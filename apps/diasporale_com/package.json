@@ -1,0 +1,47 @@
+{
+  "name": "diasporale-com",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "diasporale.com — le réseau social fermé de la diaspora gabonaise, application du moteur social national ANTIA (Next.js 16, mobile-first, port 3031).",
+  "scripts": {
+    "dev": "next dev --port 3031",
+    "build": "next build",
+    "start": "next start -p 3031",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@diasporale/domain": "workspace:*",
+    "@diasporale/features": "workspace:*",
+    "@hookform/resolvers": "catalog:",
+    "i18next": "catalog:",
+    "lucide-react": "catalog:",
+    "next": "catalog:",
+    "next-themes": "catalog:",
+    "radix-ui": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-hook-form": "catalog:",
+    "react-i18next": "catalog:",
+    "sonner": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "catalog:",
+    "@testing-library/dom": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-next": "catalog:",
+    "jsdom": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

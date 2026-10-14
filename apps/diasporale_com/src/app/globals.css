@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@import "@diasporale/features/styles/fonts.css";
+@import "@diasporale/features/styles/tailwind-theme.css";
+@import "@diasporale/features/styles/tokens.css";
+
+/* Les classes employées par les paquets de DIASPORALE doivent être générées pour
+   cette application : Tailwind ne parcourt que le dossier de l'application.
+   Au câblage PD0 s'ajouteront `@antia/ui/styles.css` et les sources du moteur. */
+@source "../../../../packages/diasporale-features/src";
