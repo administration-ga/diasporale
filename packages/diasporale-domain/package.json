@@ -1,0 +1,19 @@
+{
+  "name": "@diasporale/domain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "SSOT métier de DIASPORALE — TS pur, ZÉRO dépendance : facette diaspora, éligibilité et statuts d'adhésion, parrainage, pays, portée, badges, consentements, annuaire, ouverture des pays, modération. Importé par l'application et par la tranche convex/modules/diaspora du moteur.",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.2",
+    "typescript": "catalog:"
+  }
+}

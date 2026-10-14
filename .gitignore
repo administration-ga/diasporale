@@ -14,3 +14,8 @@ coverage/
 # Système
 .DS_Store
 *.log
+
+# TypeScript / Next
+*.tsbuildinfo
+next-env.d.ts
+.vercel/

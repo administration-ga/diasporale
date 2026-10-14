@@ -1,0 +1,6 @@
+# Domaine pur : chaque ligne et chaque fonction est exercée par un test.
+# Le seuil à 100 % fait échouer `bun test` si une règle ajoutée n'est pas testée.
+[test]
+coverage = true
+coverageThreshold = { lines = 1.0, functions = 1.0 }
+coverageSkipTestFiles = true
