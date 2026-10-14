@@ -1,38 +1,38 @@
 ---
-title: "DIASPOGAB.COM — Cahier des charges fonctionnel et technique"
+title: "DIASPORALE.COM — Cahier des charges fonctionnel et technique"
 version: "1.0"
 date: "2026-10-14"
 statut: "Proposition de référence — à valider par le propriétaire"
-projet: "DIASPOGAB"
-reference: "NTSAGUI/DIASPOGAB/CDC/2026/001"
+projet: "DIASPORALE"
+reference: "NTSAGUI/DIASPORALE/CDC/2026/001"
 maitre_d_ouvrage: "NTSAGUI Digital (propriété intellectuelle) ; données au Gabon (cible du programme)"
 dependances:
-  - "Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPOGAB_ANTIA_2026-10-14.md (plan de pilotage)"
+  - "Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTIA_2026-10-14.md (plan de pilotage)"
   - "ECOSYSTEMES/ANTIA/docs/00_CAHIER_DES_CHARGES_ANTIA.md (le moteur social national, préalable)"
-  - "ECOSYSTEMES/DIASPOGAB/docs/01_PLAN_IMPLEMENTATION_PROMPTS_DIASPOGAB.md (prompts d'exécution)"
+  - "ECOSYSTEMES/DIASPORALE/docs/01_PLAN_IMPLEMENTATION_PROMPTS_DIASPORALE.md (prompts d'exécution)"
   - "ECOSYSTEMES/GABON_DIPLOMATIE/docs/OPPORTUNITES_COMMUNAUTE_DIASPORA.md (dossier produit F01–F17, 13/07/2026)"
   - "ECOSYSTEMES/GABON_DIPLOMATIE/docs/DESIGN_SPECS_COMMUNAUTE.md (33 écrans, 17 composants)"
   - "Documentation/RESEAUX_SOCIAUX/annexes/{A,B,D}_*.md (audits du 14/10/2026)"
 ---
 
-# DIASPOGAB.COM — Cahier des charges fonctionnel et technique
+# DIASPORALE.COM — Cahier des charges fonctionnel et technique
 
-> **Place dans le programme.** DIASPOGAB.COM est le **réseau social fermé de la diaspora
+> **Place dans le programme.** DIASPORALE.COM est le **réseau social fermé de la diaspora
 > gabonaise**. C'est le premier réseau servi par le **moteur social national** (dépôt ANTIA),
-> et un réseau **enfant** du réseau public ANTIA : être membre de DIASPOGAB, c'est être membre
+> et un réseau **enfant** du réseau public ANTIA : être membre de DIASPORALE, c'est être membre
 > d'ANTIA avec un contexte en plus — le contexte de la diaspora, qui reste séparé. Le cahier
 > des charges du moteur (`ANTIA/docs/00`) est un **préalable** : ce document ne redéfinit pas
-> le moteur, il dit ce que DIASPOGAB en attend et ce qu'il y ajoute.
+> le moteur, il dit ce que DIASPORALE en attend et ce qu'il y ajoute.
 
 ## 0. Décision de conception
 
-DIASPOGAB.COM est le lieu de rencontre numérique des Gabonais de l'étranger : fil et
+DIASPORALE.COM est le lieu de rencontre numérique des Gabonais de l'étranger : fil et
 publications, hubs par pays, pages des postes consulaires et des associations, évènements,
 groupes, messagerie et appels, puis emploi, annonces et entraide. Il est **fermé** (réservé
 aux Gabonais de l'étranger), **officiel mais ouvert** (on y entre avec son identité numérique
 IDN, une attestation consulaire ou un compte léger parrainé), **par pays et global** (chaque
 pays a son hub, une couche fédère toute la diaspora), et **séparé** : ce qui se publie dans
-DIASPOGAB reste dans DIASPOGAB, sauf geste explicite de l'auteur vers ANTIA.
+DIASPORALE reste dans DIASPORALE, sauf geste explicite de l'auteur vers ANTIA.
 
 Il est construit **par duplication** du réseau social de l'espace agent d'administration.ga
 (iRéseau, iCom, stories, albums, direct, notifications — environ 22 000 lignes de backend et
@@ -108,7 +108,7 @@ pays, la confiance est visible, la modération est par pays).
 | Engagement | WAU/MAU ; publications par membre actif | > 35 % ; > 2 / mois |
 | Contenu | pays actifs (≥ 1 évènement/mois) ; part des contenus créés par la communauté | ≥ 8 ; > 60 % |
 | Modération | signalements traités sous 48 h | > 95 % |
-| Qualité | aucune fuite de contexte (contenu `network` lu hors DIASPOGAB) | 0 |
+| Qualité | aucune fuite de contexte (contenu `network` lu hors DIASPORALE) | 0 |
 
 ## 3. Sources et politique de réutilisation
 
@@ -134,7 +134,7 @@ RGPD des contenus sociaux, push social, fil matérialisé, compteurs fragmentés
 
 `GABON_DIPLOMATIE/docs/OPPORTUNITES_COMMUNAUTE_DIASPORA.md` (F01–F17), `DESIGN_SPECS_COMMUNAUTE.md`
 (33 écrans E01–E33, 17 composants C1–C17, principes P1–P5) et `PLAN_IMPLEMENTATION_ESPACE_COMMUNAUTE.md`
-sont la **spécification fonctionnelle d'origine** de DIASPOGAB. Ce cahier en reprend les
+sont la **spécification fonctionnelle d'origine** de DIASPORALE. Ce cahier en reprend les
 personas, les fiches features, la décision « scoping par pays », les principes de design
 (trois niveaux de confiance, le pays est le contexte permanent, le contact passe par la
 messagerie, états de modération visibles, états vides génératifs), la stratégie de lancement
@@ -162,7 +162,7 @@ pour les points d'accroche ; le socle reste la version la plus complète.
 5. Les tests voyagent avec le code (23 fichiers et ~645 cas pour `reseauPersonnel` seul) ;
    vérifier qu'un test s'exécute.
 6. Fusion avec l'existant, pas écrasement : ce que le moteur a déjà (A1) est conservé.
-7. UI : primitives et jetons consommés sans fork ; le thème DIASPOGAB passe par les jetons ;
+7. UI : primitives et jetons consommés sans fork ; le thème DIASPORALE passe par les jetons ;
    aucune couleur en dur (cliquet de charte).
 8. Tranches verticales : un module = `convex/modules/<module>/` (tables, fonctions, tests,
    manifeste) + sa surface dans `social-features` ; validateurs précis, jamais `v.any()`.
@@ -177,27 +177,27 @@ pour les points d'accroche ; le socle reste la version la plus complète.
 | Terme | Définition |
 |---|---|
 | **Moteur** | le backend Convex et les paquets partagés du dépôt ANTIA, qui servent tous les réseaux |
-| **Réseau** | un espace social avec ses membres, son fil, ses pages, ses modérateurs ; `diaspogab` est un réseau fermé, enfant du réseau racine `antia` |
+| **Réseau** | un espace social avec ses membres, son fil, ses pages, ses modérateurs ; `diasporale` est un réseau fermé, enfant du réseau racine `antia` |
 | **Personne** | l'identité sociale unique d'un être humain dans le moteur (handle, nom affiché, avatar) |
 | **Adhésion** | l'appartenance d'une personne à un réseau, avec un statut (`en_attente`, `declaree`, `verifiee`, `suspendue`, `partie`) et un rôle |
-| **Facette** | les attributs d'une personne propres à un réseau : pour DIASPOGAB, pays de résidence, ville, poste de rattachement, associations |
+| **Facette** | les attributs d'une personne propres à un réseau : pour DIASPORALE, pays de résidence, ville, poste de rattachement, associations |
 | **Attestation consulaire** | la réponse minimale et consentie de consulat.ga : inscription active ou non, pays, poste, date |
 | **Parrainage** | l'acte par lequel un membre vérifié admet un compte léger dans le réseau |
 | **Hub pays** | la page d'un pays : fil local, évènements, associations, entreprises, membres opt-in |
-| **Portée** (`reach`) | `local` (le pays) ou `diaspora` (tout le réseau) ; distincte de la **visibilité** (`network` : reste dans DIASPOGAB ; `root` : aussi dans ANTIA) |
+| **Portée** (`reach`) | `local` (le pays) ou `diaspora` (tout le réseau) ; distincte de la **visibilité** (`network` : reste dans DIASPORALE ; `root` : aussi dans ANTIA) |
 | **Page** | la présence d'une organisation : institution (poste consulaire, ministère), association, entreprise, média ; une page a des signataires |
 | **Badge** | Officiel · Vérifié · Agent public · Communauté — calculé côté serveur |
 
 ## 5. Invariants
 
-Hérités du plan (R1 à R8) et précisés pour DIASPOGAB :
+Hérités du plan (R1 à R8) et précisés pour DIASPORALE :
 
-1. **Clé de réseau partout** : aucune lecture ni écriture sociale sans `networkId = diaspogab`
+1. **Clé de réseau partout** : aucune lecture ni écriture sociale sans `networkId = diasporale`
    ; la recherche, les suggestions et le fil ne sortent jamais du réseau (sauf les contenus
    `root`, lus par ANTIA).
 2. **Contexte séparé** : visibilité `network` par défaut ; `root` seulement si audience
-   `public` et geste explicite de l'auteur ; un contenu `root` reste aussi dans DIASPOGAB.
-3. **Adhésion dérivée** : entrer dans DIASPOGAB crée l'adhésion à ANTIA ; quitter DIASPOGAB
+   `public` et geste explicite de l'auteur ; un contenu `root` reste aussi dans DIASPORALE.
+3. **Adhésion dérivée** : entrer dans DIASPORALE crée l'adhésion à ANTIA ; quitter DIASPORALE
    ne retire pas ANTIA ; une suspension dans ANTIA suspend partout.
 4. **Aucune donnée consulaire dans le moteur** : pas de passeport, pas de NIP, pas d'état
    civil, pas de mineur, pas de dossier ; l'attestation est un booléen, un pays, un poste, une
@@ -239,7 +239,7 @@ Hérités du plan (R1 à R8) et précisés pour DIASPOGAB :
 | **IDN (identite.ga)**, affichée en premier | identité civile, nationalité, `loa` | `declaree` (pays de résidence saisi) ; `verifiee` si `loa ≥ 2` **et** attestation consulaire ou parrainage | **Vérifié** si `loa ≥ 2` |
 | **Compte léger** (code à usage unique e-mail ou SMS) | contrôle d'une adresse ou d'un numéro | `en_attente` jusqu'au parrainage par un membre vérifié ou à l'attestation consulaire ; puis `declaree` | **Communauté** |
 | **Attestation consulaire** (après connexion, à la demande de la personne) | consulat.ga confirme une inscription consulaire active pour cet `idnSub` ou pour cette adresse vérifiée | `verifiee` | **Vérifié** |
-| **Lien administration.ga** (depuis l'espace agent) | rattachement validé reflété par le socle | adhésion `administration` dans le moteur ; aucune adhésion DIASPOGAB automatique | **Agent public** |
+| **Lien administration.ga** (depuis l'espace agent) | rattachement validé reflété par le socle | adhésion `administration` dans le moteur ; aucune adhésion DIASPORALE automatique | **Agent public** |
 
 Ce que donne chaque statut :
 
@@ -283,11 +283,11 @@ comptes actifs, non supprimés et sans demande de suppression ; sans rattachemen
 majeurs ; et parmi eux la part déjà rattachée à IDN. Ce chiffre borne la campagne
 d'information et ne se publie pas sans preuve (doctrine de communication publique).
 
-## 7. Le réseau `diaspogab` dans le moteur
+## 7. Le réseau `diasporale` dans le moteur
 
 | Attribut du réseau | Valeur |
 |---|---|
-| `slug` | `diaspogab` |
+| `slug` | `diasporale` |
 | `kind` | `closed` |
 | `parentId` | `antia` |
 | `membershipPolicy` | `declared_or_verified` (déclaration + IDN, attestation ou parrainage) |
@@ -295,7 +295,7 @@ d'information et ne se publie pas sans preuve (doctrine de communication publiqu
 | `facetSchema` | `countryOfResidence` (ISO 3166-1, obligatoire, ≠ GA), `city?`, `postSlug?` (poste consulaire de rattachement, posé par l'attestation), `associationIds[]`, `arrivedAt?` (année d'arrivée, pour l'entraide) |
 | `reachValues` | `local` (pays), `diaspora` (tout le réseau) |
 | `moderation` | équipes par pays + équipe réseau |
-| `theme` | jetons DIASPOGAB (§15) |
+| `theme` | jetons DIASPORALE (§15) |
 | `openCountries` | liste des pays ouverts (lancement : France) ; un pays s'ouvre avec deux associations relais et un modérateur |
 
 ## 8. Périmètre fonctionnel
@@ -319,10 +319,10 @@ le plan de prompts (`docs/01`) couvre 100 % des exigences. **V1** = lots D1 ; **
   quotas, journal, retrait possible.
 - **EXF-DG-05** Parcours d'élévation : bannières « Activer mon identité numérique IDN » et
   « M'inscrire au consulat » qui renvoient vers identite.ga et consulat.ga ; retour dans
-  DIASPOGAB sans perte de session (jeton à usage unique ou retour OIDC).
-- **EXF-DG-06** Depuis consulat.ga : boutons « Rejoindre DIASPOGAB » et « Activer IDN » (chantier
+  DIASPORALE sans perte de session (jeton à usage unique ou retour OIDC).
+- **EXF-DG-06** Depuis consulat.ga : boutons « Rejoindre DIASPORALE » et « Activer IDN » (chantier
   côté gabon-diplomatie), sans aucun transfert de données hors consentement.
-- **EXT-DG-01** Better Auth du moteur : origines de confiance `diaspogab.com`, `antia.ga`,
+- **EXT-DG-01** Better Auth du moteur : origines de confiance `diasporale.com`, `antia.ga`,
   consoles ; sessions par origine ; `signOutEverywhere` (révocation serveur puis purge locale).
 
 ### 8.2 M2 — Profil et facettes (V1)
@@ -477,8 +477,8 @@ traduction automatique ; application de bureau.
 Rédigés « Étant donné …, quand …, alors … » ; chacun devient un test de recette (R1–R10).
 
 - **R1 — Un inscrit de consulat.ga entre.** Étant donné une personne inscrite au Consulat
-  Général en France, rattachée à IDN ; quand elle clique « Rejoindre DIASPOGAB » dans
-  consulat.ga, se connecte par IDN sur diaspogab.com, saisit « France, Lyon », choisit son
+  Général en France, rattachée à IDN ; quand elle clique « Rejoindre DIASPORALE » dans
+  consulat.ga, se connecte par IDN sur diasporale.com, saisit « France, Lyon », choisit son
   handle et consent ; alors elle est `declaree`, voit le hub France, et son adhésion ANTIA
   existe (dérivée).
 - **R2 — Vérification consulaire.** Étant donné R1 ; quand elle demande « Vérifier mon
@@ -489,10 +489,10 @@ Rédigés « Étant donné …, quand …, alors … » ; chacun devient un test
   entre par SMS, saisit « Canada, Montréal » ; alors il est `en_attente`, lit le hub Canada
   sans publier ; quand un membre vérifié depuis plus de 30 jours le parraine ; alors il est
   `declaree` et publie.
-- **R4 — Contexte séparé.** Étant donné une publication `public` dans DIASPOGAB sans « aussi
+- **R4 — Contexte séparé.** Étant donné une publication `public` dans DIASPORALE sans « aussi
   sur ANTIA » ; alors aucune requête d'ANTIA ne la rend ; quand l'auteur coche « aussi sur
   ANTIA » ; alors elle est lue dans le fil racine avec la pastille « Diaspora » et reste dans
-  DIASPOGAB.
+  DIASPORALE.
 - **R5 — Page officielle.** Étant donné l'import du Consulat Général en France ; alors sa page
   porte « Officiel », ses publications aussi ; un membre ordinaire ne peut pas y publier ;
   un agent du poste habilité par la procédure le peut.
@@ -510,16 +510,16 @@ Rédigés « Étant donné …, quand …, alors … » ; chacun devient un test
   aucune table sociale ni aucun blob ne porte plus sa trace ; les contenus des autres qui le
   citaient affichent « compte supprimé ».
 - **R10 — Fuite interdite.** Étant donné un client qui appelle une query sociale sans
-  `networkId` ou avec `antia` sur un contenu `network` de DIASPOGAB ; alors le serveur refuse
+  `networkId` ou avec `antia` sur un contenu `network` de DIASPORALE ; alors le serveur refuse
   de façon indistincte ; le cliquet de test le prouve.
 
 ## 10. Surfaces attendues
 
-### 10.1 Web (`apps/diaspogab_com`, Next.js 16, mobile-first)
+### 10.1 Web (`apps/diasporale_com`, Next.js 16, mobile-first)
 
 | Route | Contenu | Hérité de (espace agent) |
 |---|---|---|
-| `/` | vitrine publique : ce qu'est DIASPOGAB, pays, compteurs matérialisés, entrer | — (nouvelle, charte DIASPOGAB) |
+| `/` | vitrine publique : ce qu'est DIASPORALE, pays, compteurs matérialisés, entrer | — (nouvelle, charte DIASPORALE) |
 | `/entrer`, `/bienvenue` | portes IDN / compte léger ; onboarding 3 écrans | `use-profile-onboarding`, `HandleChoiceCard` |
 | `/fil` | le fil et ses volets (`?tab=` relations, groupes, pages, evenements, directs) | `ReseauAgentPage` (bureau), `ReseauMobilePage` (téléphone) |
 | `/pays/[iso]` | hub pays | nouveau, composé de `FeedPages`, `EvenementsPanel`, `PagesPanel` |
@@ -538,21 +538,21 @@ Coque légère (cahier ANTIA) : fournisseurs Convex, TanStack et authentificatio
 de routage, cloche, dock iCom, hôte d'appel, charte ; **jamais** AppShell, personal-nav,
 org-provider ni les hôtes du Poste.
 
-### 10.2 Mobile (`apps/diaspogab_mobile`, Expo, lot D3)
+### 10.2 Mobile (`apps/diasporale_mobile`, Expo, lot D3)
 
 Fil, hub pays, évènements, messagerie et appels, stories, notifications push ; parité des
 parcours R1 à R8 avec le web.
 
 ## 11. Modèle de données
 
-Le moteur porte les tables (cahier ANTIA §11). DIASPOGAB s'y lit ainsi :
+Le moteur porte les tables (cahier ANTIA §11). DIASPORALE s'y lit ainsi :
 
-| Table (moteur) | Ce que DIASPOGAB y met |
+| Table (moteur) | Ce que DIASPORALE y met |
 |---|---|
-| `networks` | la ligne `diaspogab` (§7) |
+| `networks` | la ligne `diasporale` (§7) |
 | `persons`, `identityLinks` | la personne ; liens `idn`, `local`, `consular_attestation` (subject = empreinte, `verifiedAt`, `postSlug`, `country`) |
-| `networkMemberships` | `networkId: diaspogab`, `status`, `role`, `verifiedBy ∈ {idn, consulat, sponsor}`, `sponsorPersonId?`, `derivedRoot: true` sur l'adhésion `antia` créée |
-| `personFacets` | `networkId: diaspogab`, `countryOfResidence`, `city`, `postSlug`, `associationIds`, `arrivedAt`, `helpAvailable`, visibilités par champ |
+| `networkMemberships` | `networkId: diasporale`, `status`, `role`, `verifiedBy ∈ {idn, consulat, sponsor}`, `sponsorPersonId?`, `derivedRoot: true` sur l'adhésion `antia` créée |
+| `personFacets` | `networkId: diasporale`, `countryOfResidence`, `city`, `postSlug`, `associationIds`, `arrivedAt`, `helpAvailable`, visibilités par champ |
 | `posts` (+ `postReactions`, `postComments`, `postMarks`, `contentReports`) | `networkId`, `audience`, `visibility ∈ {network, root}`, `country?`, `reach ∈ {local, diaspora}` |
 | `pages`, `pageFollows`, `pageSignatories`, `pageClaims` | `ownerKind ∈ {institution, association, company, media}`, `trust ∈ {official, verified, community}`, `country`, `importRef?` |
 | `connections`, `follows`, `suggestionDismissals`, `mutes` | hérités, bornés par réseau |
@@ -589,7 +589,7 @@ sociale, compteurs fragmentés pour les contenus chauds, aucune donnée consulai
 
 | Contrat | Sens | Contenu | Mécanique |
 |---|---|---|---|
-| **IDN OIDC** | identite.ga → moteur | identité, `loa`, `nationality`, `profile_type` | client OIDC `diaspogab` enregistré au portail développeur (sandbox puis production), callback `https://diaspogab.com/api/auth/oauth2/callback/idn` ; SDK `@idn-ga/better-auth` ; consentement sur l'écran d'identite.ga |
+| **IDN OIDC** | identite.ga → moteur | identité, `loa`, `nationality`, `profile_type` | client OIDC `diasporale` enregistré au portail développeur (sandbox puis production), callback `https://diasporale.com/api/auth/oauth2/callback/idn` ; SDK `@idn-ga/better-auth` ; consentement sur l'écran d'identite.ga |
 | **`DIASPORA-ATTESTATION-V1`** | moteur → consulat.ga (requête), réponse signée | `{ subjectKind: idnSub \| emailHash, subject }` → `{ verified, countryOfResidence, postSlug, registrationStatus, since }` | route HTTP idempotente côté gabon-diplomatie, clé de service, journal des deux côtés, consentement enregistré dans le moteur avant l'appel ; aucune autre donnée ; chantier côté gabon-diplomatie (ADR 0006 proposé) |
 | **`DIASPORA-COMMUNAUTE-V1`** | consulat.ga → moteur, une fois (puis à la demande) | objets **publics** : postes consulaires (pages Officiel), associations (pages non revendiquées), entreprises, évènements publics à venir, communiqués officiels | export signé, import idempotent par `importRef`, journal `communityImports` ; jamais de personne |
 | Cycle de vie | consulat.ga → moteur (V2) | révocation d'une inscription, suppression de compte | webhook signé ; le statut `verifiee` retombe à `declaree` |
@@ -609,7 +609,7 @@ consommateur, routes idempotentes, clés de service par environnement, aucune le
   fail-closed (avatars, stories, albums compris) ; CSP ; secrets par environnement, jamais
   dans le dépôt ; `schemaValidation: true`.
 - **EXT-DG-04 Données** : loi n° 001/2011 modifiée par la loi n° 025/2023 (APDPVP) et RGPD
-  (France) ; dossier APDPVP propre à DIASPOGAB ; analyse d'impact ; registre des
+  (France) ; dossier APDPVP propre à DIASPORALE ; analyse d'impact ; registre des
   consentements ; export et effacement effectifs ; minimisation ; hébergement Convex en région
   UE si disponible, déclaré honnêtement.
 - **EXT-DG-05 Accessibilité** : WCAG 2.1 AA, cibles de 44 px, focus visible, lecteur d'écran,
@@ -634,8 +634,8 @@ consommateur, routes idempotentes, clés de service par environnement, aucune le
   `@container`), rail droit (iCom, suggestions, pages, évènements, directs), onglets chemise,
   composeur en feuille, coquille mobile (en-tête collant, barre basse, feuille Menu, pager
   vertical), cartes flottantes et format téléphone — tout cela se duplique avec le code.
-- **Les jetons changent, pas les composants** (règle 7) : la charte DIASPOGAB est une couche
-  de jetons posée sur `data-charte="diaspogab"` (couleurs, polices, rayons, espacements) ;
+- **Les jetons changent, pas les composants** (règle 7) : la charte DIASPORALE est une couche
+  de jetons posée sur `data-charte="diasporale"` (couleurs, polices, rayons, espacements) ;
   aucune couleur littérale ; cliquet de charte.
 - **Direction artistique** : passe `frontend-design` obligatoire avant la première ligne
   d'interface, à partir de deux options du programme : la famille **Consulaire / Sable**
@@ -659,29 +659,29 @@ consommateur, routes idempotentes, clés de service par environnement, aucune le
 
 ### Lot D0 — Préalables (propriétaire, juriste, ANTIA A0–A2)
 
-Décisions du §20 rendues ; dépôt `administration-ga/diaspogab` créé ; client OIDC `diaspogab`
+Décisions du §20 rendues ; dépôt `administration-ga/diasporale` créé ; client OIDC `diasporale`
 en sandbox ; dossier APDPVP et analyse d'impact lancés ; mesure de la population éligible ;
 **moteur livré** (A1 noyau, A2 réseaux et identité). **Sortie :** `bun run verify` du moteur
 vert avec deux réseaux de test ; décisions écrites dans ce document (§20 mis à jour).
 
-### Lot D1 — DIASPOGAB V1 web, pilote France (M1 M2 M3 M4 M5 M6 M7-thématiques M11-cloche M12 M13)
+### Lot D1 — DIASPORALE V1 web, pilote France (M1 M2 M3 M4 M5 M6 M7-thématiques M11-cloche M12 M13)
 
-Application `diaspogab_com` (espace de travail bun externe du moteur) ; réseau `diaspogab` ;
+Application `diasporale_com` (espace de travail bun externe du moteur) ; réseau `diasporale` ;
 facettes ; onboarding IDN et compte léger ; parrainage ; attestation consulaire (contrat des
 deux côtés) ; fil, hub pays, profils, relations, pages officielles et d'associations, groupes
 thématiques, évènements hérités, stories et albums ; import public unique ; modération France
-; consentements, export, effacement ; charte DIASPOGAB ; vitrine. **Sortie :** parcours R1 à
+; consentements, export, effacement ; charte DIASPORALE ; vitrine. **Sortie :** parcours R1 à
 R6, R8 à R10 joués en recette sur le déploiement de recette ; suite verte ; parité des modules
-dupliqués cochée ; mise en ligne sur diaspogab.com vérifiée ; France ouverte.
+dupliqués cochée ; mise en ligne sur diasporale.com vérifiée ; France ouverte.
 
-### Lot D2 — DIASPOGAB V2 (M7-conversation M8-communautaire M9 M10 M11-push M14)
+### Lot D2 — DIASPORALE V2 (M7-conversation M8-communautaire M9 M10 M11-push M14)
 
 Évènements communautaires complets et direct ; messagerie, appels, présence ; emploi,
 talents, annonces, entraide ; push et digest par pays ; iAsted concierge ; anglais ;
 ouverture de nouveaux pays (deux associations relais et un modérateur chacun). **Sortie :**
 R7 joué ; KPI du §2.3 mesurés sur PostHog ; files de modération < 48 h sur quatre semaines.
 
-### Lot D3 — DIASPOGAB mobile
+### Lot D3 — DIASPORALE mobile
 
 Application Expo ; parité R1–R8 ; push natif ; publication sur les stores (comptes du
 propriétaire). **Sortie :** parcours clés joués sur appareil ; crash-free > 99 %.
@@ -695,8 +695,8 @@ messagerie) ; premiers revenus mesurés.
 
 ## 17. Critères de recette transverses et Definition of Done
 
-- Deux réseaux de test (`diaspogab`, `antia`) : aucun contenu `network` de l'un n'est lu par
-  l'autre ; un membre de `diaspogab` est membre d'`antia` ; `root` exige `public`.
+- Deux réseaux de test (`diasporale`, `antia`) : aucun contenu `network` de l'un n'est lu par
+  l'autre ; un membre de `diasporale` est membre d'`antia` ; `root` exige `public`.
 - Aucune table du moteur ne porte de donnée consulaire ; aucun import de `_generated` ni de
   schéma du socle ou de gabon-diplomatie (cliquet).
 - Chaque module dupliqué a son en-tête de provenance, ses tests portés, sa liste de parité
@@ -737,13 +737,13 @@ consulaires ; l'application de bureau ; le mode hors ligne.
 
 | # | Question | Recommandation |
 |---|---|---|
-| A1 | Nom et domaine du réseau racine (ANTIA / ANTSA, `antia.ga`) ; DIASPOGAB.COM confirmé | ANTIA (`antia.ga` figure déjà au registre des dépôts du propriétaire) |
+| A1 | Nom et domaine du réseau racine (ANTIA / ANTSA, `antia.ga`) ; DIASPORALE.COM confirmé | ANTIA (`antia.ga` figure déjà au registre des dépôts du propriétaire) |
 | A2 | Architecture « un moteur, trois réseaux, deux dépôts » | oui (plan §4) |
 | A3 | Seuils du parrainage et accès des comptes `en_attente` | un parrain vérifié depuis > 30 j ; dix parrainages/mois ; `en_attente` = lecture seule |
 | A4 | Attestation consulaire : contrat minimal consenti depuis consulat.ga, après validation juridique | oui ; sinon lancement sans badge consulaire |
-| A5 | Espace Communauté de consulat.ga | geler et rediriger vers DIASPOGAB après D1 |
+| A5 | Espace Communauté de consulat.ga | geler et rediriger vers DIASPORALE après D1 |
 | A6 | Format de la carte téléphone | 440 × 956 (le plus récent du programme), plancher 375 |
-| A7 | Charte DIASPOGAB | famille Consulaire / Sable (continuité), squelette de l'espace agent ; passe `frontend-design` |
+| A7 | Charte DIASPORALE | famille Consulaire / Sable (continuité), squelette de l'espace agent ; passe `frontend-design` |
 | A8 | Pays ouverts au lancement | France seule ; puis Espagne, Belgique, Canada, Maroc, Sénégal selon les relais |
 | A9 | Monétisation | aucune en V1 ; D4 B2B étiqueté ; le citoyen ne paie jamais |
 | A10 | Hébergement | Convex (région UE si disponible) + Cloud Run ou Vercel ; budget |
@@ -751,7 +751,7 @@ consulaires ; l'application de bureau ; le mode hors ligne.
 
 ## 21. Références
 
-- Plan de pilotage : `Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPOGAB_ANTIA_2026-10-14.md`
+- Plan de pilotage : `Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTIA_2026-10-14.md`
   et ses annexes A (backend socle), B (front socle), C (comptes consulat.ga), D (conventions).
 - Cahier du moteur : `ECOSYSTEMES/ANTIA/docs/00_CAHIER_DES_CHARGES_ANTIA.md`.
 - Dossier produit diaspora : `ECOSYSTEMES/GABON_DIPLOMATIE/docs/OPPORTUNITES_COMMUNAUTE_DIASPORA.md`,
@@ -766,6 +766,6 @@ consulaires ; l'application de bureau ; le mode hors ligne.
 - identite.ga : `SERVICES_TRANSVERSES/identite.ga` (`docs/adr/0001-oidc-architecture.md`, SDK `@idn-ga/better-auth`).
 - Chartes : `okatech-projects/DESIGN_SYSTEMS/{consulaire,sable,gabon-connect}.md`, `CITIZEN_DESIGN_SYSTEM_V3.md`.
 - Droit : loi n° 001/2011 modifiée par la loi n° 025/2023 (APDPVP) ; RGPD ; dossier
-  `Documentation/00_Transverse/APDPVP/05_Dossier_APDPVP_consulat_ga.pdf` (à étendre par un dossier DIASPOGAB).
+  `Documentation/00_Transverse/APDPVP/05_Dossier_APDPVP_consulat_ga.pdf` (à étendre par un dossier DIASPORALE).
 
-*Fin du cahier des charges DIASPOGAB.COM — version 1.0 du 14 octobre 2026.*
+*Fin du cahier des charges DIASPORALE.COM — version 1.0 du 14 octobre 2026.*

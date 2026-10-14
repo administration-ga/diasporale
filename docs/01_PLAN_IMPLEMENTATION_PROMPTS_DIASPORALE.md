@@ -1,17 +1,17 @@
 ---
-title: "DIASPOGAB.COM — Plan d'implémentation en prompts"
+title: "DIASPORALE.COM — Plan d'implémentation en prompts"
 version: "1.0"
 date: "2026-10-14"
 statut: "Plan d'exécution — prompts Claude Code (Opus), à exécuter après ANTIA PA0–PA7"
-projet: "DIASPOGAB"
-reference: "NTSAGUI/DIASPOGAB/PI/2026/001"
+projet: "DIASPORALE"
+reference: "NTSAGUI/DIASPORALE/PI/2026/001"
 dependances:
-  - "ECOSYSTEMES/DIASPOGAB/docs/00_CAHIER_DES_CHARGES_DIASPOGAB.md (exigences EXF-DG / EXT-DG)"
+  - "ECOSYSTEMES/DIASPORALE/docs/00_CAHIER_DES_CHARGES_DIASPORALE.md (exigences EXF-DG / EXT-DG)"
   - "ECOSYSTEMES/ANTIA/docs/01_PLAN_IMPLEMENTATION_PROMPTS_ANTIA.md (le moteur : PA0 → PA7 doivent être clos)"
-  - "Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPOGAB_ANTIA_2026-10-14.md"
+  - "Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTIA_2026-10-14.md"
 ---
 
-# DIASPOGAB.COM — Plan d'implémentation en prompts
+# DIASPORALE.COM — Plan d'implémentation en prompts
 
 ## 0. Objet et mode d'emploi
 
@@ -31,7 +31,7 @@ Règles d'exécution héritées du programme :
 - **Jamais** : secret dans le dépôt, donnée réelle de consulat.ga dans le moteur, lecture de
   base à base, `--rapide` sans demande explicite, force-push.
 - **Dépôts touchés** : `ECOSYSTEMES/ANTIA` (le moteur et ses paquets ; la tranche
-  `convex/modules/diaspora`), `ECOSYSTEMES/DIASPOGAB` (l'application et ses paquets),
+  `convex/modules/diaspora`), `ECOSYSTEMES/DIASPORALE` (l'application et ses paquets),
   `ECOSYSTEMES/GABON_DIPLOMATIE` (les deux contrats, par PR, en coordination avec le
   développeur qui publie la prod), `SERVICES_TRANSVERSES/identite.ga` (client OIDC, par le
   portail développeur plutôt que par le code).
@@ -41,10 +41,10 @@ Règles d'exécution héritées du programme :
 - [ ] ANTIA PA0 → PA7 clos : moteur avec deux réseaux de test, identité IDN, modération V1,
       paquets `social-domain`, `social-features`, console ; `bun run verify` vert dans `ANTIA/`.
 - [ ] Décisions A1 à A11 du cahier `docs/00` §20 rendues et écrites (au moins A1, A2, A3, A7, A8).
-- [ ] Dépôt `administration-ga/diaspogab` créé par le propriétaire (vide) ; domaine
-      `diaspogab.com` confirmé.
-- [ ] Client OIDC `diaspogab` créé au portail développeur d'identite.ga en **sandbox**
-      (callback `https://diaspogab.com/api/auth/oauth2/callback/idn` et l'origine de recette).
+- [ ] Dépôt `administration-ga/diasporale` créé par le propriétaire (vide) ; domaine
+      `diasporale.com` confirmé.
+- [ ] Client OIDC `diasporale` créé au portail développeur d'identite.ga en **sandbox**
+      (callback `https://diasporale.com/api/auth/oauth2/callback/idn` et l'origine de recette).
 - [ ] Dossier APDPVP et analyse d'impact lancés (juriste) ; mesure de la population éligible
       faite par le propriétaire (cahier §6.5).
 - [ ] Pour PD3 et PD5 : accord du propriétaire et validation juridique de l'attestation
@@ -53,11 +53,11 @@ Règles d'exécution héritées du programme :
 ## 2. Préambule commun (à coller en tête de chaque prompt)
 
 ```text
-[PRÉAMBULE COMMUN — DIASPOGAB]
+[PRÉAMBULE COMMUN — DIASPORALE]
 Tu travailles dans « Digital GABON/DIGITAL_GOUV/ ». Lis d'abord
-ECOSYSTEMES/DIASPOGAB/docs/00_CAHIER_DES_CHARGES_DIASPOGAB.md, ECOSYSTEMES/ANTIA/docs/00_CAHIER_DES_CHARGES_ANTIA.md
+ECOSYSTEMES/DIASPORALE/docs/00_CAHIER_DES_CHARGES_DIASPORALE.md, ECOSYSTEMES/ANTIA/docs/00_CAHIER_DES_CHARGES_ANTIA.md
 et ECOSYSTEMES/ANTIA/CLAUDE.md. Le moteur social vit dans ECOSYSTEMES/ANTIA (backend Convex, paquets
-social-domain et social-features) ; DIASPOGAB est une application de ce moteur, espace de travail bun
+social-domain et social-features) ; DIASPORALE est une application de ce moteur, espace de travail bun
 externe déclaré dans ANTIA/package.json. Règles non négociables :
 - dix règles de duplication (copier d'abord, en-tête de provenance, périmètre d'adaptation fermé, aucun
   import de _generated/schéma/table du socle ou de gabon-diplomatie, tests portés, fusion sans écrasement,
@@ -78,12 +78,12 @@ externe déclaré dans ANTIA/package.json. Règles non négociables :
 
 | Source | Cible | Prompt |
 |---|---|---|
-| Moteur ANTIA (`convex/modules/{networks,people,posts,graph,pages,groups,events,messaging,calls,live,notifications,moderation,files,consents}`) | consommé tel quel ; seed du réseau `diaspogab` | PD1 |
-| `ANTIA/packages/social-features` (fil, profil, relations, groupes, évènements, pages, albums, stories, notifications, messagerie, direct) | montés dans `DIASPOGAB/apps/diaspogab_com` avec le contexte réseau `diaspogab` et la charte DIASPOGAB | PD4, PD7 |
+| Moteur ANTIA (`convex/modules/{networks,people,posts,graph,pages,groups,events,messaging,calls,live,notifications,moderation,files,consents}`) | consommé tel quel ; seed du réseau `diasporale` | PD1 |
+| `ANTIA/packages/social-features` (fil, profil, relations, groupes, évènements, pages, albums, stories, notifications, messagerie, direct) | montés dans `DIASPORALE/apps/diasporale_com` avec le contexte réseau `diasporale` et la charte DIASPORALE | PD4, PD7 |
 | Nouveau : `ANTIA/convex/modules/diaspora/` (`countryHubs`, `sponsorships`, `consularAttestations`, `communityImports`, V2 : `jobPostings`, `jobApplications`, `jobAlerts`, `classifieds`, `mentorships`) | tranche propre à la diaspora, dans le moteur | PD1, PD3, PD5, PD8 |
-| Nouveau : `DIASPOGAB/packages/diaspogab-domain` (TS pur : facette, éligibilité, parrainage, pays, portée, badges) | SSOT métier de DIASPOGAB, importé par le moteur et par l'application | PD1 |
-| Nouveau : `DIASPOGAB/packages/diaspogab-features` (hub pays, CountrySwitch, cartes C1–C17, onboarding diaspora, modération pays, emploi, annonces, entraide) | surfaces propres | PD2, PD4, PD5, PD6, PD8 |
-| `GABON_DIPLOMATIE/packages/backend/convex` : nouvelle route HTTP `DIASPORA-ATTESTATION-V1`, export `DIASPORA-COMMUNAUTE-V1`, boutons « Rejoindre DIASPOGAB » et « Activer IDN » | côté consulat.ga, par PR | PD3, PD5 |
+| Nouveau : `DIASPORALE/packages/diasporale-domain` (TS pur : facette, éligibilité, parrainage, pays, portée, badges) | SSOT métier de DIASPORALE, importé par le moteur et par l'application | PD1 |
+| Nouveau : `DIASPORALE/packages/diasporale-features` (hub pays, CountrySwitch, cartes C1–C17, onboarding diaspora, modération pays, emploi, annonces, entraide) | surfaces propres | PD2, PD4, PD5, PD6, PD8 |
+| `GABON_DIPLOMATIE/packages/backend/convex` : nouvelle route HTTP `DIASPORA-ATTESTATION-V1`, export `DIASPORA-COMMUNAUTE-V1`, boutons « Rejoindre DIASPORALE » et « Activer IDN » | côté consulat.ga, par PR | PD3, PD5 |
 | Spécifications : `GABON_DIPLOMATIE/docs/{OPPORTUNITES_COMMUNAUTE_DIASPORA,DESIGN_SPECS_COMMUNAUTE}.md` | reprises, pas de code | tous |
 
 ## 4. Les prompts
@@ -92,7 +92,7 @@ externe déclaré dans ANTIA/package.json. Règles non négociables :
 
 ### PROMPT PD0 — Préalables, ouverture du dépôt et câblage dans le moteur (lot D0)
 
-**Objectif.** Un dépôt `DIASPOGAB` qui compile comme espace de travail externe du moteur, sans
+**Objectif.** Un dépôt `DIASPORALE` qui compile comme espace de travail externe du moteur, sans
 une ligne de métier.
 
 **Contexte.** Le moteur est dans `ECOSYSTEMES/ANTIA` (PA0–PA7 clos). Le modèle d'un espace de
@@ -103,48 +103,48 @@ liaison IAM, domain mapping.
 
 > Vérifie les préalables du §1 (lis `ANTIA/docs/01` : PA0–PA7 doivent être marqués clos dans
 > son encart d'état) ; si l'un manque, arrête-toi et liste ce qui manque.
-> 1. Dans `ECOSYSTEMES/DIASPOGAB/` (déjà ouvert : README, CLAUDE.md, docs/), crée
->    `apps/diaspogab_com` (Next.js 16, React 19, Tailwind v4, `output: "standalone"`,
+> 1. Dans `ECOSYSTEMES/DIASPORALE/` (déjà ouvert : README, CLAUDE.md, docs/), crée
+>    `apps/diasporale_com` (Next.js 16, React 19, Tailwind v4, `output: "standalone"`,
 >    `outputFileTracingRoot` et `turbopack.root` = `ECOSYSTEMES`, alias vers le `node_modules`
->    du moteur, CSP comme demarche.ga), `packages/diaspogab-domain` (TS pur, zéro dépendance,
->    tests `bun test`) et `packages/diaspogab-features` (React, dépend de
->    `@antia/social-features`, `@antia/ui`, `@antia/api`). Noms de paquets : `diaspogab-com`,
->    `@diaspogab/domain`, `@diaspogab/features`. `tsconfig` étend celui du moteur ; alias
+>    du moteur, CSP comme demarche.ga), `packages/diasporale-domain` (TS pur, zéro dépendance,
+>    tests `bun test`) et `packages/diasporale-features` (React, dépend de
+>    `@antia/social-features`, `@antia/ui`, `@antia/api`). Noms de paquets : `diasporale-com`,
+>    `@diasporale/domain`, `@diasporale/features`. `tsconfig` étend celui du moteur ; alias
 >    `@convex/*` → `../ANTIA/convex/*` (typage seulement).
-> 2. Dans `ANTIA/package.json`, ajoute les workspaces `../DIASPOGAB/apps/*` et
->    `../DIASPOGAB/packages/*` ; régénère `bun.lock` depuis une installation propre ; ajoute
->    les scripts `dev:diaspogab` (port 3031) et l'entrée `diaspogab` du catalogue de
+> 2. Dans `ANTIA/package.json`, ajoute les workspaces `../DIASPORALE/apps/*` et
+>    `../DIASPORALE/packages/*` ; régénère `bun.lock` depuis une installation propre ; ajoute
+>    les scripts `dev:diasporale` (port 3031) et l'entrée `diasporale` du catalogue de
 >    déploiement du moteur (service, Dockerfile en contexte `ECOSYSTEMES`, `site_url`
->    `https://diaspogab.com`, tous les `ARG NEXT_PUBLIC_*`). Ajoute `diaspogab.com` et
+>    `https://diasporale.com`, tous les `ARG NEXT_PUBLIC_*`). Ajoute `diasporale.com` et
 >    l'origine de recette aux origines de confiance de Better Auth du moteur (par variable,
 >    jamais en dur).
-> 3. Page d'accueil provisoire `/` de `diaspogab_com` : titre, « bientôt », aucun contenu
+> 3. Page d'accueil provisoire `/` de `diasporale_com` : titre, « bientôt », aucun contenu
 >    inventé (doctrine de communication publique) ; `/sante-fonctionnelle` qui répond 200.
 > 4. `Dockerfile` autoportant en contexte `ECOSYSTEMES` (copie du moteur puis de
->    DIASPOGAB, `bun install --frozen-lockfile` dans ANTIA, build dans l'app, image
+>    DIASPORALE, `bun install --frozen-lockfile` dans ANTIA, build dans l'app, image
 >    `node:20-alpine`, port 8080).
 > 5. `.gitignore`, `README` et `CLAUDE.md` du dépôt mis à jour (commandes réelles).
 > Interdits : aucun module métier, aucune table. Critère de sortie : `bun install` dans ANTIA
-> passe ; `bun run --cwd ANTIA dev:diaspogab` sert la page ; `bun run verify` du moteur reste
-> vert ; `docker build` du Dockerfile réussit en local ; commit dans DIASPOGAB et dans ANTIA.
+> passe ; `bun run --cwd ANTIA dev:diasporale` sert la page ; `bun run verify` du moteur reste
+> vert ; `docker build` du Dockerfile réussit en local ; commit dans DIASPORALE et dans ANTIA.
 
-**Critères de done.** Deux commits (ANTIA : workspaces et catalogue ; DIASPOGAB : squelette) ;
+**Critères de done.** Deux commits (ANTIA : workspaces et catalogue ; DIASPORALE : squelette) ;
 `verify` vert ; page servie ; image construite.
 **Vérification.** `bun run verify` ; `curl` de `/sante-fonctionnelle` ; `docker build`.
 **Couvre.** EXT-DG-01 (origines), EXT-DG-10 (coût : un seul projet Convex).
 
 ---
 
-### PROMPT PD1 — Domaine diaspora et réseau `diaspogab` dans le moteur (lot D1)
+### PROMPT PD1 — Domaine diaspora et réseau `diasporale` dans le moteur (lot D1)
 
-**Objectif.** Le réseau `diaspogab` existe dans le moteur avec sa politique d'adhésion, ses
+**Objectif.** Le réseau `diasporale` existe dans le moteur avec sa politique d'adhésion, ses
 facettes, sa tranche propre et ses tests.
 
 **Contexte.** Le moteur fournit `networks`, `persons`, `identityLinks`, `networkMemberships`,
 `personFacets` et `requireMembership` (cahier ANTIA §11–12). La doctrine `déclaré → vérifié`
 est celle du programme.
 
-> 1. `DIASPOGAB/packages/diaspogab-domain` : `facet.ts` (schéma de facette : `countryOfResidence`
+> 1. `DIASPORALE/packages/diasporale-domain` : `facet.ts` (schéma de facette : `countryOfResidence`
 >    ISO 3166-1 ≠ GA obligatoire, `city?`, `postSlug?`, `associationIds`, `arrivedAt?`,
 >    `helpAvailable`, visibilités par champ), `eligibility.ts` (statuts `en_attente | declaree |
 >    verifiee | suspendue | partie`, transitions, ce que chaque statut autorise — table du cahier
@@ -157,17 +157,17 @@ est celle du programme.
 >    sponsorPersonId, sponsoredPersonId, createdAt, revokedAt?}, `consularAttestations`
 >    {personId, subjectKind, subjectHash, result, country?, postSlug?, since?, consentId,
 >    requestedAt, respondedAt}, `communityImports` {importRef, kind, status, createdAt}),
->    `manifest.ts`, `membership.ts` (`joinDiaspogab` : crée l'adhésion `diaspogab` au statut
+>    `manifest.ts`, `membership.ts` (`joinDiasporale` : crée l'adhésion `diasporale` au statut
 >    issu de `eligibility`, la facette, et l'adhésion dérivée `antia` ; `sponsor`,
 >    `revokeSponsorship` ; `leave`), `hubs.ts` (`getCountryHub`, `listOpenCountries`,
 >    cron quotidien de matérialisation des compteurs), index `by_network_country`. Validateurs
->    précis. Seed du réseau `diaspogab` (`kind closed`, `parentId antia`, politique
+>    précis. Seed du réseau `diasporale` (`kind closed`, `parentId antia`, politique
 >    `declared_or_verified`, visibilité `network`, pays ouverts = `["FR"]`), idempotent, gardé par
 >    une confirmation hors production.
 > 3. Tests convex-test : un compte léger est `en_attente` et ne publie pas ; un parrainage le
 >    passe `declaree` ; l'adhésion `antia` dérivée existe ; `networkId` obligatoire sur toute
 >    query de la tranche ; un membre d'`antia` seul ne lit pas un contenu `network` de
->    `diaspogab` ; les compteurs de hub ne sont jamais calculés à la lecture.
+>    `diasporale` ; les compteurs de hub ne sont jamais calculés à la lecture.
 > Critère de sortie : typecheck convex 0 ; suite du moteur verte (ancienne et nouvelle) ; le
 > cliquet « toute query sociale est bornée par le réseau » couvre la tranche `diaspora`.
 
@@ -177,7 +177,7 @@ est celle du programme.
 
 ---
 
-### PROMPT PD2 — Entrer dans DIASPOGAB : IDN, compte léger, handle, consentements (lot D1)
+### PROMPT PD2 — Entrer dans DIASPORALE : IDN, compte léger, handle, consentements (lot D1)
 
 **Objectif.** Une personne entre par IDN ou par un code à usage unique, choisit son handle,
 consent, et voit son statut.
@@ -188,13 +188,13 @@ consent, et voit son statut.
 `social-features`. Les écrans E11, E12, E13 des specs design donnent la bifurcation
 d'accueil, l'onboarding en trois étapes et le parcours d'élévation.
 
-> 1. `apps/diaspogab_com` : routes `/entrer` (deux portes, IDN affichée en premier ; aucun mot
+> 1. `apps/diasporale_com` : routes `/entrer` (deux portes, IDN affichée en premier ; aucun mot
 >    de passe), `/bienvenue` (trois écrans : pays et ville avec `CountrySelect` ; handle et
 >    nom affiché via `HandleChoiceCard` ; consentements explicites non précochés : profil
 >    social, annuaire opt-in, notifications), `/parametres` (facette, confidentialité,
->    consentements, « Mes données »). Textes en français via i18n (`@diaspogab/features/i18n`,
+>    consentements, « Mes données »). Textes en français via i18n (`@diasporale/features/i18n`,
 >    fichiers `fr.json`, `en.json` vide pour l'instant).
-> 2. Composant `MembershipStatusBanner` (`@diaspogab/features`) : `en_attente` → « demandez un
+> 2. Composant `MembershipStatusBanner` (`@diasporale/features`) : `en_attente` → « demandez un
 >    parrainage ou vérifiez votre inscription consulaire » ; `declaree` → élévation (« Activer
 >    mon identité numérique IDN », « M'inscrire au consulat ») ; `verifiee` → badge. Les liens
 >    d'élévation renvoient vers identite.ga et consulat.ga ; le retour conserve la session
@@ -246,7 +246,7 @@ et accord du propriétaire requis (préalable).
 >    signature invalide, l'idempotence.
 > 3. ADR `docs/adr/0006-consulat-atteste-ne-federe-pas-d-identite.md` (gabarit du dépôt).
 > **Côté moteur** (`ANTIA/convex/modules/diaspora/attestation.ts`) :
-> 4. Mutation `requestConsularAttestation` : exige l'adhésion `diaspogab`, enregistre le
+> 4. Mutation `requestConsularAttestation` : exige l'adhésion `diasporale`, enregistre le
 >    consentement (`consents`, finalité `consular_attestation`), crée la ligne
 >    `consularAttestations` et planifie l'action `callAttestation` (clé de service en variable
 >    d'environnement du déploiement, jamais dans le code) ; à la réponse, pose
@@ -265,7 +265,7 @@ et accord du propriétaire requis (préalable).
 
 **Critères de done.** Contrat écrit ; PR ouverte côté consulat.ga ; R2 joué en dev.
 **Vérification.** Tests des deux côtés ; `grep` : aucune donnée hors contrat ; journal des deux côtés.
-**Couvre.** EXF-DG-03, 06 (boutons côté consulat.ga, posés dans la même PR : « Rejoindre DIASPOGAB », « Activer IDN »), EXT-DG-03, 04.
+**Couvre.** EXF-DG-03, 06 (boutons côté consulat.ga, posés dans la même PR : « Rejoindre DIASPORALE », « Activer IDN »), EXT-DG-03, 04.
 
 ---
 
@@ -273,24 +273,24 @@ et accord du propriétaire requis (préalable).
 
 **Objectif.** Le réseau vit : fil par pays et pour toute la diaspora, hub pays, profils avec
 facette, relations, abonnements, suggestions, stories, albums — à partir des surfaces du
-moteur, dans la charte DIASPOGAB.
+moteur, dans la charte DIASPORALE.
 
 **Contexte.** `social-features` (PA6) expose les écrans dupliqués de l'espace agent :
 `ReseauAgentPage` → `FeedPage` générique, `ProfilPersonnePage`, `PeoplePanel`, `GroupsPanel`,
 `EvenementsPanel`, `StoriesTray`, `AlbumPage`, coquille mobile, cartes flottantes ; les URL
 sont paramétrées par un adaptateur de routage et un `NetworkProvider`. La direction artistique
-DIASPOGAB (A7) est arrêtée.
+DIASPORALE (A7) est arrêtée.
 
-> 0. Passe `frontend-design` : à partir de la décision A7, écris `DIASPOGAB/docs/02_CHARTE_DIASPOGAB.md`
+> 0. Passe `frontend-design` : à partir de la décision A7, écris `DIASPORALE/docs/02_CHARTE_DIASPORALE.md`
 >    (parti pris, palette en jetons, typographie, rayons, états, thème sombre, exemples) et
->    `packages/diaspogab-features/src/styles/tokens.css` posé sur `[data-charte="diaspogab"]`.
+>    `packages/diasporale-features/src/styles/tokens.css` posé sur `[data-charte="diasporale"]`.
 >    Aucune couleur littérale hors de ce fichier ; cliquet de charte du moteur étendu à l'app.
 > 1. Routes : `/fil` (volets `?tab=` relations, groupes, pages, evenements, directs ; portées
 >    « Mon pays » par défaut, « Toute la diaspora », « Récents », « Pour vous »), `/pays/[iso]`
 >    (hub : `StatCounter` ×4 depuis `countryHubs`, fil local, évènements, associations,
 >    entreprises, pages officielles, membres opt-in), `/@[handle]`, `/@[handle]/albums/[id]`,
 >    `/actus`, `/parametres` (déjà), coquille mobile et bureau (bascule 960 px héritée).
->    `NetworkProvider` = `diaspogab` ; aucune URL `/espace` ne subsiste (grep nul).
+>    `NetworkProvider` = `diasporale` ; aucune URL `/espace` ne subsiste (grep nul).
 > 2. Composeur : audience, pays ou portée `diaspora`, case « Publier aussi sur ANTIA »
 >    (seulement si audience publique) avec une ligne d'explication ; `CountryChip` et
 >    `ScopeBadge` sur toute carte ; badges P1 (Officiel, Vérifié, Agent public, Communauté)
@@ -303,7 +303,7 @@ DIASPOGAB (A7) est arrêtée.
 >    (liste fermée de remplacements dans `i18n/fr.json`) ; fuseau horaire = pays de résidence.
 > 6. Tests : composants montés clés (fil, hub, composeur avec la case ANTIA, profil) ; test de
 >    contrat « aucun `/espace` » ; test « un contenu `network` n'est jamais rendu avec
->    `networkId` ≠ diaspogab » ; parité cochée pour chaque écran repris
+>    `networkId` ≠ diasporale » ; parité cochée pour chaque écran repris
 >    (`docs/03_PARITE_SURFACES.md`).
 > Critère de sortie : R4 joué (contexte séparé) avec l'application ANTIA de dev ou une query
 > directe ; typecheck, tests, lint verts ; `web-design-guidelines` sans défaut bloquant ;
@@ -351,7 +351,7 @@ claims), `companies`, `communityEvents`, `posts`, `orgs` (postes, `jurisdictionC
 >    d'office, signataires nommés par l'association.
 > 5. Pages d'entreprise : création par un membre vérifié, preuves (registre, mandat), fiche,
 >    publications ; aucune vitrine premium (D4).
-> 6. UI (`@diaspogab/features`) : `AssociationCard`, `CompanyCard`, listings `/associations`,
+> 6. UI (`@diasporale/features`) : `AssociationCard`, `CompanyCard`, listings `/associations`,
 >    `/entreprises`, fiches `/pages/[handle]` (hérité `ProfilPagePage` avec autorité générique),
 >    bouton « Écrire » (messagerie, jamais de coordonnées), bouton « Revendiquer cette page ».
 > 7. Tests : allowlist d'export ; idempotence d'import ; un membre ordinaire ne publie pas sur
@@ -375,7 +375,7 @@ recette complète du lot ; mise en ligne vérifiée.
 `appeals`, `moderationTeams`, limitation de débit, effacement RGPD). Les specs E16 (file de
 modération) et P4 (états de modération visibles pour l'auteur).
 
-> 1. `moderationTeams` : équipe `diaspogab/FR` (rôles modérateur pays) et équipe réseau ;
+> 1. `moderationTeams` : équipe `diasporale/FR` (rôles modérateur pays) et équipe réseau ;
 >    écran `/moderation` (rôle) : file par pays (tous types de contenus), masquer, retirer,
 >    avertir, sourdine temporaire, suspendre, exclure ; motifs ; recours ; pages à vérifier ;
 >    évènements en relecture. `ModerationBanner` pour l'auteur (en relecture, publié, refusé).
@@ -387,14 +387,14 @@ modération) et P4 (états de modération visibles pour l'auteur).
 > 3. Données : `/parametres/donnees` (export, effacement avec délai et confirmation,
 >    consentements, visibilité annuaire `hidden | country | network`) ; test R9 : après
 >    effacement, aucune table sociale ni blob ne porte la personne.
-> 4. Vitrine `/` : ce qu'est DIASPOGAB, comment on entre, les pays ouverts, les compteurs
+> 4. Vitrine `/` : ce qu'est DIASPORALE, comment on entre, les pays ouverts, les compteurs
 >    matérialisés (jamais un chiffre en dur), mentions légales et politique de confidentialité
 >    (loi n° 001/2011 modifiée par la loi n° 025/2023, APDPVP, RGPD pour les résidents de l'UE,
 >    responsable de traitement **à confirmer par le juriste** : marqueur `TODO JURISTE` visible
 >    en recette, bloquant pour la mise en ligne) ; cliquet de communication publique (aucun
 >    pourcentage, audit ou hébergement affirmé sans preuve).
 > 5. Recette du lot D1 : parcours R1, R2, R3, R4, R5, R6, R8, R9, R10 joués en recette,
->    consignés dans `DIASPOGAB/docs/04_RECETTE_D1.md` avec captures ; `web-design-guidelines`
+>    consignés dans `DIASPORALE/docs/04_RECETTE_D1.md` avec captures ; `web-design-guidelines`
 >    sur toutes les routes ; accessibilité AA.
 > 6. Mise en ligne (seulement si les textes légaux sont validés et la décision A10 rendue) :
 >    déploiement du moteur en production (backend d'abord), puis de l'app ; domaine ; preuve
@@ -484,15 +484,15 @@ Le moteur fournit push (PA5), préférences, iAsted (si PA7 l'a porté ; sinon c
 
 ### PROMPT PD9 — Application mobile Expo (lot D3)
 
-**Objectif.** DIASPOGAB dans la poche : fil, hub, évènements, messagerie, appels, stories,
+**Objectif.** DIASPORALE dans la poche : fil, hub, évènements, messagerie, appels, stories,
 push.
 
 **Contexte.** La diaspora est mobile ; consulat.ga a `citizen-mobile` (Expo 57, Expo Router,
 `mobile-ui-v2`) et la maquette « Accueil — Feed Communauté » (pager horizontal, header
 stable). Le moteur expose la même API ; Better Auth `bearer` pour le mobile.
 
-> 1. `DIASPOGAB/apps/diaspogab_mobile` (Expo, Expo Router, React Native, `@antia/api` en mode
->    bearer, i18n partagé) ; design system mobile : jetons DIASPOGAB, composants `FlatCard`,
+> 1. `DIASPORALE/apps/diasporale_mobile` (Expo, Expo Router, React Native, `@antia/api` en mode
+>    bearer, i18n partagé) ; design system mobile : jetons DIASPORALE, composants `FlatCard`,
 >    `Badge`, `Avatar`, `Chip`, `Sheet` (reprise des patrons de `mobile-ui-v2`, pas de copie de
 >    code consulaire).
 > 2. Écrans : accueil paginé (fil pays ↔ toute la diaspora), hub pays, article et commentaires,
@@ -514,7 +514,7 @@ stable). Le moteur expose la même API ; Better Auth `bearer` pour le mobile.
 
 **Objectif.** Prouver, pas supposer.
 
-> 1. `DIASPOGAB/docs/05_RAPPORT_PARITE_ET_LANCEMENT.md` : par module dupliqué, la liste de
+> 1. `DIASPORALE/docs/05_RAPPORT_PARITE_ET_LANCEMENT.md` : par module dupliqué, la liste de
 >    parité source ↔ cible cochée (fonctionnalités, tests, gardes) ; les adaptations (liste
 >    fermée, règle 3) ; les conservations ; les écarts assumés ; les TODO.
 > 2. Vérifications globales : `bun run verify` du moteur et de l'app ; cliquets (réseau
@@ -557,5 +557,5 @@ stable). Le moteur expose la même API ; Better Auth `bearer` pour le mobile.
       annonce ; aucun chiffre public n'est affirmé sans mesure.
 - [ ] Les textes légaux sont validés par un juriste ; le dossier APDPVP est déposé ; le
       registre des consentements est alimenté.
-- [ ] `bun run verify` vert dans ANTIA (moteur + DIASPOGAB) ; mise en ligne vérifiée après coup
+- [ ] `bun run verify` vert dans ANTIA (moteur + DIASPORALE) ; mise en ligne vérifiée après coup
       et rapportée ; mémoire du programme mise à jour.
