@@ -1,0 +1,123 @@
+/**
+ * Contrat `DIASPORA-ATTESTATION-V1` — côté CONSOMMATEUR (le moteur).
+ *
+ * consulat.ga n'est pas un fournisseur d'identité : il ATTESTE, avec le
+ * consentement de la personne, qu'une inscription consulaire active existe.
+ * La réponse est minimale et FERMÉE : un booléen, un pays, un poste, un
+ * statut, deux dates. Ce module la relit champ par champ et refuse toute
+ * réponse qui porterait autre chose — c'est la garantie, testée, qu'aucune
+ * donnée consulaire (nom, passeport, NIP, état civil, mineur) n'entre jamais
+ * dans le moteur (cahier §5, invariant 4).
+ *
+ * Les types sont COPIÉS chez le consommateur (doctrine d'interopérabilité) :
+ * la source du contrat est `GABON_DIPLOMATIE/docs/contrats/DIASPORA-ATTESTATION-V1.md`.
+ */
+import { isResidenceCountry, type CountryCode } from "./countries"
+import { ok, refuse, type Result } from "./result"
+
+export const ATTESTATION_CONTRACT = "DIASPORA-ATTESTATION-V1"
+
+export const ATTESTATION_SUBJECT_KINDS = ["idnSub", "emailHash"] as const
+export type AttestationSubjectKind = (typeof ATTESTATION_SUBJECT_KINDS)[number]
+
+export const REGISTRATION_STATUSES = ["active", "expired", "none"] as const
+export type RegistrationStatus = (typeof REGISTRATION_STATUSES)[number]
+
+/** La requête : un sujet (jamais en clair pour l'e-mail), une référence de consentement, une date. */
+export interface AttestationRequest {
+  readonly subjectKind: AttestationSubjectKind
+  readonly subject: string
+  readonly consentRef: string
+  readonly requestedAt: number
+}
+
+/** La réponse — et RIEN d'autre. */
+export interface AttestationResponse {
+  readonly verified: boolean
+  readonly countryOfResidence?: CountryCode
+  readonly postSlug?: string
+  readonly registrationStatus?: RegistrationStatus
+  readonly since?: number
+  readonly attestedAt: number
+}
+
+const RESPONSE_FIELDS: ReadonlySet<string> = new Set([
+  "verified",
+  "countryOfResidence",
+  "postSlug",
+  "registrationStatus",
+  "since",
+  "attestedAt",
+])
+
+export const ATTESTATION_RESPONSE_REFUSALS = [
+  "response_not_object",
+  "response_field_not_allowed",
+  "response_field_invalid",
+  "response_incoherent",
+] as const
+export type AttestationResponseRefusal = (typeof ATTESTATION_RESPONSE_REFUSALS)[number]
+
+/** Slug de poste : minuscules, chiffres et tirets — un identifiant public, jamais un nom de personne. */
+const POST_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+
+function isTimestamp(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value > 0
+}
+
+/**
+ * Relit une réponse reçue (JSON déjà signé et vérifié par l'action) : tout
+ * champ hors contrat est un REFUS, pas un oubli silencieux. Une réponse
+ * `verified: true` doit porter le pays, le poste et un statut `active`.
+ */
+export function parseAttestationResponse(raw: unknown): Result<AttestationResponse, AttestationResponseRefusal> {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return refuse("response_not_object")
+  const record = raw as Record<string, unknown>
+  for (const key of Object.keys(record)) {
+    if (!RESPONSE_FIELDS.has(key)) return refuse("response_field_not_allowed")
+  }
+  const { verified, countryOfResidence, postSlug, registrationStatus, since, attestedAt } = record
+  if (typeof verified !== "boolean" || !isTimestamp(attestedAt)) return refuse("response_field_invalid")
+  if (countryOfResidence !== undefined && (typeof countryOfResidence !== "string" || !isResidenceCountry(countryOfResidence))) {
+    return refuse("response_field_invalid")
+  }
+  if (postSlug !== undefined && (typeof postSlug !== "string" || !POST_SLUG.test(postSlug))) {
+    return refuse("response_field_invalid")
+  }
+  if (
+    registrationStatus !== undefined &&
+    (typeof registrationStatus !== "string" || !(REGISTRATION_STATUSES as readonly string[]).includes(registrationStatus))
+  ) {
+    return refuse("response_field_invalid")
+  }
+  if (since !== undefined && !isTimestamp(since)) return refuse("response_field_invalid")
+  if (verified && (countryOfResidence === undefined || postSlug === undefined || registrationStatus !== "active")) {
+    return refuse("response_incoherent")
+  }
+  if (!verified && registrationStatus === "active") return refuse("response_incoherent")
+  return ok({
+    verified,
+    attestedAt,
+    ...(countryOfResidence !== undefined ? { countryOfResidence: countryOfResidence as CountryCode } : {}),
+    ...(postSlug !== undefined ? { postSlug } : {}),
+    ...(registrationStatus !== undefined ? { registrationStatus: registrationStatus as RegistrationStatus } : {}),
+    ...(since !== undefined ? { since } : {}),
+  })
+}
+
+/** Une demande d'attestation par 24 h et par personne (PD3, point 4). */
+export const ATTESTATION_REQUEST_INTERVAL_MS = 24 * 60 * 60 * 1000
+
+export function canRequestAttestation(lastRequestedAt: number | null, now: number): boolean {
+  return lastRequestedAt === null || now - lastRequestedAt >= ATTESTATION_REQUEST_INTERVAL_MS
+}
+
+/**
+ * Ce que l'interface dit d'une réponse. Le refus ou l'absence est expliqué SANS
+ * la raison consulaire (EXF-DG-03) : « nous n'avons pas pu confirmer ».
+ */
+export type AttestationOutcome = "verified" | "not_confirmed"
+
+export function attestationOutcome(response: AttestationResponse): AttestationOutcome {
+  return response.verified ? "verified" : "not_confirmed"
+}
