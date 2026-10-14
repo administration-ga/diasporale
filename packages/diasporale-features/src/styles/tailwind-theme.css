@@ -1,0 +1,189 @@
+/*
+ * Couche Tailwind v4 de DIASPORALE — relie les utilitaires aux jetons de la
+ * charte (`tokens.css`). À importer APRÈS `@import "tailwindcss"`.
+ *
+ * PROVISOIRE pour la famille shadcn : au câblage PD0, `@antia/ui/styles.css`
+ * apporte la même liaison pour les jetons du contrat ; seuls les utilitaires
+ * propres à DIASPORALE (étiquette, badges, modération, démonstration) restent
+ * dans ce fichier.
+ */
+
+@custom-variant dark (&:is(.dark *, .dark));
+
+@theme inline {
+  /* Polices — portées par la charte sur le nœud [data-charte]. */
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
+
+  /* Famille shadcn */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-light: var(--success-light);
+  --color-warning: var(--warning);
+  --color-warning-light: var(--warning-light);
+  --color-destructive-light: var(--destructive-light);
+
+  /* Rôles propres à DIASPORALE (charte §5 à §7) */
+  --color-tag: var(--dg-tag-bg);
+  --color-tag-foreground: var(--dg-tag-fg);
+  --color-tag-code: var(--dg-tag-code);
+  --color-tag-eyelet: var(--dg-tag-eyelet);
+  --color-tag-eyelet-ring: var(--dg-tag-eyelet-ring);
+  --color-tag-diaspora: var(--dg-tag-diaspora-bg);
+  --color-tag-diaspora-foreground: var(--dg-tag-diaspora-fg);
+  --color-monument: var(--dg-monument);
+  --color-official: var(--dg-official-bg);
+  --color-official-foreground: var(--dg-official-fg);
+  --color-verified: var(--dg-verified-bg);
+  --color-verified-foreground: var(--dg-verified-fg);
+  --color-agent: var(--dg-agent-bg);
+  --color-agent-foreground: var(--dg-agent-fg);
+  --color-community: var(--dg-community-bg);
+  --color-community-foreground: var(--dg-community-fg);
+  --color-sponsored: var(--dg-sponsored-bg);
+  --color-sponsored-foreground: var(--dg-sponsored-fg);
+  --color-pending: var(--dg-moderation-pending-bg);
+  --color-pending-foreground: var(--dg-moderation-pending-fg);
+  --color-pending-edge: var(--dg-moderation-pending-edge);
+  --color-published: var(--dg-moderation-published-bg);
+  --color-published-foreground: var(--dg-moderation-published-fg);
+  --color-published-edge: var(--dg-moderation-published-edge);
+  --color-rejected: var(--dg-moderation-rejected-bg);
+  --color-rejected-foreground: var(--dg-moderation-rejected-fg);
+  --color-rejected-edge: var(--dg-moderation-rejected-edge);
+  --color-demo: var(--dg-demo-bg);
+  --color-demo-foreground: var(--dg-demo-fg);
+  --color-demo-edge: var(--dg-demo-edge);
+  --color-ink-subtle: var(--ink-500);
+  --color-scrim: var(--dg-scrim);
+  --color-avatar-foreground: var(--esp-on-avatar);
+  --color-avatar-1: var(--esp-ava-1);
+  --color-avatar-2: var(--esp-ava-2);
+  --color-avatar-3: var(--esp-ava-3);
+  --color-avatar-4: var(--esp-ava-4);
+  --color-avatar-5: var(--esp-ava-5);
+  --color-avatar-6: var(--esp-ava-6);
+
+  /* Rayons — lus sur la charte : l'utilitaire suit le thème. */
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-3xl: var(--radius-3xl);
+
+  /* Reliefs nommés de la charte. */
+  --shadow-card: var(--esp-shadow-card);
+  --shadow-card-hover: var(--esp-shadow-card-hover);
+  --shadow-float: var(--esp-shadow-float);
+  --shadow-sheet: var(--shadow-lg);
+  --shadow-focus: var(--shadow-focus);
+
+  /* Mouvement */
+  --ease-charte: var(--dg-ease-out);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.55;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    color: var(--foreground);
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
+
+  button,
+  a,
+  [role="button"],
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Entrée des cartes : 160 ms, translation de 4 px — coupée par le mouvement réduit. */
+@keyframes dg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-rise {
+  animation: dg-rise var(--dg-duration-fast) var(--dg-ease-out) both;
+}
+
+@keyframes dg-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility animate-fade {
+  animation: dg-fade var(--dg-duration-base) var(--dg-ease-out) both;
+}
