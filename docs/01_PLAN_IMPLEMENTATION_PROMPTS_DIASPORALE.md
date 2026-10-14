@@ -26,7 +26,7 @@ dependances:
 | b) Charte DIASPORALE (`docs/03_CHARTE_DIASPORALE.md`, jetons `[data-charte="diasporale"]`) | 2026-10-14 | `8b1306a` |
 | c) `apps/diasporale_com` sur fournisseur factice (R1 à blanc sur :3031) | 2026-10-14 | `f5aff56` |
 | d) `packages/diasporale-features` (C1–C17, CountrySwitch, badges, ModerationBanner, états vides) | 2026-10-14 | `b953739` |
-| e) Contrats côté gabon-diplomatie (PR brouillon) + fournisseur d'attestation factice | — | fournisseur factice et lecture du contrat côté domaine : `bb76017`, `b953739` ; PR à ouvrir |
+| e) Contrats côté gabon-diplomatie (PR brouillon) + fournisseur d'attestation factice | 2026-10-15 | PR brouillon administration-ga/gabon-diplomatie#184 (`7d01f215`) et #185 (`540d3c45`), non fusionnées ; fournisseur factice `b953739`, lecture stricte `bb76017` |
 | PD0 → PD10 | — | — (attendent le moteur) |
 
 Vérifications des étapes closes :
@@ -41,6 +41,14 @@ Vérifications des étapes closes :
   → France / Lyon → identifiant → consentements → hub), 320, 375 et 1452 px sans défilement
   horizontal, thèmes clair et sombre, console sans erreur. Cliquets : clés i18n (aucune clé
   morte, codes d'erreur fermés), aucune couleur ni chaîne affichée en dur.
+- **e)** Côté gabon-diplomatie, sur deux branches en worktree (le `main` partagé n'est pas
+  touché) : #184 `DIASPORA-ATTESTATION-V1` (route signée HMAC, exclusions indiscernables,
+  idempotence par `consentRef`, journal à empreinte, correspondance e-mail par
+  `hashPii`, ADR-0006 proposé) — 42 tests ; #185 `DIASPORA-COMMUNAUTE-V1` (export public
+  en liste blanche, signature de la requête entière, pagination) — 17 tests ; suite backend
+  complète verte (2 537 tests). Restent au propriétaire et au juriste : clés
+  `DIASPORA_PARTNER_KEYS`, validation juridique, durée du journal, `convex codegen` sur un
+  déploiement de développement avant fusion.
 - **d)** 142 tests (parcours R1, R2, R3 sur le magasin de démonstration, composants,
   parité fr / en, contrastes). Lancer : `bun install` puis `bun run dev` à la racine de
   DIASPORALE (installation provisoire ; elle passe dans `ANTIA/` à PD0).
