@@ -48,7 +48,7 @@ Règles d'exécution héritées du programme :
 - [ ] Dossier APDPVP et analyse d'impact lancés (juriste) ; mesure de la population éligible
       faite par le propriétaire (cahier §6.5).
 - [ ] Pour PD3 et PD5 : accord du propriétaire et validation juridique de l'attestation
-      consulaire ; coordination avec le développeur qui publie la prod de gabon-diplomatie.
+      consulaire ; coordination avec l'équipe qui publie gabon-diplomatie de gabon-diplomatie.
 
 ## 2. Préambule commun (à coller en tête de chaque prompt)
 
@@ -225,8 +225,8 @@ ne circule.
 **Contexte.** consulat.ga n'est pas un fournisseur OIDC et ne doit pas le devenir (IDN est
 l'IdP unique déclaré) ; il atteste. Côté gabon-diplomatie, le backend est
 `packages/backend/convex` (`http.ts`, `schemas/profiles.ts`, `consularRegistrations`,
-`users.idnSub`, `users.email`) ; la prod est publiée hors du dépôt par un autre développeur
-et la CI est coupée : **ce prompt livre une PR, pas une publication**. Validation juridique
+`users.idnSub`, `users.email`) ; la publication de gabon-diplomatie suit sa propre gouvernance
+: **ce prompt livre une PR, pas une publication**. Validation juridique
 et accord du propriétaire requis (préalable).
 
 > **Côté gabon-diplomatie** (branche `feat/diaspora-attestation-v1`, PR) :
@@ -260,7 +260,7 @@ et accord du propriétaire requis (préalable).
 >    donnée hors contrat persistée (test qui inspecte la ligne écrite).
 > Critère de sortie : PR gabon-diplomatie ouverte et verte (suite + lint du périmètre) ;
 > moteur vert ; recette croisée réelle en **dev** (déploiement dev de gabon-diplomatie
-> `compassionate-mallard-323` ou un déploiement de recette créé par le propriétaire) : R2 joué
+> ou un déploiement de recette créé par le propriétaire) : R2 joué
 > ; aucune commande vers la prod consulaire.
 
 **Critères de done.** Contrat écrit ; PR ouverte côté consulat.ga ; R2 joué en dev.

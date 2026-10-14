@@ -42,7 +42,7 @@
   domaines reste au propriétaire ; aucune commande vers un déploiement de production sans
   décision explicite ; jamais de `--rapide` sans demande.
 - Dépôts voisins touchés par ce projet : `../GABON_DIPLOMATIE` (contrats `DIASPORA-ATTESTATION-V1`
-  et `DIASPORA-COMMUNAUTE-V1`, par PR, en coordination avec le développeur qui publie sa prod),
+  et `DIASPORA-COMMUNAUTE-V1`, par PR, en coordination avec l'équipe qui publie gabon-diplomatie),
   `../../SERVICES_TRANSVERSES/identite.ga` (client OIDC par le portail développeur).
 
 ## Vérification

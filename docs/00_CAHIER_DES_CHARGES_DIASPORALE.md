@@ -43,7 +43,7 @@ association), l'attestation consulaire, les hubs pays, l'import des objets publi
 consulat.ga et sa charte.
 
 Ce qu'il n'est pas : une nouvelle application de consulat.ga (le réseau ne vit pas dans la base
-consulaire — passeports, état civil, renseignement — règle R7 du plan), une base de données
+consulaire — passeports, état civil, données sensibles — règle R7 du plan), une base de données
 sur la diaspora (aucune donnée consulaire n'est copiée), un fil déversoir (le contexte est le
 pays, la confiance est visible, la modération est par pays).
 
@@ -723,7 +723,7 @@ consulaires ; l'application de bureau ; le mode hors ligne.
 | Risque | Mesure |
 |---|---|
 | Population éligible plus faible que 4 500 | mesurer avant d'annoncer ; comptes légers et parrainage ; associations relais ; lancement France |
-| Attestation consulaire retardée (litige, formalité, publication de gabon-diplomatie hors dépôt) | D1 démarre avec IDN, comptes légers et parrainage ; le badge consulaire arrive quand le contrat est en place |
+| Attestation consulaire retardée (formalités ou gouvernance de publication côté consulat.ga) | D1 démarre avec IDN, comptes légers et parrainage ; le badge consulaire arrive quand le contrat est en place |
 | Réseau vide | import public, pages officielles, cold start par pays, états vides génératifs |
 | Confusion officiel / communauté | badges calculés, pages Officiel seulement par import ou fédération |
 | Arnaques (logement, ventes) | logement réservé aux vérifiés, signalement en un geste, messagerie traçable, guide anti-arnaque |
