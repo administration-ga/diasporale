@@ -13,6 +13,41 @@ dependances:
 
 # DIASPORALE.COM — Plan d'implémentation en prompts
 
+## État d'avancement (tenu par la session de construction)
+
+> Session de construction ouverte le 14/10/2026 (Opus 5.5, effort maximal). Le moteur ANTIA
+> se construit en parallèle : tant qu'il n'existe pas, DIASPORALE avance sur ce qui n'en
+> dépend pas (étapes a → e du prompt de lancement, `docs/02`), puis enchaîne PD0 → PD10
+> au fil des jalons d'ANTIA (PA2, PA3, PA7).
+
+| Prompt | Clos le | Commit |
+|---|---|---|
+| a) `packages/diasporale-domain` (domaine pur, `bun test`) | 2026-10-14 | `b214e81` |
+| b) Charte DIASPORALE (`docs/03_CHARTE_DIASPORALE.md`, jetons `[data-charte="diasporale"]`) | — | — |
+| c) `apps/diasporale_com` sur fournisseur factice (R1 à blanc sur :3031) | — | — |
+| d) `packages/diasporale-features` (C1–C17, CountrySwitch, badges, ModerationBanner, états vides) | — | — |
+| e) Contrats côté gabon-diplomatie (PR brouillon) + fournisseur d'attestation factice | — | — |
+| PD0 → PD10 | — | — (attendent le moteur) |
+
+Vérifications des étapes closes :
+- **a)** 197 cas `bun test`, couverture lignes et fonctions 100 % imposée par
+  `packages/diasporale-domain/bunfig.toml`, `tsc --noEmit` 0.
+
+**Arbitrages pris par défaut** (recommandations du cahier `docs/00` §20, retenues comme
+valeurs de travail jusqu'à décision écrite du propriétaire) : A1 ANTIA / `antia.ga`, DIASPORALE.COM
+confirmé ; A2 un moteur, trois réseaux, deux dépôts ; A3 un parrain vérifié depuis plus de
+30 jours, dix parrainages par fenêtre glissante de 30 jours, `en_attente` en lecture seule ;
+A4 attestation consulaire par contrat minimal consenti, après validation juridique (sinon
+lancement sans badge consulaire) ; A5 Espace Communauté de consulat.ga gelé puis redirigé
+après D1 ; A6 carte téléphone 440 × 956, plancher 375 ; A7 famille Consulaire / Sable sur
+le squelette de l'espace agent ; A8 France seule au lancement, puis Espagne, Belgique,
+Canada, Maroc, Sénégal ; A9 aucune monétisation en V1 ; A10 Convex (région UE si
+disponible) et hébergement à décider ; A11 dossier APDPVP et analyse d'impact dès D0.
+
+**Numérotation des documents** : `docs/02` est pris par le prompt de lancement ; la charte
+devient `docs/03`, la parité des surfaces `docs/04`, la recette D1 `docs/05`, le rapport de
+parité et de lancement `docs/06` (décalage d'un rang par rapport aux prompts ci-dessous).
+
 ## 0. Objet et mode d'emploi
 
 Ce plan exécute le cahier des charges `docs/00` en **onze prompts** (PD0 → PD10), rangés par
