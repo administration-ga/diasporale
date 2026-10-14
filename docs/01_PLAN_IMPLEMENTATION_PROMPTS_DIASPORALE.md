@@ -23,15 +23,27 @@ dependances:
 | Prompt | Clos le | Commit |
 |---|---|---|
 | a) `packages/diasporale-domain` (domaine pur, `bun test`) | 2026-10-14 | `b214e81` |
-| b) Charte DIASPORALE (`docs/03_CHARTE_DIASPORALE.md`, jetons `[data-charte="diasporale"]`) | — | — |
-| c) `apps/diasporale_com` sur fournisseur factice (R1 à blanc sur :3031) | — | — |
-| d) `packages/diasporale-features` (C1–C17, CountrySwitch, badges, ModerationBanner, états vides) | — | — |
-| e) Contrats côté gabon-diplomatie (PR brouillon) + fournisseur d'attestation factice | — | — |
+| b) Charte DIASPORALE (`docs/03_CHARTE_DIASPORALE.md`, jetons `[data-charte="diasporale"]`) | 2026-10-14 | `8b1306a` |
+| c) `apps/diasporale_com` sur fournisseur factice (R1 à blanc sur :3031) | 2026-10-14 | `f5aff56` |
+| d) `packages/diasporale-features` (C1–C17, CountrySwitch, badges, ModerationBanner, états vides) | 2026-10-14 | `b953739` |
+| e) Contrats côté gabon-diplomatie (PR brouillon) + fournisseur d'attestation factice | — | fournisseur factice et lecture du contrat côté domaine : `bb76017`, `b953739` ; PR à ouvrir |
 | PD0 → PD10 | — | — (attendent le moteur) |
 
 Vérifications des étapes closes :
 - **a)** 197 cas `bun test`, couverture lignes et fonctions 100 % imposée par
-  `packages/diasporale-domain/bunfig.toml`, `tsc --noEmit` 0.
+  `packages/diasporale-domain/bunfig.toml`, `tsc --noEmit` 0 ; 206 cas depuis le module
+  d'attestation (`bb76017`).
+- **b)** `tokens-contrast.test.ts` : 97 contrôles (paires texte ≥ 4,5:1, contours et focus
+  ≥ 3:1, dans les deux thèmes ; contrat de thème couvert ; aucune primitive redéclarée en
+  sombre ; drapeau réservé au filet). Le cliquet a recalé le texte discret (4,499:1 → 4,70:1).
+- **c)** `bun run verify` vert (typecheck des trois paquets, 206 + 142 + 14 tests, lint).
+  Recette à blanc dans le navigateur sur `http://localhost:3031` : R1 complet (IDN fictif
+  → France / Lyon → identifiant → consentements → hub), 320, 375 et 1452 px sans défilement
+  horizontal, thèmes clair et sombre, console sans erreur. Cliquets : clés i18n (aucune clé
+  morte, codes d'erreur fermés), aucune couleur ni chaîne affichée en dur.
+- **d)** 142 tests (parcours R1, R2, R3 sur le magasin de démonstration, composants,
+  parité fr / en, contrastes). Lancer : `bun install` puis `bun run dev` à la racine de
+  DIASPORALE (installation provisoire ; elle passe dans `ANTIA/` à PD0).
 
 **Arbitrages pris par défaut** (recommandations du cahier `docs/00` §20, retenues comme
 valeurs de travail jusqu'à décision écrite du propriétaire) : A1 ANTIA / `antia.ga`, DIASPORALE.COM
