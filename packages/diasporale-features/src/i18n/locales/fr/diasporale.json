@@ -341,6 +341,7 @@
     "bodyLabel": "Votre message",
     "placeholder": "Une information utile pour la communauté — {{country}} ?",
     "counter": "{{count}} / {{max}} caractères",
+    "draftKept": "brouillon gardé sur cet appareil",
     "reachLegend": "Où publier",
     "reachLocal": "Dans le hub {{country}}",
     "reachDiaspora": "Pour toute la diaspora",

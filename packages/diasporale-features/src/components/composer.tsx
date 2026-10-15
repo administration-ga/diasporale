@@ -30,6 +30,29 @@ type ComposerValues = z.infer<typeof composerSchema>
 
 const DEFAULTS: ComposerValues = { body: "", reach: "local", audience: "public", alsoOnRoot: false }
 
+/** Un brouillon relu du navigateur : la forme du composeur, sans exiger un texte non vide. */
+const draftSchema = composerSchema.extend({ body: z.string().max(POST_BODY_MAX + 200) })
+/** Attente après la dernière frappe avant de garder le brouillon. */
+const DRAFT_SAVE_MS = 400
+
+function readDraft(key: string): ComposerValues | null {
+  try {
+    const parsed = draftSchema.safeParse(JSON.parse(window.localStorage.getItem(key) ?? "null"))
+    return parsed.success ? parsed.data : null
+  } catch {
+    return null
+  }
+}
+
+function writeDraft(key: string, values: ComposerValues): void {
+  try {
+    if (values.body.trim().length === 0) window.localStorage.removeItem(key)
+    else window.localStorage.setItem(key, JSON.stringify(values))
+  } catch {
+    // Stockage refusé (navigation privée…) : le brouillon vit le temps de la page.
+  }
+}
+
 /**
  * Composeur en feuille (charte §8, EXF-DG-10/11). La portée est visible avant
  * l'envoi (le pays de l'auteur, ou toute la diaspora). La visibilité reste
@@ -41,6 +64,11 @@ export function PostComposerSheet(props: {
   onOpenChange: (open: boolean) => void
   memberCountry: CountryCode
   openCountries: readonly CountryCode[]
+  /**
+   * Brouillon durable (EXF-DG-10) : gardé dans CE navigateur sous cette clé (une
+   * par personne), rétabli à l'ouverture, effacé à la publication. Jamais envoyé.
+   */
+  draftKey?: string
 }) {
   const { t, locale } = useDiasporaleT()
   const actions = useActions()
@@ -56,6 +84,22 @@ export function PostComposerSheet(props: {
     if (!rootAllowed) form.setValue("alsoOnRoot", false)
   }, [rootAllowed, form])
 
+  // Le brouillon gardé est rétabli une fois, au montage (le stockage n'existe pas au rendu serveur).
+  const draftKey = props.draftKey
+  useEffect(() => {
+    if (!draftKey) return
+    const draft = readDraft(draftKey)
+    if (draft) form.reset(draft)
+  }, [draftKey, form])
+
+  // Puis gardé à chaque pause dans la frappe.
+  const alsoOnRoot = useWatch({ control: form.control, name: "alsoOnRoot" })
+  useEffect(() => {
+    if (!draftKey) return
+    const timer = setTimeout(() => writeDraft(draftKey, { body, reach, audience, alsoOnRoot }), DRAFT_SAVE_MS)
+    return () => clearTimeout(timer)
+  }, [draftKey, body, reach, audience, alsoOnRoot])
+
   const onSubmit = form.handleSubmit(async (values) => {
     const result = await actions.publish({
       body: values.body,
@@ -70,6 +114,7 @@ export function PostComposerSheet(props: {
       return
     }
     toast.success(result.value.moderation === "published" ? t("composer.published") : t("composer.sentForReview"))
+    if (draftKey) writeDraft(draftKey, DEFAULTS)
     form.reset(DEFAULTS)
     props.onOpenChange(false)
   })
@@ -86,7 +131,11 @@ export function PostComposerSheet(props: {
             id={`${ids}-corps`}
             label={t("composer.bodyLabel")}
             error={bodyError ? t(`errors.${bodyError}`) : undefined}
-            hint={t("composer.counter", { count: body.length, max: POST_BODY_MAX })}
+            hint={
+              draftKey && body.trim().length > 0
+                ? `${t("composer.counter", { count: body.length, max: POST_BODY_MAX })} · ${t("composer.draftKept")}`
+                : t("composer.counter", { count: body.length, max: POST_BODY_MAX })
+            }
           >
             {(control) => (
               <Textarea

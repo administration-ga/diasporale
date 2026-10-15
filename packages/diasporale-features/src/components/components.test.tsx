@@ -7,6 +7,7 @@ import { CountrySwitch } from "./country-switch"
 import { CountryTag, ScopeTag } from "./country-tag"
 import { MembershipStatusBanner } from "./membership-status-banner"
 import { ModerationBanner } from "./moderation-banner"
+import { richParts } from "./rich-text"
 import { TrustBadge } from "./trust-badge"
 
 describe("CountryTag — l'étiquette pays", () => {
@@ -189,5 +190,48 @@ describe("CountrySwitch — le sélecteur de pays", () => {
     expect(trigger).toHaveAttribute("aria-expanded", "false")
     await userEvent.setup().click(trigger)
     expect(trigger).toHaveAttribute("aria-expanded", "true")
+  })
+})
+
+describe("RichText — mentions et mots-dièse", () => {
+  it("une @identifiant valide est une mention ; un #mot-dièse est mis en valeur ; le reste est du texte", () => {
+    expect(richParts("Merci @Ada.Lovelace pour #Libreville2026 !")).toEqual([
+      { kind: "text", text: "Merci " },
+      { kind: "mention", handle: "ada.lovelace", text: "@Ada.Lovelace" },
+      { kind: "text", text: " pour " },
+      { kind: "tag", text: "#Libreville2026" },
+      { kind: "text", text: " !" },
+    ])
+  })
+
+  it("une adresse n'est pas une mention ; un identifiant trop court reste du texte ; le point final n'en fait pas partie", () => {
+    expect(richParts("Écrivez à contact@exemple.test")).toEqual([{ kind: "text", text: "Écrivez à contact@exemple.test" }])
+    expect(richParts("Salut @ab")).toEqual([{ kind: "text", text: "Salut @ab" }])
+    expect(richParts("Vu par @awa.")).toEqual([
+      { kind: "text", text: "Vu par " },
+      { kind: "mention", handle: "awa", text: "@awa" },
+      { kind: "text", text: "." },
+    ])
+    expect(richParts("")).toEqual([])
+  })
+
+  it("la casse de l'auteur est gardée, même quand la minuscule du moteur s'allonge (« İ »)", () => {
+    expect(richParts("Vu à #İstanbul avec @Awa !")).toEqual([
+      { kind: "text", text: "Vu à " },
+      { kind: "tag", text: "#İstanbul" },
+      { kind: "text", text: " avec " },
+      { kind: "mention", handle: "awa", text: "@Awa" },
+      { kind: "text", text: " !" },
+    ])
+  })
+
+  it("les morceaux recomposent le texte à l'identique", () => {
+    for (const text of ["#Gabon #Diaspora", "@Ada.Lovelace, #İzmir et @awa.", "a#bc d-@efg @h_ij"]) {
+      expect(
+        richParts(text)
+          .map((part) => part.text)
+          .join(""),
+      ).toBe(text)
+    }
   })
 })

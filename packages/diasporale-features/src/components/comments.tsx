@@ -17,6 +17,7 @@ import { Sheet, SheetContent } from "../primitives/sheet"
 import { Avatar, Skeleton } from "../primitives/surface"
 import { useRouting } from "../routing"
 import { EmptyState } from "./empty-state"
+import { RichText } from "./rich-text"
 
 const commentSchema = z.object({
   body: z.string().trim().min(1, "comment_empty").max(COMMENT_MAX_LENGTH, "comment_too_long"),
@@ -190,7 +191,9 @@ function Comment(props: {
           </time>
           {comment.edited ? <span className="text-muted-foreground">· {t("comments.edited")}</span> : null}
         </p>
-        <p className="mt-0.5 whitespace-pre-line break-words text-[14px] leading-relaxed">{comment.body}</p>
+        <p className="mt-0.5 whitespace-pre-line break-words text-[14px] leading-relaxed">
+          <RichText text={comment.body} />
+        </p>
         {props.canComment || canRemove ? (
           <div className="mt-1 flex flex-wrap items-center gap-1">
             {props.canComment ? (

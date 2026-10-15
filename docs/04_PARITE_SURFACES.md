@@ -17,8 +17,8 @@
 | Surface de référence | Surface DIASPORALE | Exigences | État | Source moteur | Écarts |
 |---|---|---|---|---|---|
 | Fil (`FeedPage`) | `/fil` : « Mon pays », « Toute la diaspora », « Récents », « Pour vous » | EXF-DG-13 | ✅ | `posts.myFeed` (portées, voies du hub) | une page de 30, sans curseur ni « voir plus » |
-| Composeur en feuille | `PostComposerSheet` | EXF-DG-10, 11 | 🟡 | `posts.publish` (portée, pays, ANTIA) | sans médias, partage cité ni brouillon durable ; local refusé dans un pays non ouvert (§3) |
-| Carte de publication | `PostCard` | EXF-DG-10, 12 | ✅ | DTO `myFeed` | auteur d'une page : sa carte ; « signé par » attend PD5 |
+| Composeur en feuille | `PostComposerSheet` | EXF-DG-10, 11 | 🟡 | `posts.publish` (portée, pays, ANTIA) | sans médias ni partage cité ; brouillon durable dans CE navigateur (une clé par personne, rétabli à l'ouverture, effacé à la publication, jamais envoyé) ; local refusé dans un pays non ouvert (§3) |
+| Carte de publication | `PostCard` | EXF-DG-10, 12 | ✅ | DTO `myFeed` | auteur d'une page : sa carte ; « signé par » attend PD5 ; mentions (lien vers le profil) et mots-dièse découpés par le moteur (`splitBodyRich`), dans les commentaires aussi, casse de l'auteur gardée (ANTIA l'abaisse) ; un mot-dièse n'ouvre pas encore de recherche |
 | Réactions (4 genres) | palette de la carte | EXF-DG-12 | ✅ | `engagement.toggleReaction` | — |
 | Commentaires | feuille « Commentaires » | EXF-DG-12 | ✅ | `engagement.paginateComments`, `paginateReplies`, `comment`, `removeComment` | pas d'édition d'un commentaire |
 | Menu « … » | `PostMenu` | EXF-DG-12, 40 | 🟡 | `marks.toggleMark`, `hidePost`, `muteAuthor`, `moderation.reportPost`, `posts.remove` | sans « Modifier », sans relais ; signets sans liste |

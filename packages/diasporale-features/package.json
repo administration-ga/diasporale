@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@antia/api": "workspace:*",
+    "@antia/social-domain": "workspace:*",
     "@antia/social-features": "workspace:*",
     "@antia/ui": "workspace:*",
     "@diasporale/domain": "workspace:*",

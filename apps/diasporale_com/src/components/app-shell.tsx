@@ -188,6 +188,7 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
           onOpenChange={setComposerOpen}
           memberCountry={props.membership.facet.countryOfResidence}
           openCountries={open}
+          draftKey={`diasporale:brouillon:${props.membership.personId}`}
         />
       ) : null}
     </div>
