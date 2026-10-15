@@ -1,7 +1,10 @@
 # DIASPORALE.COM — Consignes pour les agents (Claude Code, Codex)
 
-> Dossier ouvert le 14/10/2026 : **cahier des charges et prompts seulement, pas encore de
-> code**. Avant tout travail, lire dans l'ordre :
+> Dossier ouvert le 14/10/2026. **Où l'on en est** : l'encart « État d'avancement » en tête de
+> `docs/01` (étapes a → e livrées le 14–15/10 ; PD0, câblage dans le moteur, en cours). Code :
+> `packages/diasporale-domain` (règles pures), `packages/diasporale-features` (surfaces, interface
+> de données, fournisseur de démonstration), `apps/diasporale_com` (Next.js 16, port 3031).
+> Avant tout travail, lire dans l'ordre :
 > 1. `docs/00_CAHIER_DES_CHARGES_DIASPORALE.md` (ce que le produit est, ses invariants, ses lots) ;
 > 2. `../ANTIA/docs/00_CAHIER_DES_CHARGES_ANTIA.md` (le moteur dont DIASPORALE est une application) ;
 > 3. `docs/01_PLAN_IMPLEMENTATION_PROMPTS_DIASPORALE.md` (le prompt à exécuter, un à la fois, avec son préambule commun) ;
@@ -14,6 +17,12 @@
   moteur `ECOSYSTEMES/ANTIA`. Le backend est celui du moteur (tranche `convex/modules/diaspora/`
   dans ANTIA). Une seule installation : `bun install` dans `ANTIA/`, jamais ici.
 - Un réseau **fermé**, enfant du réseau public ANTIA, dans le moteur multi-réseaux.
+- **Charte** : le contrat de couleurs vit dans `../ANTIA/packages/ui/src/themes/diasporale.css`
+  (écrit par la session DIASPORALE) ; les rôles propres dans
+  `packages/diasporale-features/src/styles/extras.css` (renvois au contrat seulement) ;
+  référence `docs/03_CHARTE_DIASPORALE.md`.
+- **Données** : les écrans lisent un port (`@diasporale/features/data`) ; aujourd'hui le
+  fournisseur de DÉMONSTRATION (données fictives, ce navigateur seulement), demain celui du moteur.
 
 ## Invariants (ne jamais contourner)
 
