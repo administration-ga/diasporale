@@ -99,7 +99,8 @@ export const DIASPORALE_NETWORK_SEED = Object.freeze({
   theme: "diasporale",
 })
 
-export type EngineFacetValue = string | number | boolean | readonly string[]
+/** Valeur d'un champ de facette, à la forme exacte de `personFacets.values` du moteur. */
+export type EngineFacetValue = string | number | boolean | string[]
 
 /**
  * Valeurs et visibilités d'une facette, prêtes pour `personFacets` du moteur :
