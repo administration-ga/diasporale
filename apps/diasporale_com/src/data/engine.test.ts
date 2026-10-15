@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { authActionErrorCode, engineActionErrorCode } from "./engine-errors"
 import { createEngineActions } from "./engine-source"
-import { toFacetArgs, toFeed, toMembershipView, toOpenCountries } from "./engine-views"
+import { toFacetArgs, toFeed, toMembershipView, toOpenCountries, toProfileView } from "./engine-views"
 
 /**
  * La source « moteur » sans moteur : traduction des refus, projections pures, et
@@ -115,6 +115,16 @@ describe("projections du moteur vers les vues de DIASPORALE", () => {
     expect(toFeed(items, "diaspora", "BE").map((post) => post.id)).toEqual(["a", "b"])
     expect(toFeed(items, "pour_vous", "FR").map((post) => post.id)).toEqual(["b"])
     expect(toFeed(items, "recents", "FR")[0]).toMatchObject({ scope: { reach: "diaspora" }, author: { handle: "", displayName: "" }, moderation: "published" })
+  })
+
+  it("le profil : identité publique du moteur et facette projetée ; l'aperçu n'existe que pour soi", () => {
+    const profile = { personId: "p2", handle: "ada", displayName: "Ada", headline: null, avatar: { url: null, withheld: null }, cover: { url: null, withheld: null }, badges: ["verified"], isMe: false } as never
+    const other = toProfileView(profile, { facet: { countryOfResidence: "FR", city: "Lyon" }, preview: null } as never)
+    expect(other).toMatchObject({ handle: "ada", isSelf: false, facet: { countryOfResidence: "FR", city: "Lyon" }, publicFacet: { countryOfResidence: "FR", city: "Lyon" }, posts: [], postName: null })
+    const self = toProfileView({ ...(profile as object), isMe: true } as never, { facet: { countryOfResidence: "FR", city: "Lyon" }, preview: { countryOfResidence: "FR" } } as never)
+    expect(self).toMatchObject({ isSelf: true, publicFacet: { countryOfResidence: "FR" } })
+    // Un pays hors forme est écarté, jamais deviné.
+    expect(toProfileView(profile, { facet: { countryOfResidence: "ZZ" }, preview: null } as never).facet).toEqual({})
   })
 
   it("la saisie de facette part aux arguments du moteur sans niveau inconnu, listes copiées", () => {

@@ -12,6 +12,7 @@ import {
   type DiasporaFacet,
   type FacetField,
   type FacetInput,
+  type FacetProjection,
   type FeedScope,
   isFieldVisibility,
   isResidenceCountry,
@@ -24,6 +25,7 @@ import {
   type MembershipView,
   type OpenCountryView,
   type PostView,
+  type ProfileView,
   type SponsorDashboardView,
 } from "@diasporale/features/data"
 import type { FunctionArgs, FunctionReturnType } from "convex/server"
@@ -34,6 +36,8 @@ type MyMembership = NonNullable<FunctionReturnType<typeof api.modules.diaspora.m
 type HubView = FunctionReturnType<typeof api.modules.diaspora.hubs.getCountryHub>
 type FeedItem = FunctionReturnType<typeof api.modules.posts.posts.feed>["page"][number]
 type SponsorDashboard = FunctionReturnType<typeof api.modules.diaspora.membership.sponsorDashboard>
+type PublicProfile = NonNullable<FunctionReturnType<typeof api.modules.people.profile.getPublicProfile>>
+type MemberFacet = NonNullable<FunctionReturnType<typeof api.modules.diaspora.profile.memberFacet>>
 type MyConsents = FunctionReturnType<typeof api.modules.diaspora.membership.myConsents>
 export type FacetArgs = FunctionArgs<typeof api.modules.diaspora.facet.updateMyFacet>["facet"]
 
@@ -187,5 +191,32 @@ export function toFacetArgs(input: FacetInput): FacetArgs {
     ...(input.arrivedAt !== undefined ? { arrivedAt: input.arrivedAt } : {}),
     ...(input.helpAvailable !== undefined ? { helpAvailable: input.helpAvailable } : {}),
     ...(Object.keys(visibility).length > 0 ? { visibility } : {}),
+  }
+}
+
+/** Une projection de facette reçue du moteur : un pays inconnu est écarté, jamais deviné. */
+function toFacetProjection(projection: MemberFacet["facet"]): FacetProjection {
+  const { countryOfResidence, ...rest } = projection
+  return { ...rest, ...(countryOfResidence !== undefined && isResidenceCountry(countryOfResidence) ? { countryOfResidence } : {}) }
+}
+
+/**
+ * Le profil d'un membre : identité publique du moteur (`getPublicProfile`) et
+ * facette projetée pour le lecteur (`memberFacet`). Les publications d'un auteur
+ * et le nom du poste arrivent avec les lots « posts » et « pages » (PD4, PD5).
+ */
+export function toProfileView(profile: PublicProfile, member: MemberFacet): ProfileView {
+  const facet = toFacetProjection(member.facet)
+  return {
+    personId: profile.personId,
+    handle: profile.handle,
+    displayName: profile.displayName,
+    headline: profile.headline,
+    badges: profile.badges,
+    facet,
+    publicFacet: member.preview ? toFacetProjection(member.preview) : facet,
+    postName: null,
+    isSelf: profile.isMe,
+    posts: [],
   }
 }

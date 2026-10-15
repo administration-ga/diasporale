@@ -35,6 +35,7 @@ import type {
   Loadable,
   OpenCountryView,
   PostView,
+  ProfileView,
   ReactionKind,
   SessionView,
   SponsorDashboardView,
@@ -55,6 +56,7 @@ import {
   toFeed,
   toMembershipView,
   toOpenCountries,
+  toProfileView,
   toSponsorDashboardView,
 } from "./engine-views"
 
@@ -190,8 +192,19 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       return ready(posts)
     },
 
-    // Profils et pages du réseau : PD4 et PD5. Rien n'est inventé d'ici là.
-    useProfile: () => failed("feature_unavailable"),
+    useProfile(handle: string): Loadable<ProfileView | null> {
+      const { networkId } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const args = id ? { networkId: id, handle } : "skip"
+      const profile = useLoaded(api.modules.people.profile.getPublicProfile, args)
+      const member = useLoaded(api.modules.diaspora.profile.memberFacet, args)
+      for (const loaded of [networkId, profile, member]) if (loaded.state === "error") return failed(loaded.code)
+      if (profile.state !== "ready" || member.state !== "ready") return LOADING
+      // Inconnu, non publié, hors réseau ou bloqué : le même « introuvable ».
+      return ready(profile.value && member.value ? toProfileView(profile.value, member.value) : null)
+    },
+
+    // Les pages du réseau (officielles, associations, entreprises) : PD5. Rien n'est inventé d'ici là.
     usePage: () => failed("feature_unavailable"),
 
     useHandleSuggestions(displayName: string): readonly string[] {
