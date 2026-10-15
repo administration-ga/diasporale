@@ -11,7 +11,9 @@ import {
   countsAsHubMember,
   countsInSponsorshipWindow,
   deriveMembershipStatus,
+  DIRECTORY_PAGE_SIZE_MAX,
   isCountryOpen,
+  isListedInDirectoryFor,
   isReadableByOthers,
   isShownInHub,
   pageTrustLevel,
@@ -33,6 +35,7 @@ import type {
   ConsentView,
   CountryHubView,
   EventView,
+  MemberHitView,
   MembershipView,
   OpenCountryView,
   PageDetailView,
@@ -45,6 +48,7 @@ import type {
   SponsorDashboardView,
   UnreadCountView,
 } from "../data/types"
+import { MEMBER_SEARCH_MIN_LENGTH } from "../data/types"
 import { maskDestination } from "../data/mask"
 import type { DemoAccountView } from "../data/port"
 import type { DemoPage, DemoPost, DemoState } from "./state"
@@ -159,6 +163,79 @@ export const NOTIFICATIONS_PAGE = 30
 export function unreadCountView(state: DemoState, viewerId: string): UnreadCountView {
   const count = state.notifications.filter((item) => item.recipientId === viewerId && item.readAt === null).length
   return { count: Math.min(count, 99), capped: count > 99 }
+}
+
+/** Repli sans accents et en minuscules, comme la recherche du moteur. */
+function fold(value: string): string {
+  return value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase()
+}
+
+/** Chaque mot cherché commence un mot du nom affiché ou de l'identifiant. */
+function matchesMember(query: string, displayName: string, handle: string): boolean {
+  const words = fold(`${displayName} ${handle} ${handle.replace(/[._-]+/g, " ")}`).split(/\s+/)
+  return fold(query)
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((term) => words.some((word) => word.startsWith(term)))
+}
+
+/**
+ * L'annuaire opt-in, rendu comme par la tranche du moteur : chaque personne est
+ * jugée par LA règle du domaine (niveau choisi, consentement en vigueur, statut,
+ * pays du lecteur, blocage dans la paire) ; la facette est projetée pour le
+ * lecteur ; vingt au plus. Le filtre de pays restreint, il n'ouvre rien.
+ */
+export function memberSearchView(state: DemoState, viewerId: string, query: string, country: CountryCode | undefined, now: number): MemberHitView[] {
+  const term = query.trim().replace(/^@/, "")
+  const viewerMembership = state.memberships[viewerId]
+  const viewerStatus = statusOf(state, viewerId, now)
+  if (term.length < MEMBER_SEARCH_MIN_LENGTH || !viewerMembership || !viewerStatus) return []
+  const viewerCountry = viewerMembership.facet.countryOfResidence
+  const hits: MemberHitView[] = []
+  for (const person of Object.values(state.persons)) {
+    const membership = state.memberships[person.id]
+    if (!person.profile || !membership) continue
+    if (!matchesMember(term, person.profile.displayName, person.profile.handle)) continue
+    const facet = membership.facet
+    if (country !== undefined && facet.countryOfResidence !== country) continue
+    const isSelf = person.id === viewerId
+    const listed = isListedInDirectoryFor(
+      {
+        status: deriveMembershipStatus(membership.grounds, now),
+        visibility: membership.directoryVisibility,
+        consentActive: isConsentActive(
+          state.consents.filter((record) => record.personId === person.id),
+          "directory",
+        ),
+        country: facet.countryOfResidence,
+      },
+      {
+        status: viewerStatus,
+        country: viewerCountry,
+        isSelf,
+        blockedWithTarget:
+          !isSelf &&
+          state.blocks.some(
+            (block) => (block.byId === viewerId && block.targetId === person.id) || (block.byId === person.id && block.targetId === viewerId),
+          ),
+      },
+    )
+    if (!listed) continue
+    hits.push({
+      personId: person.id,
+      handle: person.profile.handle,
+      displayName: person.profile.displayName,
+      headline: person.profile.headline,
+      badges: badgesOfPerson(state, person.id, now),
+      facet: projectFacet(facet, {
+        isSelf,
+        isConnection: isConnected(state, person.id, viewerId),
+        isSameCountryMember: viewerCountry === facet.countryOfResidence,
+        isActiveMember: true,
+      }),
+    })
+  }
+  return hits.sort((a, b) => a.displayName.localeCompare(b.displayName, "fr")).slice(0, DIRECTORY_PAGE_SIZE_MAX)
 }
 
 export function isConnected(state: DemoState, a: string, b: string): boolean {

@@ -28,6 +28,7 @@ import type {
   CountryHubView,
   ConsentView,
   Loadable,
+  MemberHitView,
   PageDetailView,
   OpenCountryView,
   PostView,
@@ -133,6 +134,11 @@ export interface DiasporaleDataSource {
   useProfile(handle: string): Loadable<ProfileView | null>
   /** Ma relation avec une personne (connexion, abonnement, mon blocage). */
   useRelation(personId: string): Loadable<RelationView>
+  /**
+   * L'annuaire opt-in : rien sous `MEMBER_SEARCH_MIN_LENGTH` caractères ; réservé
+   * aux membres actifs ; le filtre de pays restreint, il n'ouvre jamais rien.
+   */
+  useMemberSearch(args: { query: string; country?: CountryCode }): Loadable<readonly MemberHitView[]>
   /** La cloche : les avis les plus récents, et le compte des non-lus. */
   useNotifications(): Loadable<readonly NotificationView[]>
   useUnreadCount(): Loadable<UnreadCountView>

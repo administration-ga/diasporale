@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { authActionErrorCode, engineActionErrorCode } from "./engine-errors"
 import { createEngineActions } from "./engine-source"
-import { toFacetArgs, toFeed, toMembershipView, toNotificationView, toOpenCountries, toProfileView, toRelationView } from "./engine-views"
+import { toFacetArgs, toFeed, toMemberHitView, toMembershipView, toNotificationView, toOpenCountries, toProfileView, toRelationView } from "./engine-views"
 
 /**
  * La source « moteur » sans moteur : traduction des refus, projections pures, et
@@ -429,5 +429,28 @@ describe("la cloche du moteur (PD4)", () => {
       { name: "modules/notifications/bell:markRead", args: { networkId: "n-diasporale", notificationId: "nt1" } },
       { name: "modules/notifications/bell:markAllRead", args: { networkId: "n-diasporale" } },
     ])
+  })
+})
+
+describe("annuaire de la tranche (PD4, EXF-DG-19)", () => {
+  it("un membre trouvé garde la facette déjà projetée par le serveur ; un pays inconnu est écarté, jamais deviné", () => {
+    const hit = {
+      personId: "p2",
+      handle: "ada",
+      displayName: "Ada",
+      headline: null,
+      avatarUrl: null,
+      badges: ["community"],
+      facet: { countryOfResidence: "FR", city: "Lyon" },
+    } as never
+    expect(toMemberHitView(hit)).toEqual({
+      personId: "p2",
+      handle: "ada",
+      displayName: "Ada",
+      headline: null,
+      badges: ["community"],
+      facet: { countryOfResidence: "FR", city: "Lyon" },
+    })
+    expect(toMemberHitView({ ...(hit as object), facet: { countryOfResidence: "XX" } } as never).facet).toEqual({})
   })
 })

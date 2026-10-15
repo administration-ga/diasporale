@@ -33,6 +33,7 @@ import type {
   DiasporaleActions,
   DiasporaleDataSource,
   Loadable,
+  MemberHitView,
   OpenCountryView,
   PostView,
   NotificationView,
@@ -43,6 +44,7 @@ import type {
   SponsorDashboardView,
   UnreadCountView,
 } from "@diasporale/features/data"
+import { MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
 import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
@@ -57,6 +59,7 @@ import {
   toCountryHubView,
   toFacetArgs,
   toFeed,
+  toMemberHitView,
   toMembershipView,
   toNotificationView,
   toOpenCountries,
@@ -220,6 +223,21 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       for (const loaded of [networkId, connection, following]) if (loaded.state === "error") return failed(loaded.code)
       if (connection.state !== "ready" || following.state !== "ready") return LOADING
       return ready(toRelationView(connection.value, following.value))
+    },
+
+    useMemberSearch(args: { query: string; country?: CountryCode }): Loadable<readonly MemberHitView[]> {
+      const { networkId } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const term = args.query.trim()
+      const searching = term.length >= MEMBER_SEARCH_MIN_LENGTH
+      const hits = useLoaded(
+        api.modules.diaspora.directory.searchMembers,
+        id && searching ? { networkId: id, query: term, ...(args.country ? { country: args.country } : {}) } : "skip",
+      )
+      if (networkId.state === "error") return failed(networkId.code)
+      if (!searching) return ready([])
+      if (hits.state === "error") return failed(hits.code)
+      return hits.state === "ready" ? ready(hits.value.map(toMemberHitView)) : LOADING
     },
 
     useNotifications(): Loadable<readonly NotificationView[]> {

@@ -22,6 +22,7 @@
     "hub": "Mon pays",
     "profile": "Profil",
     "sponsor": "Parrainer",
+    "members": "Membres",
     "settings": "Réglages"
   },
   "footer": {
@@ -911,6 +912,23 @@
       "advertiserMessage": "Un encart étiqueté, jamais plus d'un par écran, jamais dans la messagerie.",
       "postMine": "Ma publication, en relecture : la carte flottante n'est montrée qu'à son autrice ou son auteur."
     }
+  },
+  "members": {
+    "title": "Membres",
+    "lead": "Les membres qui ont choisi d'apparaître dans l'annuaire. Le contact passe par la messagerie : aucune coordonnée n'est affichée.",
+    "searchLabel": "Chercher un membre",
+    "searchPlaceholder": "Nom ou identifiant",
+    "reachLabel": "Où chercher",
+    "reachNetwork": "Tout le réseau",
+    "idleTitle": "Cherchez un membre par son nom ou son identifiant.",
+    "idleBody": "Seuls les membres qui l'ont choisi apparaissent : personne n'est listé sans son accord.",
+    "emptyTitle": "Aucun membre trouvé pour « {{query}} ».",
+    "emptyBody": "Un membre qui n'a pas choisi d'apparaître dans l'annuaire reste introuvable. Vérifiez l'orthographe, ou l'identifiant exact.",
+    "count_one": "{{count}} membre trouvé.",
+    "count_other": "{{count}} membres trouvés.",
+    "resultsLabel": "Membres trouvés",
+    "mine": "Votre niveau d'annuaire : « {{level}} ».",
+    "mineAction": "Le régler"
   },
   "bell": {
     "open": "Notifications",

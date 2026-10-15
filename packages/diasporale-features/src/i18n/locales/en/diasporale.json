@@ -22,6 +22,7 @@
     "hub": "My country",
     "profile": "Profile",
     "sponsor": "Sponsor",
+    "members": "Members",
     "settings": "Settings"
   },
   "footer": {
@@ -911,6 +912,23 @@
       "advertiserMessage": "A labelled slot, never more than one per screen, never in messaging.",
       "postMine": "My post, under review: the floating card is shown to its author only."
     }
+  },
+  "members": {
+    "title": "Members",
+    "lead": "Members who chose to appear in the directory. Contact goes through messaging: no contact details are shown.",
+    "searchLabel": "Search for a member",
+    "searchPlaceholder": "Name or handle",
+    "reachLabel": "Where to search",
+    "reachNetwork": "Whole network",
+    "idleTitle": "Search for a member by name or handle.",
+    "idleBody": "Only members who chose to be listed appear: no one is listed without their consent.",
+    "emptyTitle": "No member found for “{{query}}”.",
+    "emptyBody": "A member who hasn't chosen to appear in the directory can't be found. Check the spelling, or the exact handle.",
+    "count_one": "{{count}} member found.",
+    "count_other": "{{count}} members found.",
+    "resultsLabel": "Members found",
+    "mine": "Your directory level: “{{level}}”.",
+    "mineAction": "Change it"
   },
   "bell": {
     "open": "Notifications",

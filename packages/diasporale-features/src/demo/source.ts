@@ -1,16 +1,17 @@
 "use client"
 
-import type { CountryCode, FeedScope } from "@diasporale/domain"
+import { hasCapability, type CountryCode, type FeedScope } from "@diasporale/domain"
 import { useMemo, useSyncExternalStore } from "react"
 
 import type { DemoAccountView, DiasporaleDataSource } from "../data/port"
-import type { Loadable, NotificationView, RelationView, UnreadCountView } from "../data/types"
+import type { Loadable, MemberHitView, NotificationView, RelationView, UnreadCountView } from "../data/types"
 import { splitDisplayName, suggestHandles } from "../lib/handle"
 import {
   consentsView,
   countryHubView,
   demoAccountsView,
   feedView,
+  memberSearchView,
   openCountriesView,
   pageDetailView,
   notificationsView,
@@ -18,6 +19,7 @@ import {
   relationView,
   sessionView,
   sponsorDashboardView,
+  statusOf,
   unreadCountView,
 } from "./selectors"
 import type { DemoStore } from "./store"
@@ -96,6 +98,21 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
         const viewerId = state.session.personId
         return viewerId ? ready(relationView(state, viewerId, personId)) : { status: "error", code: "not_signed_in" }
       }, [version, personId])
+    },
+
+    useMemberSearch(args: { query: string; country?: CountryCode }) {
+      const version = useVersion()
+      const { query, country } = args
+      return useMemo<Loadable<readonly MemberHitView[]>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return { status: "error", code: "not_signed_in" }
+        // Un compte en attente lit le réseau ; il ne consulte pas l'annuaire.
+        const status = statusOf(state, viewerId, store.now())
+        if (!status || !hasCapability(status, "view_directory")) return { status: "error", code: "status_insufficient" }
+        return ready(memberSearchView(state, viewerId, query, country, store.now()))
+      }, [version, query, country])
     },
 
     useNotifications() {

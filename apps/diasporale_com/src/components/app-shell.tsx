@@ -11,6 +11,7 @@ import {
   PlusIcon,
   Settings2Icon,
   UserRoundIcon,
+  UsersRoundIcon,
   type LucideIcon,
 } from "lucide-react"
 import NextLink from "next/link"
@@ -47,6 +48,7 @@ function navItems(membership: MembershipView): NavItem[] {
   return [
     { id: "feed", href: routes.feed(), icon: HouseIcon, labelKey: "nav.feed", match: (path) => path.startsWith("/fil") },
     { id: "hub", href: hub, icon: MapPinnedIcon, labelKey: "nav.hub", match: (path) => path.startsWith("/pays") },
+    { id: "members", href: routes.members(), icon: UsersRoundIcon, labelKey: "nav.members", match: (path) => path.startsWith("/membres") },
     { id: "profile", href: routes.profile(membership.handle), icon: UserRoundIcon, labelKey: "nav.profile", match: (path) => path.startsWith("/@") || path.startsWith("/profil") },
     { id: "sponsor", href: routes.sponsor(), icon: HandshakeIcon, labelKey: "nav.sponsor", match: (path) => path.startsWith("/parrainer") },
     { id: "settings", href: routes.settings(), icon: Settings2Icon, labelKey: "nav.settings", match: (path) => path.startsWith("/parametres") || path.startsWith("/verification") },
@@ -116,20 +118,30 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
 
         <div className="min-w-0 flex-1">
           <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-border bg-background/95 px-4 backdrop-blur min-[960px]:hidden">
-            <div className="flex min-w-0 items-center gap-2">
+            {/* Le mot-symbole garde sa largeur ; l'étiquette pays cède la première (tronquée, puis
+                retirée sous 360 px : « Mon pays » reste dans la barre basse). */}
+            <div className="flex shrink-0 items-center gap-2">
               <NextLink href={routes.feed()} aria-label={t("nav.feed")} className="rounded-md focus-visible:shadow-focus">
                 <Wordmark />
               </NextLink>
               <AppDemoChip />
             </div>
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="flex min-w-0 items-center justify-end gap-1">
+              <NextLink
+                href={routes.members()}
+                aria-label={t("nav.members")}
+                aria-current={pathname.startsWith("/membres") ? "page" : undefined}
+                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:shadow-focus aria-[current=page]:text-[var(--esp-accent-deep)]"
+              >
+                <UsersRoundIcon aria-hidden className="size-5" />
+              </NextLink>
               <NotificationBell />
               <NextLink
                 href={routes.hub(props.membership.facet.countryOfResidence)}
                 aria-label={t("nav.hub")}
-                className="rounded-md focus-visible:shadow-focus"
+                className="flex min-w-0 rounded-md focus-visible:shadow-focus max-[359px]:hidden"
               >
-                <CountryTag country={props.membership.facet.countryOfResidence} city={props.membership.facet.city} />
+                <CountryTag country={props.membership.facet.countryOfResidence} city={props.membership.facet.city} className="min-w-0 shrink" />
               </NextLink>
             </div>
           </header>
@@ -150,7 +162,7 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
         className="fixed inset-x-3 bottom-3 z-40 rounded-4xl bg-[var(--esp-mobilebar-bg)] shadow-[var(--esp-mobilebar-shadow)] backdrop-blur min-[960px]:hidden"
       >
         <ul className="grid h-16 grid-cols-5 items-center px-1 pb-[env(safe-area-inset-bottom)]">
-          {items.slice(0, 2).map((item) => (
+          {mobileItems(items, ["feed", "hub"]).map((item) => (
             <MobileTab key={item.id} item={item} active={item.match(pathname)} label={t(item.labelKey)} />
           ))}
           <li className="flex justify-center">
@@ -164,9 +176,9 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
               <PlusIcon className="size-6" aria-hidden />
             </button>
           </li>
-          {[items[2], items[4]].map((item) =>
-            item ? <MobileTab key={item.id} item={item} active={item.match(pathname)} label={t(item.labelKey)} /> : null,
-          )}
+          {mobileItems(items, ["profile", "settings"]).map((item) => (
+            <MobileTab key={item.id} item={item} active={item.match(pathname)} label={t(item.labelKey)} />
+          ))}
         </ul>
       </nav>
 
@@ -180,6 +192,11 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
       ) : null}
     </div>
   )
+}
+
+/** Les onglets de la barre basse, désignés par leur identifiant (la colonne du bureau en a davantage). */
+function mobileItems(items: readonly NavItem[], ids: readonly string[]): NavItem[] {
+  return ids.flatMap((id) => items.filter((item) => item.id === id))
 }
 
 function MobileTab(props: { item: NavItem; active: boolean; label: string }) {

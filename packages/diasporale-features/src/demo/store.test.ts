@@ -3,7 +3,7 @@ import { DAY_MS, HOUR_MS, type OnboardingConsentChoices } from "@diasporale/doma
 import { describe, expect, it } from "vitest"
 
 import type { JoinInput } from "../data/port"
-import { NOTIFICATIONS_PAGE, feedView, hubCounters, membershipView, notificationsView, relationView, sessionView, unreadCountView } from "./selectors"
+import { NOTIFICATIONS_PAGE, feedView, hubCounters, memberSearchView, membershipView, notificationsView, relationView, sessionView, unreadCountView } from "./selectors"
 import { DEMO_STORAGE_KEY, DemoStore } from "./store"
 
 /**
@@ -504,5 +504,41 @@ describe("la cloche", () => {
     await store.switchTo("p-steeve")
     await store.deleteMyAccount()
     expect(store.getState().notifications).toEqual([])
+  })
+})
+
+describe("annuaire opt-in (EXF-DG-19, EXF-DG-46)", () => {
+  const handles = (hits: readonly { handle: string }[]) => hits.map((hit) => hit.handle)
+
+  it("la règle du domaine : « réseau » partout, « pays » au même pays, « masqué » nulle part", () => {
+    const { store } = demo()
+    const state = store.getState()
+    // Steeve (FR) : Mireille et Steeve choisissent « pays », Prisca « réseau » ; Rodrigue (CA) reste masqué.
+    expect(handles(memberSearchView(state, "p-steeve", "i", undefined, T0))).toEqual([])
+    expect(handles(memberSearchView(state, "p-steeve", "mireille", undefined, T0))).toEqual(["mireille.ivindo"])
+    expect(handles(memberSearchView(state, "p-steeve", "rodrigue", undefined, T0))).toEqual([])
+    // Nadia (BE) ne voit pas les fiches « pays » de France, seulement celle « réseau ».
+    expect(handles(memberSearchView(state, "p-nadia", "mireille", undefined, T0))).toEqual([])
+    expect(handles(memberSearchView(state, "p-nadia", "prisca", undefined, T0))).toEqual(["prisca.abanga"])
+    // Le filtre de pays restreint, il n'ouvre rien.
+    expect(handles(memberSearchView(state, "p-nadia", "prisca", "BE", T0))).toEqual([])
+    // Par identifiant, accents repliés.
+    expect(handles(memberSearchView(state, "p-steeve", "@prisca.abanga", undefined, T0))).toEqual(["prisca.abanga"])
+    expect(handles(memberSearchView(state, "p-mireille", "steeve ngounie", undefined, T0))).toEqual(["steeve.ngounie"])
+  })
+
+  it("rien que la facette projetée ; un blocage ou un retrait de consentement retire la fiche", async () => {
+    const { store } = demo()
+    const [prisca] = memberSearchView(store.getState(), "p-nadia", "prisca", undefined, T0)
+    expect(prisca?.facet).toEqual(expect.objectContaining({ countryOfResidence: "FR" }))
+    expect(Object.keys(prisca ?? {}).sort()).toEqual(["badges", "displayName", "facet", "handle", "headline", "personId"])
+
+    await store.switchTo("p-nadia")
+    await store.block("p-prisca")
+    expect(memberSearchView(store.getState(), "p-nadia", "prisca", undefined, T0)).toEqual([])
+    await store.unblock("p-prisca")
+    await store.switchTo("p-prisca")
+    await store.setConsent("directory", false)
+    expect(memberSearchView(store.getState(), "p-nadia", "prisca", undefined, T0)).toEqual([])
   })
 })

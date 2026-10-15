@@ -22,6 +22,7 @@ import {
   type ConsentView,
   type CountryHubView,
   maskDestination,
+  type MemberHitView,
   type MembershipView,
   type OpenCountryView,
   type PostView,
@@ -199,7 +200,7 @@ export function toFacetArgs(input: FacetInput): FacetArgs {
 }
 
 /** Une projection de facette reçue du moteur : un pays inconnu est écarté, jamais deviné. */
-function toFacetProjection(projection: MemberFacet["facet"]): FacetProjection {
+function toFacetProjection(projection: Omit<FacetProjection, "countryOfResidence"> & { readonly countryOfResidence?: string }): FacetProjection {
   const { countryOfResidence, ...rest } = projection
   return { ...rest, ...(countryOfResidence !== undefined && isResidenceCountry(countryOfResidence) ? { countryOfResidence } : {}) }
 }
@@ -222,6 +223,20 @@ export function toProfileView(profile: PublicProfile, member: MemberFacet): Prof
     postName: null,
     isSelf: profile.isMe,
     posts: [],
+  }
+}
+
+type DirectoryHit = FunctionReturnType<typeof api.modules.diaspora.directory.searchMembers>[number]
+
+/** Un membre trouvé dans l'annuaire de la tranche : la facette déjà projetée pour le lecteur, un pays inconnu écarté. */
+export function toMemberHitView(hit: DirectoryHit): MemberHitView {
+  return {
+    personId: hit.personId,
+    handle: hit.handle,
+    displayName: hit.displayName,
+    headline: hit.headline,
+    badges: hit.badges,
+    facet: toFacetProjection(hit.facet),
   }
 }
 

@@ -188,6 +188,23 @@ export interface RelationView {
 }
 
 /**
+ * Un membre trouvé dans l'annuaire opt-in (EXF-DG-19, EXF-DG-46) : seulement
+ * la facette PROJETÉE pour le lecteur, aucune coordonnée — le contact passe par
+ * la messagerie.
+ */
+export interface MemberHitView {
+  readonly personId: string
+  readonly handle: string
+  readonly displayName: string
+  readonly headline: string | null
+  readonly badges: readonly TrustBadge[]
+  readonly facet: FacetProjection
+}
+
+/** Une requête plus courte ne cherche pas : « chercher sans chercher » viderait l'annuaire. */
+export const MEMBER_SEARCH_MIN_LENGTH = 2
+
+/**
  * Les avis de la cloche que DIASPORALE sait dire. Tout autre genre du moteur se
  * dit « nouvelle activité » (`other`) : jamais un libellé inventé.
  */

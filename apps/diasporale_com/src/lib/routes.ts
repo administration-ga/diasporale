@@ -19,6 +19,8 @@ export const routes = {
   /** Se voir comme les autres membres (EXF-DG-07, `?apercu=1`). */
   profilePreview: (handle: string) => `/@${handle}?apercu=1`,
   page: (handle: string) => `/pages/${handle}`,
+  /** L'annuaire opt-in des membres (EXF-DG-19). */
+  members: () => "/membres",
   settings: () => "/parametres",
   /** L'aide « obtenir un parrainage », dans les paramètres. */
   sponsorHelp: () => "/parametres#parrainage",
