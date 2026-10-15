@@ -1,5 +1,7 @@
 "use client"
 
+import { useRingRelation } from "@antia/social-features/iappel"
+import type { Id } from "@convex/_generated/dataModel"
 import type { FacetProjection } from "@diasporale/domain"
 import {
   Avatar,
@@ -17,7 +19,7 @@ import {
 } from "@diasporale/features"
 import { type ActionResult, useActions, usePage, useProfile, useRelation, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { BanIcon, BookmarkIcon, ClockIcon, EyeIcon, FlagIcon, HandHeartIcon, LandmarkIcon, NewspaperIcon, PencilIcon, ShieldOffIcon, UserCheckIcon, UserPlusIcon, UserRoundXIcon, UsersIcon } from "lucide-react"
+import { BanIcon, BookmarkIcon, ClockIcon, EyeIcon, FlagIcon, HandHeartIcon, LandmarkIcon, NewspaperIcon, PencilIcon, PhoneIcon, ShieldOffIcon, UserCheckIcon, UserPlusIcon, UserRoundXIcon, UsersIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useSearchParams } from "next/navigation"
 import { type ReactNode, useId, useState } from "react"
@@ -25,6 +27,7 @@ import { toast } from "sonner"
 
 import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
+import { IcomIsland, useIcomState, useWriteTo } from "@/components/icom"
 import { routes } from "@/lib/routes"
 
 /** `/@handle` (réécrit vers `/profil/handle`) — profil publié, facette selon ses visibilités (EXF-DG-07/08). */
@@ -93,7 +96,7 @@ function Profile(props: { handle: string; membership: MembershipView }) {
               ) : (
                 <>
                   <RelationBar personId={view.personId} handle={view.handle} displayName={view.displayName} canCommunicate={props.membership.canPublish} />
-                  <ContactButton recipientName={view.displayName} />
+                  <PersonContact personId={view.personId} handle={view.handle} displayName={view.displayName} />
                 </>
               )}
             </div>
@@ -238,6 +241,50 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
         </p>
       )}
     </div>
+  )
+}
+
+/**
+ * « Écrire » et « Appeler » (PD7) : la messagerie et les appels du moteur. Le
+ * moteur n'ouvre un fil neuf qu'entre relations (`THREAD_RELATION_REQUIRED`) et
+ * n'appelle que ses relations : hors relation, ou sans iCom (démonstration,
+ * membre pas encore déclaré), seul « Écrire » reste, fermé, et dit pourquoi.
+ */
+function PersonContact(props: { personId: string; handle: string; displayName: string }) {
+  const { t } = useDiasporaleT()
+  const icom = useIcomState()
+  const relation = useRelation(props.personId)
+  const connected = relation.status === "ready" && relation.data.connection === "connected"
+  if (icom.status === "on" && connected) {
+    return (
+      <IcomIsland network={icom.network}>
+        <IcomContact personId={props.personId} handle={props.handle} displayName={props.displayName} />
+      </IcomIsland>
+    )
+  }
+  const hint =
+    icom.status === "on" ? t("contact.needsRelation") : icom.status === "off" && icom.reason === "not_allowed" ? t("relation.needsStatus") : undefined
+  return <ContactButton recipientName={props.displayName} unavailableHint={hint} />
+}
+
+/** Les deux gestes d'iCom, sous l'îlot du moteur (réseau courant, hôte d'appel de la coque). */
+function IcomContact(props: { personId: string; handle: string; displayName: string }) {
+  const { t } = useDiasporaleT()
+  const writeTo = useWriteTo()
+  const { busyHandle, ring } = useRingRelation()
+  return (
+    <>
+      <ContactButton recipientName={props.displayName} onContact={() => writeTo(props.handle)} />
+      <Button
+        variant="outline"
+        disabled={busyHandle === props.handle}
+        aria-label={t("contact.callTo", { name: props.displayName })}
+        onClick={() => void ring({ personId: props.personId as Id<"persons">, handle: props.handle, displayName: props.displayName })}
+      >
+        <PhoneIcon aria-hidden />
+        {t("contact.call")}
+      </Button>
+    </>
   )
 }
 

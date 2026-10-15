@@ -3,10 +3,13 @@
 import { Avatar, Button, CountryTag, NotificationBell, PostComposerSheet, PostShareProvider, TrustBadges, cn } from "@diasporale/features"
 import { useOpenCountries, type MembershipView, type PostView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
+import { MessagerieDock } from "@antia/social-features/messagerie"
+import { useIsReseauMobile } from "@antia/ui/overlay"
 import {
   HandshakeIcon,
   HouseIcon,
   MapPinnedIcon,
+  MessageCircleIcon,
   PenSquareIcon,
   PlusIcon,
   Settings2Icon,
@@ -16,10 +19,11 @@ import {
 } from "lucide-react"
 import NextLink from "next/link"
 import { usePathname } from "next/navigation"
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, Suspense, useContext, useState, type ReactNode } from "react"
 
 import { routes } from "@/lib/routes"
 
+import { IcomIsland, useIcomNetwork } from "./icom"
 import { AppDemoChip } from "./site-chrome"
 import { Wordmark } from "./wordmark"
 
@@ -43,12 +47,16 @@ interface NavItem {
   readonly match: (path: string) => boolean
 }
 
-function navItems(membership: MembershipView): NavItem[] {
+function navItems(membership: MembershipView, withMessages: boolean): NavItem[] {
   const hub = routes.hub(membership.facet.countryOfResidence)
+  const messages: NavItem[] = withMessages
+    ? [{ id: "messages", href: routes.messages(), icon: MessageCircleIcon, labelKey: "nav.messages", match: (path) => path.startsWith("/messages") }]
+    : []
   return [
     { id: "feed", href: routes.feed(), icon: HouseIcon, labelKey: "nav.feed", match: (path) => path.startsWith("/fil") },
     { id: "hub", href: hub, icon: MapPinnedIcon, labelKey: "nav.hub", match: (path) => path.startsWith("/pays") },
     { id: "members", href: routes.members(), icon: UsersRoundIcon, labelKey: "nav.members", match: (path) => path.startsWith("/membres") },
+    ...messages,
     { id: "profile", href: routes.profile(membership.handle), icon: UserRoundIcon, labelKey: "nav.profile", match: (path) => path.startsWith("/@") || path.startsWith("/profil") },
     { id: "sponsor", href: routes.sponsor(), icon: HandshakeIcon, labelKey: "nav.sponsor", match: (path) => path.startsWith("/parrainer") },
     { id: "settings", href: routes.settings(), icon: Settings2Icon, labelKey: "nav.settings", match: (path) => path.startsWith("/parametres") || path.startsWith("/verification") },
@@ -73,7 +81,11 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   // Chaque partage remonte son composeur : formulaire, aperçu et clé d'idempotence repartent de zéro.
   const [shareSession, setShareSession] = useState(0)
   const openCountries = useOpenCountries()
-  const items = navItems(props.membership)
+  // iCom (PD7) : en mode moteur, pour un membre qui peut écrire ; le dock se monte au bureau seulement
+  // (seuil du moteur, 960 px ; inconnu au rendu serveur, donc rien avant le premier passage client).
+  const icom = useIcomNetwork()
+  const desktop = useIsReseauMobile() === false
+  const items = navItems(props.membership, icom !== null)
   const canPublish = props.membership.canPublish
   const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : []
 
@@ -147,6 +159,16 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
                 >
                   <UsersRoundIcon aria-hidden className="size-5" />
                 </NextLink>
+                {icom ? (
+                  <NextLink
+                    href={routes.messages()}
+                    aria-label={t("nav.messages")}
+                    aria-current={pathname.startsWith("/messages") ? "page" : undefined}
+                    className="inline-flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:shadow-focus aria-[current=page]:text-[var(--esp-accent-deep)]"
+                  >
+                    <MessageCircleIcon aria-hidden className="size-5" />
+                  </NextLink>
+                ) : null}
                 <NotificationBell />
                 <NextLink
                   href={routes.hub(props.membership.facet.countryOfResidence)}
@@ -164,7 +186,21 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
               <ComposerContext.Provider value={{ open: () => setComposerOpen(true), canPublish }}>
                 <div className="flex min-w-0 max-w-[792px] flex-col gap-4">{props.children}</div>
               </ComposerContext.Provider>
-              {props.rail ? <aside className="hidden flex-col gap-4 xl:flex">{props.rail}</aside> : null}
+              {/* Le rail droit (dès 1 280 px). Sa première place revient à la carte iCom ; montée dès 960 px,
+                  elle reste disponible entre 960 et 1 280 px, rail retiré : une adresse de messagerie l'ouvre
+                  détachée, en carte flottante (même doctrine que la page réseau du moteur). */}
+              {props.rail || (icom && desktop) ? (
+                <aside className="hidden flex-col gap-4 xl:flex">
+                  {icom && desktop ? (
+                    <IcomIsland network={icom}>
+                      <Suspense fallback={null}>
+                        <MessagerieDock />
+                      </Suspense>
+                    </IcomIsland>
+                  ) : null}
+                  {props.rail}
+                </aside>
+              ) : null}
             </main>
           </div>
         </div>

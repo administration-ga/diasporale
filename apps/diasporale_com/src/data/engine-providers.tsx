@@ -14,6 +14,7 @@ import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { useConvex } from "convex/react"
 import { type ReactNode, useState } from "react"
 
+import { EngineIcom } from "@/components/icom"
 import { authClient } from "@/lib/auth-client"
 import { publicEnv } from "@/lib/env"
 
@@ -45,7 +46,10 @@ export function EngineDataProviders(props: { children: ReactNode }) {
       ensurePerson={api.modules.people.persons.ensureMyPerson}
       labels={{ loading: t("engine.sessionLoading"), failed: t("engine.sessionFailed"), retry: t("engine.sessionRetry") }}
     >
-      <EngineSource>{props.children}</EngineSource>
+      <EngineSource>
+        {/* iCom (PD7) : la couche de communication du moteur, montée une fois, à côté des pages. */}
+        <EngineIcom>{props.children}</EngineIcom>
+      </EngineSource>
     </EngineConvexProvider>
   )
 }

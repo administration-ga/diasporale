@@ -23,6 +23,7 @@
     "profile": "Profile",
     "sponsor": "Sponsor",
     "members": "Members",
+    "messages": "Messages",
     "settings": "Settings"
   },
   "footer": {
@@ -502,7 +503,10 @@
   "contact": {
     "write": "Write",
     "writeTo": "Write to {{name}}",
-    "soon": "Messaging is coming soon: no contact will ever go through a displayed address or number."
+    "soon": "Messaging is coming soon: no contact will ever go through a displayed address or number.",
+    "needsRelation": "Messaging is for your connections: connect first.",
+    "call": "Call",
+    "callTo": "Call {{name}}"
   },
   "filters": { "advanced": "More filters" },
   "hub": {
@@ -945,6 +949,15 @@
       "advertiser": "Sample advertiser",
       "advertiserMessage": "A labelled slot, never more than one per screen, never in messaging.",
       "postMine": "My post, under review: the floating card is shown to its author only."
+    }
+  },
+  "messages": { "title": "Messages" },
+  "stories": { "title": "Stories" },
+  "icom": {
+    "unavailableTitle": "Messaging unavailable",
+    "unavailable": {
+      "demo": "Messaging and calls run on the live network: the demo doesn't include them.",
+      "networkMissing": "Messaging isn't open on this network yet: come back a little later."
     }
   },
   "members": {

@@ -9,5 +9,8 @@
 @import "@diasporale/features/styles/tailwind-theme.css";
 
 /* Tailwind ne parcourt que le dossier de l'application : les surfaces de
-   @diasporale/features doivent être lues pour générer leurs classes. */
+   @diasporale/features doivent être lues pour générer leurs classes, et celles
+   du moteur montées par iCom (PD7 : messagerie, appels, statuts) aussi. */
 @source "../../../../packages/diasporale-features/src";
+@source "../../../../../ANTIA/packages/ui/src";
+@source "../../../../../ANTIA/packages/social-features/src";

@@ -23,6 +23,7 @@
     "profile": "Profil",
     "sponsor": "Parrainer",
     "members": "Membres",
+    "messages": "Messages",
     "settings": "Réglages"
   },
   "footer": {
@@ -502,7 +503,10 @@
   "contact": {
     "write": "Écrire",
     "writeTo": "Écrire à {{name}}",
-    "soon": "La messagerie arrive bientôt : aucun contact ne passera par une adresse ou un numéro affiché."
+    "soon": "La messagerie arrive bientôt : aucun contact ne passera par une adresse ou un numéro affiché.",
+    "needsRelation": "Écrire est réservé à vos relations : connectez-vous d'abord.",
+    "call": "Appeler",
+    "callTo": "Appeler {{name}}"
   },
   "filters": { "advanced": "Plus de filtres" },
   "hub": {
@@ -945,6 +949,15 @@
       "advertiser": "Annonceur d'exemple",
       "advertiserMessage": "Un encart étiqueté, jamais plus d'un par écran, jamais dans la messagerie.",
       "postMine": "Ma publication, en relecture : la carte flottante n'est montrée qu'à son autrice ou son auteur."
+    }
+  },
+  "messages": { "title": "Messages" },
+  "stories": { "title": "Statuts" },
+  "icom": {
+    "unavailableTitle": "Messagerie indisponible",
+    "unavailable": {
+      "demo": "La messagerie et les appels passent par le réseau en service : la démonstration ne les porte pas.",
+      "networkMissing": "La messagerie n'est pas encore ouverte sur ce réseau : revenez un peu plus tard."
     }
   },
   "members": {

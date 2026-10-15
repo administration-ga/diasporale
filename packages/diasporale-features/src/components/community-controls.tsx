@@ -24,10 +24,11 @@ import { SponsoredBadge } from "./trust-badge"
 /**
  * Bouton « Écrire » (C16, P3) — le seul moyen de contacter une page, une
  * association, un recruteur ou un vendeur : aucune coordonnée n'est jamais
- * affichée. La messagerie arrive au lot D2 (PD7) : d'ici là, le bouton dit
- * clairement qu'elle arrive, au lieu de mentir par un lien mort.
+ * affichée. La messagerie arrive au lot D2 (PD7) : là où elle n'est pas encore
+ * ouverte, le bouton dit pourquoi (`unavailableHint`, par défaut « elle
+ * arrive »), au lieu de mentir par un lien mort.
  */
-export function ContactButton(props: { onContact?: () => void; recipientName: string; className?: string }) {
+export function ContactButton(props: { onContact?: () => void; recipientName: string; unavailableHint?: string; className?: string }) {
   const { t } = useDiasporaleT()
   const available = props.onContact !== undefined
   return (
@@ -36,7 +37,7 @@ export function ContactButton(props: { onContact?: () => void; recipientName: st
       onClick={props.onContact}
       disabled={!available}
       aria-label={t("contact.writeTo", { name: props.recipientName })}
-      title={available ? undefined : t("contact.soon")}
+      title={available ? undefined : (props.unavailableHint ?? t("contact.soon"))}
       className={props.className}
     >
       <MailIcon aria-hidden />

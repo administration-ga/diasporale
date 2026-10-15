@@ -6,6 +6,9 @@
  */
 import type { CountryCode, FeedScope } from "@diasporale/domain"
 
+/** Le segment « nouveau statut » de la route des statuts (lu aussi par la page des statuts). */
+export const STORIES_NEW_SEGMENT = "nouvelle"
+
 export const routes = {
   home: () => "/",
   enter: () => "/entrer",
@@ -25,6 +28,15 @@ export const routes = {
   bookmarks: () => "/enregistrements",
   /** L'annuaire opt-in des membres (EXF-DG-19). */
   members: () => "/membres",
+  /**
+   * iCom en pages (PD7) : la messagerie et ses sous-adresses. Au téléphone, la page
+   * iCom ; au bureau, l'adresse ouvre la carte iCom détachée sur le fil.
+   */
+  messages: () => "/messages",
+  /** Statuts (stories) en plein écran, ouverts depuis iCom ; `…/nouvelle` ouvre le composeur. */
+  stories: () => "/actus",
+  /** Conférence en direct (lot `live` du moteur, PD7 point 4) : pas encore servie ici. */
+  conference: (sessionId: string) => `/direct/${encodeURIComponent(sessionId)}`,
   settings: () => "/parametres",
   /** L'aide « obtenir un parrainage », dans les paramètres. */
   sponsorHelp: () => "/parametres#parrainage",
