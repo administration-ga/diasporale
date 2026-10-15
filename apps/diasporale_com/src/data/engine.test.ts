@@ -245,7 +245,6 @@ describe("écritures de la source « moteur »", () => {
     expect(await actions.signInWithIdn({ firstName: "A", lastName: "B", loa: 2, gaboneseNationality: true })).toEqual({ ok: false, code: "feature_unavailable" })
     expect(await actions.exportMyData()).toEqual({ ok: false, code: "feature_unavailable" })
     expect(await actions.deleteMyAccount()).toEqual({ ok: false, code: "feature_unavailable" })
-    expect(await actions.requestAttestation()).toEqual({ ok: false, code: "attestation_unavailable" })
     expect(await actions.publish({ body: "Bonjour", reach: "local", country: "FR", audience: "public", alsoOnRoot: false })).toEqual({
       ok: false,
       code: "feature_unavailable",
@@ -266,5 +265,50 @@ describe("écritures de la source « moteur »", () => {
       { name: "modules/people/consents:revokeConsent", args: { purpose: "directory", networkId: "n-diasporale" } },
       { name: "modules/diaspora/facet:setDirectoryVisibility", args: { networkId: "n-diasporale", level: "hidden" } },
     ])
+  })
+})
+
+describe("attestation consulaire par le moteur (PD3)", () => {
+  function attestationConvex(results: string[], mutationError?: unknown) {
+    let read = 0
+    return fakeConvex({
+      ...NETWORK,
+      "modules/diaspora/attestation:requestConsularAttestation": () => {
+        if (mutationError) throw mutationError
+        return { attestationId: "att-1" }
+      },
+      "modules/diaspora/attestation:myAttestationRequest": () => ({ result: results[Math.min(read++, results.length - 1)] }),
+    })
+  }
+  const noWait = async () => undefined
+
+  it("la demande part avec le geste de consentement, puis l'issue de consulat.ga est lue", async () => {
+    const { convex, calls } = attestationConvex(["pending", "pending", "verified"])
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client, sleep: noWait })
+    expect(await actions.requestAttestation()).toEqual({ ok: true, value: { outcome: "verified" } })
+    expect(calls[1]).toEqual({ name: "modules/diaspora/attestation:requestConsularAttestation", args: { networkId: "n-diasporale", consent: true } })
+    expect(calls.filter((call) => call.name.endsWith("myAttestationRequest"))).toHaveLength(3)
+  })
+
+  it("non confirmée se dit sans raison ; un échec technique ou un délai dépassé : indisponible", async () => {
+    const notConfirmed = createEngineActions({ convex: attestationConvex(["not_confirmed"]).convex, authClient: fakeAuth().client, sleep: noWait })
+    expect(await notConfirmed.requestAttestation()).toEqual({ ok: true, value: { outcome: "not_confirmed" } })
+    const failed = createEngineActions({ convex: attestationConvex(["failed"]).convex, authClient: fakeAuth().client, sleep: noWait })
+    expect(await failed.requestAttestation()).toEqual({ ok: false, code: "attestation_unavailable" })
+    const slow = createEngineActions({ convex: attestationConvex(["pending"]).convex, authClient: fakeAuth().client, sleep: noWait })
+    expect(await slow.requestAttestation()).toEqual({ ok: false, code: "attestation_unavailable" })
+  })
+
+  it("les refus de la tranche arrivent avec leur code : trop tôt, inutile", async () => {
+    const tooSoon = attestationConvex([], engineError({ code: "policyRefused", appRule: "attestation_too_soon", appParams: { availableAt: 1 } }))
+    expect(await createEngineActions({ convex: tooSoon.convex, authClient: fakeAuth().client, sleep: noWait }).requestAttestation()).toEqual({
+      ok: false,
+      code: "attestation_too_soon",
+    })
+    const notNeeded = attestationConvex([], engineError({ code: "conflict", appRule: "attestation_not_needed" }))
+    expect(await createEngineActions({ convex: notNeeded.convex, authClient: fakeAuth().client, sleep: noWait }).requestAttestation()).toEqual({
+      ok: false,
+      code: "attestation_not_needed",
+    })
   })
 })

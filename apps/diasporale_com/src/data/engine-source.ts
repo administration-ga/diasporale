@@ -11,8 +11,9 @@
  * - Écritures : client Convex et client Better Auth (codes à usage unique) ;
  *   chacune rend un résultat à code FERMÉ (`errors.<code>`), jamais une exception.
  * - Ce que le moteur ne sert pas encore rend `feature_unavailable` : IDN et SMS
- *   (PA4), export et effacement (PA5), profils et pages (PD4, PD5), attestation
- *   consulaire (PD3) — jamais une donnée inventée.
+ *   (PA4), export et effacement (PA5), profils et pages (PD4, PD5) — jamais une
+ *   donnée inventée. L'attestation consulaire (PD3) rend `attestation_unavailable`
+ *   tant que le déploiement n'a pas sa clé de service.
  */
 import type { EngineAuthClient } from "@antia/api/auth-client"
 import { useStableConvexAuth } from "@antia/api/hooks"
@@ -111,7 +112,15 @@ function useNetworkId(): Loaded<Id<"networks"> | null> {
 export interface EngineSourceDeps {
   readonly convex: ConvexReactClient
   readonly authClient: EngineAuthClient
+  /** Attente entre deux lectures de l'issue d'une attestation (remplaçable dans les tests). */
+  readonly sleep?: (ms: number) => Promise<void>
 }
+
+/** L'issue d'une attestation se lit au plus quinze secondes : au-delà, elle est tenue pour indisponible. */
+export const ATTESTATION_POLL_MS = 750
+export const ATTESTATION_POLLS = 20
+
+const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
 export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSource {
   /** Réactions connues du lecteur, relevées par le fil : « retirer ma réaction » rejoue la même. */
@@ -343,8 +352,24 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         return null
       }),
 
-    // L'attestation consulaire (DIASPORA-ATTESTATION-V1) se câble avec PD3.
-    requestAttestation: async () => ({ ok: false, code: "attestation_unavailable" }),
+    // L'attestation consulaire (DIASPORA-ATTESTATION-V1) : le geste vaut consentement (écran de
+    // consentement explicite) ; la réponse de consulat.ga arrive par une action planifiée.
+    requestAttestation: () =>
+      attempt(async () => {
+        const id = await diasporale()
+        const { attestationId } = await deps.convex.mutation(api.modules.diaspora.attestation.requestConsularAttestation, {
+          networkId: id,
+          consent: true,
+        })
+        for (let poll = 0; poll < ATTESTATION_POLLS; poll += 1) {
+          const { result } = await deps.convex.query(api.modules.diaspora.attestation.myAttestationRequest, { networkId: id, attestationId })
+          if (result === "verified") return { outcome: "verified" as const }
+          if (result === "not_confirmed") return { outcome: "not_confirmed" as const }
+          if (result === "failed") throw new Refusal("attestation_unavailable")
+          await (deps.sleep ?? realSleep)(ATTESTATION_POLL_MS)
+        }
+        throw new Refusal("attestation_unavailable")
+      }),
 
     setConsent: (purpose, granted) =>
       attempt(async () => {
