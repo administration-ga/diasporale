@@ -698,7 +698,7 @@
     "section": {
       "color": {
         "title": "Couleur",
-        "lead": "Six couleurs nommées. En clair comme en sombre, le contenu se pose sur la surface la plus contrastée : le papier sur le sable, l'encre sur la nuit."
+        "lead": "Six couleurs nommées. En clair comme en sombre, le fond est la couche la plus basse et chaque surface qui monte s'éclaircit : le papier sur le sable, la nuit sur l'encre."
       },
       "contrast": {
         "title": "Contraste",
@@ -726,7 +726,7 @@
       },
       "cards": {
         "title": "Cartes",
-        "lead": "Papier sur sable en clair, encre sur nuit en sombre, sans filet. Chaque contenu porte son pays."
+        "lead": "Papier sur sable en clair, nuit sur encre en sombre : la carte se lève par la clarté, sans filet. Chaque contenu porte son pays."
       },
       "controls": {
         "title": "Commandes",
@@ -737,7 +737,7 @@
       "light": "Clair",
       "dark": "Sombre",
       "lightRoles": "Fond sable · carte papier · texte encre",
-      "darkRoles": "Fond nuit · carte encre · texte sable",
+      "darkRoles": "Fond encre · carte nuit · texte sable",
       "text": "Le texte principal",
       "secondary": "Le texte secondaire, plus discret",
       "action": "Agir"
@@ -753,11 +753,11 @@
       },
       "encre": {
         "name": "Encre",
-        "role": "Texte clair, carte sombre"
+        "role": "Texte clair, fond sombre"
       },
       "nuit": {
         "name": "Nuit",
-        "role": "Fond sombre"
+        "role": "Carte sombre"
       },
       "bleu": {
         "name": "Bleu Gabon",

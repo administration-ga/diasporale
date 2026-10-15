@@ -2,7 +2,7 @@
 title: "DIASPORALE.COM — Charte graphique « Sable de la diaspora »"
 version: "2.0"
 date: "2026-10-15"
-statut: "Charte de travail v2 — arbitrage A7 (famille Consulaire / Sable) ; refonte demandée par le propriétaire le 15/10/2026 : épurée, contraste renforcé, sombre inversé, rayons resserrés, sans drapeau, avis en cartes flottantes"
+statut: "Charte de travail v2 — arbitrage A7 (famille Consulaire / Sable) ; refonte demandée par le propriétaire le 15/10/2026 : épurée, contraste renforcé, couches du sombre renforcées (le fond reste le plus sombre), rayons resserrés, sans drapeau, avis en cartes flottantes"
 projet: "DIASPORALE"
 jetons: "ANTIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diasporale-features/src/styles/extras.css (rôles propres) — [data-charte=\"diasporale\"]"
 ---
@@ -23,8 +23,9 @@ jetons: "ANTIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diaspo
 >
 > **Version 2 (15/10/2026, demande du propriétaire).** Plus épurée : aucun filet autour des
 > cartes, aucun liseré, presque pas d'ombre. Contraste renforcé (grès 6,46:1 sur le sable,
-> texte 17,19:1 sur la carte sombre). Le sombre **retourne la page** : la carte est l'encre,
-> plus profonde que le fond. Boutons et cartes moins arrondis (6 et 8 px) ; pilules et
+> grès clair 6,92:1 sur la carte sombre). **Élévation par la clarté** dans les deux thèmes : le
+> fond est la couche la plus sombre, chaque surface qui monte s'éclaircit, avec des marches
+> nettes puisqu'il n'y a plus de filet. Boutons et cartes moins arrondis (6 et 8 px) ; pilules et
 > interrupteur inchangés. Plus aucune référence au drapeau. Les bandeaux deviennent des
 > **cartes flottantes** qu'on écarte d'une croix. Vitrine vivante : `/charte`, contrastes
 > mesurés en direct.
@@ -51,10 +52,10 @@ Six couleurs nommées portent toute l'interface. Le reste dérive de rampes rég
 |---|---|---|
 | **Sable** | `#F7F6F2` | fond de page : le sable de consulat.ga, signature de la famille |
 | **Papier** | `#FFFFFF` | cartes posées sur le sable |
-| **Encre** | `#14130F` | texte ; fond du tampon « Officiel » (brun-noir chaud, jamais noir pur) |
+| **Encre** | `#14130F` | texte ; fond du tampon « Officiel » ; fond du thème sombre, la couche la plus basse (brun-noir chaud, jamais noir pur) |
 | **Bleu Gabon** | `#0072B9` | action, lien, sélection, focus : palier 600 de la rampe H 246,6 |
 | **Grès** | `#5C5952` | texte secondaire, icônes au repos (assombri en v2 : 6,46:1 sur le sable) |
-| **Nuit** | `#201D18` | fond du thème sombre ; la carte y est l'**Encre** `#14130F`, plus profonde (jamais de noir pur) |
+| **Nuit** | `#24211C` | carte du thème sombre, posée sur l'**Encre** et plus claire qu'elle |
 
 **Rampe Bleu Gabon** (identique à Consulaire et Sable, `#0072B9` épinglé au palier 600) :
 `50 #EEF7FF · 100 #D7ECFF · 200 #B4DBFF · 300 #7EC2FF · 400 #449FE9 · 500 #2786CF ·
@@ -64,11 +65,13 @@ Six couleurs nommées portent toute l'interface. Le reste dérive de rampes rég
 300 #E6E2D8 · 400 #D2CDBF`. **Grès** : `#918E89` (contour de champ, 3,26:1) ·
 `#6B675D` (texte discret, 5,22:1 sur sable) · `#5C5952` (texte secondaire, 6,46:1) · `#3A3833`.
 
-**Le sombre retourne la page (v2).** En clair, la carte est plus claire que le fond (papier sur
-sable) ; en sombre, elle est plus profonde (encre sur nuit). Dans les deux thèmes, le contenu
-se pose sur la surface la plus contrastée. Échelle sombre : carte `#14130F` < fond `#201D18` <
-section, puce et carte flottante `#2A2620` < survol `#322E27` ; texte sable `#F7F6F2`, grès
-clair `#B0AA99` (8,02:1 sur la carte), discret `#948E7E`.
+**Élévation par la clarté (v2).** Dans les deux thèmes, le fond est la couche la plus basse et
+chaque surface qui monte s'éclaircit : papier sur sable en clair, nuit sur encre en sombre. Sans
+filet, chaque marche se lit par la clarté. Échelle sombre, du plus sombre au plus clair : fond
+`#14130F` < creux `#1B1915` (aplats, survol dans une carte) < carte `#24211C` (1,16:1 sur le
+fond) < puce, piste des pilules et carte flottante `#2F2B25` (1,14:1 sur la carte) < survol
+`#3A362F` ; texte sable `#F7F6F2`, grès clair `#B0AA99` (6,92:1 sur la carte), discret
+`#948E7E` (4,91:1).
 
 **Statuts.** Le cahier prévoit quatre accents réservés aux statuts. Chaque statut a une
 paire texte / teinte mesurée :
@@ -120,8 +123,8 @@ noms du contrat (`--font-sans`, `--font-display`, `--font-mono`) qui y renvoient
   d'ombre teinté d'encre (`0 1px 2px` à 5 %). Ce qui passe DEVANT la page (carte flottante,
   barre basse) prend un souffle de plus (`0 4px 14px -4px` à 8 %). Les seuls traits restants
   sont fonctionnels : contour de champ (3:1, WCAG 1.4.11) et filets de séparation internes.
-- **Thème sombre** : la carte est la surface la plus profonde ; ce qui flotte remonte vers la
-  clarté (voir §2).
+- **Thème sombre** : le fond est le plus sombre ; la carte, puis ce qui flotte, s'éclaircissent
+  (voir §2).
 
 ## 5. La signature : l'étiquette pays
 
@@ -230,18 +233,18 @@ thème affiché.
 
 | Paire | Ratio | | Paire (sombre) | Ratio |
 |---|---|---|---|---|
-| Encre / Sable | 17,19 | | texte sable / fond nuit `#201D18` | 15,53 |
-| Encre / Papier | 18,59 | | texte sable / carte encre `#14130F` | 17,19 |
-| Grès `#5C5952` / Sable | 6,46 | | grès clair `#B0AA99` / carte | 8,02 |
-| Grès / Papier | 6,99 | | grès clair / fond | 7,24 |
-| Bleu Gabon / Papier (lien) | 5,11 | | bleu `#449FE9` / carte (lien) | 6,53 |
+| Encre / Sable | 17,19 | | texte sable / fond encre `#14130F` | 17,19 |
+| Encre / Papier | 18,59 | | texte sable / carte nuit `#24211C` | 14,83 |
+| Grès `#5C5952` / Sable | 6,46 | | grès clair `#B0AA99` / carte | 6,92 |
+| Grès / Papier | 6,99 | | grès clair / fond | 8,02 |
+| Bleu Gabon / Papier (lien) | 5,11 | | bleu `#449FE9` / carte (lien) | 5,64 |
 | Bleu Gabon / Sable (lien) | 4,73 | | encre `#14130F` / bleu `#449FE9` (bouton) | 6,53 |
-| blanc / Bleu Gabon (bouton) | 5,11 | | vert `#4CBB75` / carte | 7,68 |
-| vert `#0F5F2F` / teinte `#E3F1E8` | 6,68 | | ambre `#D8A53C` / carte | 8,29 |
-| ambre `#8A5E00` / teinte `#FAEDCA` | 4,90 | | rose `#E58079` / carte | 6,81 |
-| rose `#B3261E` / teinte `#FDECEA` | 5,72 | | contour de champ `#7D7666` / carte | 4,12 |
-| contour de champ `#918E89` / Papier | 3,26 | | texte discret `#948E7E` / carte | 5,69 |
-| texte discret `#6B675D` / Sable | 5,22 | | grès clair / carte flottante `#2A2620` | 6,48 |
+| blanc / Bleu Gabon (bouton) | 5,11 | | vert `#4CBB75` / carte | 6,62 |
+| vert `#0F5F2F` / teinte `#E3F1E8` | 6,68 | | ambre `#D8A53C` / carte | 7,16 |
+| ambre `#8A5E00` / teinte `#FAEDCA` | 4,90 | | rose `#E58079` / carte | 5,88 |
+| rose `#B3261E` / teinte `#FDECEA` | 5,72 | | contour de champ `#7D7666` / carte | 3,56 |
+| contour de champ `#918E89` / Papier | 3,26 | | texte discret `#948E7E` / carte | 4,91 |
+| texte discret `#6B675D` / Sable | 5,22 | | grès clair / carte flottante `#2F2B25` | 6,07 |
 | tampon Sable / Encre | 17,19 | | | |
 
 Règles non chromatiques :
@@ -285,8 +288,9 @@ La charte vit en trois couches, importées dans cet ordre par
   (sonner, `useFloatingCard`, `useDismissal`).
 - **Cliquets** : `engine-theme-contrast.test.ts` rejoue la cascade base, thème, rôles propres
   dans les deux thèmes (texte ≥ 4,5:1, contours et focus ≥ 3:1, titre de bannière sur les deux
-  arrêts du dégradé), vérifie l'inversion du sombre (carte plus profonde que le fond, carte
-  flottante plus claire), les rayons de la v2 et l'absence de toute couleur du drapeau ;
+  arrêts du dégradé), vérifie l'élévation par la clarté dans les deux thèmes (carte au-dessus du
+  fond, carte flottante au-dessus de la carte ; marches d'au moins 1,15 et 1,12 en sombre), les
+  rayons de la v2 et l'absence de toute couleur du drapeau ;
   `theme-contract` et `no-hardcoded-colors` côté moteur ; le cliquet de couleurs de
   l'application n'admet plus aucune couleur littérale.
 
@@ -328,10 +332,11 @@ La charte vit en trois couches, importées dans cet ordre par
    4,50:1 sur le sable, mesurait en réalité 4,499:1. Le cliquet de contraste l'a refusée
    le 14 octobre 2026 ; la nouvelle valeur tient 4,70:1 sur le sable et 5,08:1 sur le papier.
 
-8. **Sombre inversé (v2)** : la carte est plus profonde que le fond, à rebours de l'élévation
-   « par la clarté » de la v1 et du socle. Demande du propriétaire : en clair comme en sombre, le
-   contenu se pose sur la surface la plus contrastée. Ce qui flotte (carte flottante, menu)
-   remonte vers la clarté.
+8. **Couches du sombre renforcées (v2)** : sans filet autour des cartes, les marches de clarté
+   s'écartent (carte `#24211C` à 1,16:1 du fond, au lieu de `#201D18` à 1,11:1 en v1) ; le creux
+   (aplats, survol dans une carte) passe sous la carte, la carte flottante au-dessus. Le 15/10,
+   une première version de la v2 inversait le sombre (carte plus profonde que le fond) ; le
+   propriétaire l'a écartée le jour même : le fond reste la couche la plus sombre.
 9. **Démonstration fermable (v2)** : la carte de démonstration a une croix, à rebours du bandeau
    permanent de la v1 ; l'invariant est tenu par le repère « Démo » permanent de l'en-tête.
 10. **Texte secondaire assombri (v2)** : `#5C5952` plutôt que `#66635D` (6,46:1 au lieu de

@@ -138,11 +138,14 @@ describe("thème DIASPORALE servi par le moteur — cascade base + thème", () =
     })
   })
 
-  it("le sombre retourne la page : la carte est plus profonde que le fond, comme elle est plus claire en clair", () => {
-    expect(tokenLuminance(THEMES.clair, "--card")).toBeGreaterThan(tokenLuminance(THEMES.clair, "--background"))
-    expect(tokenLuminance(THEMES.sombre, "--card")).toBeLessThan(tokenLuminance(THEMES.sombre, "--background"))
-    // Ce qui flotte (carte flottante, menu) remonte vers la clarté, au-dessus du fond comme de la carte.
-    expect(tokenLuminance(THEMES.sombre, "--popover")).toBeGreaterThan(tokenLuminance(THEMES.sombre, "--background"))
+  it("élévation par la clarté dans les deux thèmes : le fond est la couche la plus basse, la carte se lève, ce qui flotte se lève encore", () => {
+    for (const theme of [THEMES.clair, THEMES.sombre]) {
+      expect(tokenLuminance(theme, "--card")).toBeGreaterThan(tokenLuminance(theme, "--background"))
+      expect(tokenLuminance(theme, "--popover")).toBeGreaterThanOrEqual(tokenLuminance(theme, "--card"))
+    }
+    // En sombre, sans filet, chaque marche se voit : la carte et ce qui flotte s'écartent nettement.
+    expect(contrastRatio(THEMES.sombre, "--card", "--background")).toBeGreaterThanOrEqual(1.15)
+    expect(contrastRatio(THEMES.sombre, "--popover", "--card")).toBeGreaterThanOrEqual(1.12)
   })
 
   it("rayons resserrés (contrôles 6 px, cartes 8 px, panneaux 12 px), pilule intacte", () => {

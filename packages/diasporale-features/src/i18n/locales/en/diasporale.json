@@ -698,7 +698,7 @@
     "section": {
       "color": {
         "title": "Colour",
-        "lead": "Six named colours. In light and dark alike, content sits on the most contrasted surface: paper on sand, ink on night."
+        "lead": "Six named colours. In light and dark alike, the background is the lowest layer and every surface that rises gets lighter: paper on sand, night on ink."
       },
       "contrast": {
         "title": "Contrast",
@@ -726,7 +726,7 @@
       },
       "cards": {
         "title": "Cards",
-        "lead": "Paper on sand in light, ink on night in dark, no hairline. Every piece of content carries its country."
+        "lead": "Paper on sand in light, night on ink in dark: the card rises through lightness, no hairline. Every piece of content carries its country."
       },
       "controls": {
         "title": "Controls",
@@ -737,7 +737,7 @@
       "light": "Light",
       "dark": "Dark",
       "lightRoles": "Sand background · paper card · ink text",
-      "darkRoles": "Night background · ink card · sand text",
+      "darkRoles": "Ink background · night card · sand text",
       "text": "Main text",
       "secondary": "Secondary text, quieter",
       "action": "Act"
@@ -753,11 +753,11 @@
       },
       "encre": {
         "name": "Ink",
-        "role": "Light text, dark card"
+        "role": "Light text, dark background"
       },
       "nuit": {
         "name": "Night",
-        "role": "Dark background"
+        "role": "Dark card"
       },
       "bleu": {
         "name": "Gabon blue",
