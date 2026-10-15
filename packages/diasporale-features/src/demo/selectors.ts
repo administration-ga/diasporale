@@ -20,7 +20,9 @@ import {
   personBadges,
   presentHubCounters,
   projectFacet,
+  rankSuggestions,
   sponsorStanding,
+  suggestionReasons,
   writeRateTier,
   type ConsentPurpose,
   type CountryCode,
@@ -48,6 +50,7 @@ import type {
   NotificationView,
   RelationView,
   SponsorDashboardView,
+  SuggestionView,
   UnreadCountView,
 } from "../data/types"
 import { COMMENT_REPLIES_PREVIEW, COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH } from "../data/types"
@@ -187,57 +190,87 @@ function matchesMember(query: string, displayName: string, handle: string): bool
  * pays du lecteur, blocage dans la paire) ; la facette est projetée pour le
  * lecteur ; vingt au plus. Le filtre de pays restreint, il n'ouvre rien.
  */
-export function memberSearchView(state: DemoState, viewerId: string, query: string, country: CountryCode | undefined, now: number): MemberHitView[] {
-  const term = query.trim().replace(/^@/, "")
+/**
+ * LA règle de l'annuaire pour un candidat, comme dans la tranche du moteur :
+ * niveau choisi, consentement en vigueur, statut, pays du lecteur, blocage —
+ * puis la vue du membre, facette projetée pour le lecteur. `null` : absent.
+ */
+function listedMemberView(state: DemoState, viewerId: string, personId: string, now: number): MemberHitView | null {
+  const person = state.persons[personId]
+  const membership = state.memberships[personId]
   const viewerMembership = state.memberships[viewerId]
   const viewerStatus = statusOf(state, viewerId, now)
-  if (term.length < MEMBER_SEARCH_MIN_LENGTH || !viewerMembership || !viewerStatus) return []
+  if (!person?.profile || !membership || !viewerMembership || !viewerStatus) return null
+  const facet = membership.facet
   const viewerCountry = viewerMembership.facet.countryOfResidence
+  const isSelf = personId === viewerId
+  const listed = isListedInDirectoryFor(
+    {
+      status: deriveMembershipStatus(membership.grounds, now),
+      visibility: membership.directoryVisibility,
+      consentActive: isConsentActive(
+        state.consents.filter((record) => record.personId === personId),
+        "directory",
+      ),
+      country: facet.countryOfResidence,
+    },
+    { status: viewerStatus, country: viewerCountry, isSelf, blockedWithTarget: !isSelf && blockedBetween(state, viewerId, personId) },
+  )
+  if (!listed) return null
+  return {
+    personId,
+    handle: person.profile.handle,
+    displayName: person.profile.displayName,
+    headline: person.profile.headline,
+    badges: badgesOfPerson(state, personId, now),
+    facet: projectFacet(facet, {
+      isSelf,
+      isConnection: isConnected(state, personId, viewerId),
+      isSameCountryMember: viewerCountry === facet.countryOfResidence,
+      isActiveMember: true,
+    }),
+  }
+}
+
+export function memberSearchView(state: DemoState, viewerId: string, query: string, country: CountryCode | undefined, now: number): MemberHitView[] {
+  const term = query.trim().replace(/^@/, "")
+  if (term.length < MEMBER_SEARCH_MIN_LENGTH) return []
   const hits: MemberHitView[] = []
   for (const person of Object.values(state.persons)) {
-    const membership = state.memberships[person.id]
-    if (!person.profile || !membership) continue
-    if (!matchesMember(term, person.profile.displayName, person.profile.handle)) continue
-    const facet = membership.facet
-    if (country !== undefined && facet.countryOfResidence !== country) continue
-    const isSelf = person.id === viewerId
-    const listed = isListedInDirectoryFor(
-      {
-        status: deriveMembershipStatus(membership.grounds, now),
-        visibility: membership.directoryVisibility,
-        consentActive: isConsentActive(
-          state.consents.filter((record) => record.personId === person.id),
-          "directory",
-        ),
-        country: facet.countryOfResidence,
-      },
-      {
-        status: viewerStatus,
-        country: viewerCountry,
-        isSelf,
-        blockedWithTarget:
-          !isSelf &&
-          state.blocks.some(
-            (block) => (block.byId === viewerId && block.targetId === person.id) || (block.byId === person.id && block.targetId === viewerId),
-          ),
-      },
-    )
-    if (!listed) continue
-    hits.push({
-      personId: person.id,
-      handle: person.profile.handle,
-      displayName: person.profile.displayName,
-      headline: person.profile.headline,
-      badges: badgesOfPerson(state, person.id, now),
-      facet: projectFacet(facet, {
-        isSelf,
-        isConnection: isConnected(state, person.id, viewerId),
-        isSameCountryMember: viewerCountry === facet.countryOfResidence,
-        isActiveMember: true,
-      }),
-    })
+    if (!person.profile || !matchesMember(term, person.profile.displayName, person.profile.handle)) continue
+    const hit = listedMemberView(state, viewerId, person.id, now)
+    if (!hit || (country !== undefined && hit.facet.countryOfResidence !== country)) continue
+    hits.push(hit)
   }
   return hits.sort((a, b) => a.displayName.localeCompare(b.displayName, "fr")).slice(0, DIRECTORY_PAGE_SIZE_MAX)
+}
+
+/**
+ * Des membres à rencontrer, comme la tranche les rend : l'annuaire opt-in, le
+ * classement du domaine sur la facette projetée (pays, ville, associations,
+ * relations communes). Jamais soi, une relation, une demande, un blocage, ni
+ * une personne écartée.
+ */
+export function suggestionsView(state: DemoState, viewerId: string, now: number): SuggestionView[] {
+  const reader = state.memberships[viewerId]
+  if (!reader) return []
+  const myConnections = new Set(
+    state.connections.flatMap(([a, b]) => (a === viewerId ? [b] : b === viewerId ? [a] : [])),
+  )
+  const asked = new Set(
+    state.connectionRequests.flatMap((request) => (request.fromId === viewerId ? [request.toId] : request.toId === viewerId ? [request.fromId] : [])),
+  )
+  const dismissed = new Set(state.suggestionDismissals.flatMap(([by, target]) => (by === viewerId ? [target] : [])))
+  const pool = Object.values(state.persons)
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .flatMap((person) => {
+      if (person.id === viewerId || myConnections.has(person.id) || asked.has(person.id) || dismissed.has(person.id)) return []
+      const hit = listedMemberView(state, viewerId, person.id, now)
+      if (!hit) return []
+      const mutual = state.connections.filter(([a, b]) => (a === person.id && myConnections.has(b)) || (b === person.id && myConnections.has(a))).length
+      return [{ ...hit, reasons: suggestionReasons(reader.facet, hit.facet, mutual) }]
+    })
+  return rankSuggestions(pool)
 }
 
 export function isConnected(state: DemoState, a: string, b: string): boolean {

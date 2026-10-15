@@ -45,6 +45,7 @@ import type {
   RelationView,
   SessionView,
   SponsorDashboardView,
+  SuggestionView,
   UnreadCountView,
 } from "@diasporale/features/data"
 import { COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
@@ -71,6 +72,7 @@ import {
   toOpenCountries,
   toProfileView,
   toRelationView,
+  toSuggestionView,
   toSponsorDashboardView,
 } from "./engine-views"
 
@@ -269,6 +271,14 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       if (!searching) return ready([])
       if (hits.state === "error") return failed(hits.code)
       return hits.state === "ready" ? ready(hits.value.map(toMemberHitView)) : LOADING
+    },
+
+    useSuggestions(): Loadable<readonly SuggestionView[]> {
+      const { networkId } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const list = useLoaded(api.modules.diaspora.suggestions.forMe, id ? { networkId: id } : "skip")
+      for (const loaded of [networkId, list]) if (loaded.state === "error") return failed(loaded.code)
+      return list.state === "ready" ? ready(list.value.map(toSuggestionView)) : LOADING
     },
 
     useComments(postId: string): Loadable<readonly CommentThreadView[]> {
@@ -477,6 +487,13 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           networkId: await diasporale(),
           commentId: commentId as Id<"postComments">,
         })
+        return null
+      }),
+
+    dismissSuggestion: (handle) =>
+      attempt(async () => {
+        // Le masquage GÉNÉRIQUE du moteur, par réseau : la tranche le relit pour écarter la personne.
+        await deps.convex.mutation(api.modules.suggestions.suggestions.dismiss, { networkId: await diasporale(), handle })
         return null
       }),
 

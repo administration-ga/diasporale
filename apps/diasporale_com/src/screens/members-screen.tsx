@@ -1,6 +1,6 @@
 "use client"
 
-import { Avatar, Card, CountryTag, EmptyState, FilterBar, Input, Skeleton, TrustBadges, countryName } from "@diasporale/features"
+import { Avatar, Card, CountryTag, EmptyState, FilterBar, Input, MemberSuggestions, Skeleton, TrustBadges, countryName } from "@diasporale/features"
 import { MEMBER_SEARCH_MIN_LENGTH, useMemberSearch, type MemberHitView, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { SearchIcon, UsersRoundIcon } from "lucide-react"
@@ -88,6 +88,8 @@ function Members(props: { membership: MembershipView }) {
           onToggle={setReach}
         />
       </Card>
+
+      {searching ? null : <MemberSuggestions headingId={`${ids}-suggestions`} />}
 
       <section aria-labelledby={`${ids}-results`} aria-busy={searching && results.status === "loading"}>
         <h2 id={`${ids}-results`} className="sr-only">

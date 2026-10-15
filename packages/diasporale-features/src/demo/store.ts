@@ -487,6 +487,19 @@ export class DemoStore {
     return OK
   }
 
+  // ── Suggestions (EXF-DG-18) ─────────────────────────────────────────────
+  async dismissSuggestion(handle: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    const me = viewer.person.id
+    const target = Object.values(this.state.persons).find((person) => person.profile?.handle === normalizeHandle(handle))
+    if (!target || target.id === me) return fail("not_found")
+    if (this.state.suggestionDismissals.some(([by, dismissed]) => by === me && dismissed === target.id)) return OK
+    this.commit({ ...this.state, suggestionDismissals: [...this.state.suggestionDismissals, [me, target.id] as const] })
+    return OK
+  }
+
   // ── Cloche ─────────────────────────────────────────────────────────────
   /**
    * Ajoute un avis à l'état `next`, comme le moteur : rien pour soi-même ni à
@@ -883,6 +896,7 @@ export class DemoStore {
       marks: this.state.marks.filter((mark) => mark.personId !== personId),
       mutes: this.state.mutes.filter(([by, target]) => by !== personId && target !== personId),
       reports: this.state.reports.filter((report) => report.reporterId !== personId),
+      suggestionDismissals: this.state.suggestionDismissals.filter(([by, dismissed]) => by !== personId && dismissed !== personId),
       // Ses commentaires, et ceux portés par ses publications effacées.
       comments: this.state.comments.filter(
         (item) => item.authorId !== personId && this.state.posts.some((post) => post.id === item.postId && !(post.author.kind === "person" && post.author.id === personId)),

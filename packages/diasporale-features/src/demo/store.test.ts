@@ -15,6 +15,7 @@ import {
   relationView,
   repliesView,
   sessionView,
+  suggestionsView,
   unreadCountView,
 } from "./selectors"
 import { DEMO_STORAGE_KEY, DemoStore } from "./store"
@@ -677,5 +678,29 @@ describe("signets, masquage, sourdine, signalement et retrait (EXF-DG-12)", () =
     expect(feedIds(store, "p-steeve")).not.toContain("post-2")
     expect(feedIds(store, "p-mireille")).not.toContain("post-6")
     expect(profileView(store.getState(), "mireille.ivindo", "p-steeve", T0)).toBeNull()
+  })
+})
+
+describe("suggestions de relations (EXF-DG-18)", () => {
+  it("l'annuaire opt-in, classé sur ce que je vois : même hub et relations communes ; ni mes relations ni les masqués ; « ne plus me proposer » tient", async () => {
+    const { store } = demo()
+    // Steeve (France) : Prisca est déjà une relation ; Mireille (fiche « pays ») partage Prisca avec lui.
+    const [mireille, ...rest] = suggestionsView(store.getState(), "p-steeve", T0)
+    expect(rest).toEqual([])
+    expect(mireille).toMatchObject({ handle: "mireille.ivindo", reasons: { sameCountry: true, sameCity: false, sharedAssociations: 0, mutualConnections: 1 } })
+    // Nadia (Belgique) : aucune fiche ne lui est rapprochée — rien plutôt qu'un inconnu.
+    expect(suggestionsView(store.getState(), "p-nadia", T0)).toEqual([])
+    await store.switchTo("p-steeve")
+    expect(await store.dismissSuggestion("@mireille.ivindo")).toEqual({ ok: true, value: null })
+    expect(await store.dismissSuggestion("mireille.ivindo")).toEqual({ ok: true, value: null })
+    expect(suggestionsView(store.getState(), "p-steeve", T0)).toEqual([])
+    expect(await store.dismissSuggestion("steeve.ngounie")).toEqual({ ok: false, code: "not_found" })
+  })
+
+  it("une demande envoyée retire la suggestion", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    await store.connect("p-mireille")
+    expect(suggestionsView(store.getState(), "p-steeve", T0)).toEqual([])
   })
 })

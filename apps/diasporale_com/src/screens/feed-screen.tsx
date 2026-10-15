@@ -1,7 +1,7 @@
 "use client"
 
 import { FEED_SCOPES, parseFeedScope, type FeedScope } from "@diasporale/domain"
-import { Avatar, Card, EmptyState, EventCard, FolderTabsNav, PostCard, Skeleton, StatCounter, countryName } from "@diasporale/features"
+import { Avatar, Card, EmptyState, EventCard, FolderTabsNav, MemberSuggestions, PostCard, Skeleton, StatCounter, countryName } from "@diasporale/features"
 import { useActions, useCountryHub, useFeed, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { ArrowRightIcon, NewspaperIcon } from "lucide-react"
@@ -136,6 +136,7 @@ function FeedRail(props: { membership: MembershipView }) {
           <ArrowRightIcon className="size-4" aria-hidden />
         </NextLink>
       </Card>
+      <MemberSuggestions headingId="rail-suggestions" />
       <section aria-labelledby="rail-evenements" className="flex flex-col gap-3">
         <h2 id="rail-evenements" className="font-display text-lg font-bold">
           {t("rail.upcoming")}

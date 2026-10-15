@@ -17,6 +17,7 @@ import {
   toOpenCountries,
   toProfileView,
   toRelationView,
+  toSuggestionView,
   toWall,
 } from "./engine-views"
 
@@ -624,5 +625,18 @@ describe("menu d'une publication par le moteur (PD4, lots 7 et 8 d'ANTIA)", () =
       { name: "modules/moderation/moderation:reportPost", args: { networkId: "n-diasporale", postId: "post-1", reason: "other", note: "Détail." } },
       { name: "modules/posts/posts:remove", args: { networkId: "n-diasporale", postId: "post-9" } },
     ])
+  })
+})
+
+describe("suggestions par la tranche (PD4, EXF-DG-18)", () => {
+  it("une suggestion garde la facette projetée par le serveur et ce qui rapproche ; « ne plus me proposer » passe par le masquage du moteur", async () => {
+    const reasons = { sameCountry: true, sameCity: false, sharedAssociations: 0, mutualConnections: 2 }
+    const item = { personId: "p2", handle: "ada", displayName: "Ada", headline: null, avatarUrl: null, badges: [], facet: { countryOfResidence: "FR" }, reasons } as never
+    expect(toSuggestionView(item)).toEqual({ personId: "p2", handle: "ada", displayName: "Ada", headline: null, badges: [], facet: { countryOfResidence: "FR" }, reasons })
+
+    const { convex, calls } = fakeConvex({ ...NETWORK, "modules/suggestions/suggestions:dismiss": () => ({ targetPersonId: "p2", dismissed: true }) })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.dismissSuggestion("ada")).toEqual({ ok: true, value: null })
+    expect(calls.slice(1)).toEqual([{ name: "modules/suggestions/suggestions:dismiss", args: { networkId: "n-diasporale", handle: "ada" } }])
   })
 })

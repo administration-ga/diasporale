@@ -19,6 +19,7 @@ import type {
   PageTrustLevel,
   PostAudience,
   SponsorshipRefusal,
+  SuggestionReasons,
   TrustBadge,
   Visibility,
   WriteRateTier,
@@ -234,6 +235,14 @@ export interface MemberHitView {
 
 /** Une requête plus courte ne cherche pas : « chercher sans chercher » viderait l'annuaire. */
 export const MEMBER_SEARCH_MIN_LENGTH = 2
+
+/**
+ * Une suggestion de relation (EXF-DG-18) : un membre de l'annuaire opt-in et ce
+ * qui le rapproche du lecteur — lu sur ce que le lecteur a le droit de voir.
+ */
+export interface SuggestionView extends MemberHitView {
+  readonly reasons: SuggestionReasons
+}
 
 /**
  * Les avis de la cloche que DIASPORALE sait dire. Tout autre genre du moteur se

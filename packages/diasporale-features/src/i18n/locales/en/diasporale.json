@@ -996,6 +996,18 @@
     "cancel": "Cancel",
     "done": "Post removed."
   },
+  "suggestions": {
+    "title": "Members to meet",
+    "sameCity": "Same city: {{city}}",
+    "sameCountry": "Same hub: {{country}}",
+    "sharedAssociations_one": "{{count}} association in common",
+    "sharedAssociations_other": "{{count}} associations in common",
+    "mutualConnections_one": "{{count}} connection in common",
+    "mutualConnections_other": "{{count}} connections in common",
+    "requested": "Connection request sent.",
+    "dismiss": "Stop suggesting {{name}}",
+    "dismissed": "Suggestion removed."
+  },
   "bell": {
     "open": "Notifications",
     "openUnread_one": "Notifications, {{count}} unread",

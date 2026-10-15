@@ -29,9 +29,10 @@ import type { AssociationType, CompanySector, EventCategory, NotificationKind, R
 
 /**
  * Version de l'état persisté : v2 = relations (demandes, blocages, abonnements) ;
- * v3 = cloche ; v4 = commentaires ; v5 = marques, sourdines et signalements.
+ * v3 = cloche ; v4 = commentaires ; v5 = marques, sourdines et signalements ;
+ * v6 = « ne plus me proposer ».
  */
-export const DEMO_STATE_VERSION = 5
+export const DEMO_STATE_VERSION = 6
 
 export interface DemoPerson {
   readonly id: string
@@ -201,6 +202,8 @@ export interface DemoState {
   /** Sourdines : [qui se tait, qui est tu]. */
   readonly mutes: readonly (readonly [string, string])[]
   readonly reports: readonly DemoReport[]
+  /** « Ne plus me proposer » : [qui écarte, qui est écarté]. */
+  readonly suggestionDismissals: readonly (readonly [string, string])[]
   readonly openCountries: readonly CountryCode[]
   readonly countryModerators: Readonly<Partial<Record<CountryCode, number>>>
   readonly networkModerators: number
@@ -586,6 +589,7 @@ export function createDemoSeed(now: number): DemoState {
     marks: [],
     mutes: [],
     reports: [],
+    suggestionDismissals: [],
     openCountries: ["FR"],
     countryModerators: { FR: 2 },
     networkModerators: 2,

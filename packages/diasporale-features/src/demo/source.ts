@@ -4,7 +4,7 @@ import { hasCapability, type CountryCode, type FeedScope } from "@diasporale/dom
 import { useMemo, useSyncExternalStore } from "react"
 
 import type { DemoAccountView, DiasporaleDataSource } from "../data/port"
-import type { CommentThreadView, CommentView, Loadable, MemberHitView, NotificationView, RelationView, UnreadCountView } from "../data/types"
+import type { CommentThreadView, CommentView, Loadable, MemberHitView, NotificationView, RelationView, SuggestionView, UnreadCountView } from "../data/types"
 import { splitDisplayName, suggestHandles } from "../lib/handle"
 import {
   commentsView,
@@ -22,6 +22,7 @@ import {
   sessionView,
   sponsorDashboardView,
   statusOf,
+  suggestionsView,
   unreadCountView,
 } from "./selectors"
 import type { DemoStore } from "./store"
@@ -117,6 +118,19 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       }, [version, query, country])
     },
 
+    useSuggestions() {
+      const version = useVersion()
+      return useMemo<Loadable<readonly SuggestionView[]>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return { status: "error", code: "not_signed_in" }
+        const status = statusOf(state, viewerId, store.now())
+        if (!status || !hasCapability(status, "view_directory")) return { status: "error", code: "status_insufficient" }
+        return ready(suggestionsView(state, viewerId, store.now()))
+      }, [version])
+    },
+
     useComments(postId: string) {
       const version = useVersion()
       return useMemo<Loadable<readonly CommentThreadView[]>>(() => {
@@ -209,6 +223,7 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       react: (postId, kind) => store.react(postId, kind),
       comment: (input) => store.comment(input),
       removeComment: (commentId) => store.removeComment(commentId),
+      dismissSuggestion: (handle) => store.dismissSuggestion(handle),
       toggleBookmark: (postId) => store.toggleBookmark(postId),
       hidePost: (postId) => store.hidePost(postId),
       muteAuthor: (personId) => store.muteAuthor(personId),

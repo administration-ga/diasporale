@@ -996,6 +996,18 @@
     "cancel": "Annuler",
     "done": "Publication retirée."
   },
+  "suggestions": {
+    "title": "Des membres à rencontrer",
+    "sameCity": "Même ville : {{city}}",
+    "sameCountry": "Même hub : {{country}}",
+    "sharedAssociations_one": "{{count}} association en commun",
+    "sharedAssociations_other": "{{count}} associations en commun",
+    "mutualConnections_one": "{{count}} relation en commun",
+    "mutualConnections_other": "{{count}} relations en commun",
+    "requested": "Demande de relation envoyée.",
+    "dismiss": "Ne plus me proposer {{name}}",
+    "dismissed": "Suggestion retirée."
+  },
   "bell": {
     "open": "Notifications",
     "openUnread_one": "Notifications, {{count}} non lue",

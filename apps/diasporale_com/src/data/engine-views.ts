@@ -15,6 +15,7 @@ import {
   type FacetProjection,
   type FeedRelation,
   type FeedScope,
+  type PostAudience,
   isFieldVisibility,
   isResidenceCountry,
   parseContentScope,
@@ -36,6 +37,7 @@ import {
   type ProfileView,
   type RelationView,
   type SponsorDashboardView,
+  type SuggestionView,
 } from "@diasporale/features/data"
 import type { FunctionArgs, FunctionReturnType } from "convex/server"
 
@@ -140,19 +142,46 @@ function relationOf(item: FeedItem): FeedRelation {
   }
 }
 
+/**
+ * L'audience du moteur dans les mots du domaine : les abonnés d'une page
+ * (`followers`, lot des pages du moteur) sont l'audience `page`. Une audience
+ * inconnue se dit restreinte, jamais publique.
+ */
+const ENGINE_AUDIENCES: Readonly<Record<string, PostAudience>> = Object.freeze({
+  public: "public",
+  connections: "connections",
+  group: "group",
+  followers: "page",
+})
+
+function audienceOf(audience: string): PostAudience {
+  return ENGINE_AUDIENCES[audience] ?? "connections"
+}
+
+/**
+ * Qui parle : une page (sa carte, son badge calculé — l'auteur est alors le
+ * SIGNATAIRE, PD5) ou une personne par son profil publié.
+ */
+function authorOf(item: FeedItem): PostView["author"] {
+  if (item.page) {
+    return { kind: "page", id: item.page.pageId, handle: item.page.handle, displayName: item.page.name, badges: [item.page.badge] }
+  }
+  return {
+    kind: "person",
+    id: item.author.personId,
+    handle: item.author.handle ?? "",
+    displayName: item.author.displayName ?? "",
+    badges: item.author.badges,
+  }
+}
+
 export function toPostView(item: FeedItem): PostView {
   return {
     id: item._id,
-    author: {
-      kind: "person",
-      id: item.author.personId,
-      handle: item.author.handle ?? "",
-      displayName: item.author.displayName ?? "",
-      badges: item.author.badges,
-    },
+    author: authorOf(item),
     body: item.body,
     scope: scopeOf(item),
-    audience: item.audience,
+    audience: audienceOf(item.audience),
     visibility: item.visibility,
     // Le moteur ne rend au lecteur que du publié ; la relecture avant publication viendra avec PD6.
     moderation: "published",
@@ -256,6 +285,13 @@ export function toMemberHitView(hit: DirectoryHit): MemberHitView {
     badges: hit.badges,
     facet: toFacetProjection(hit.facet),
   }
+}
+
+type EngineSuggestion = FunctionReturnType<typeof api.modules.diaspora.suggestions.forMe>[number]
+
+/** Une suggestion de la tranche : la facette déjà projetée pour le lecteur, et ce qui rapproche. */
+export function toSuggestionView(item: EngineSuggestion): SuggestionView {
+  return { ...toMemberHitView(item), reasons: item.reasons }
 }
 
 type ConnectionWith = FunctionReturnType<typeof api.modules.graph.connections.connectionWith>
