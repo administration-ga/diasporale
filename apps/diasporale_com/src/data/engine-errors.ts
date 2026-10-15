@@ -45,6 +45,9 @@ const ENGINE_RULES: Readonly<Record<string, ActionErrorCode>> = {
   DISPLAY_NAME_LENGTH: "display_name_invalid",
   POST_EMPTY: "post_empty",
   POST_TOO_LONG: "post_too_long",
+  POST_REACH_INVALID: "scope_reach_invalid",
+  POST_COUNTRY_INVALID: "scope_country_invalid",
+  POST_COUNTRY_REQUIRED: "scope_country_required",
 }
 
 /** Le code FERMÉ d'une erreur levée par une fonction du moteur. */

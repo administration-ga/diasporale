@@ -62,7 +62,8 @@ export function PostComposerSheet(props: {
       reach: values.reach,
       audience: values.audience,
       alsoOnRoot: values.alsoOnRoot,
-      ...(values.reach === "local" ? { country: props.memberCountry } : {}),
+      // Local : le pays du hub. Diaspora : le pays d'ORIGINE, en pastille dans les autres hubs (EXF-DG-16).
+      country: props.memberCountry,
     })
     if (!result.ok) {
       toast.error(t(`errors.${result.code}`))

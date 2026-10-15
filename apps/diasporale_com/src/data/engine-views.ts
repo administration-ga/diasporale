@@ -13,9 +13,11 @@ import {
   type FacetField,
   type FacetInput,
   type FacetProjection,
+  type FeedRelation,
   type FeedScope,
   isFieldVisibility,
   isResidenceCountry,
+  parseContentScope,
 } from "@diasporale/domain"
 import {
   type AccountView,
@@ -39,7 +41,7 @@ type MyPerson = NonNullable<FunctionReturnType<typeof api.modules.people.persons
 type MyIdentity = NonNullable<FunctionReturnType<typeof api.modules.diaspora.membership.myIdentity>>
 type MyMembership = NonNullable<FunctionReturnType<typeof api.modules.diaspora.membership.myMembership>>
 type HubView = FunctionReturnType<typeof api.modules.diaspora.hubs.getCountryHub>
-type FeedItem = FunctionReturnType<typeof api.modules.posts.posts.feed>["page"][number]
+type FeedItem = FunctionReturnType<typeof api.modules.posts.posts.myFeed>["items"][number]
 type SponsorDashboard = FunctionReturnType<typeof api.modules.diaspora.membership.sponsorDashboard>
 type PublicProfile = NonNullable<FunctionReturnType<typeof api.modules.people.profile.getPublicProfile>>
 type MemberFacet = NonNullable<FunctionReturnType<typeof api.modules.diaspora.profile.memberFacet>>
@@ -113,11 +115,28 @@ export function toCountryHubView(hub: HubView, country: CountryCode): CountryHub
 }
 
 /**
- * Une publication du moteur. Sans pays ni portée posés à la publication (ils
- * arrivent avec PD4), elle est de portée `diaspora` — c'est exactement ce que dit
- * le domaine d'un contenu sans pays.
+ * Le lieu d'une publication sans portée lisible (publiée avant que le moteur
+ * porte pays et portée) : `diaspora` — c'est exactement ce que dit le domaine
+ * d'un contenu sans pays.
  */
 export const ENGINE_POST_SCOPE: ContentScope = Object.freeze({ reach: "diaspora" })
+
+/** Portée et pays d'une publication, relus par la règle du domaine (le moteur les a déjà validés à l'écriture). */
+function scopeOf(item: FeedItem): ContentScope {
+  const scope = parseContentScope({ reach: item.reach ?? ENGINE_POST_SCOPE.reach, country: item.country })
+  return scope.ok ? scope.value : ENGINE_POST_SCOPE
+}
+
+/** Pourquoi la ligne est dans MON fil, dit par le moteur : l'ordre de « Pour vous », jamais un droit de lecture. */
+function relationOf(item: FeedItem): FeedRelation {
+  return {
+    own: item.isMine || item.reason === "own",
+    connection: item.reason === "connection",
+    follow: item.reason === "follow",
+    followedPage: item.reason === "page",
+    memberGroup: item.reason === "group",
+  }
+}
 
 export function toPostView(item: FeedItem): PostView {
   return {
@@ -130,32 +149,28 @@ export function toPostView(item: FeedItem): PostView {
       badges: item.author.badges,
     },
     body: item.body,
-    scope: ENGINE_POST_SCOPE,
+    scope: scopeOf(item),
     audience: item.audience,
     visibility: item.visibility,
+    // Le moteur ne rend au lecteur que du publié ; la relecture avant publication viendra avec PD6.
     moderation: "published",
     createdAt: item.publishedAt,
     reactionCount: item.reactions.total,
-    commentCount: 0,
+    commentCount: item.commentCount,
     myReaction: item.reactions.mine,
     isMine: item.isMine,
   }
 }
 
-/** Le fil d'une portée : ce que le moteur rend au lecteur, ordonné par la règle du domaine. */
+/** Le fil d'une portée : ce que le moteur rend au lecteur, trié par la règle du domaine (`admitsInFeedScope`). */
 export function toFeed(items: readonly FeedItem[], scope: FeedScope, viewerCountry: CountryCode): PostView[] {
-  return items
-    .map(toPostView)
-    .filter((post) =>
-      admitsInFeedScope(
-        scope,
-        {
-          scope: post.scope,
-          relation: { own: post.isMine, connection: false, follow: false, followedPage: false, memberGroup: false },
-        },
-        viewerCountry,
-      ),
-    )
+  return items.filter((item) => admitsInFeedScope(scope, { scope: scopeOf(item), relation: relationOf(item) }, viewerCountry)).map(toPostView)
+}
+
+/** Le mur d'un auteur : l'épinglée d'abord, jamais deux fois. */
+export function toWall(wall: { readonly items: readonly FeedItem[]; readonly pinned: FeedItem | null }): PostView[] {
+  const pinned = wall.pinned
+  return [...(pinned ? [pinned] : []), ...wall.items.filter((item) => item._id !== pinned?._id)].map(toPostView)
 }
 
 export function toSponsorDashboardView(dashboard: SponsorDashboard): SponsorDashboardView {
@@ -206,11 +221,11 @@ function toFacetProjection(projection: Omit<FacetProjection, "countryOfResidence
 }
 
 /**
- * Le profil d'un membre : identité publique du moteur (`getPublicProfile`) et
- * facette projetée pour le lecteur (`memberFacet`). Les publications d'un auteur
- * et le nom du poste arrivent avec les lots « posts » et « pages » (PD4, PD5).
+ * Le profil d'un membre : identité publique du moteur (`getPublicProfile`),
+ * facette projetée pour le lecteur (`memberFacet`) et mur de l'auteur
+ * (`personPosts`). Le nom du poste arrive avec les pages (PD5).
  */
-export function toProfileView(profile: PublicProfile, member: MemberFacet): ProfileView {
+export function toProfileView(profile: PublicProfile, member: MemberFacet, posts: readonly PostView[] = []): ProfileView {
   const facet = toFacetProjection(member.facet)
   return {
     personId: profile.personId,
@@ -222,7 +237,7 @@ export function toProfileView(profile: PublicProfile, member: MemberFacet): Prof
     publicFacet: member.preview ? toFacetProjection(member.preview) : facet,
     postName: null,
     isSelf: profile.isMe,
-    posts: [],
+    posts,
   }
 }
 

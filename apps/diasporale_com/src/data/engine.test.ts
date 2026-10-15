@@ -6,8 +6,8 @@ import { ConvexError } from "convex/values"
 import { describe, expect, it, vi } from "vitest"
 
 import { authActionErrorCode, engineActionErrorCode } from "./engine-errors"
-import { createEngineActions } from "./engine-source"
-import { toFacetArgs, toFeed, toMemberHitView, toMembershipView, toNotificationView, toOpenCountries, toProfileView, toRelationView } from "./engine-views"
+import { createEngineActions, feedRequest } from "./engine-source"
+import { toFacetArgs, toFeed, toMemberHitView, toMembershipView, toNotificationView, toOpenCountries, toProfileView, toRelationView, toWall } from "./engine-views"
 
 /**
  * La source « moteur » sans moteur : traduction des refus, projections pures, et
@@ -255,10 +255,6 @@ describe("écritures de la source « moteur »", () => {
     expect(await actions.signInWithIdn({ firstName: "A", lastName: "B", loa: 2, gaboneseNationality: true })).toEqual({ ok: false, code: "feature_unavailable" })
     expect(await actions.exportMyData()).toEqual({ ok: false, code: "feature_unavailable" })
     expect(await actions.deleteMyAccount()).toEqual({ ok: false, code: "feature_unavailable" })
-    expect(await actions.publish({ body: "Bonjour", reach: "local", country: "FR", audience: "public", alsoOnRoot: false })).toEqual({
-      ok: false,
-      code: "feature_unavailable",
-    })
     expect(await actions.react("post-1", null)).toEqual({ ok: true, value: null })
     expect(calls).toEqual([])
   })
@@ -452,5 +448,93 @@ describe("annuaire de la tranche (PD4, EXF-DG-19)", () => {
       facet: { countryOfResidence: "FR", city: "Lyon" },
     })
     expect(toMemberHitView({ ...(hit as object), facet: { countryOfResidence: "XX" } } as never).facet).toEqual({})
+  })
+})
+
+describe("publications à portée et pays (PD4, lot 7 d'ANTIA)", () => {
+  const base = {
+    body: "Bonjour",
+    audience: "public",
+    visibility: "network",
+    publishedAt: 1,
+    author: { personId: "p2", handle: "ada", displayName: "Ada", badges: [] },
+    reactions: { counts: { like: 0, bravo: 0, soutien: 0, instructif: 0 }, total: 0, mine: null },
+    commentCount: 2,
+  }
+  const item = (id: string, reach: string | null, country: string | null, reason = "public", isMine = false) =>
+    ({ ...base, _id: id, reach, country, reason, isMine }) as never
+  const ids = (posts: readonly { id: string }[]) => posts.map((post) => post.id)
+
+  it("« Mon pays » et un hub : le local du pays plus toute la diaspora ; « Pour vous » suit la raison du moteur", () => {
+    const items = [item("fr-local", "local", "FR"), item("be-local", "local", "BE"), item("diaspora-be", "diaspora", "BE", "connection"), item("ancienne", null, null)]
+    expect(ids(toFeed(items, "mon_pays", "FR"))).toEqual(["fr-local", "diaspora-be", "ancienne"])
+    expect(ids(toFeed(items, "mon_pays", "BE"))).toEqual(["be-local", "diaspora-be", "ancienne"])
+    expect(ids(toFeed(items, "diaspora", "FR"))).toEqual(["diaspora-be", "ancienne"])
+    expect(ids(toFeed(items, "pour_vous", "FR"))).toEqual(["diaspora-be"])
+    // Le pays d'origine d'une publication diaspora reste lisible : la pastille des autres hubs.
+    expect(toFeed(items, "recents", "FR").find((post) => post.id === "diaspora-be")).toMatchObject({
+      scope: { reach: "diaspora", country: "BE" },
+      commentCount: 2,
+    })
+  })
+
+  it("la requête du fil : portées du moteur, ou voies composées par la règle du hub", () => {
+    expect(feedRequest("pour_vous", "FR")).toEqual({ scope: "pour_vous" })
+    expect(feedRequest("recents", "FR")).toEqual({ scope: "recents" })
+    expect(feedRequest("mon_pays", "CA")).toEqual({ lanes: [{ reach: "local", country: "CA" }, { reach: "diaspora" }] })
+    expect(feedRequest("diaspora", "CA")).toEqual({ lanes: [{ reach: "diaspora" }] })
+  })
+
+  it("le mur d'un auteur : l'épinglée d'abord, jamais deux fois", () => {
+    const pinned = item("epinglee", "local", "FR")
+    expect(ids(toWall({ items: [item("a", "local", "FR"), pinned, item("b", "diaspora", null)], pinned }))).toEqual(["epinglee", "a", "b"])
+    expect(ids(toWall({ items: [item("a", "local", "FR")], pinned: null }))).toEqual(["a"])
+  })
+
+  const OPEN_FR = { "modules/diaspora/hubs:listOpenCountries": () => [{ country: "FR" }] }
+
+  it("local dans un pays ouvert : portée et pays partent au moteur ; diaspora garde son pays d'origine ; ANTIA seulement en public", async () => {
+    const { convex, calls } = fakeConvex({ ...NETWORK, ...OPEN_FR, "modules/posts/posts:publish": () => ({ postId: "post-1", created: true }) })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.publish({ body: "Bonjour Lyon", reach: "local", country: "FR", audience: "public", alsoOnRoot: true })).toEqual({
+      ok: true,
+      value: { moderation: "published" },
+    })
+    expect(await actions.publish({ body: "Pour tous", reach: "diaspora", country: "FR", audience: "connections", alsoOnRoot: true })).toEqual({
+      ok: true,
+      value: { moderation: "published" },
+    })
+    expect(calls.filter((call) => call.name === "modules/posts/posts:publish").map((call) => call.args)).toEqual([
+      { networkId: "n-diasporale", body: "Bonjour Lyon", audience: "public", reach: "local", country: "FR", alsoOnRoot: true },
+      { networkId: "n-diasporale", body: "Pour tous", audience: "connections", reach: "diaspora", country: "FR", alsoOnRoot: false },
+    ])
+  })
+
+  it("local dans un pays non ouvert : refusé avant toute écriture, tant que le moteur ne retient rien en relecture", async () => {
+    const { convex, calls } = fakeConvex({ ...NETWORK, ...OPEN_FR })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.publish({ body: "Bonjour Montréal", reach: "local", country: "CA", audience: "public", alsoOnRoot: false })).toEqual({
+      ok: false,
+      code: "feature_unavailable",
+    })
+    expect(calls.some((call) => call.name === "modules/posts/posts:publish")).toBe(false)
+  })
+
+  it("un pays absent ou le Gabon : le refus du domaine, sans appel ; un refus de portée du moteur arrive avec son code", async () => {
+    const { convex, calls } = fakeConvex({
+      ...NETWORK,
+      ...OPEN_FR,
+      "modules/posts/posts:publish": () => {
+        throw engineError({ code: "invalidArgument", rule: "POST_REACH_INVALID" })
+      },
+    })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.publish({ body: "x", reach: "local", audience: "public", alsoOnRoot: false })).toEqual({ ok: false, code: "scope_country_required" })
+    expect(await actions.publish({ body: "x", reach: "local", country: "GA" as never, audience: "public", alsoOnRoot: false })).toEqual({
+      ok: false,
+      code: "scope_country_invalid",
+    })
+    expect(calls).toEqual([])
+    expect(await actions.publish({ body: "x", reach: "diaspora", audience: "public", alsoOnRoot: false })).toEqual({ ok: false, code: "scope_reach_invalid" })
   })
 })

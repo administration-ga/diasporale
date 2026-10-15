@@ -23,6 +23,7 @@ import {
   type CountryCode,
   DIASPORALE_NETWORK_SLUG,
   type FeedScope,
+  parseContentScope,
   parseResidenceCountry,
 } from "@diasporale/domain"
 import type {
@@ -61,6 +62,7 @@ import {
   toFeed,
   toMemberHitView,
   toMembershipView,
+  toWall,
   toNotificationView,
   toOpenCountries,
   toProfileView,
@@ -70,6 +72,24 @@ import {
 
 /** Une page du fil, la plus grande que le moteur serve. */
 const FEED_PAGE = 30
+
+/**
+ * La requête du fil pour une portée. « Pour vous » et « Récents » sont celles du
+ * moteur ; « Mon pays » et « Toute la diaspora » composent ses voies selon LA
+ * règle du domaine (`isShownInHub`) : le local du pays, plus toute la diaspora.
+ */
+export function feedRequest(scope: FeedScope, country: CountryCode) {
+  switch (scope) {
+    case "pour_vous":
+      return { scope: "pour_vous" as const }
+    case "recents":
+      return { scope: "recents" as const }
+    case "mon_pays":
+      return { lanes: [{ reach: "local", country }, { reach: "diaspora" }] }
+    case "diaspora":
+      return { lanes: [{ reach: "diaspora" }] }
+  }
+}
 /** La première page de la cloche. */
 const BELL_PAGE = 30
 
@@ -191,13 +211,14 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
     useFeed(args: { scope: FeedScope; hubCountry?: CountryCode }): Loadable<readonly PostView[]> {
       const { networkId, membership } = useMember()
       const id = networkId.state === "ready" ? networkId.value : null
-      const feed = useLoaded(api.modules.posts.posts.feed, id ? { networkId: id, paginationOpts: { numItems: FEED_PAGE, cursor: null } } : "skip")
-      for (const loaded of [networkId, membership, feed]) if (loaded.state === "error") return failed(loaded.code)
-      if (feed.state !== "ready" || membership.state !== "ready") return LOADING
-      const memberCountry = membership.value?.facet?.countryOfResidence
+      const memberCountry = membership.state === "ready" ? membership.value?.facet?.countryOfResidence : undefined
       const country = args.hubCountry ?? (memberCountry !== undefined && parseResidenceCountry(memberCountry).ok ? (memberCountry as CountryCode) : null)
+      const feed = useLoaded(api.modules.posts.posts.myFeed, id && country ? { networkId: id, limit: FEED_PAGE, ...feedRequest(args.scope, country) } : "skip")
+      for (const loaded of [networkId, membership, feed]) if (loaded.state === "error") return failed(loaded.code)
+      if (membership.state !== "ready") return LOADING
       if (country === null) return failed("not_member")
-      const posts = toFeed(feed.value.page, args.scope, country)
+      if (feed.state !== "ready") return LOADING
+      const posts = toFeed(feed.value.items, args.scope, country)
       for (const post of posts) myReactions.set(post.id, post.myReaction)
       return ready(posts)
     },
@@ -208,10 +229,14 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       const args = id ? { networkId: id, handle } : "skip"
       const profile = useLoaded(api.modules.people.profile.getPublicProfile, args)
       const member = useLoaded(api.modules.diaspora.profile.memberFacet, args)
-      for (const loaded of [networkId, profile, member]) if (loaded.state === "error") return failed(loaded.code)
-      if (profile.state !== "ready" || member.state !== "ready") return LOADING
+      const wall = useLoaded(api.modules.posts.posts.personPosts, id ? { networkId: id, handle, limit: FEED_PAGE } : "skip")
+      for (const loaded of [networkId, profile, member, wall]) if (loaded.state === "error") return failed(loaded.code)
+      if (profile.state !== "ready" || member.state !== "ready" || wall.state !== "ready") return LOADING
       // Inconnu, non publié, hors réseau ou bloqué : le même « introuvable ».
-      return ready(profile.value && member.value ? toProfileView(profile.value, member.value) : null)
+      if (!profile.value || !member.value) return ready(null)
+      const posts = toWall(wall.value)
+      for (const post of posts) myReactions.set(post.id, post.myReaction)
+      return ready(toProfileView(profile.value, member.value, posts))
     },
 
     useRelation(personId: string): Loadable<RelationView> {
@@ -377,12 +402,23 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
 
     publish: (input) =>
       attempt(async () => {
-        // Pays et portée d'une publication : PD4. D'ici là, seule la portée « toute la diaspora » se publie.
-        if (input.reach !== "diaspora") throw new Refusal("feature_unavailable")
+        const scope = parseContentScope({ reach: input.reach, country: input.country ?? null })
+        if (!scope.ok) throw new Refusal(scope.code)
+        const networkId = await diasporale()
+        // Relecture avant publication (invariant 10) : tant que le moteur ne retient pas un contenu
+        // (PA5), un pays qui n'est pas ouvert ne reçoit pas de publication locale. Garde d'écran
+        // seulement : la garde serveur viendra avec le crochet de politique de la tranche.
+        if (scope.value.reach === "local") {
+          const local = scope.value.country
+          const open = await deps.convex.query(api.modules.diaspora.hubs.listOpenCountries, { networkId })
+          if (!open.some((hub) => hub.country === local)) throw new Refusal("feature_unavailable")
+        }
         await deps.convex.mutation(api.modules.posts.posts.publish, {
-          networkId: await diasporale(),
+          networkId,
           body: input.body,
           audience: input.audience,
+          reach: scope.value.reach,
+          ...(scope.value.country !== undefined ? { country: scope.value.country } : {}),
           alsoOnRoot: input.alsoOnRoot && input.audience === "public",
         })
         return { moderation: "published" as const }
