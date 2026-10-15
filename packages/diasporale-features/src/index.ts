@@ -18,7 +18,7 @@ export { Field, Input, Label, Textarea } from "./primitives/field"
 export { Checkbox } from "./primitives/checkbox"
 export { RadioCard, RadioGroup } from "./primitives/radio-group"
 export { Switch } from "./primitives/switch"
-export { Sheet, SheetClose, SheetContent, SheetTrigger } from "./primitives/sheet"
+export { Sheet, SheetClose, SheetContent, SheetTrigger, useSheetOpen } from "./primitives/sheet"
 export {
   FolderTabs,
   FolderTabsContent,

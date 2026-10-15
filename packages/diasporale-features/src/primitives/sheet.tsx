@@ -2,7 +2,7 @@
 
 import { XIcon } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
-import type { ComponentProps, ReactNode } from "react"
+import { useEffect, useSyncExternalStore, type ComponentProps, type ReactNode } from "react"
 
 import { cn } from "../lib/cn"
 
@@ -15,6 +15,49 @@ import { cn } from "../lib/cn"
 export const Sheet = DialogPrimitive.Root
 export const SheetTrigger = DialogPrimitive.Trigger
 export const SheetClose = DialogPrimitive.Close
+
+/* Feuilles ouvertes. Les cartes flottantes persistantes (statut, démonstration)
+   s'écartent tant qu'une feuille est ouverte : sinon elles passent devant elle,
+   et un clic sur leur croix compterait comme un clic hors de la feuille. */
+let openSheets = 0
+const sheetListeners = new Set<() => void>()
+
+function subscribeToSheets(listener: () => void): () => void {
+  sheetListeners.add(listener)
+  return () => {
+    sheetListeners.delete(listener)
+  }
+}
+
+function notifySheets(): void {
+  for (const listener of sheetListeners) listener()
+}
+
+/** Vrai tant qu'une feuille est ouverte (son contenu n'est monté qu'ouvert). */
+export function useSheetOpen(): boolean {
+  return useSyncExternalStore(
+    subscribeToSheets,
+    () => openSheets > 0,
+    () => false,
+  )
+}
+
+function SheetPresence() {
+  useEffect(() => {
+    openSheets += 1
+    notifySheets()
+    return () => {
+      openSheets -= 1
+      notifySheets()
+    }
+  }, [])
+  return null
+}
+
+/** La pile des avis (sonner) vit hors de la feuille : un geste dans la pile ne la ferme pas. */
+function keepOpenOnNotice(event: Event): void {
+  if (event.target instanceof Element && event.target.closest("[data-sonner-toaster]")) event.preventDefault()
+}
 
 export function SheetContent(props: {
   title: ReactNode
@@ -38,6 +81,7 @@ export function SheetContent(props: {
         id={props.id}
         data-slot="sheet-content"
         onOpenAutoFocus={props.onOpenAutoFocus}
+        onInteractOutside={keepOpenOnNotice}
         className={cn(
           "fixed z-50 flex max-h-[min(88dvh,780px)] flex-col overflow-hidden bg-card text-card-foreground shadow-sheet focus:outline-none data-[state=open]:animate-rise",
           // Téléphone : feuille basse, coins hauts de 12 px, réserve de la zone sûre.
@@ -47,6 +91,7 @@ export function SheetContent(props: {
           props.className,
         )}
       >
+        <SheetPresence />
         <div className="flex items-start gap-3 border-b border-border px-5 pb-3 pt-4">
           <div className="min-w-0 flex-1">
             <DialogPrimitive.Title className="font-display text-xl font-bold leading-tight">

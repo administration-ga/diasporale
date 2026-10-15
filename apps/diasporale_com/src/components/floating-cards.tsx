@@ -1,5 +1,6 @@
 "use client"
 
+import { useSheetOpen } from "@diasporale/features"
 import { useEffect, useEffectEvent, useSyncExternalStore, type ReactElement } from "react"
 import { toast } from "sonner"
 
@@ -16,6 +17,10 @@ import { toast } from "sonner"
  * reviendra. Le retrait est différé d'un tour : un écran qui remonte aussitôt
  * (double montage du mode strict, navigation entre deux écrans qui portent la
  * même carte) la garde en place, sans la rejouer.
+ *
+ * Tant qu'une feuille est ouverte (composeur, cloche, choix du pays), la carte
+ * s'écarte, puis revient à la fermeture : posée devant la feuille, elle en
+ * masquait les boutons. Ce retrait-là n'est pas non plus un choix de la personne.
  */
 
 export type DismissalStore = "session" | "local"
@@ -120,7 +125,8 @@ export function useFloatingCard(props: {
   version: string
 }) {
   const { dismissed, dismiss, restore } = useDismissal(props.dismissKey, props.store)
-  const visible = props.content !== null && !dismissed
+  const sheetOpen = useSheetOpen()
+  const visible = props.content !== null && !dismissed && !sheetOpen
 
   const place = useEffectEvent(() => {
     const render = props.content
