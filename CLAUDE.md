@@ -57,8 +57,11 @@
 ## Vérification
 
 ```bash
-bun run --cwd ../ANTIA verify   # obligatoire avant tout commit : codegen, typecheck, tests, lint
+PATH="/opt/homebrew/opt/node@22/bin:$PATH" bun run --cwd ../ANTIA verify   # obligatoire avant tout commit : codegen, typecheck, tests, lint
 ```
+
+Node 22 en tête du PATH : le Mac a Node 25, sous lequel `codegen` échoue dès qu'une action
+`"use node"` existe dans le moteur (lot 15 d'ANTIA, voir son `CLAUDE.md`).
 
 Cliquets attendus (verts avant toute PR) : réseau borné, aucun import inter-produit, charte,
 i18n, `.collect()` borné, `v.any()`, communication publique (aucun chiffre non mesuré, aucun
