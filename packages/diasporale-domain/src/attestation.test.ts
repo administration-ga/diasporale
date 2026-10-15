@@ -9,6 +9,7 @@ import {
 
 const NOW = Date.UTC(2026, 9, 14, 12, 0, 0)
 const VERIFIED = {
+  contract: "DIASPORA-ATTESTATION-V1",
   verified: true,
   countryOfResidence: "FR",
   postSlug: "poste-demo-france",
@@ -22,18 +23,27 @@ describe("parseAttestationResponse — la réponse et rien d'autre", () => {
     expect(ATTESTATION_CONTRACT).toBe("DIASPORA-ATTESTATION-V1")
   })
 
-  test("R2 : une réponse vérifiée complète est acceptée telle quelle", () => {
-    expect(parseAttestationResponse(VERIFIED)).toEqual({ ok: true, value: VERIFIED })
+  test("R2 : une réponse vérifiée complète est acceptée ; le nom du contrat est vérifié puis écarté", () => {
+    const { contract: _contract, ...expected } = VERIFIED
+    expect(parseAttestationResponse(VERIFIED)).toEqual({ ok: true, value: expected })
   })
 
   test("une réponse négative minimale est acceptée", () => {
-    expect(parseAttestationResponse({ verified: false, registrationStatus: "none", attestedAt: NOW })).toEqual({
+    expect(parseAttestationResponse({ contract: ATTESTATION_CONTRACT, verified: false, registrationStatus: "none", attestedAt: NOW })).toEqual({
       ok: true,
       value: { verified: false, registrationStatus: "none", attestedAt: NOW },
     })
-    expect(parseAttestationResponse({ verified: false, attestedAt: NOW })).toEqual({
-      ok: true,
-      value: { verified: false, attestedAt: NOW },
+  })
+
+  test("le nom du contrat et le statut d'inscription sont exigés dans TOUTE réponse", () => {
+    const { contract: _contract, ...withoutContract } = VERIFIED
+    const { registrationStatus: _status, ...withoutStatus } = VERIFIED
+    for (const raw of [withoutContract, { ...VERIFIED, contract: "DIASPORA-ATTESTATION-V2" }, withoutStatus]) {
+      expect(parseAttestationResponse(raw)).toEqual({ ok: false, code: "response_field_invalid" })
+    }
+    expect(parseAttestationResponse({ contract: ATTESTATION_CONTRACT, verified: false, attestedAt: NOW })).toEqual({
+      ok: false,
+      code: "response_field_invalid",
     })
   })
 
@@ -74,14 +84,14 @@ describe("parseAttestationResponse — la réponse et rien d'autre", () => {
     for (const raw of [noCountry, noPost, { ...VERIFIED, registrationStatus: "expired" }]) {
       expect(parseAttestationResponse(raw)).toEqual({ ok: false, code: "response_incoherent" })
     }
-    expect(parseAttestationResponse({ verified: false, registrationStatus: "active", attestedAt: NOW })).toEqual({
+    expect(parseAttestationResponse({ contract: ATTESTATION_CONTRACT, verified: false, registrationStatus: "active", attestedAt: NOW })).toEqual({
       ok: false,
       code: "response_incoherent",
     })
   })
 
   test("issue affichée : vérifié ou « nous n'avons pas pu confirmer », sans raison consulaire", () => {
-    expect(attestationOutcome({ verified: true, attestedAt: NOW })).toBe("verified")
+    expect(attestationOutcome({ verified: true, registrationStatus: "active", attestedAt: NOW })).toBe("verified")
     expect(attestationOutcome({ verified: false, registrationStatus: "expired", attestedAt: NOW })).toBe("not_confirmed")
   })
 })

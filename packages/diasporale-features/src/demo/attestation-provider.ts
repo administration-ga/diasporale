@@ -9,7 +9,7 @@
  * deux dates. Le moteur relit sa réponse avec `parseAttestationResponse`
  * exactement comme il relira celle du vrai service (PD3).
  */
-import type { AttestationRequest, CountryCode, RegistrationStatus } from "@diasporale/domain"
+import { ATTESTATION_CONTRACT, type AttestationRequest, type CountryCode, type RegistrationStatus } from "@diasporale/domain"
 
 interface FakeRegistration {
   readonly country: CountryCode
@@ -53,11 +53,12 @@ export async function fakeConsularAttestation(request: AttestationRequest, now: 
     request.subjectKind === "idnSub"
       ? FAKE_REGISTRY_BY_IDN_SUB[request.subject]
       : (await hashedEmailRegistry()).get(request.subject)
-  if (registration === undefined) return { verified: false, registrationStatus: "none", attestedAt: now }
+  if (registration === undefined) return { contract: ATTESTATION_CONTRACT, verified: false, registrationStatus: "none", attestedAt: now }
   if (registration.status !== "active") {
-    return { verified: false, registrationStatus: registration.status, attestedAt: now }
+    return { contract: ATTESTATION_CONTRACT, verified: false, registrationStatus: registration.status, attestedAt: now }
   }
   return {
+    contract: ATTESTATION_CONTRACT,
     verified: true,
     countryOfResidence: registration.country,
     postSlug: registration.postSlug,

@@ -31,17 +31,22 @@ export interface AttestationRequest {
   readonly requestedAt: number
 }
 
-/** La réponse — et RIEN d'autre. */
+/**
+ * La réponse — et RIEN d'autre. Le nom du contrat (`contract`), émis dans toute
+ * réponse, est EXIGÉ à sa valeur exacte puis écarté : il ne dit rien de la personne.
+ */
 export interface AttestationResponse {
   readonly verified: boolean
   readonly countryOfResidence?: CountryCode
   readonly postSlug?: string
-  readonly registrationStatus?: RegistrationStatus
+  /** Toujours présent (contrat §3.3) : `active`, `expired` ou `none`. */
+  readonly registrationStatus: RegistrationStatus
   readonly since?: number
   readonly attestedAt: number
 }
 
 const RESPONSE_FIELDS: ReadonlySet<string> = new Set([
+  "contract",
   "verified",
   "countryOfResidence",
   "postSlug",
@@ -67,7 +72,8 @@ function isTimestamp(value: unknown): value is number {
 
 /**
  * Relit une réponse reçue (JSON déjà signé et vérifié par l'action) : tout
- * champ hors contrat est un REFUS, pas un oubli silencieux. Une réponse
+ * champ hors contrat est un REFUS, pas un oubli silencieux. Le nom du contrat et
+ * le statut d'inscription sont exigés dans toute réponse ; une réponse
  * `verified: true` doit porter le pays, le poste et un statut `active`.
  */
 export function parseAttestationResponse(raw: unknown): Result<AttestationResponse, AttestationResponseRefusal> {
@@ -76,7 +82,8 @@ export function parseAttestationResponse(raw: unknown): Result<AttestationRespon
   for (const key of Object.keys(record)) {
     if (!RESPONSE_FIELDS.has(key)) return refuse("response_field_not_allowed")
   }
-  const { verified, countryOfResidence, postSlug, registrationStatus, since, attestedAt } = record
+  const { contract, verified, countryOfResidence, postSlug, registrationStatus, since, attestedAt } = record
+  if (contract !== ATTESTATION_CONTRACT) return refuse("response_field_invalid")
   if (typeof verified !== "boolean" || !isTimestamp(attestedAt)) return refuse("response_field_invalid")
   if (countryOfResidence !== undefined && (typeof countryOfResidence !== "string" || !isResidenceCountry(countryOfResidence))) {
     return refuse("response_field_invalid")
@@ -84,10 +91,7 @@ export function parseAttestationResponse(raw: unknown): Result<AttestationRespon
   if (postSlug !== undefined && (typeof postSlug !== "string" || !POST_SLUG.test(postSlug))) {
     return refuse("response_field_invalid")
   }
-  if (
-    registrationStatus !== undefined &&
-    (typeof registrationStatus !== "string" || !(REGISTRATION_STATUSES as readonly string[]).includes(registrationStatus))
-  ) {
+  if (typeof registrationStatus !== "string" || !(REGISTRATION_STATUSES as readonly string[]).includes(registrationStatus)) {
     return refuse("response_field_invalid")
   }
   if (since !== undefined && !isTimestamp(since)) return refuse("response_field_invalid")
@@ -98,9 +102,9 @@ export function parseAttestationResponse(raw: unknown): Result<AttestationRespon
   return ok({
     verified,
     attestedAt,
+    registrationStatus: registrationStatus as RegistrationStatus,
     ...(countryOfResidence !== undefined ? { countryOfResidence: countryOfResidence as CountryCode } : {}),
     ...(postSlug !== undefined ? { postSlug } : {}),
-    ...(registrationStatus !== undefined ? { registrationStatus: registrationStatus as RegistrationStatus } : {}),
     ...(since !== undefined ? { since } : {}),
   })
 }
