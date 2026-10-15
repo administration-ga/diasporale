@@ -38,8 +38,10 @@ import type {
   SessionView,
   SponsorDashboardView,
 } from "@diasporale/features/data"
-import { type ConvexReactClient, useQueries } from "convex/react"
-import type { FunctionArgs, FunctionReference, FunctionReturnType } from "convex/server"
+import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
+import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
+import { convexToJson, jsonToConvex, type Value } from "convex/values"
+import { useMemo } from "react"
 
 import { routes } from "@/lib/routes"
 
@@ -73,13 +75,26 @@ type Loaded<T> = { readonly state: "loading" } | { readonly state: "error"; read
 /**
  * Une query du moteur dont l'erreur se LIT (`useQueries` la rend au lieu de la
  * lever) : un refus du serveur devient un code fermé, pas un écran d'erreur.
+ *
+ * L'objet de requêtes est MÉMORISÉ sur une clé stable (nom de la fonction et
+ * arguments sérialisés), comme le fait le `useQuery` de Convex : un objet neuf à
+ * chaque rendu relancerait l'abonnement à chaque rendu, sans fin.
  */
 function useLoaded<Query extends FunctionReference<"query">>(
   query: Query,
   args: FunctionArgs<Query> | "skip",
 ): Loaded<FunctionReturnType<Query>> {
-  const results = useQueries(args === "skip" ? {} : { value: { query, args } }) as Record<string, unknown>
-  if (args === "skip") return { state: "loading" }
+  const name = getFunctionName(query)
+  const argsKey = args === "skip" ? null : JSON.stringify(convexToJson(args as Value))
+  const queries = useMemo(() => {
+    const request: RequestForQueries = {}
+    if (argsKey !== null) {
+      request.value = { query: makeFunctionReference<"query">(name), args: jsonToConvex(JSON.parse(argsKey) as never) as Record<string, Value> }
+    }
+    return request
+  }, [name, argsKey])
+  const results = useQueries(queries) as Record<string, unknown>
+  if (argsKey === null) return { state: "loading" }
   const value = results.value
   if (value === undefined) return { state: "loading" }
   if (value instanceof Error) return { state: "error", code: engineActionErrorCode(value) }
