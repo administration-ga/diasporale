@@ -27,8 +27,9 @@ dependances:
 | c) `apps/diasporale_com` sur fournisseur factice (R1 à blanc sur :3031) | 2026-10-14 | `f5aff56` |
 | d) `packages/diasporale-features` (C1–C17, CountrySwitch, badges, ModerationBanner, états vides) | 2026-10-14 | `b953739` |
 | e) Contrats côté gabon-diplomatie (PR brouillon) + fournisseur d'attestation factice | 2026-10-15 | PR brouillon administration-ga/gabon-diplomatie#184 (`7d01f215`) et #185 (`540d3c45`), non fusionnées ; fournisseur factice `b953739`, lecture stricte `bb76017` |
-| PD0 Câblage dans le moteur | en cours (15/10) | ANTIA `5535a63` ; DIASPORALE `fa307c0`, `dffbe4b`, `fc8acef`, `1752d22` — restent l'entrée `deploy/catalog.json` et le bun.lock côté ANTIA, et `docker build` |
-| PD1 → PD10 | — | — (PD1 préparé : `7c5575e` ; demande de fichiers partagés envoyée à ANTIA) |
+| PD0 Câblage dans le moteur | en cours (15/10) | ANTIA `5535a63`, `97cec07` (installation), `2454aed` (catalogue) ; DIASPORALE `fa307c0`, `dffbe4b`, `fc8acef`, `1752d22` — reste `docker build` (disque de la machine) |
+| PD1 Domaine diaspora et réseau `diasporale` dans le moteur | 2026-10-15 | domaine `7c5575e`, `c622cb9`, `c067746` ; tranche ANTIA `22b0383` (tables), `7cfafdd` (fonctions) ; côté moteur, par ANTIA : `97cec07` (`managedBy`, aides d'admission, `failAppRule`, seaux), `bf1f46c` (schéma) — reste la ligne de `convex/crons.ts` (demandée à ANTIA) |
+| PD2 → PD10 | — | — |
 
 Vérifications des étapes closes :
 - **a)** 197 cas `bun test`, couverture lignes et fonctions 100 % imposée par
@@ -48,6 +49,25 @@ Vérifications des étapes closes :
   moteur ; charte servie par `@antia/ui` + thème `diasporale.css` + rôles propres `extras.css` ;
   Dockerfile en contexte ECOSYSTEMES (non construit : disque de la machine). Vérifié : typecheck,
   212 + 155 + 15 tests, lint ; rendu contrôlé dans le navigateur, clair et sombre.
+- **PD1** : tranche `ANTIA/convex/modules/diaspora/` (tables, faits, adhésion, parrainage,
+  facette, hubs, graine, manifeste) sur les règles de `@diasporale/domain`. Vérifié dans l'arbre
+  ANTIA : typecheck convex et tests 0, 67 tests convex (dont 23 de la tranche : compte léger en
+  attente qui ne publie pas, parrainage qui le passe déclaré, adhésion ANTIA dérivée, refus
+  indistinct de la cible, quota et ancienneté du parrain, retrait, départ, IDN étrangère, Gabon
+  refusé comme pays, annuaire sous consentement, membre d'ANTIA seul sans accès, compteurs
+  matérialisés jamais calculés à la lecture, graine idempotente), 35 cliquets (dont « toute
+  fonction sociale bornée par le réseau », qui couvre la tranche) ; domaine 228 tests, 100 %.
+  **Écarts au plan, assumés** :
+  - le réseau est GOUVERNÉ par la tranche (`networks.managedBy = "diaspora"`, ajouté au moteur à
+    la demande de DIASPORALE) : les chemins génériques `joinNetwork` et `setMyFacet` le refusent,
+    sans quoi une IDN étrangère y entrait « déclarée » et un poste consulaire se saisissait ;
+  - `countryHubs` ne recopie pas l'ouverture d'un pays : elle se lit dans `networks.openCountries`,
+    réglage tracé de la console ;
+  - table `memberPrivacy` en plus des quatre du plan : niveaux fins de la facette et niveau
+    d'annuaire (le moteur générique ne connaît que `hidden`, `network`, `root`) ;
+  - index nommés selon la convention du moteur (`by_network_and_country`…) ;
+  - compteurs d'associations, d'entreprises et d'évènements à zéro jusqu'à leurs sources (PD5,
+    PD7) ; le chiffre des membres sous le seuil de publication ne quitte pas le serveur.
 - **e)** Côté gabon-diplomatie, sur deux branches en worktree (le `main` partagé n'est pas
   touché) : #184 `DIASPORA-ATTESTATION-V1` (route signée HMAC, exclusions indiscernables,
   idempotence par `consentRef`, journal à empreinte, correspondance e-mail par
