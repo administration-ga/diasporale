@@ -17,8 +17,8 @@
 | Surface de référence | Surface DIASPORALE | Exigences | État | Source moteur | Écarts |
 |---|---|---|---|---|---|
 | Fil (`FeedPage`) | `/fil` : « Mon pays », « Toute la diaspora », « Récents », « Pour vous » | EXF-DG-13 | ✅ | `posts.myFeed` (portées, voies du hub) | une page de 30, sans curseur ni « voir plus » |
-| Composeur en feuille | `PostComposerSheet` | EXF-DG-10, 11 | 🟡 | `posts.publish` (portée, pays, ANTIA) | sans médias ni partage cité ; brouillon durable dans CE navigateur (une clé par personne, rétabli à l'ouverture, effacé à la publication, jamais envoyé) ; local refusé dans un pays non ouvert (§3) |
-| Carte de publication | `PostCard` | EXF-DG-10, 12 | ✅ | DTO `myFeed` | auteur d'une page : sa carte ; « signé par » attend PD5 ; mentions (lien vers le profil) et mots-dièse découpés par le moteur (`splitBodyRich`), dans les commentaires aussi, casse de l'auteur gardée (ANTIA l'abaisse) ; un mot-dièse n'ouvre pas encore de recherche |
+| Composeur en feuille | `PostComposerSheet` | EXF-DG-10, 11 | 🟡 | `posts.publish` (portée, pays, ANTIA, médias), `media.generateUploadUrl` (`media_social`) | médias : quatre photos ou une vidéo seule, texte alternatif par média, règles du moteur jugées avant tout envoi (PR administration-ga/diasporale#5) ; la démonstration garde des photos réduites, pas de vidéo ; sans partage cité ; brouillon durable dans CE navigateur (texte et choix, sans les médias ; une clé par personne, rétabli à l'ouverture, effacé à la publication, jamais envoyé) ; local refusé dans un pays non ouvert (§3) |
+| Carte de publication | `PostCard` | EXF-DG-10, 12 | ✅ | DTO `myFeed` | auteur d'une page : sa carte ; « signé par » attend PD5 ; mentions (lien vers le profil) et mots-dièse découpés par le moteur (`splitBodyRich`), dans les commentaires aussi, casse de l'auteur gardée (ANTIA l'abaisse) ; un mot-dièse n'ouvre pas encore de recherche ; médias : photo seule à ses proportions, grille carrée de deux à quatre, retenue de la garde dite (analyse en cours, bloqué), sans visionneuse plein écran |
 | Réactions (4 genres) | palette de la carte | EXF-DG-12 | ✅ | `engagement.toggleReaction` | — |
 | Commentaires | feuille « Commentaires » | EXF-DG-12 | ✅ | `engagement.paginateComments`, `paginateReplies`, `comment`, `removeComment` | pas d'édition d'un commentaire |
 | Menu « … » | `PostMenu` | EXF-DG-12, 40 | 🟡 | `marks.toggleMark`, `hidePost`, `muteAuthor`, `moderation.reportPost`, `posts.remove` | sans « Modifier », sans relais ; signets sans liste |
@@ -29,8 +29,8 @@
 | Cloche | `NotificationBell` | EXF-DG-38 | ✅ | `notifications.bell.*` | genres de PD5 à PD8 dits « nouvelle activité » d'ici là |
 | Hub pays | `/pays/[iso]` | EXF-DG-15, 16 | 🟡 | `diaspora.hubs.getCountryHub`, voies du fil | compteurs et fil local ; pages, associations, entreprises (PD5) et évènements (PD7) vides ; membres opt-in par la recherche filtrée |
 | Sélecteur de pays (C11) | `CountrySwitch` | EXF-DG-15 | ✅ | — | accès rapide : mon pays, puis les trois derniers choisis (ce navigateur) |
-| Stories 24 h (`StoriesTray`) | — | EXF-DG-14 | ⬜ | `stories.*` (lot 12b d'ANTIA, servi) | à brancher |
-| Albums (`AlbumPage`) | — | EXF-DG-14 | ⬜ | `albums.*` (lot 14 d'ANTIA, servi) | à brancher |
+| Stories 24 h (`StoriesTray`) | — | EXF-DG-14 | ⬜ | `stories.*` (lot 12b d'ANTIA, servi) | à brancher sur la surface du moteur : `@antia/social-features/stories` (`StoriesTray`, `StoriesViewerPage`), sous `NetworkProvider` |
+| Albums (`AlbumPage`) | — | EXF-DG-14 | ⬜ | `albums.*` (lot 14 d'ANTIA, servi) | à brancher ; la surface vient avec le lot F2 d'ANTIA (réseau personnel) |
 | Coquille mobile et bureau | `AppShell` | EXT-DG-05 | ✅ | — | colonne (Fil, Mon pays, Membres, Profil, Parrainer, Réglages), barre basse, en-tête (Membres, cloche, pays) |
 | Cartes flottantes | `FloatingNotice`, pile « Avis » | charte v2 §7 | ✅ | — | échelle de couches de la charte : barres 40 < feuilles 50 < pile 55 < menus 60 |
 
