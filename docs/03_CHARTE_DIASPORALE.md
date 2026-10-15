@@ -1,6 +1,6 @@
 ---
 title: "DIASPORALE.COM — Charte graphique « Sable de la diaspora »"
-version: "3.0"
+version: "3.1"
 date: "2026-10-15"
 statut: "Charte de travail v3 — arbitrage A7 (famille Consulaire / Sable) ; refonte demandée par le propriétaire le 15/10/2026 : épurée, contraste renforcé, couches du sombre renforcées (le fond reste le plus sombre), rayons resserrés, sans drapeau, avis en cartes flottantes ; v3 : palette confort (une teinte par thème, chroma basse, texte sans éblouissement, focus plein)"
 projet: "DIASPORALE"
@@ -77,22 +77,25 @@ la v3 les aligne sur la même teinte.
 **Élévation par la clarté.** Dans les deux thèmes, le fond est la couche la plus basse et
 chaque surface qui monte s'éclaircit : papier sur sable en clair, carte relevée sur la nuit en
 sombre. Sans filet, chaque marche se lit par la clarté. Échelle sombre (v3, une seule teinte
-OKLCH h 75, plus de brun olive), du plus sombre au plus clair : fond `#151311` < creux `#1A1816`
-(aplats, survol dans une carte) < carte `#24211F` (1,16:1 sur le fond) < puce, piste des pilules
-et carte flottante `#2E2C28` (1,15:1 sur la carte) < survol `#393632` ; texte sable adouci
+OKLCH h 75, plus de brun olive), du plus sombre au plus clair : fond `#151311` < carte `#24211F`
+(1,16:1 sur le fond) < aplats `#2B2825` (survol, petites étiquettes, squelettes : en v3.1 ils
+éclaircissent au lieu de creuser) < puce, piste des pilules et carte flottante `#2E2C28` (1,15:1
+sur la carte) < survol fort `#393632` ; texte sable adouci
 `#E9E7E1` (14,99:1 sur le fond, 12,94:1 sur la carte : pas de halo), grès clair `#B3AFA7`
 (7,32:1 sur la carte), discret `#96918A` (5,12:1). Le bleu du sombre est adouci (`#5BA5E5`),
 les tons aussi (vert `#6EBE85`, ambre `#D7AD63`, rose `#E18C85`).
 
 **Statuts.** Le cahier prévoit quatre accents réservés aux statuts. Chaque statut a une
-paire texte / teinte mesurée :
+paire texte / teinte mesurée. En v3.1, les quatre teintes partagent la même clarté et la même
+saturation dans chaque thème (OKLCH L 95,8 % C 0,030 en clair ; L 29,5 % C 0,045 en sombre,
+toujours au-dessus de la carte) : l'ambre ne crie plus, la pastille rose ne se fond plus.
 
 | Statut | Texte | Plein | Teinte | Sens |
 |---|---|---|---|---|
-| succès / vérifié | `#0F5F2F` | `#157A3D` | `#E3F1E8` | vérifié, publié, inscrit |
-| alerte / en attente | `#8A5E00` | `#A16E00` | `#FAEDCA` | en relecture, en attente de parrainage |
-| danger / refus | `#B3261E` | `#B3261E` | `#FDECEA` | refusé, signalé, erreur |
-| information | `#004C7D` | `#0072B9` | `#EEF7FF` | consignes, aides |
+| succès / vérifié | `#0F5F2F` | `#157A3D` | `#E3F7E7` (sombre `#1A3321`) | vérifié, publié, inscrit |
+| alerte / en attente | `#8A5E00` | `#A16E00` | `#FBF0DB` (sombre `#382A10`) | en relecture, en attente de parrainage |
+| danger / refus | `#B3261E` | `#B3261E` | `#FFEAE7` (sombre `#402321`) | refusé, signalé, erreur |
+| information | `#004C7D` | `#0072B9` | `#E1F4FF` (sombre `#182F42`) | consignes, aides |
 
 **Aucune référence au drapeau (v2).** Le filet tricolore de la vitrine et les trois couleurs
 du drapeau sont retirés de la charte, des jetons et des écrans (décision du propriétaire du
@@ -252,9 +255,9 @@ thème affiché. Zone de confort (v3, tenue par le cliquet) : le texte principal
 | Bleu Gabon / Papier (lien) | 5,02 | | bleu `#5BA5E5` / carte (lien) | 6,06 |
 | Bleu Gabon / Sable (lien) | 4,57 | | encre `#151311` / bleu `#5BA5E5` (bouton) | 7,02 |
 | papier / Bleu Gabon (bouton) | 5,02 | | vert `#6EBE85` / carte | 7,14 |
-| vert `#0F5F2F` / teinte `#E3F1E8` | 6,68 | | ambre `#D7AD63` / carte | 7,66 |
-| ambre `#8A5E00` / teinte `#FAEDCA` | 4,90 | | rose `#E18C85` / carte | 6,32 |
-| rose `#B3261E` / teinte `#FDECEA` | 5,72 | | contour de champ `#78746E` / carte | 3,45 |
+| vert `#0F5F2F` / teinte `#E3F7E7` | 6,94 | | ambre `#D7AD63` / carte | 7,66 |
+| ambre `#8A5E00` / teinte `#FBF0DB` | 5,05 | | rose `#E18C85` / carte | 6,32 |
+| rose `#B3261E` / teinte `#FFEAE7` | 5,66 | | contour de champ `#78746E` / carte | 3,45 |
 | contour de champ `#8B8882` / Papier | 3,47 | | texte discret `#96918A` / carte | 5,12 |
 | texte discret `#6F6B65` / Sable | 4,73 | | grès clair / carte flottante `#2E2C28` | 6,37 |
 | anneau de focus (bleu plein) / Papier | 5,02 | | anneau de focus / carte | 6,06 |
@@ -340,6 +343,15 @@ La charte vit en trois couches, importées dans cet ordre par
    `#DF7F0A` (2,93:1) et `#1D8B96` (4,05:1). Elles sont assombries dans la même teinte —
    `#0C7A44`, `#A35A09`, `#167580` — et tiennent toutes au moins 5,07:1. L'ordre des six
    teintes est conservé : une personne garde sa couleur d'un réseau à l'autre.
+   En v3.1, les six teintes sont réglées au validateur de palette du skill dataviz (simulation
+   Machado 2009, toutes paires, puisque deux avatars quelconques peuvent se suivre dans un fil) :
+   `#2971D5 · #01793D · #9A5600 · #804DAE · #C94050 · #238090`. La pire paire passe de ΔE 9,2 à
+   12,5 en vision normale et de 2,2 à 6,3 en daltonisme (le bleu et le violet se confondaient pour
+   un deutéranope) ; le blanc tient au moins 4,6:1 ; l'écart moyen aux teintes d'avant est
+   ΔE 3 (même identité visuelle). Le seuil de 15 en vision normale sur toutes les paires n'est pas
+   atteignable avec six familles assez foncées pour des initiales blanches : l'identité ne repose
+   jamais sur la seule couleur (initiales et nom l'accompagnent toujours). Le sarcelle plafonne à
+   une chroma de 0,08, limite du gamut sRGB à cette clarté.
 7. **Texte discret `#736E61`** plutôt que `#767164` : la première valeur, annoncée à
    4,50:1 sur le sable, mesurait en réalité 4,499:1. Le cliquet de contraste l'a refusée
    le 14 octobre 2026 ; la nouvelle valeur tient 4,70:1 sur le sable et 5,08:1 sur le papier.
@@ -359,4 +371,9 @@ La charte vit en trois couches, importées dans cet ordre par
     `#E9E7E1`) au lieu de 18,59 et 17,19 ; papier `#FDFDFB` au lieu du blanc pur ; sable `#F4F2EE`
     (le bleu Gabon y tient 4,57:1) ; bleu et tons du sombre moins saturés ; anneau de focus plein.
 
-*Fin de la charte DIASPORALE — version 3.0 du 15 octobre 2026.*
+12. **Harmonisation (v3.1, même jour)** : teintes de statut à clarté et saturation égales dans
+    chaque thème ; aplats sombres au-dessus de la carte (le survol éclaircit) ; avatars réglés au
+    validateur de palette (voir n° 6) ; étiquette « Toute la diaspora » sur la teinte bleue de
+    statut dans les deux thèmes.
+
+*Fin de la charte DIASPORALE — version 3.1 du 15 octobre 2026.*

@@ -21,7 +21,7 @@
   --dg-tag-code: var(--foreground);
   --dg-tag-eyelet: var(--background);
   --dg-tag-eyelet-ring: var(--ink-300);
-  --dg-tag-diaspora-bg: var(--primary-light);
+  --dg-tag-diaspora-bg: var(--esp-tone-blue-bg);
   --dg-tag-diaspora-fg: var(--esp-tone-blue);
   --dg-monument: var(--foreground);
 

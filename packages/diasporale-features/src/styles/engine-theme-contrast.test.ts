@@ -148,6 +148,16 @@ describe("thème DIASPORALE servi par le moteur — cascade base + thème", () =
     expect(contrastRatio(THEMES.sombre, "--popover", "--card")).toBeGreaterThanOrEqual(1.12)
   })
 
+  it("en sombre, les aplats et les teintes de statut se lèvent au-dessus de la carte (jamais un trou)", () => {
+    const card = tokenLuminance(THEMES.sombre, "--card")
+    // Survol, étiquettes, squelettes : le survol éclaircit en sombre, il ne creuse pas.
+    expect(tokenLuminance(THEMES.sombre, "--muted")).toBeGreaterThan(card)
+    for (const tint of ["--esp-tone-blue-bg", "--esp-tone-amber-bg", "--esp-tone-rose-bg", "--esp-tone-green-bg"]) {
+      expect(contrastRatio(THEMES.sombre, tint, "--card"), tint).toBeGreaterThanOrEqual(1.1)
+      expect(tokenLuminance(THEMES.sombre, tint), tint).toBeGreaterThan(card)
+    }
+  })
+
   it("rayons resserrés (contrôles 6 px, cartes 8 px, panneaux 12 px), pilule intacte", () => {
     expect(THEMES.clair.get("--radius-md")).toBe("6px")
     expect(THEMES.clair.get("--radius-xl")).toBe("8px")
