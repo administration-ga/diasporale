@@ -7,7 +7,9 @@ import {
   countsInSponsorshipWindow,
   remainingSponsorships,
   sponsorSeniorityReachedAt,
+  sponsorStanding,
   sponsorshipWindowStart,
+  SPONSORSHIP_WINDOW_DAYS,
   type SponsorFacts,
   type SponsorshipTargetFacts,
 } from "./sponsorship"
@@ -101,5 +103,34 @@ describe("retrait d'un parrainage", () => {
 
   test("un parrainage ne se retire qu'une fois (journal sans doublon)", () => {
     expect(checkSponsorshipRevocation({ actor: "sponsor", revokedAt: NOW })).toEqual({ ok: false, code: "already_revoked" })
+  })
+})
+
+describe("sponsorStanding — ce que voit le parrain avant tout geste", () => {
+  test("un parrain ancien et sous quota peut parrainer", () => {
+    expect(sponsorStanding({ ...SENIOR, sponsorshipsInWindow: 3 }, NOW)).toEqual({
+      eligible: true,
+      refusal: null,
+      remaining: SPONSORSHIPS_PER_WINDOW - 3,
+      windowDays: SPONSORSHIP_WINDOW_DAYS,
+      seniorityReachedAt: sponsorSeniorityReachedAt(SENIOR.verifiedSince as number),
+    })
+  })
+
+  test("un parrain trop récent sait quand il pourra parrainer", () => {
+    const verifiedSince = NOW - 2 * DAY_MS
+    expect(sponsorStanding({ status: "verifiee", verifiedSince, sponsorshipsInWindow: 0 }, NOW)).toMatchObject({
+      eligible: false,
+      refusal: "sponsor_too_recent",
+      seniorityReachedAt: verifiedSince + SPONSOR_MIN_VERIFIED_DAYS * DAY_MS,
+    })
+  })
+
+  test("un membre non vérifié n'a pas d'échéance d'ancienneté", () => {
+    expect(sponsorStanding({ status: "declaree", sponsorshipsInWindow: 0 }, NOW)).toMatchObject({
+      eligible: false,
+      refusal: "sponsor_not_verified",
+      seniorityReachedAt: null,
+    })
   })
 })

@@ -86,7 +86,7 @@ export const FACET_REFUSALS = [
 ] as const
 export type FacetRefusal = (typeof FACET_REFUSALS)[number]
 
-function isFieldVisibility(value: string): value is FieldVisibility {
+export function isFieldVisibility(value: string): value is FieldVisibility {
   return (FIELD_VISIBILITY_LEVELS as readonly string[]).includes(value)
 }
 

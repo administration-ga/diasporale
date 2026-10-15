@@ -1,8 +1,25 @@
 import { describe, expect, test } from "bun:test"
-import { MEMBER_COUNTER_DISPLAY_THRESHOLD, presentHubCounters, presentMemberCounter } from "./hubs"
+import { countsAsHubMember, MEMBER_COUNTER_DISPLAY_THRESHOLD, presentHubCounters, presentMemberCounter } from "./hubs"
 import { DIASPORALE_NETWORK, ROOT_NETWORK_SLUG } from "./network"
 import { DiasporaleViolation, ok, refuse, unwrap } from "./result"
 import { DAY_MS, HOUR_MS, MINUTE_MS, utcYear } from "./time"
+
+describe("qui compte parmi les membres d'un hub", () => {
+  const listed = { status: "declaree", directoryVisibility: "country", directoryConsent: true } as const
+
+  test("un membre actif qui a choisi un niveau et consenti à l'annuaire", () => {
+    expect(countsAsHubMember(listed)).toBe(true)
+    expect(countsAsHubMember({ ...listed, status: "verifiee", directoryVisibility: "network" })).toBe(true)
+  })
+
+  test("ni le niveau « personne », ni un consentement retiré, ni un statut sans annuaire", () => {
+    expect(countsAsHubMember({ ...listed, directoryVisibility: "hidden" })).toBe(false)
+    expect(countsAsHubMember({ ...listed, directoryConsent: false })).toBe(false)
+    for (const status of ["en_attente", "suspendue", "partie"] as const) {
+      expect(countsAsHubMember({ ...listed, status })).toBe(false)
+    }
+  })
+})
 
 describe("compteurs d'un hub", () => {
   test("membres sous le seuil : jamais le chiffre exact", () => {

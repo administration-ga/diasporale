@@ -6,10 +6,9 @@
  * profil inaccessible rendent la même chose : `null`).
  */
 import {
-  SPONSORSHIP_WINDOW_DAYS,
   admitsInFeedScope,
   capabilitiesOf,
-  checkSponsorship,
+  countsAsHubMember,
   countsInSponsorshipWindow,
   deriveMembershipStatus,
   isCountryOpen,
@@ -19,8 +18,7 @@ import {
   personBadges,
   presentHubCounters,
   projectFacet,
-  remainingSponsorships,
-  sponsorSeniorityReachedAt,
+  sponsorStanding,
   writeRateTier,
   type ConsentPurpose,
   type CountryCode,
@@ -196,14 +194,18 @@ function eventView(state: DemoState, event: DemoState["events"][number], now: nu
 
 /** Compteurs « matérialisés » du hub — recalculés depuis l'état, comme le ferait le cron quotidien. */
 export function hubCounters(state: DemoState, country: CountryCode, now: number) {
-  const members = Object.values(state.memberships).filter((membership) => {
-    const status = deriveMembershipStatus(membership.grounds, now)
-    return (
+  const members = Object.entries(state.memberships).filter(
+    ([personId, membership]) =>
       membership.facet.countryOfResidence === country &&
-      membership.directoryVisibility !== "hidden" &&
-      (status === "declaree" || status === "verifiee")
-    )
-  }).length
+      countsAsHubMember({
+        status: deriveMembershipStatus(membership.grounds, now),
+        directoryVisibility: membership.directoryVisibility,
+        directoryConsent: isConsentActive(
+          state.consents.filter((record) => record.personId === personId),
+          "directory",
+        ),
+      }),
+  ).length
   const pages = Object.values(state.pages).filter((page) => page.country === country)
   return presentHubCounters({
     members,
@@ -353,15 +355,8 @@ export function sponsorFacts(state: DemoState, sponsorId: string, now: number) {
 }
 
 export function sponsorDashboardView(state: DemoState, viewerId: string, now: number): SponsorDashboardView {
-  const facts = sponsorFacts(state, viewerId, now)
-  // On juge le PARRAIN seul : la cible fictive est un compte admissible.
-  const check = checkSponsorship(facts, { isSelf: false, status: "en_attente", alreadySponsored: false }, now)
   return {
-    eligible: check.ok,
-    refusal: check.ok ? null : (check.code as SponsorDashboardView["refusal"]),
-    remaining: remainingSponsorships(facts.sponsorshipsInWindow),
-    windowDays: SPONSORSHIP_WINDOW_DAYS,
-    seniorityReachedAt: facts.verifiedSince !== undefined ? sponsorSeniorityReachedAt(facts.verifiedSince) : null,
+    ...sponsorStanding(sponsorFacts(state, viewerId, now), now),
     given: state.sponsorships
       .filter((item) => item.sponsorId === viewerId)
       .sort((a, b) => b.createdAt - a.createdAt)

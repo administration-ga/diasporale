@@ -74,6 +74,32 @@ export function checkSponsorship(
   return ok(true)
 }
 
+export interface SponsorStanding {
+  readonly eligible: boolean
+  /** Le refus qui tient au PARRAIN (statut, ancienneté, quota) — jamais à une cible. */
+  readonly refusal: SponsorshipRefusal | null
+  readonly remaining: number
+  readonly windowDays: number
+  /** Quand l'ancienneté du parrain sera atteinte ; `null` s'il n'est pas vérifié. */
+  readonly seniorityReachedAt: number | null
+}
+
+/**
+ * Où en est un parrain, avant tout geste : ce que l'écran « Parrainer » affiche
+ * (le moteur et le fournisseur de démonstration lisent la même règle).
+ */
+export function sponsorStanding(sponsor: SponsorFacts, now: number): SponsorStanding {
+  // Une cible fictive admissible : seul le parrain est jugé ici.
+  const check = checkSponsorship(sponsor, { isSelf: false, status: "en_attente", alreadySponsored: false }, now)
+  return {
+    eligible: check.ok,
+    refusal: check.ok ? null : check.code,
+    remaining: remainingSponsorships(sponsor.sponsorshipsInWindow),
+    windowDays: SPONSORSHIP_WINDOW_DAYS,
+    seniorityReachedAt: sponsor.verifiedSince !== undefined ? sponsorSeniorityReachedAt(sponsor.verifiedSince) : null,
+  }
+}
+
 /** Parrainages encore possibles dans la fenêtre — affiché au parrain (« 3 sur 10 »). */
 export function remainingSponsorships(sponsorshipsInWindow: number): number {
   return Math.max(0, SPONSORSHIPS_PER_WINDOW - Math.max(0, Math.trunc(sponsorshipsInWindow)))

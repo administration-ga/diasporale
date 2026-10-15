@@ -8,6 +8,8 @@
  *     (anti-réidentification, dossier produit F16) ;
  *   · un hub sans aucun contenu dit « bientôt », pas une rangée de zéros (E01).
  */
+import type { DirectoryVisibility } from "./directory"
+import { hasCapability, type MembershipStatus } from "./eligibility"
 
 export interface HubCounters {
   /** Membres ayant choisi d'apparaître dans l'annuaire du pays. */
@@ -15,6 +17,24 @@ export interface HubCounters {
   readonly associations: number
   readonly companies: number
   readonly upcomingEvents: number
+}
+
+/**
+ * Un membre compte-t-il parmi les « membres » du hub de son pays ? Les mêmes
+ * accords que pour paraître dans l'annuaire : un statut qui le permet, un
+ * niveau choisi autre que « personne », et le consentement `directory` en
+ * vigueur, relu au moment du comptage (il se retire sans prévenir la tranche).
+ */
+export function countsAsHubMember(member: {
+  readonly status: MembershipStatus
+  readonly directoryVisibility: DirectoryVisibility
+  readonly directoryConsent: boolean
+}): boolean {
+  return (
+    hasCapability(member.status, "appear_in_directory") &&
+    member.directoryVisibility !== "hidden" &&
+    member.directoryConsent
+  )
 }
 
 /** En deçà, le nombre de membres d'un pays ne se publie pas. */
