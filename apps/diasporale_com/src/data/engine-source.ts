@@ -514,6 +514,9 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           ...(scope.value.country !== undefined ? { country: scope.value.country } : {}),
           alsoOnRoot: input.alsoOnRoot && input.audience === "public",
           ...(input.media && input.media.length > 0 ? { media: input.media.map(toDeclaredMedia) } : {}),
+          // Partage cité : le moteur re-garde l'original, et cite l'original d'un partage.
+          ...(input.sharedPostId ? { sharedPostId: input.sharedPostId as Id<"posts"> } : {}),
+          ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
         })
         return { moderation: "published" as const }
       }),

@@ -45,9 +45,11 @@ import type {
   OpenCountryView,
   PageDetailView,
   PageView,
+  PostMediaView,
   PostView,
   ProfileView,
   SessionView,
+  SharedPostView,
   NotificationView,
   RelationView,
   SponsorDashboardView,
@@ -296,6 +298,25 @@ export function canRead(state: DemoState, post: DemoPost, viewerId: string, now:
   return post.audience === "public"
 }
 
+function mediaViews(post: DemoPost): PostMediaView[] {
+  return (post.media ?? []).map((item) => ({ kind: item.kind, url: item.url, withheld: null, altText: item.altText, width: item.width, height: item.height }))
+}
+
+/** L'original cité, re-gardé pour CE lecteur : retiré ou hors de sa portée, il est « indisponible ». */
+function sharedPostView(state: DemoState, postId: string, viewerId: string, now: number): SharedPostView {
+  const original = state.posts.find((item) => item.id === postId)
+  if (!original || !canRead(state, original, viewerId, now)) return { available: false }
+  const author = authorOf(state, original.author, now)
+  return {
+    available: true,
+    postId: original.id,
+    author: { kind: author.kind, handle: author.handle || null, displayName: author.displayName || null },
+    body: original.body,
+    media: mediaViews(original),
+    publishedAt: original.createdAt,
+  }
+}
+
 export function postView(state: DemoState, post: DemoPost, viewerId: string, now: number): PostView {
   const reactionsByOthers = Object.entries(post.reactions).filter(([personId]) => personId !== viewerId).length
   const mine = post.reactions[viewerId] ?? null
@@ -303,14 +324,9 @@ export function postView(state: DemoState, post: DemoPost, viewerId: string, now
     id: post.id,
     author: authorOf(state, post.author, now),
     body: post.body,
-    media: (post.media ?? []).map((item) => ({
-      kind: item.kind,
-      url: item.url,
-      withheld: null,
-      altText: item.altText,
-      width: item.width,
-      height: item.height,
-    })),
+    media: mediaViews(post),
+    share: post.sharedPostId === undefined ? null : sharedPostView(state, post.sharedPostId, viewerId, now),
+    shareCount: state.posts.filter((item) => item.sharedPostId === post.id).length,
     scope: post.scope,
     audience: post.audience,
     visibility: post.visibility,

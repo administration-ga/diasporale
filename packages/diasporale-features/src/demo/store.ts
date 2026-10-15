@@ -51,6 +51,7 @@ import {
   type DemoMembership,
   type DemoNotification,
   type DemoPerson,
+  type DemoPost,
   type DemoState,
 } from "./state"
 
@@ -136,6 +137,9 @@ export class DemoStore {
   private nextId(prefix: string): [string, number] {
     return [`${prefix}-${this.state.sequence}`, this.state.sequence + 1]
   }
+
+  /** Les clés d'idempotence déjà publiées, et la réponse qu'elles ont reçue (mémoire de la page seulement). */
+  private readonly publishedKeys = new Map<string, ContentModerationState>()
 
   /** Les photos déposées, en attente de la publication qui les embarquera (mémoire de la page seulement). */
   private readonly staged = new Map<string, Omit<DemoMedia, "altText">>()
@@ -319,6 +323,9 @@ export class DemoStore {
     const now = this.clock()
     const status = deriveMembershipStatus(viewer.membership.grounds, now)
     if (!capabilitiesOf(status).has("publish")) return fail("publish_not_allowed")
+    // Rejeu d'une clé déjà publiée (règle du moteur) : la réponse d'alors, aucune seconde publication.
+    const replay = input.idempotencyKey === undefined ? undefined : this.publishedKeys.get(input.idempotencyKey)
+    if (replay !== undefined) return { ok: true, value: { moderation: replay } }
     const body = input.body.trim()
     // Les médias, jugés ensemble par la règle du moteur ; une référence inconnue n'a jamais été déposée ici.
     const media: DemoMedia[] = []
@@ -331,8 +338,20 @@ export class DemoStore {
       (input.media ?? []).map((item) => ({ kind: item.upload.kind, mimeType: item.upload.mimeType, sizeBytes: item.upload.sizeBytes, altText: item.altText.trim() })),
     )
     if (mediaRefusal) return fail(mediaRefusal)
-    // Une photo sans légende est une publication légitime ; un message vide sans média ne l'est pas.
-    if (body.length === 0 && media.length === 0) return fail("post_empty")
+    // Partage cité (règles du moteur) : on ne partage que ce qu'on voit ; partager un partage cite
+    // l'ORIGINAL ; seule une publication publique et publiée se partage ; un partage ne joint pas de média.
+    let shared: DemoPost | null = null
+    if (input.sharedPostId !== undefined) {
+      const first = this.state.posts.find((item) => item.id === input.sharedPostId)
+      const originalId = first?.sharedPostId
+      const target = originalId === undefined ? first : this.state.posts.find((item) => item.id === originalId)
+      if (!target || !canRead(this.state, target, viewer.person.id, now)) return fail("not_found")
+      if (target.audience !== "public" || target.moderation !== "published") return fail("share_not_allowed")
+      if (media.length > 0) return fail("share_with_media")
+      shared = target
+    }
+    // Une photo sans légende, un partage sans un mot, sont des publications légitimes ; un message vide seul ne l'est pas.
+    if (body.length === 0 && media.length === 0 && shared === null) return fail("post_empty")
     if (body.length > POST_MAX_LENGTH) return fail("post_too_long")
     // Un contenu local porte le pays choisi (par défaut celui de l'auteur) ; un
     // contenu diaspora garde ce pays comme ORIGINE (pastille dans les autres hubs).
@@ -349,7 +368,7 @@ export class DemoStore {
     })
     const moderation = initialModerationState(policy)
     const [id, sequence] = this.nextId("post")
-    this.commit({
+    const next: DemoState = {
       ...this.state,
       posts: [
         {
@@ -357,6 +376,7 @@ export class DemoStore {
           author: { kind: "person", id: viewer.person.id },
           body,
           ...(media.length > 0 ? { media } : {}),
+          ...(shared ? { sharedPostId: shared.id } : {}),
           scope: scope.value,
           audience: input.audience,
           visibility: resolveVisibility({ audience: input.audience, alsoOnRoot: input.alsoOnRoot }),
@@ -369,8 +389,14 @@ export class DemoStore {
         ...this.state.posts,
       ],
       sequence,
-    })
+    }
+    // L'auteur de l'original apprend le partage (jamais de soi à soi) ; l'avis mène à SA publication.
+    const sharedAuthorId = shared?.author.kind === "person" && shared.author.id !== viewer.person.id ? shared.author.id : null
+    this.commit(
+      shared && sharedAuthorId ? this.notified(next, { recipientId: sharedAuthorId, kind: "post_share", actorId: viewer.person.id, postId: shared.id }) : next,
+    )
     for (const item of input.media ?? []) this.staged.delete(item.upload.ref)
+    if (input.idempotencyKey !== undefined) this.publishedKeys.set(input.idempotencyKey, moderation)
     return { ok: true, value: { moderation } }
   }
 

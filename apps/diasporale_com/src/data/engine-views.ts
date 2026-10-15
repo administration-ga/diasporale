@@ -34,6 +34,7 @@ import {
   type PostMediaView,
   type PostView,
   type PublishMediaInput,
+  type SharedPostView,
   NOTIFICATION_KINDS,
   type NotificationKind,
   type NotificationView,
@@ -207,12 +208,29 @@ export function toDeclaredMedia(item: PublishMediaInput): DeclaredMedia {
   }
 }
 
+/** L'original cité, re-gardé par le moteur pour CE lecteur : une page parle en son nom, sinon la personne. */
+export function toSharedPostView(share: NonNullable<FeedItem["share"]>): SharedPostView {
+  if (!share.available) return { available: false }
+  return {
+    available: true,
+    postId: share.postId,
+    author: share.page
+      ? { kind: "page", handle: share.page.handle, displayName: share.page.name }
+      : { kind: "person", handle: share.author.handle, displayName: share.author.displayName },
+    body: share.body,
+    media: share.media.map(toPostMediaView),
+    publishedAt: share.publishedAt,
+  }
+}
+
 export function toPostView(item: FeedItem): PostView {
   return {
     id: item._id,
     author: authorOf(item),
     body: item.body,
     media: item.media.map(toPostMediaView),
+    share: item.share ? toSharedPostView(item.share) : null,
+    shareCount: item.shareCount,
     scope: scopeOf(item),
     audience: audienceOf(item.audience),
     visibility: item.visibility,

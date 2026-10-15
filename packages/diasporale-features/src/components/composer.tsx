@@ -19,6 +19,7 @@ import {
   postMediaRefusal,
 } from "../data/media"
 import type { PublishMediaInput, UploadedMedia } from "../data/port"
+import type { PostView } from "../data/types"
 import { useDiasporaleT } from "../i18n/client"
 import { cn } from "../lib/cn"
 import { countryName } from "../lib/countries"
@@ -28,6 +29,7 @@ import { Field, Input, Label, Textarea } from "../primitives/field"
 import { RadioCard, RadioGroup } from "../primitives/radio-group"
 import { Sheet, SheetContent } from "../primitives/sheet"
 import { CountryTag, ScopeTag } from "./country-tag"
+import { SharedPostEmbed, sharedPreviewOf } from "./post-share"
 
 export const POST_BODY_MAX = 2000
 
@@ -40,17 +42,21 @@ const composerFields = z.object({
   media: z
     .array(z.object({ key: z.string(), altText: z.string().max(POST_MEDIA_ALT_MAX_LENGTH, "media_alt_too_long") }))
     .max(POST_MEDIA_MAX_COUNT, "media_too_many"),
+  /** Partage cité en cours : le texte devient facultatif (l'original porte la publication). */
+  sharing: z.boolean(),
 })
-// Une photo sans légende est une publication légitime ; un message vide sans média ne l'est pas.
+// Une photo sans légende, un partage sans un mot, sont des publications légitimes ; un message vide seul ne l'est pas.
 const composerSchema = composerFields.superRefine((values, context) => {
-  if (values.body.length === 0 && values.media.length === 0) context.addIssue({ code: "custom", path: ["body"], message: "post_empty" })
+  if (values.body.length === 0 && values.media.length === 0 && !values.sharing) {
+    context.addIssue({ code: "custom", path: ["body"], message: "post_empty" })
+  }
 })
 type ComposerValues = z.infer<typeof composerFields>
 
-const DEFAULTS: ComposerValues = { body: "", reach: "local", audience: "public", alsoOnRoot: false, media: [] }
+const DEFAULTS: ComposerValues = { body: "", reach: "local", audience: "public", alsoOnRoot: false, media: [], sharing: false }
 
-/** Un brouillon relu du navigateur : le texte et les choix, sans exiger un texte non vide. Les médias n'y vont pas. */
-const draftSchema = composerFields.omit({ media: true }).extend({ body: z.string().max(POST_BODY_MAX + 200) })
+/** Un brouillon relu du navigateur : le texte et les choix, sans exiger un texte non vide. Ni médias ni partage n'y vont. */
+const draftSchema = composerFields.omit({ media: true, sharing: true }).extend({ body: z.string().max(POST_BODY_MAX + 200) })
 type DraftValues = z.infer<typeof draftSchema>
 /** Attente après la dernière frappe avant de garder le brouillon. */
 const DRAFT_SAVE_MS = 400
@@ -92,6 +98,11 @@ function without<T>(record: Readonly<Record<string, T>>, key: string): Record<st
   return next
 }
 
+/** Une clé d'idempotence neuve (EXF-DG-10) : une par série d'essais d'une même publication. */
+function newPublishKey(): string {
+  return crypto.randomUUID()
+}
+
 /** Entrée dans un texte alternatif ne publie pas : on décrit, on n'envoie pas. */
 function keepEnterInField(event: KeyboardEvent<HTMLInputElement>): void {
   if (event.key === "Enter") event.preventDefault()
@@ -117,11 +128,21 @@ export function PostComposerSheet(props: {
    * par personne), rétabli à l'ouverture, effacé à la publication. Jamais envoyé.
    */
   draftKey?: string
+  /**
+   * Partage cité : la publication partagée (son original si c'en est un). Le
+   * composeur la montre, n'offre aucun média, et rend le texte facultatif.
+   */
+  share?: PostView | null
 }) {
   const { t, locale } = useDiasporaleT()
   const actions = useActions()
   const ids = useId()
-  const form = useForm<ComposerValues>({ resolver: zodResolver(composerSchema), defaultValues: DEFAULTS })
+  // Un partage monte sa propre instance (la coque la remonte à chaque partage) : il naît en mode partage.
+  const share = props.share ?? null
+  const form = useForm<ComposerValues>({ resolver: zodResolver(composerSchema), defaultValues: { ...DEFAULTS, sharing: share !== null } })
+  // Idempotence : la même clé pour tous les essais d'une publication (un échec réseau rejoué ne double
+  // rien), une clé neuve dès qu'elle est publiée.
+  const [publishKey, setPublishKey] = useState(newPublishKey)
   const mediaFields = useFieldArray({ control: form.control, name: "media" })
   const [attachments, setAttachments] = useState<Readonly<Record<string, Attachment>>>({})
   const [mediaError, setMediaError] = useState<ActionErrorCode | null>(null)
@@ -142,7 +163,7 @@ export function PostComposerSheet(props: {
   useEffect(() => {
     if (!draftKey) return
     const draft = readDraft(draftKey)
-    if (draft) form.reset({ ...draft, media: [] })
+    if (draft) form.reset({ ...draft, media: [], sharing: false })
   }, [draftKey, form])
 
   // Puis gardé à chaque pause dans la frappe.
@@ -249,12 +270,15 @@ export function PostComposerSheet(props: {
       // Local : le pays du hub. Diaspora : le pays d'ORIGINE, en pastille dans les autres hubs (EXF-DG-16).
       country: props.memberCountry,
       ...(media.length > 0 ? { media } : {}),
+      ...(share ? { sharedPostId: share.id } : {}),
+      idempotencyKey: publishKey,
     })
     if (!result.ok) {
       toast.error(t(`errors.${result.code}`))
       return
     }
-    toast.success(result.value.moderation === "published" ? t("composer.published") : t("composer.sentForReview"))
+    setPublishKey(newPublishKey())
+    toast.success(result.value.moderation === "published" ? t(share ? "composer.shared" : "composer.published") : t("composer.sentForReview"))
     if (draftKey) writeDraft(draftKey, { body: "", reach: DEFAULTS.reach, audience: DEFAULTS.audience, alsoOnRoot: DEFAULTS.alsoOnRoot })
     clearAttachments()
     form.reset(DEFAULTS)
@@ -267,11 +291,22 @@ export function PostComposerSheet(props: {
 
   return (
     <Sheet open={props.open} onOpenChange={props.onOpenChange}>
-      <SheetContent title={t("composer.title")} description={t("composer.description")} hideDescription closeLabel={t("common.close")}>
+      <SheetContent
+        title={share ? t("composer.shareTitle") : t("composer.title")}
+        description={share ? t("composer.shareDescription") : t("composer.description")}
+        hideDescription
+        closeLabel={t("common.close")}
+      >
         <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
+          {share ? (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-sm font-medium">{t("composer.shareOriginal")}</p>
+              <SharedPostEmbed share={sharedPreviewOf(share)} now={Date.now()} />
+            </div>
+          ) : null}
           <Field
             id={`${ids}-corps`}
-            label={t("composer.bodyLabel")}
+            label={share ? t("composer.shareBodyLabel") : t("composer.bodyLabel")}
             error={bodyError ? t(`errors.${bodyError}`) : undefined}
             hint={
               draftKey && body.trim().length > 0
@@ -286,13 +321,14 @@ export function PostComposerSheet(props: {
                 aria-invalid={control.invalid || undefined}
                 rows={5}
                 maxLength={POST_BODY_MAX + 200}
-                placeholder={t("composer.placeholder", { country: countryLabel })}
+                placeholder={share ? t("composer.sharePlaceholder") : t("composer.placeholder", { country: countryLabel })}
                 {...form.register("body")}
               />
             )}
           </Field>
 
-          <fieldset className="flex flex-col gap-2">
+          {/* Un partage ne joint aucun média : il montre ceux de l'original (règle du moteur). */}
+          <fieldset className={cn("flex flex-col gap-2", share && "hidden")} disabled={share !== null}>
             <legend className="mb-1 text-sm font-medium">{t("composer.mediaLegend")}</legend>
             {mediaFields.fields.length > 0 ? (
               <ul className="grid grid-cols-2 gap-3" aria-label={t("composer.mediaListLabel")}>
