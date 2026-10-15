@@ -32,6 +32,8 @@ export const useRelation = (personId: string) => useDataSource().useRelation(per
 export const useMemberSearch = (args: { query: string; country?: CountryCode }) => useDataSource().useMemberSearch(args)
 export const useComments = (postId: string) => useDataSource().useComments(postId)
 export const useSuggestions = () => useDataSource().useSuggestions()
+export const usePost = (postId: string) => useDataSource().usePost(postId)
+export const useBookmarks = () => useDataSource().useBookmarks()
 export const useReplies = (args: { postId: string; commentId: string | null }) => useDataSource().useReplies(args)
 export const useNotifications = () => useDataSource().useNotifications()
 export const useUnreadCount = () => useDataSource().useUnreadCount()

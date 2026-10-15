@@ -5,12 +5,14 @@ import { describe, expect, it } from "vitest"
 import type { JoinInput } from "../data/port"
 import {
   NOTIFICATIONS_PAGE,
+  bookmarksView,
   commentsView,
   feedView,
   hubCounters,
   memberSearchView,
   membershipView,
   notificationsView,
+  postDetailView,
   profileView,
   relationView,
   repliesView,
@@ -479,6 +481,7 @@ describe("la cloche", () => {
       readAt: null,
       connectionRequestId: null,
       inviteDeclined: false,
+      postId: null,
     }))
     const state = { ...store.getState(), notifications }
     expect(unreadCountView(state, "p-mireille")).toEqual({ count: 99, capped: true })
@@ -702,5 +705,50 @@ describe("suggestions de relations (EXF-DG-18)", () => {
     await store.switchTo("p-steeve")
     await store.connect("p-mireille")
     expect(suggestionsView(store.getState(), "p-steeve", T0)).toEqual([])
+  })
+})
+
+describe("publication seule, modification et signets (EXF-DG-12)", () => {
+  it("modifier ma publication : le texte change, la carte dit « modifiée » ; celle d'autrui reste introuvable", async () => {
+    const { store, advance } = demo()
+    await store.switchTo("p-mireille")
+    expect(await store.editPost("post-5", "Autre texte")).toEqual({ ok: false, code: "not_found" })
+    expect(await store.editPost("post-2", "   ")).toEqual({ ok: false, code: "post_empty" })
+    advance(HOUR_MS)
+    expect(await store.editPost("post-2", "  Valise pleine, merci à toutes et à tous.  ")).toEqual({ ok: true, value: null })
+    expect(postDetailView(store.getState(), "post-2", "p-steeve", T0)).toMatchObject({ body: "Valise pleine, merci à toutes et à tous.", edited: true })
+  })
+
+  it("la publication seule suit les mêmes règles que le fil : masquée, bloquée ou inconnue, c'est « introuvable »", async () => {
+    const { store } = demo()
+    expect(postDetailView(store.getState(), "post-2", "p-steeve", T0)).toMatchObject({ id: "post-2", edited: false })
+    expect(postDetailView(store.getState(), "post-inconnue", "p-steeve", T0)).toBeNull()
+    await store.switchTo("p-steeve")
+    await store.hidePost("post-2")
+    expect(postDetailView(store.getState(), "post-2", "p-steeve", T0)).toBeNull()
+    await store.block("p-nadia")
+    expect(postDetailView(store.getState(), "post-5", "p-steeve", T0)).toBeNull()
+  })
+
+  it("mes signets, du plus récent ; une publication retirée disparaît de la liste", async () => {
+    const { store, advance } = demo()
+    await store.switchTo("p-steeve")
+    await store.toggleBookmark("post-2")
+    advance(HOUR_MS)
+    await store.toggleBookmark("post-1")
+    expect(bookmarksView(store.getState(), "p-steeve", T0).map((item) => [item.postId, item.author.kind])).toEqual([
+      ["post-1", "page"],
+      ["post-2", "person"],
+    ])
+    await store.switchTo("p-mireille")
+    await store.removePost("post-2")
+    expect(bookmarksView(store.getState(), "p-steeve", T0).map((item) => item.postId)).toEqual(["post-1"])
+  })
+
+  it("l'avis d'un commentaire mène à sa publication", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    await store.comment({ postId: "post-7", body: "Bonne question." })
+    expect(notificationsView(store.getState(), "p-prisca").find((item) => item.kind === "post_comment")?.postId).toBe("post-7")
   })
 })

@@ -19,6 +19,10 @@ export const routes = {
   /** Se voir comme les autres membres (EXF-DG-07, `?apercu=1`). */
   profilePreview: (handle: string) => `/@${handle}?apercu=1`,
   page: (handle: string) => `/pages/${handle}`,
+  /** Une publication seule (depuis la cloche, un signet, son horodatage). */
+  post: (postId: string) => `/publication/${postId}`,
+  /** Mes signets (EXF-DG-12). */
+  bookmarks: () => "/enregistrements",
   /** L'annuaire opt-in des membres (EXF-DG-19). */
   members: () => "/membres",
   settings: () => "/parametres",

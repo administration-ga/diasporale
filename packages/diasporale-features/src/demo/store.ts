@@ -328,6 +328,7 @@ export class DemoStore {
           createdAt: now,
           reactions: {},
           baseReactions: 0,
+          editedAt: null,
         },
         ...this.state.posts,
       ],
@@ -382,8 +383,10 @@ export class DemoStore {
       sequence,
     }
     const postAuthorId = post.author.kind === "person" ? post.author.id : null
-    if (postAuthorId) next = this.notified(next, { recipientId: postAuthorId, kind: "post_comment", actorId: viewer.person.id })
-    if (answeredId && answeredId !== postAuthorId) next = this.notified(next, { recipientId: answeredId, kind: "post_comment", actorId: viewer.person.id })
+    if (postAuthorId) next = this.notified(next, { recipientId: postAuthorId, kind: "post_comment", actorId: viewer.person.id, postId: post.id })
+    if (answeredId && answeredId !== postAuthorId) {
+      next = this.notified(next, { recipientId: answeredId, kind: "post_comment", actorId: viewer.person.id, postId: post.id })
+    }
     this.commit(next)
     return OK
   }
@@ -421,7 +424,7 @@ export class DemoStore {
       ...this.state,
       marks: existing
         ? this.state.marks.filter((mark) => !(mark.personId === me && mark.postId === postId && mark.kind === "bookmark"))
-        : [...this.state.marks, { personId: me, postId, kind: "bookmark" }],
+        : [...this.state.marks, { personId: me, postId, kind: "bookmark", createdAt: this.clock() }],
     })
     return { ok: true, value: { bookmarked: !existing } }
   }
@@ -437,7 +440,7 @@ export class DemoStore {
 
   private withHidden(state: DemoState, personId: string, postId: string): DemoState {
     if (state.marks.some((mark) => mark.personId === personId && mark.postId === postId && mark.kind === "hidden")) return state
-    return { ...state, marks: [...state.marks, { personId, postId, kind: "hidden" }] }
+    return { ...state, marks: [...state.marks, { personId, postId, kind: "hidden", createdAt: this.clock() }] }
   }
 
   async muteAuthor(personId: string): Promise<ActionResult> {
@@ -469,6 +472,22 @@ export class DemoStore {
       sequence,
     }
     this.commit(this.withHidden(next, me, post.id))
+    return OK
+  }
+
+  async editPost(postId: string, body: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer?.membership) return fail("not_member")
+    if (!capabilitiesOf(deriveMembershipStatus(viewer.membership.grounds, this.clock())).has("publish")) return fail("publish_not_allowed")
+    const post = this.state.posts.find((candidate) => candidate.id === postId)
+    // Seule l'autrice ou l'auteur modifie ; pour tout autre, la publication n'existe pas.
+    if (!post || !(post.author.kind === "person" && post.author.id === viewer.person.id)) return fail("not_found")
+    const text = body.trim()
+    if (text.length === 0) return fail("post_empty")
+    if (text.length > POST_MAX_LENGTH) return fail("post_too_long")
+    const now = this.clock()
+    this.commit({ ...this.state, posts: this.state.posts.map((candidate) => (candidate.id === postId ? { ...candidate, body: text, editedAt: now } : candidate)) })
     return OK
   }
 
@@ -507,7 +526,7 @@ export class DemoStore {
    */
   private notified(
     next: DemoState,
-    input: { recipientId: string; kind: DemoNotification["kind"]; actorId: string | null; connectionRequestId?: string },
+    input: { recipientId: string; kind: DemoNotification["kind"]; actorId: string | null; connectionRequestId?: string; postId?: string },
   ): DemoState {
     if (input.actorId === input.recipientId) return next
     const actorId = input.actorId
@@ -516,8 +535,14 @@ export class DemoStore {
     }
     const now = this.clock()
     const requestId = input.connectionRequestId ?? null
+    const postId = input.postId ?? null
     const existing = next.notifications.find(
-      (item) => item.recipientId === input.recipientId && item.kind === input.kind && item.actorId === actorId && item.connectionRequestId === requestId,
+      (item) =>
+        item.recipientId === input.recipientId &&
+        item.kind === input.kind &&
+        item.actorId === actorId &&
+        item.connectionRequestId === requestId &&
+        item.postId === postId,
     )
     if (existing) {
       return { ...next, notifications: next.notifications.map((item) => (item === existing ? { ...item, createdAt: now, readAt: null } : item)) }
@@ -531,6 +556,7 @@ export class DemoStore {
       readAt: null,
       connectionRequestId: requestId,
       inviteDeclined: false,
+      postId,
     }
     return { ...next, notifications: [...next.notifications, notification], sequence: next.sequence + 1 }
   }

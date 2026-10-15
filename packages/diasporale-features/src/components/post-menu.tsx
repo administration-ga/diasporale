@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { BookmarkCheckIcon, BookmarkIcon, EyeOffIcon, FlagIcon, MoreHorizontalIcon, Trash2Icon, VolumeXIcon, type LucideIcon } from "lucide-react"
+import { BookmarkCheckIcon, BookmarkIcon, EyeOffIcon, FlagIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon, VolumeXIcon, type LucideIcon } from "lucide-react"
 import { DropdownMenu } from "radix-ui"
 import { useId, useState, type ReactNode } from "react"
 import { Controller, useForm } from "react-hook-form"
@@ -10,6 +10,7 @@ import { z } from "zod"
 
 import { useActions } from "../data/context"
 import { REPORT_NOTE_MAX, REPORT_REASONS, type PostView } from "../data/types"
+import { POST_BODY_MAX } from "./composer"
 import { useDiasporaleT } from "../i18n/client"
 import { cn } from "../lib/cn"
 import { Button } from "../primitives/button"
@@ -27,6 +28,7 @@ export function PostMenu(props: { post: PostView }) {
   const actions = useActions()
   const [reporting, setReporting] = useState(false)
   const [removing, setRemoving] = useState(false)
+  const [editing, setEditing] = useState(false)
   const { post } = props
   const person = post.author.kind === "person" && !post.isMine ? post.author : null
 
@@ -61,9 +63,14 @@ export function PostMenu(props: { post: PostView }) {
               {post.bookmarked ? t("postMenu.unbookmark") : t("postMenu.bookmark")}
             </MenuItem>
             {post.isMine ? (
-              <MenuItem icon={Trash2Icon} tone="danger" onSelect={() => setRemoving(true)}>
-                {t("postMenu.remove")}
-              </MenuItem>
+              <>
+                <MenuItem icon={PencilIcon} onSelect={() => setEditing(true)}>
+                  {t("postMenu.edit")}
+                </MenuItem>
+                <MenuItem icon={Trash2Icon} tone="danger" onSelect={() => setRemoving(true)}>
+                  {t("postMenu.remove")}
+                </MenuItem>
+              </>
             ) : (
               <>
                 <MenuItem icon={EyeOffIcon} onSelect={hide}>
@@ -82,7 +89,14 @@ export function PostMenu(props: { post: PostView }) {
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
-      {post.isMine ? <RemovePostSheet postId={post.id} open={removing} onOpenChange={setRemoving} /> : <ReportPostSheet postId={post.id} open={reporting} onOpenChange={setReporting} />}
+      {post.isMine ? (
+        <>
+          <EditPostSheet post={post} open={editing} onOpenChange={setEditing} />
+          <RemovePostSheet postId={post.id} open={removing} onOpenChange={setRemoving} />
+        </>
+      ) : (
+        <ReportPostSheet postId={post.id} open={reporting} onOpenChange={setReporting} />
+      )}
     </>
   )
 }
@@ -179,6 +193,60 @@ function ReportPostSheet(props: { postId: string; open: boolean; onOpenChange: (
             <Button type="submit" variant="destructive" disabled={form.formState.isSubmitting}>
               <FlagIcon aria-hidden />
               {t("report.send")}
+            </Button>
+          </div>
+        </form>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+const editSchema = z.object({
+  body: z.string().trim().min(1, "post_empty").max(POST_BODY_MAX, "post_too_long"),
+})
+type EditValues = z.infer<typeof editSchema>
+
+/** Modifier le texte de SA publication ; portée, audience et visibilité ne changent pas. */
+function EditPostSheet(props: { post: PostView; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { t } = useDiasporaleT()
+  const actions = useActions()
+  const ids = useId()
+  const form = useForm<EditValues>({ resolver: zodResolver(editSchema), values: { body: props.post.body } })
+  const error = form.formState.errors.body?.message
+
+  const onSubmit = form.handleSubmit(async (values) => {
+    const result = await actions.editPost(props.post.id, values.body)
+    if (!result.ok) {
+      form.setError("body", { message: result.code })
+      return
+    }
+    toast.success(t("editPost.saved"))
+    props.onOpenChange(false)
+  })
+
+  return (
+    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+      <SheetContent title={t("editPost.title")} description={t("editPost.description")} closeLabel={t("editPost.close")}>
+        <form noValidate onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+          <Field id={`${ids}-corps`} label={t("editPost.label")} error={error ? t(`errors.${error}`) : undefined}>
+            {(control) => (
+              <Textarea
+                id={control.id}
+                rows={6}
+                maxLength={POST_BODY_MAX}
+                aria-describedby={control.describedBy}
+                aria-invalid={control.invalid || undefined}
+                {...form.register("body")}
+              />
+            )}
+          </Field>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => props.onOpenChange(false)}>
+              {t("editPost.cancel")}
+            </Button>
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              <PencilIcon aria-hidden />
+              {t("editPost.save")}
             </Button>
           </div>
         </form>

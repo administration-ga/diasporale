@@ -72,9 +72,12 @@ export function PostCard(props: {
               <TrustBadges badges={post.author.badges} />
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
-              <time dateTime={new Date(post.createdAt).toISOString()} title={formatDate(post.createdAt, locale)}>
-                {formatRelative(post.createdAt, props.now, locale)}
-              </time>
+              <Link href={routes.post(post.id)} className="rounded-sm hover:underline focus-visible:shadow-focus">
+                <time dateTime={new Date(post.createdAt).toISOString()} title={formatDate(post.createdAt, locale)}>
+                  {formatRelative(post.createdAt, props.now, locale)}
+                </time>
+              </Link>
+              {post.edited ? <span>· {t("post.edited")}</span> : null}
               <ContentScopeTag scope={post.scope} {...(props.hubCountry ? { hubCountry: props.hubCountry } : {})} />
             </div>
           </div>

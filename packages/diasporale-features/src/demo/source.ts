@@ -4,9 +4,21 @@ import { hasCapability, type CountryCode, type FeedScope } from "@diasporale/dom
 import { useMemo, useSyncExternalStore } from "react"
 
 import type { DemoAccountView, DiasporaleDataSource } from "../data/port"
-import type { CommentThreadView, CommentView, Loadable, MemberHitView, NotificationView, RelationView, SuggestionView, UnreadCountView } from "../data/types"
+import type {
+  BookmarkView,
+  CommentThreadView,
+  CommentView,
+  Loadable,
+  MemberHitView,
+  NotificationView,
+  PostView,
+  RelationView,
+  SuggestionView,
+  UnreadCountView,
+} from "../data/types"
 import { splitDisplayName, suggestHandles } from "../lib/handle"
 import {
+  bookmarksView,
   commentsView,
   consentsView,
   countryHubView,
@@ -15,6 +27,7 @@ import {
   memberSearchView,
   openCountriesView,
   pageDetailView,
+  postDetailView,
   notificationsView,
   profileView,
   relationView,
@@ -116,6 +129,26 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
         if (!status || !hasCapability(status, "view_directory")) return { status: "error", code: "status_insufficient" }
         return ready(memberSearchView(state, viewerId, query, country, store.now()))
       }, [version, query, country])
+    },
+
+    usePost(postId: string) {
+      const version = useVersion()
+      return useMemo<Loadable<PostView | null>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        return viewerId ? ready(postDetailView(state, postId, viewerId, store.now())) : { status: "error", code: "not_signed_in" }
+      }, [version, postId])
+    },
+
+    useBookmarks() {
+      const version = useVersion()
+      return useMemo<Loadable<readonly BookmarkView[]>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        return viewerId ? ready(bookmarksView(state, viewerId, store.now())) : { status: "error", code: "not_signed_in" }
+      }, [version])
     },
 
     useSuggestions() {
@@ -229,6 +262,7 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       muteAuthor: (personId) => store.muteAuthor(personId),
       reportPost: (input) => store.reportPost(input),
       removePost: (postId) => store.removePost(postId),
+      editPost: (postId, body) => store.editPost(postId, body),
       connect: (personId) => store.connect(personId),
       respondToConnection: (connectionId, accept) => store.respondToConnection(connectionId, accept),
       follow: (handle) => store.follow(handle),

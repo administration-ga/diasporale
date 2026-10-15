@@ -19,6 +19,7 @@ import { DemoFloatingCard } from "./site-chrome"
 /** La table de routes, telle que les surfaces de `@diasporale/features` la consomment. */
 const featureRoutes: FeatureRoutes = {
   profile: routes.profile,
+  post: routes.post,
   page: routes.page,
   hub: routes.hub,
   feed: () => routes.feed(),

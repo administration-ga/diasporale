@@ -11,6 +11,8 @@ import { createContext, useContext, type ComponentProps, type ComponentType, typ
  */
 export interface FeatureRoutes {
   profile(handle: string): string
+  /** Une publication, ouverte seule (depuis la cloche, un signet, son horodatage). */
+  post(postId: string): string
   page(handle: string): string
   hub(country: CountryCode): string
   feed(): string

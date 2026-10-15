@@ -29,6 +29,7 @@ import {
 import type {
   ActionErrorCode,
   ActionResult,
+  BookmarkView,
   CommentThreadView,
   CommentView,
   ConsentView,
@@ -63,6 +64,7 @@ import {
   toCountryHubView,
   toFacetArgs,
   toFeed,
+  toBookmarkView,
   toCommentThreadView,
   toCommentView,
   toMemberHitView,
@@ -70,6 +72,7 @@ import {
   toWall,
   toNotificationView,
   toOpenCountries,
+  toPostView,
   toProfileView,
   toRelationView,
   toSuggestionView,
@@ -100,6 +103,8 @@ export function feedRequest(scope: FeedScope, country: CountryCode) {
 const BELL_PAGE = 30
 /** Les réponses d'une racine, lues d'un coup à la demande. */
 const REPLIES_PAGE = 50
+/** Les signets lus d'un coup (première page). */
+const BOOKMARKS_PAGE = 50
 
 const LOADING = { status: "loading" } as const
 
@@ -271,6 +276,27 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       if (!searching) return ready([])
       if (hits.state === "error") return failed(hits.code)
       return hits.state === "ready" ? ready(hits.value.map(toMemberHitView)) : LOADING
+    },
+
+    usePost(postId: string): Loadable<PostView | null> {
+      const { networkId } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const post = useLoaded(api.modules.posts.posts.getPost, id ? { networkId: id, postId: postId as Id<"posts"> } : "skip")
+      if (networkId.state === "error") return failed(networkId.code)
+      // Introuvable, illisible ou bloqué : le moteur répond « notFound », l'écran dit « introuvable ».
+      if (post.state === "error") return post.code === "not_found" ? ready(null) : failed(post.code)
+      if (post.state !== "ready") return LOADING
+      const view = toPostView(post.value)
+      myReactions.set(view.id, view.myReaction)
+      return ready(view)
+    },
+
+    useBookmarks(): Loadable<readonly BookmarkView[]> {
+      const { networkId } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const page = useLoaded(api.modules.marks.marks.paginateBookmarks, id ? { networkId: id, paginationOpts: { numItems: BOOKMARKS_PAGE, cursor: null } } : "skip")
+      for (const loaded of [networkId, page]) if (loaded.state === "error") return failed(loaded.code)
+      return page.state === "ready" ? ready(page.value.page.map(toBookmarkView)) : LOADING
     },
 
     useSuggestions(): Loadable<readonly SuggestionView[]> {
@@ -528,6 +554,12 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           reason: input.reason,
           ...(note ? { note } : {}),
         })
+        return null
+      }),
+
+    editPost: (postId, body) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.posts.posts.edit, { networkId: await diasporale(), postId: postId as Id<"posts">, body })
         return null
       }),
 

@@ -17,21 +17,7 @@ import {
 } from "@diasporale/features"
 import { type ActionResult, useActions, usePage, useProfile, useRelation, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import {
-  BanIcon,
-  ClockIcon,
-  EyeIcon,
-  FlagIcon,
-  HandHeartIcon,
-  LandmarkIcon,
-  NewspaperIcon,
-  PencilIcon,
-  ShieldOffIcon,
-  UserCheckIcon,
-  UserPlusIcon,
-  UserRoundXIcon,
-  UsersIcon,
-} from "lucide-react"
+import { BanIcon, BookmarkIcon, ClockIcon, EyeIcon, FlagIcon, HandHeartIcon, LandmarkIcon, NewspaperIcon, PencilIcon, ShieldOffIcon, UserCheckIcon, UserPlusIcon, UserRoundXIcon, UsersIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useSearchParams } from "next/navigation"
 import { type ReactNode, useId, useState } from "react"
@@ -95,6 +81,12 @@ function Profile(props: { handle: string; membership: MembershipView }) {
                     <NextLink href={preview ? routes.profile(view.handle) : routes.profilePreview(view.handle)}>
                       <EyeIcon aria-hidden />
                       {preview ? t("profile.previewExit") : t("profile.preview")}
+                    </NextLink>
+                  </Button>
+                  <Button asChild variant="ghost" size="sm">
+                    <NextLink href={routes.bookmarks()}>
+                      <BookmarkIcon aria-hidden />
+                      {t("profile.bookmarks")}
                     </NextLink>
                   </Button>
                 </>

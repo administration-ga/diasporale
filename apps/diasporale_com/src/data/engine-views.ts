@@ -22,6 +22,7 @@ import {
 } from "@diasporale/domain"
 import {
   type AccountView,
+  type BookmarkView,
   type CommentThreadView,
   type CommentView,
   type ConsentView,
@@ -191,6 +192,7 @@ export function toPostView(item: FeedItem): PostView {
     myReaction: item.reactions.mine,
     isMine: item.isMine,
     bookmarked: item.viewer.bookmarked,
+    edited: item.editedAt !== null,
   }
 }
 
@@ -344,6 +346,7 @@ export function toNotificationView(item: EngineNotification): NotificationView {
     read: item.readAt !== null,
     pendingConnectionId,
     inviteOutcome,
+    postId: subject?.kind === "post" ? subject.id : null,
   }
 }
 
@@ -364,4 +367,19 @@ export function toCommentView(item: EngineReply): CommentView {
 
 export function toCommentThreadView(item: EngineComment): CommentThreadView {
   return { ...toCommentView(item), replyCount: item.replyCount, replies: item.replies.map(toCommentView) }
+}
+
+type EngineBookmark = FunctionReturnType<typeof api.modules.marks.marks.paginateBookmarks>["page"][number]
+
+/** Un signet du moteur : la page quand elle parle, sinon la personne par son profil publié. */
+export function toBookmarkView(item: EngineBookmark): BookmarkView {
+  return {
+    postId: item.postId,
+    author: item.page
+      ? { kind: "page", handle: item.page.handle, displayName: item.page.name }
+      : { kind: "person", handle: item.author.handle, displayName: item.author.displayName },
+    body: item.body,
+    publishedAt: item.publishedAt,
+    markedAt: item.markedAt,
+  }
 }

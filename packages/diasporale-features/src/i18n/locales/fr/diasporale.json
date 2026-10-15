@@ -368,7 +368,8 @@
     },
     "comments_one": "{{count}} commentaire",
     "comments_other": "{{count}} commentaires",
-    "alsoOnRoot": "Aussi dans ANTIA"
+    "alsoOnRoot": "Aussi dans ANTIA",
+    "edited": "modifiée"
   },
   "event": {
     "category": {
@@ -530,7 +531,8 @@
     "noPosts": "{{name}} n'a encore rien publié.",
     "noPostsSelf": "Vous n'avez encore rien publié.",
     "unavailableTitle": "Ce profil n'est pas disponible.",
-    "unavailableBody": "Il n'existe pas, ou vous ne pouvez pas le voir."
+    "unavailableBody": "Il n'existe pas, ou vous ne pouvez pas le voir.",
+    "bookmarks": "Mes enregistrements"
   },
   "facet": {
     "country": "Pays de résidence",
@@ -969,7 +971,8 @@
     "mute": "Mettre {{name}} en sourdine",
     "muted": "{{name}} est en sourdine : ses publications quittent vos fils.",
     "report": "Signaler…",
-    "remove": "Retirer ma publication…"
+    "remove": "Retirer ma publication…",
+    "edit": "Modifier ma publication…"
   },
   "report": {
     "title": "Signaler cette publication",
@@ -1010,6 +1013,29 @@
     "dismiss": "Ne plus me proposer {{name}}",
     "dismissed": "Suggestion retirée."
   },
+  "editPost": {
+    "title": "Modifier ma publication",
+    "description": "Le texte seulement : la portée, l'audience et la visibilité ne changent pas.",
+    "label": "Votre message",
+    "save": "Enregistrer la modification",
+    "saved": "Publication modifiée.",
+    "cancel": "Annuler",
+    "close": "Fermer"
+  },
+  "postScreen": {
+    "title": "Publication",
+    "notFoundTitle": "Publication introuvable.",
+    "notFoundBody": "Elle a pu être retirée, ou elle ne vous est pas lisible.",
+    "back": "Revenir au fil"
+  },
+  "bookmarks": {
+    "title": "Mes enregistrements",
+    "lead": "Les publications que vous avez enregistrées. Elles ne sont visibles que de vous.",
+    "emptyTitle": "Aucune publication enregistrée.",
+    "emptyBody": "Enregistrez une publication depuis son menu « … » pour la retrouver ici.",
+    "open": "Ouvrir",
+    "remove": "Retirer"
+  },
   "bell": {
     "open": "Notifications",
     "openUnread_one": "Notifications, {{count}} non lue",
@@ -1043,7 +1069,8 @@
       "accepted": "acceptée",
       "declined": "refusée",
       "gone": "n'est plus d'actualité"
-    }
+    },
+    "openPost": "Voir la publication"
   },
   "relation": {
     "connect": "Se connecter",

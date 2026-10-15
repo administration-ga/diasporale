@@ -34,6 +34,7 @@ import { CONSENT_PURPOSES, CONSENT_TEXT_VERSIONS, isConsentActive } from "@diasp
 
 import type {
   AuthorView,
+  BookmarkView,
   CommentThreadView,
   CommentView,
   ConsentView,
@@ -158,6 +159,7 @@ export function notificationsView(state: DemoState, viewerId: string): Notificat
         pendingConnectionId: isRequest && request && request.toId === viewerId ? request.id : null,
         // Une demande tranchée : refusée par moi, acceptée (le lien existe), sinon disparue (retirée, défaite).
         inviteOutcome: !isRequest || request ? null : item.inviteDeclined ? "declined" : item.actorId && isConnected(state, viewerId, item.actorId) ? "accepted" : "gone",
+        postId: item.postId,
       }
     })
 }
@@ -311,7 +313,36 @@ export function postView(state: DemoState, post: DemoPost, viewerId: string, now
     myReaction: mine,
     isMine: post.author.kind === "person" && post.author.id === viewerId,
     bookmarked: state.marks.some((mark) => mark.personId === viewerId && mark.postId === post.id && mark.kind === "bookmark"),
+    edited: post.editedAt !== null,
   }
+}
+
+/** Une publication seule, pour ce lecteur ; `null` : introuvable, illisible ou écartée (même réponse). */
+export function postDetailView(state: DemoState, postId: string, viewerId: string, now: number): PostView | null {
+  const post = state.posts.find((candidate) => candidate.id === postId)
+  if (!post || !canRead(state, post, viewerId, now) || setAside(state, post, viewerId, false)) return null
+  return postView(state, post, viewerId, now)
+}
+
+/** Mes signets, du plus récent ; une publication devenue illisible disparaît. */
+export function bookmarksView(state: DemoState, viewerId: string, now: number): BookmarkView[] {
+  return state.marks
+    .filter((mark) => mark.personId === viewerId && mark.kind === "bookmark")
+    .flatMap((mark) => {
+      const post = state.posts.find((candidate) => candidate.id === mark.postId)
+      if (!post || !canRead(state, post, viewerId, now) || setAside(state, post, viewerId, false)) return []
+      const author = authorOf(state, post.author, now)
+      return [
+        {
+          postId: post.id,
+          author: { kind: author.kind, handle: author.handle, displayName: author.displayName },
+          body: post.body,
+          publishedAt: post.createdAt,
+          markedAt: mark.createdAt,
+        },
+      ]
+    })
+    .sort((a, b) => b.markedAt - a.markedAt)
 }
 
 /** Un blocage, dans un sens ou dans l'autre, entre deux personnes. */

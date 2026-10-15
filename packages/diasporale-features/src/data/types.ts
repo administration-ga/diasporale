@@ -56,6 +56,17 @@ export interface PostView {
   readonly isMine: boolean
   /** Enregistrée par le lecteur (signet, visible de lui seul). */
   readonly bookmarked: boolean
+  /** Modifiée après sa publication : la carte le dit. */
+  readonly edited: boolean
+}
+
+/** Un signet (EXF-DG-12) : de quoi reconnaître la publication et l'ouvrir. */
+export interface BookmarkView {
+  readonly postId: string
+  readonly author: { readonly kind: "person" | "page"; readonly handle: string | null; readonly displayName: string | null }
+  readonly body: string
+  readonly publishedAt: number
+  readonly markedAt: number
 }
 
 /** Les six motifs de signalement (EXF-DG-12), ceux du moteur (`CONTENT_REPORT_REASONS`). */
@@ -277,6 +288,8 @@ export interface NotificationView {
   /** Une demande de relation encore à trancher PAR MOI : de quoi l'accepter ou la refuser d'ici. */
   readonly pendingConnectionId: string | null
   readonly inviteOutcome: InviteOutcome | null
+  /** La publication dont parle l'avis (réaction, commentaire, citation) : de quoi l'ouvrir. */
+  readonly postId: string | null
 }
 
 /** Les non-lues, bornées : au-delà de 99, la cloche dit « 99+ ». */

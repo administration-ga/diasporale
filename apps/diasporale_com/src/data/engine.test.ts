@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from "vitest"
 import { authActionErrorCode, engineActionErrorCode } from "./engine-errors"
 import { createEngineActions, feedRequest } from "./engine-source"
 import {
+  toBookmarkView,
   toCommentThreadView,
   toFacetArgs,
   toFeed,
@@ -409,6 +410,7 @@ describe("la cloche du moteur (PD4)", () => {
       read: false,
       pendingConnectionId: "c1",
       inviteOutcome: null,
+      postId: null,
     })
     expect(toNotificationView(notice({ inviteState: { status: "accepted", iAmRecipient: true } }))).toMatchObject({ pendingConnectionId: null, inviteOutcome: "accepted" })
     expect(toNotificationView(notice({ inviteState: { status: "declined", iAmRecipient: true } }))).toMatchObject({ inviteOutcome: "declined" })
@@ -421,7 +423,7 @@ describe("la cloche du moteur (PD4)", () => {
 
   it("un genre inconnu se dit « nouvelle activité » ; un profil non publié ne nomme personne ; lu, c'est lu", () => {
     const view = toNotificationView(notice({ kind: "file_withheld", subject: null, inviteState: null, readAt: 9, actor: { personId: "p3", displayName: null, handle: null, avatarUrl: null, badges: [] } }))
-    expect(view).toEqual({ id: "nt1", kind: "other", actor: null, createdAt: 5, read: true, pendingConnectionId: null, inviteOutcome: null })
+    expect(view).toEqual({ id: "nt1", kind: "other", actor: null, createdAt: 5, read: true, pendingConnectionId: null, inviteOutcome: null, postId: null })
     expect(toNotificationView(notice({ kind: "sponsorship_withdrawn", inviteState: null, actor: null }))).toMatchObject({ kind: "sponsorship_withdrawn", actor: null })
   })
 
@@ -638,5 +640,29 @@ describe("suggestions par la tranche (PD4, EXF-DG-18)", () => {
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
     expect(await actions.dismissSuggestion("ada")).toEqual({ ok: true, value: null })
     expect(calls.slice(1)).toEqual([{ name: "modules/suggestions/suggestions:dismiss", args: { networkId: "n-diasporale", handle: "ada" } }])
+  })
+})
+
+describe("publication seule, modification et signets par le moteur (PD4)", () => {
+  it("un signet du moteur : la page quand elle parle, sinon la personne ; modifier part vers posts.edit ; l'avis porte sa publication", async () => {
+    const base = { postId: "post-1", body: "Bonjour", publishedAt: 1, markedAt: 2, author: { personId: "p2", displayName: "Ada", handle: "ada", avatarUrl: null } }
+    expect(toBookmarkView({ ...base, page: null } as never)).toEqual({
+      postId: "post-1",
+      author: { kind: "person", handle: "ada", displayName: "Ada" },
+      body: "Bonjour",
+      publishedAt: 1,
+      markedAt: 2,
+    })
+    const page = { pageId: "pg1", networkId: "n", handle: "consulat-lyon", name: "Consulat de Lyon", shortName: null, logoUrl: null, badge: "official", ownerKind: "institution", country: "FR" }
+    expect(toBookmarkView({ ...base, page } as never).author).toEqual({ kind: "page", handle: "consulat-lyon", displayName: "Consulat de Lyon" })
+
+    const notice = { notificationId: "nt1", kind: "post_comment", subject: { kind: "post", id: "post-1" }, createdAt: 1, readAt: null, resolution: null, inviteState: null, fileScanStatus: null, actor: null }
+    expect(toNotificationView(notice as never).postId).toBe("post-1")
+    expect(toNotificationView({ ...notice, subject: { kind: "connection", id: "c1" } } as never).postId).toBeNull()
+
+    const { convex, calls } = fakeConvex({ ...NETWORK, "modules/posts/posts:edit": () => ({ editedAt: 3 }) })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.editPost("post-1", "Texte corrigé")).toEqual({ ok: true, value: null })
+    expect(calls.slice(1)).toEqual([{ name: "modules/posts/posts:edit", args: { networkId: "n-diasporale", postId: "post-1", body: "Texte corrigé" } }])
   })
 })

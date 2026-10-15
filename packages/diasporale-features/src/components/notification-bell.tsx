@@ -196,6 +196,7 @@ function NoticeSentence(props: { item: NotificationView; onNavigate: () => void 
 function NotificationRow(props: { item: NotificationView; now: number; onNavigate: () => void }) {
   const { t, locale } = useDiasporaleT()
   const actions = useActions()
+  const { routes, Link } = useRouting()
   const [busy, setBusy] = useState(false)
   const { item } = props
   const Icon = KIND_ICONS[item.kind]
@@ -222,6 +223,15 @@ function NotificationRow(props: { item: NotificationView; now: number; onNavigat
             {item.inviteOutcome ? ` · ${t(`bell.outcome.${item.inviteOutcome}`)}` : null}
             {item.read ? null : <span className="sr-only"> · {t("bell.unread")}</span>}
           </p>
+          {item.postId ? (
+            <Link
+              href={routes.post(item.postId)}
+              onClick={props.onNavigate}
+              className="mt-1 inline-flex text-[13px] font-semibold text-[var(--esp-accent-deep)] hover:underline focus-visible:shadow-focus"
+            >
+              {t("bell.openPost")}
+            </Link>
+          ) : null}
           {item.pendingConnectionId ? (
             <div className="mt-2 flex flex-wrap gap-2">
               <Button size="sm" disabled={busy} onClick={() => run(() => actions.respondToConnection(item.pendingConnectionId ?? "", true))}>

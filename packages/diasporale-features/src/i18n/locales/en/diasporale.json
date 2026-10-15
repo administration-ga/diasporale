@@ -368,7 +368,8 @@
     },
     "comments_one": "{{count}} comment",
     "comments_other": "{{count}} comments",
-    "alsoOnRoot": "Also on ANTIA"
+    "alsoOnRoot": "Also on ANTIA",
+    "edited": "edited"
   },
   "event": {
     "category": {
@@ -530,7 +531,8 @@
     "noPosts": "{{name}} hasn't posted anything yet.",
     "noPostsSelf": "You haven't posted anything yet.",
     "unavailableTitle": "This profile is not available.",
-    "unavailableBody": "It doesn't exist, or you can't see it."
+    "unavailableBody": "It doesn't exist, or you can't see it.",
+    "bookmarks": "My saved posts"
   },
   "facet": {
     "country": "Country of residence",
@@ -969,7 +971,8 @@
     "mute": "Mute {{name}}",
     "muted": "{{name}} is muted: their posts leave your feeds.",
     "report": "Report…",
-    "remove": "Remove my post…"
+    "remove": "Remove my post…",
+    "edit": "Edit my post…"
   },
   "report": {
     "title": "Report this post",
@@ -1010,6 +1013,29 @@
     "dismiss": "Stop suggesting {{name}}",
     "dismissed": "Suggestion removed."
   },
+  "editPost": {
+    "title": "Edit my post",
+    "description": "The text only: reach, audience and visibility don't change.",
+    "label": "Your message",
+    "save": "Save the change",
+    "saved": "Post edited.",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "postScreen": {
+    "title": "Post",
+    "notFoundTitle": "Post not found.",
+    "notFoundBody": "It may have been removed, or it isn't visible to you.",
+    "back": "Back to the feed"
+  },
+  "bookmarks": {
+    "title": "My saved posts",
+    "lead": "The posts you saved. Only you can see them.",
+    "emptyTitle": "No saved posts.",
+    "emptyBody": "Save a post from its “…” menu to find it here.",
+    "open": "Open",
+    "remove": "Remove"
+  },
   "bell": {
     "open": "Notifications",
     "openUnread_one": "Notifications, {{count}} unread",
@@ -1043,7 +1069,8 @@
       "accepted": "accepted",
       "declined": "declined",
       "gone": "no longer current"
-    }
+    },
+    "openPost": "See the post"
   },
   "relation": {
     "connect": "Connect",

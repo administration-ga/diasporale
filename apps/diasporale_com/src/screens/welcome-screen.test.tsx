@@ -25,6 +25,7 @@ afterEach(() => {
 
 const featureRoutes: FeatureRoutes = {
   profile: routes.profile,
+  post: routes.post,
   page: routes.page,
   hub: routes.hub,
   feed: () => routes.feed(),

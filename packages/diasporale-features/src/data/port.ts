@@ -25,6 +25,7 @@ import type {
 } from "@diasporale/domain"
 
 import type {
+  BookmarkView,
   CommentThreadView,
   CommentView,
   CountryHubView,
@@ -120,6 +121,8 @@ export interface DiasporaleActions {
   reportPost(input: ReportInput): Promise<ActionResult>
   /** Retirer MA publication, partout où elle est lue. */
   removePost(postId: string): Promise<ActionResult>
+  /** Modifier le texte de MA publication ; la carte dira « modifiée ». */
+  editPost(postId: string, body: string): Promise<ActionResult>
   /** « Ne plus me proposer » : un choix privé, réversible, que l'autre n'apprend pas. */
   dismissSuggestion(handle: string): Promise<ActionResult>
   /** Demander une connexion. Un blocage, dans un sens ou dans l'autre, rend la même réponse, sans rien écrire. */
@@ -173,6 +176,10 @@ export interface DiasporaleDataSource {
    * aux membres actifs ; le filtre de pays restreint, il n'ouvre jamais rien.
    */
   useMemberSearch(args: { query: string; country?: CountryCode }): Loadable<readonly MemberHitView[]>
+  /** Une publication seule ; `null` : introuvable ou illisible pour ce lecteur (même réponse). */
+  usePost(postId: string): Loadable<PostView | null>
+  /** Mes signets, du plus récent ; une publication devenue illisible disparaît de la liste. */
+  useBookmarks(): Loadable<readonly BookmarkView[]>
   /** Des membres à rencontrer (EXF-DG-18) : six au plus, réservées aux membres actifs. */
   useSuggestions(): Loadable<readonly SuggestionView[]>
   /** Les commentaires d'une publication, des plus anciens aux plus récents, avec leurs premières réponses. */

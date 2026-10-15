@@ -30,9 +30,9 @@ import type { AssociationType, CompanySector, EventCategory, NotificationKind, R
 /**
  * Version de l'état persisté : v2 = relations (demandes, blocages, abonnements) ;
  * v3 = cloche ; v4 = commentaires ; v5 = marques, sourdines et signalements ;
- * v6 = « ne plus me proposer ».
+ * v6 = « ne plus me proposer » ; v7 = publication modifiée, avis qui mène à sa publication.
  */
-export const DEMO_STATE_VERSION = 6
+export const DEMO_STATE_VERSION = 7
 
 export interface DemoPerson {
   readonly id: string
@@ -106,6 +106,8 @@ export interface DemoPost {
   readonly createdAt: number
   readonly reactions: Readonly<Record<string, ReactionKind>>
   readonly baseReactions: number
+  /** Date de la dernière modification du texte ; `null` : jamais modifiée. */
+  readonly editedAt: number | null
 }
 
 /** Une marque PRIVÉE d'une personne sur une publication : signet, ou publication masquée pour elle. */
@@ -113,6 +115,7 @@ export interface DemoMark {
   readonly personId: string
   readonly postId: string
   readonly kind: "bookmark" | "hidden"
+  readonly createdAt: number
 }
 
 /** Un signalement (EXF-DG-12) : la publication est aussitôt masquée pour la personne qui signale. */
@@ -179,6 +182,8 @@ export interface DemoNotification {
   readonly connectionRequestId: string | null
   /** La demande annoncée, refusée par la personne avisée : le moteur garde cet état, l'avis le dit. */
   readonly inviteDeclined: boolean
+  /** La publication dont parle l'avis (commentaire, réaction), pour l'ouvrir. */
+  readonly postId: string | null
 }
 
 export interface DemoState {
@@ -429,6 +434,7 @@ export function createDemoSeed(now: number): DemoState {
     createdAt: now - ageMs,
     reactions: {},
     baseReactions: extra.baseReactions ?? 0,
+    editedAt: null,
   })
 
   const comment = (id: string, postId: string, authorId: string, body: string, ageMs: number, parentId: string | null = null): DemoComment => ({
