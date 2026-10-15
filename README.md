@@ -41,13 +41,14 @@ DIASPORALE est un **espace de travail bun externe** du moteur (`../DIASPORALE/ap
 `../DIASPORALE/packages/*` dans `ANTIA/package.json`), sur le modèle des applications de l'État
 vis-à-vis du socle (ADR-0165) : une seule installation, dans `ANTIA/`.
 
-## Commandes (cibles, posées par PD0)
+## Commandes (posées par PD0)
 
 ```bash
 cd ../ANTIA && bun install            # une seule installation, dans le moteur
 bun run --cwd ../ANTIA dev:diasporale  # http://localhost:3031
 bun run --cwd ../ANTIA verify         # codegen + typecheck + tests + lint (moteur + DIASPORALE)
-bun run --cwd ../ANTIA deploy diasporale
+# Publication : aucune commande tant que l'hébergement n'est pas tranché (arbitrage du propriétaire) ;
+# l'image se construit depuis ECOSYSTEMES : docker build -f DIASPORALE/apps/diasporale_com/Dockerfile .
 ```
 
 ## Règles non négociables

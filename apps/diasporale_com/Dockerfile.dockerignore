@@ -1,0 +1,18 @@
+# Contexte = ECOSYSTEMES : LISTE BLANCHE. Seuls le moteur (ANTIA) et
+# DIASPORALE partent dans le contexte ; les écosystèmes voisins (PRO_GA,
+# SANTE_GA, GABON_DIPLOMATIE…) et tous les node_modules restent dehors.
+*
+!ANTIA
+!DIASPORALE
+ANTIA/.git
+ANTIA/.convex
+DIASPORALE/.git
+DIASPORALE/docs
+**/node_modules
+**/.next
+**/.turbo
+**/coverage
+**/.env
+**/.env.*
+!**/.env.example
+**/.DS_Store

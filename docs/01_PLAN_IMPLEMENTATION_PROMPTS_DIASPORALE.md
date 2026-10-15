@@ -50,8 +50,8 @@ Vérifications des étapes closes :
   `DIASPORA_PARTNER_KEYS`, validation juridique, durée du journal, `convex codegen` sur un
   déploiement de développement avant fusion.
 - **d)** 142 tests (parcours R1, R2, R3 sur le magasin de démonstration, composants,
-  parité fr / en, contrastes). Lancer : `bun install` puis `bun run dev` à la racine de
-  DIASPORALE (installation provisoire ; elle passe dans `ANTIA/` à PD0).
+  parité fr / en, contrastes). Lancer depuis PD0 : `bun install` dans `ANTIA/` (installation
+  unique), puis `bun run --cwd ../ANTIA dev:diasporale` ou `bun run dev` à la racine de DIASPORALE.
 
 **Arbitrages pris par défaut** (recommandations du cahier `docs/00` §20, retenues comme
 valeurs de travail jusqu'à décision écrite du propriétaire) : A1 ANTIA / `antia.ga`, DIASPORALE.COM

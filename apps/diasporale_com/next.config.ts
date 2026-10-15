@@ -1,12 +1,20 @@
+import path from "node:path"
+
 import type { NextConfig } from "next"
 
 /**
- * Configuration Next.js 16 PROVISOIRE de diasporale.com (avant le câblage PD0).
- * Au câblage, elle devient `createEngineNextConfig({ appDir: process.cwd() })`
- * du moteur (`@antia/api/next-config` : racine ECOSYSTEMES, sortie standalone,
- * paquets du moteur en sources, CSP, déploiement Convex lu dans ANTIA/.env.local) ;
- * seules les réécritures propres à DIASPORALE restent ici.
+ * Configuration Next.js 16 de diasporale.com, espace de travail externe du
+ * moteur ANTIA (installation unique dans `ANTIA/`, PD0).
+ *
+ * Racine de résolution et de traçage = ECOSYSTEMES : les dépendances vivent
+ * dans `ANTIA/node_modules`, hors du dossier de l'application, et l'image se
+ * construit dans ce même contexte (Dockerfile à côté). Étape suivante de PD0 :
+ * `createEngineNextConfig({ appDir: process.cwd() })` de `@antia/api/next-config`
+ * (CSP et déploiement Convex communs) ; seules les réécritures propres à
+ * DIASPORALE restent alors ici.
  */
+const ecosystemsRoot = path.resolve(process.cwd(), "../../..")
+
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -18,6 +26,8 @@ const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   output: "standalone",
+  outputFileTracingRoot: ecosystemsRoot,
+  turbopack: { root: ecosystemsRoot },
   transpilePackages: ["@diasporale/domain", "@diasporale/features"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }]
