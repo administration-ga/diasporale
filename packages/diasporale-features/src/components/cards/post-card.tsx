@@ -99,7 +99,7 @@ export function PostCard(props: {
               <DropdownMenu.Content
                 sideOffset={6}
                 align="start"
-                className="z-50 flex gap-1 rounded-xl bg-popover p-1.5 text-popover-foreground shadow-float"
+                className="z-60 flex gap-1 rounded-xl bg-popover p-1.5 text-popover-foreground shadow-float"
               >
                 {(Object.keys(REACTIONS) as ReactionKind[]).map((kind) => {
                   const Icon = REACTIONS[kind].icon

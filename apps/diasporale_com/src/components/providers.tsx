@@ -55,11 +55,16 @@ function DataProviders(props: { children: ReactNode }) {
  * confirmations, en bas à droite ; au téléphone, pleine largeur au-dessus de la
  * barre basse. Déployée : une carte flottante n'est jamais cachée derrière une
  * autre. Sa zone s'annonce « Avis » : « Notifications », c'est la cloche.
+ *
+ * Couches (charte §4) : barres 40 < feuilles 50 < pile des avis 55 < menus 60.
+ * Un avis passager reste lisible au-dessus d'une feuille, et un menu ouvert
+ * passe devant une carte flottante (sonner se pose sinon à 999999999).
  */
 function FloatingStack() {
   const { t } = useDiasporaleT()
   return (
     <Toaster
+      className="!z-55"
       containerAriaLabel={t("notice.region")}
       position="bottom-right"
       offset={{ bottom: 88, right: 24 }}

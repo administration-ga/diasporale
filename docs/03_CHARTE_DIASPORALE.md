@@ -158,6 +158,11 @@ noms du contrat (`--font-sans`, `--font-display`, `--font-mono`) qui y renvoient
   `#243849` en sombre, plus claire que la carte et que ce qui flotte (le bleu 950 creusait un trou
   cerclé de bleu). L'état se lit toujours aussi sans la couleur : inversion de clarté, pastille
   radio remplie, coche.
+- **Couches (v3.2)** : barres (en-tête, barre basse) 40 < feuilles (voile et panneau) 50 < pile
+  des avis 55 < menus et bulles 60. Un avis passager reste lisible au-dessus d'une feuille. Une carte
+  flottante persistante s'écarte tant qu'une feuille est ouverte. Un menu ouvert passe devant les
+  cartes flottantes : sonner se posait sinon à 999999999 et masquait le dernier élément d'un menu.
+  Le cliquet `layers.test.ts` tient l'échelle.
 - **Thème sombre** : le fond est le plus sombre ; la carte, puis ce qui flotte, s'éclaircissent
   (voir §2).
 

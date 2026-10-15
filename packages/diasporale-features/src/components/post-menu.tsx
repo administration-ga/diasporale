@@ -56,7 +56,7 @@ export function PostMenu(props: { post: PostView }) {
           <MoreHorizontalIcon className="size-5" aria-hidden />
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
-          <DropdownMenu.Content align="end" sideOffset={6} className="z-50 min-w-60 rounded-xl bg-popover p-1.5 text-popover-foreground shadow-float">
+          <DropdownMenu.Content align="end" sideOffset={6} className="z-60 min-w-60 rounded-xl bg-popover p-1.5 text-popover-foreground shadow-float">
             <MenuItem icon={post.bookmarked ? BookmarkCheckIcon : BookmarkIcon} onSelect={bookmark}>
               {post.bookmarked ? t("postMenu.unbookmark") : t("postMenu.bookmark")}
             </MenuItem>
