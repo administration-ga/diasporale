@@ -30,7 +30,8 @@ dependances:
 | PD0 Câblage dans le moteur | en cours (15/10) | ANTIA `5535a63`, `97cec07` (installation), `2454aed` (catalogue) ; DIASPORALE `fa307c0`, `dffbe4b`, `fc8acef`, `1752d22` — reste `docker build` (disque de la machine) |
 | PD1 Domaine diaspora et réseau `diasporale` dans le moteur | 2026-10-15 | domaine `7c5575e`, `c622cb9`, `c067746` ; tranche ANTIA `22b0383` (tables), `7cfafdd` (fonctions) ; côté moteur, par ANTIA : `97cec07` (`managedBy`, aides d'admission, `failAppRule`, seaux), `bf1f46c` (schéma) — reste la ligne de `convex/crons.ts` (demandée à ANTIA) |
 | PD2 Entrer dans DIASPORALE (IDN, compte léger, handle, consentements) | partiel (15/10) | DIASPORALE `140a82c`, `a8ea1a9` ; tranche ANTIA `8176491`, `ecae28d` ; ANTIA `187adb6` (`isHandleAvailable`, proxy d'authentification commun) — R3 joué contre le moteur local ; reste R1 (IDN dans le moteur : PA4 d'ANTIA ; client OIDC sandbox `diasporale`) |
-| PD3 → PD10 | — | — (PD3 préparé côté domaine : `77fa3ff`, `3fa4213`) |
+| PD3 Attestation consulaire `DIASPORA-ATTESTATION-V1` | partiel (15/10) | gabon-diplomatie : PR brouillon #184 (étape e) ; domaine `77fa3ff`, `3fa4213` ; tranche ANTIA `ac2eca3`, `be59fcf` ; application `34fa44a` — reste la recette R2 réelle (clé de service et URL de consulat.ga sur un déploiement, après validation juridique ; empreinte d'adresse d'un compte léger : PA4) |
+| PD4 → PD10 | — | — |
 
 Vérifications des étapes closes :
 - **a)** 197 cas `bun test`, couverture lignes et fonctions 100 % imposée par
@@ -83,6 +84,14 @@ Vérifications des étapes closes :
   **Écarts assumés** : ce que le moteur ne sert pas encore se dit `feature_unavailable` ; le fil
   lit toute publication du moteur comme portée « diaspora » (règle du domaine pour un contenu
   sans pays) jusqu'au lot « posts » de PA3, et refuse de publier en portée « local » d'ici là.
+- **PD3 (partiel)** : côté moteur (`convex/modules/diaspora/attestation.ts`), geste de
+  consentement enregistré AVANT l'appel ; une demande par 24 h (le seau de débit refuse d'abord) ;
+  requête de quatre champs signée HMAC (clé du déploiement, jamais dans le code) ; réponse relue en
+  liste blanche ; ligne à l'empreinte du sujet ; issue confirmée = lien `consular_attestation`, poste
+  sur la facette, statut « vérifiée ». Tests contre un faux consulat.ga qui vérifie la signature
+  (confirmée, non confirmée, hors contrat, sans configuration, 24 h, blocage) : 32 tests de la
+  tranche, 50 cliquets. Application : demande puis lecture de l'issue (20 tests). La lecture du
+  domaine exigeait un écart : `contract`, émis par la route de #184, est désormais exigé (`77fa3ff`).
 - **e)** Côté gabon-diplomatie, sur deux branches en worktree (le `main` partagé n'est pas
   touché) : #184 `DIASPORA-ATTESTATION-V1` (route signée HMAC, exclusions indiscernables,
   idempotence par `consentRef`, journal à empreinte, correspondance e-mail par
