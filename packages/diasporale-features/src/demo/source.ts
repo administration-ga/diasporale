@@ -4,7 +4,7 @@ import type { CountryCode, FeedScope } from "@diasporale/domain"
 import { useMemo, useSyncExternalStore } from "react"
 
 import type { DemoAccountView, DiasporaleDataSource } from "../data/port"
-import type { Loadable } from "../data/types"
+import type { Loadable, RelationView } from "../data/types"
 import { splitDisplayName, suggestHandles } from "../lib/handle"
 import {
   consentsView,
@@ -14,6 +14,7 @@ import {
   openCountriesView,
   pageDetailView,
   profileView,
+  relationView,
   sessionView,
   sponsorDashboardView,
 } from "./selectors"
@@ -85,6 +86,16 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       }, [version, handle])
     },
 
+    useRelation(personId: string) {
+      const version = useVersion()
+      return useMemo<Loadable<RelationView>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        return viewerId ? ready(relationView(state, viewerId, personId)) : { status: "error", code: "not_signed_in" }
+      }, [version, personId])
+    },
+
     useHandleSuggestions(displayName: string) {
       const version = useVersion()
       return useMemo(() => {
@@ -129,6 +140,12 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       join: (input) => store.join(input),
       publish: (input) => store.publish(input),
       react: (postId, kind) => store.react(postId, kind),
+      connect: (personId) => store.connect(personId),
+      respondToConnection: (connectionId, accept) => store.respondToConnection(connectionId, accept),
+      follow: (handle) => store.follow(handle),
+      unfollow: (personId) => store.unfollow(personId),
+      block: (personId) => store.block(personId),
+      unblock: (personId) => store.unblock(personId),
       sponsor: (handle) => store.sponsor(handle),
       revokeSponsorship: (id) => store.revokeSponsorship(id),
       requestAttestation: () => store.requestAttestation(),

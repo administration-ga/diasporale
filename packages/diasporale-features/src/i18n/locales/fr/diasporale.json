@@ -910,6 +910,25 @@
       "postMine": "Ma publication, en relecture : la carte flottante n'est montrée qu'à son autrice ou son auteur."
     }
   },
+  "relation": {
+    "connect": "Se connecter",
+    "requested": "Demande envoyée",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "connected": "En relation",
+    "follow": "Suivre",
+    "unfollow": "Ne plus suivre",
+    "block": "Bloquer",
+    "blockAction": "Bloquer",
+    "blockConfirm": "Bloquer {{name}} ? Vous ne vous verrez plus, et vos liens tombent.",
+    "cancel": "Annuler",
+    "unblock": "Débloquer",
+    "blocked": "Vous avez bloqué {{name}}.",
+    "unblocked": "Vous avez débloqué {{name}}.",
+    "requestSent": "Demande envoyée à {{name}}.",
+    "accepted": "Vous et {{name}} êtes maintenant en relation.",
+    "needsStatus": "Pour échanger, il faut être membre déclaré : demandez un parrainage."
+  },
   "engine": {
     "backendMissing": "Le service n'est pas configuré sur cet environnement.",
     "sessionLoading": "Ouverture de votre session…",
@@ -979,6 +998,7 @@
     "too_many_attempts": "Trop d'essais pour ce code : demandez-en un nouveau.",
     "delivery_unavailable": "Le code n'a pas pu être envoyé pour le moment. Réessayez dans un instant.",
     "feature_unavailable": "Cette fonction n'est pas encore ouverte.",
-    "network_unavailable": "DIASPORALE est injoignable pour le moment. Réessayez dans un instant."
+    "network_unavailable": "DIASPORALE est injoignable pour le moment. Réessayez dans un instant.",
+    "status_insufficient": "Votre statut ne permet pas encore ce geste : demandez un parrainage ou vérifiez votre inscription consulaire."
   }
 }

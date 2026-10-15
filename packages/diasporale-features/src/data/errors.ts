@@ -42,8 +42,9 @@ export const DATA_ERROR_CODES = [
   "attestation_not_needed",
   "attestation_too_soon",
   "attestation_unavailable",
-  // Refus du moteur ANTIA (PD2) : débit, sanction, codes à usage unique, câblage à venir.
+  // Refus du moteur ANTIA (PD2) : débit, sanction, statut, codes à usage unique, câblage à venir.
   "rate_limited",
+  "status_insufficient",
   "suspended",
   "too_many_attempts",
   "delivery_unavailable",

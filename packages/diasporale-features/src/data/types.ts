@@ -172,6 +172,21 @@ export interface PageDetailView {
   readonly events: readonly EventView[]
 }
 
+/**
+ * Ma relation avec une personne, dans DIASPORALE (EXF-DG-11, EXF-DG-12) : la
+ * connexion (demande, réponse, lien établi), l'abonnement, et MON blocage. Un
+ * blocage posé par l'AUTRE ne se voit pas : pour le bloqué, il n'y a « rien ».
+ */
+export const CONNECTION_STATES = ["none", "requested_by_me", "requested_by_them", "connected", "blocked_by_me"] as const
+export type ConnectionState = (typeof CONNECTION_STATES)[number]
+
+export interface RelationView {
+  readonly connection: ConnectionState
+  /** La demande ou le lien en cours, pour y répondre ou le défaire ; `null` sans relation. */
+  readonly connectionId: string | null
+  readonly following: boolean
+}
+
 export interface SponsorshipView {
   readonly id: string
   readonly sponsored: { readonly handle: string; readonly displayName: string }

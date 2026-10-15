@@ -27,7 +27,8 @@ import {
 
 import type { AssociationType, CompanySector, EventCategory, ReactionKind } from "../data/types"
 
-export const DEMO_STATE_VERSION = 1
+/** Version de l'état persisté : la v2 ajoute demandes de connexion, blocages et abonnements. */
+export const DEMO_STATE_VERSION = 2
 
 export interface DemoPerson {
   readonly id: string
@@ -117,6 +118,22 @@ export interface DemoEvent {
   readonly moderation: ContentModerationState
 }
 
+/** Une demande de connexion en attente de réponse. */
+export interface DemoConnectionRequest {
+  readonly id: string
+  readonly fromId: string
+  readonly toId: string
+  readonly createdAt: number
+}
+
+/** Un blocage : il vaut pour toute la paire, et seul son auteur le voit. */
+export interface DemoBlock {
+  readonly id: string
+  readonly byId: string
+  readonly targetId: string
+  readonly createdAt: number
+}
+
 export interface DemoState {
   readonly version: number
   readonly createdAt: number
@@ -128,6 +145,10 @@ export interface DemoState {
   readonly posts: readonly DemoPost[]
   readonly events: readonly DemoEvent[]
   readonly connections: readonly (readonly [string, string])[]
+  readonly connectionRequests: readonly DemoConnectionRequest[]
+  readonly blocks: readonly DemoBlock[]
+  /** Abonnements : [qui suit, qui est suivi]. */
+  readonly follows: readonly (readonly [string, string])[]
   readonly openCountries: readonly CountryCode[]
   readonly countryModerators: Readonly<Partial<Record<CountryCode, number>>>
   readonly networkModerators: number
@@ -488,6 +509,9 @@ export function createDemoSeed(now: number): DemoState {
       ["p-mireille", "p-prisca"],
       ["p-prisca", "p-steeve"],
     ],
+    connectionRequests: [],
+    blocks: [],
+    follows: [["p-steeve", "p-mireille"]],
     openCountries: ["FR"],
     countryModerators: { FR: 2 },
     networkModerators: 2,

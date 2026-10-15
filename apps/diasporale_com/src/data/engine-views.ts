@@ -26,6 +26,7 @@ import {
   type OpenCountryView,
   type PostView,
   type ProfileView,
+  type RelationView,
   type SponsorDashboardView,
 } from "@diasporale/features/data"
 import type { FunctionArgs, FunctionReturnType } from "convex/server"
@@ -218,5 +219,24 @@ export function toProfileView(profile: PublicProfile, member: MemberFacet): Prof
     postName: null,
     isSelf: profile.isMe,
     posts: [],
+  }
+}
+
+type ConnectionWith = FunctionReturnType<typeof api.modules.graph.connections.connectionWith>
+
+/**
+ * Ma relation avec une personne, depuis le graphe du moteur. Une demande refusée
+ * se lit « aucune relation » : le moteur permet de redemander. Un blocage posé
+ * par l'autre est déjà rendu « none » par le moteur.
+ */
+export function toRelationView(connection: ConnectionWith, following: boolean): RelationView {
+  switch (connection.state) {
+    case "none":
+    case "declined":
+      return { connection: "none", connectionId: null, following }
+    case "blocked_by_me":
+      return { connection: "blocked_by_me", connectionId: connection.connectionId, following: false }
+    default:
+      return { connection: connection.state, connectionId: connection.connectionId, following }
   }
 }

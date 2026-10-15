@@ -910,6 +910,25 @@
       "postMine": "My post, under review: the floating card is shown to its author only."
     }
   },
+  "relation": {
+    "connect": "Connect",
+    "requested": "Request sent",
+    "accept": "Accept",
+    "decline": "Decline",
+    "connected": "Connected",
+    "follow": "Follow",
+    "unfollow": "Unfollow",
+    "block": "Block",
+    "blockAction": "Block",
+    "blockConfirm": "Block {{name}}? You won't see each other, and your links are removed.",
+    "cancel": "Cancel",
+    "unblock": "Unblock",
+    "blocked": "You blocked {{name}}.",
+    "unblocked": "You unblocked {{name}}.",
+    "requestSent": "Request sent to {{name}}.",
+    "accepted": "You and {{name}} are now connected.",
+    "needsStatus": "To interact, you need to be a declared member: ask for a sponsorship."
+  },
   "engine": {
     "backendMissing": "The service isn't configured in this environment.",
     "sessionLoading": "Opening your session…",
@@ -979,6 +998,7 @@
     "too_many_attempts": "Too many attempts for this code: request a new one.",
     "delivery_unavailable": "The code couldn't be sent right now. Try again in a moment.",
     "feature_unavailable": "This feature isn't open yet.",
-    "network_unavailable": "DIASPORALE can't be reached right now. Try again in a moment."
+    "network_unavailable": "DIASPORALE can't be reached right now. Try again in a moment.",
+    "status_insufficient": "Your status doesn't allow this yet: ask for a sponsorship or verify your consular registration."
   }
 }

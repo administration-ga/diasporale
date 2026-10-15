@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { authActionErrorCode, engineActionErrorCode } from "./engine-errors"
 import { createEngineActions } from "./engine-source"
-import { toFacetArgs, toFeed, toMembershipView, toOpenCountries, toProfileView } from "./engine-views"
+import { toFacetArgs, toFeed, toMembershipView, toOpenCountries, toProfileView, toRelationView } from "./engine-views"
 
 /**
  * La source « moteur » sans moteur : traduction des refus, projections pures, et
@@ -320,5 +320,58 @@ describe("attestation consulaire par le moteur (PD3)", () => {
       ok: false,
       code: "attestation_not_needed",
     })
+  })
+})
+
+describe("relations par le graphe du moteur (PD4)", () => {
+  it("l'état du graphe devient la relation de l'écran ; une demande refusée redevient « aucune »", () => {
+    expect(toRelationView({ state: "none" } as never, true)).toEqual({ connection: "none", connectionId: null, following: true })
+    expect(toRelationView({ state: "declined", connectionId: "c1" } as never, false)).toEqual({ connection: "none", connectionId: null, following: false })
+    expect(toRelationView({ state: "requested_by_them", connectionId: "c2", message: "Bonjour" } as never, false)).toEqual({
+      connection: "requested_by_them",
+      connectionId: "c2",
+      following: false,
+    })
+    expect(toRelationView({ state: "connected", connectionId: "c3", since: 1 } as never, true)).toEqual({ connection: "connected", connectionId: "c3", following: true })
+    // Mon blocage : aucun abonnement ne survit.
+    expect(toRelationView({ state: "blocked_by_me", connectionId: "c4" } as never, true)).toEqual({ connection: "blocked_by_me", connectionId: "c4", following: false })
+  })
+
+  it("chaque geste part vers sa fonction du graphe, borné par le réseau diasporale", async () => {
+    const ok = () => ({ status: "requested" })
+    const { convex, calls } = fakeConvex({
+      ...NETWORK,
+      "modules/graph/connections:requestConnection": ok,
+      "modules/graph/connections:respondToConnection": () => ({ status: "accepted" }),
+      "modules/graph/follows:follow": () => ({ targetPersonId: "p2", following: true }),
+      "modules/graph/follows:unfollow": () => ({ following: false }),
+      "modules/graph/connections:blockPerson": () => null,
+      "modules/graph/connections:unblockPerson": () => null,
+    })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    await actions.connect("p2")
+    await actions.respondToConnection("c1", true)
+    await actions.follow("@ada")
+    await actions.unfollow("p2")
+    await actions.block("p2")
+    await actions.unblock("p2")
+    expect(calls.slice(1)).toEqual([
+      { name: "modules/graph/connections:requestConnection", args: { networkId: "n-diasporale", targetPersonId: "p2" } },
+      { name: "modules/graph/connections:respondToConnection", args: { networkId: "n-diasporale", connectionId: "c1", accept: true } },
+      { name: "modules/graph/follows:follow", args: { networkId: "n-diasporale", handle: "ada" } },
+      { name: "modules/graph/follows:unfollow", args: { networkId: "n-diasporale", targetPersonId: "p2" } },
+      { name: "modules/graph/connections:blockPerson", args: { networkId: "n-diasporale", targetPersonId: "p2" } },
+      { name: "modules/graph/connections:unblockPerson", args: { networkId: "n-diasporale", targetPersonId: "p2" } },
+    ])
+  })
+
+  it("un statut insuffisant se dit comme tel", async () => {
+    const { convex } = fakeConvex({
+      ...NETWORK,
+      "modules/graph/connections:requestConnection": () => {
+        throw engineError({ code: "statusInsufficient" })
+      },
+    })
+    expect(await createEngineActions({ convex, authClient: fakeAuth().client }).connect("p2")).toEqual({ ok: false, code: "status_insufficient" })
   })
 })

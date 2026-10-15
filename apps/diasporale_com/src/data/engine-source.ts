@@ -37,6 +37,7 @@ import type {
   PostView,
   ProfileView,
   ReactionKind,
+  RelationView,
   SessionView,
   SponsorDashboardView,
 } from "@diasporale/features/data"
@@ -57,6 +58,7 @@ import {
   toMembershipView,
   toOpenCountries,
   toProfileView,
+  toRelationView,
   toSponsorDashboardView,
 } from "./engine-views"
 
@@ -204,6 +206,17 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       return ready(profile.value && member.value ? toProfileView(profile.value, member.value) : null)
     },
 
+    useRelation(personId: string): Loadable<RelationView> {
+      const { networkId } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const other = personId as Id<"persons">
+      const connection = useLoaded(api.modules.graph.connections.connectionWith, id ? { networkId: id, otherPersonId: other } : "skip")
+      const following = useLoaded(api.modules.graph.follows.isFollowing, id ? { networkId: id, targetPersonId: other } : "skip")
+      for (const loaded of [networkId, connection, following]) if (loaded.state === "error") return failed(loaded.code)
+      if (connection.state !== "ready" || following.state !== "ready") return LOADING
+      return ready(toRelationView(connection.value, following.value))
+    },
+
     // Les pages du réseau (officielles, associations, entreprises) : PD5. Rien n'est inventé d'ici là.
     usePage: () => failed("feature_unavailable"),
 
@@ -347,6 +360,46 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           kind: toggle,
         })
         myReactions.set(postId, result.mine)
+        return null
+      }),
+
+    connect: (personId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.graph.connections.requestConnection, { networkId: await diasporale(), targetPersonId: personId as Id<"persons"> })
+        return null
+      }),
+
+    respondToConnection: (connectionId, accept) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.graph.connections.respondToConnection, {
+          networkId: await diasporale(),
+          connectionId: connectionId as Id<"connections">,
+          accept,
+        })
+        return null
+      }),
+
+    follow: (handle) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.graph.follows.follow, { networkId: await diasporale(), handle: handle.trim().replace(/^@/, "") })
+        return null
+      }),
+
+    unfollow: (personId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.graph.follows.unfollow, { networkId: await diasporale(), targetPersonId: personId as Id<"persons"> })
+        return null
+      }),
+
+    block: (personId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.graph.connections.blockPerson, { networkId: await diasporale(), targetPersonId: personId as Id<"persons"> })
+        return null
+      }),
+
+    unblock: (personId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.graph.connections.unblockPerson, { networkId: await diasporale(), targetPersonId: personId as Id<"persons"> })
         return null
       }),
 

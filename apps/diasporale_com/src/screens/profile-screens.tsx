@@ -15,12 +15,26 @@ import {
   TrustBadges,
   formatDate,
 } from "@diasporale/features"
-import { useActions, usePage, useProfile, type MembershipView } from "@diasporale/features/data"
+import { type ActionResult, useActions, usePage, useProfile, useRelation, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { EyeIcon, FlagIcon, HandHeartIcon, LandmarkIcon, NewspaperIcon, PencilIcon, UserRoundXIcon } from "lucide-react"
+import {
+  BanIcon,
+  ClockIcon,
+  EyeIcon,
+  FlagIcon,
+  HandHeartIcon,
+  LandmarkIcon,
+  NewspaperIcon,
+  PencilIcon,
+  ShieldOffIcon,
+  UserCheckIcon,
+  UserPlusIcon,
+  UserRoundXIcon,
+  UsersIcon,
+} from "lucide-react"
 import NextLink from "next/link"
 import { useSearchParams } from "next/navigation"
-import type { ReactNode } from "react"
+import { type ReactNode, useId, useState } from "react"
 import { toast } from "sonner"
 
 import { AppShell } from "@/components/app-shell"
@@ -85,7 +99,10 @@ function Profile(props: { handle: string; membership: MembershipView }) {
                   </Button>
                 </>
               ) : (
-                <ContactButton recipientName={view.displayName} />
+                <>
+                  <RelationBar personId={view.personId} handle={view.handle} displayName={view.displayName} canCommunicate={props.membership.canPublish} />
+                  <ContactButton recipientName={view.displayName} />
+                </>
               )}
             </div>
           </div>
@@ -121,6 +138,114 @@ function Profile(props: { handle: string; membership: MembershipView }) {
         )}
       </section>
     </>
+  )
+}
+
+/**
+ * Ma relation avec ce membre (EXF-DG-11, EXF-DG-12) : se connecter, répondre à
+ * une demande reçue, suivre, bloquer. Un blocage posé par l'autre ne se voit
+ * pas ; bloquer se confirme, et défait le lien et les abonnements de la paire.
+ */
+function RelationBar(props: { personId: string; handle: string; displayName: string; canCommunicate: boolean }) {
+  const { t } = useDiasporaleT()
+  const relation = useRelation(props.personId)
+  const actions = useActions()
+  const [busy, setBusy] = useState(false)
+  const [confirmingBlock, setConfirmingBlock] = useState(false)
+  const hintId = useId()
+  const name = props.displayName
+
+  if (relation.status !== "ready") return <Skeleton className="h-9 w-40 rounded-full" />
+  const { connection, connectionId, following } = relation.data
+
+  const run = async (action: () => Promise<ActionResult>, done?: string) => {
+    setBusy(true)
+    const result = await action()
+    setBusy(false)
+    if (!result.ok) toast.error(t(`errors.${result.code}`))
+    else if (done) toast.success(done)
+  }
+
+  if (connection === "blocked_by_me") {
+    return (
+      <Button variant="outline" size="sm" disabled={busy} onClick={() => run(() => actions.unblock(props.personId), t("relation.unblocked", { name }))}>
+        <ShieldOffIcon aria-hidden />
+        {t("relation.unblock")}
+      </Button>
+    )
+  }
+
+  if (confirmingBlock) {
+    return (
+      <div role="group" aria-label={t("relation.blockConfirm", { name })} className="flex flex-wrap items-center justify-end gap-2">
+        <p className="text-[13px] text-muted-foreground">{t("relation.blockConfirm", { name })}</p>
+        <Button
+          variant="destructive"
+          size="sm"
+          disabled={busy}
+          onClick={async () => {
+            await run(() => actions.block(props.personId), t("relation.blocked", { name }))
+            setConfirmingBlock(false)
+          }}
+        >
+          <BanIcon aria-hidden />
+          {t("relation.blockAction")}
+        </Button>
+        <Button variant="ghost" size="sm" onClick={() => setConfirmingBlock(false)}>
+          {t("relation.cancel")}
+        </Button>
+      </div>
+    )
+  }
+
+  const locked = busy || !props.canCommunicate
+  return (
+    <div className="flex flex-wrap justify-end gap-2">
+      {connection === "none" ? (
+        <Button size="sm" disabled={locked} aria-describedby={props.canCommunicate ? undefined : hintId} onClick={() => run(() => actions.connect(props.personId), t("relation.requestSent", { name }))}>
+          <UserPlusIcon aria-hidden />
+          {t("relation.connect")}
+        </Button>
+      ) : connection === "requested_by_me" ? (
+        <Button size="sm" variant="outline" disabled>
+          <ClockIcon aria-hidden />
+          {t("relation.requested")}
+        </Button>
+      ) : connection === "requested_by_them" && connectionId ? (
+        <>
+          <Button size="sm" disabled={locked} onClick={() => run(() => actions.respondToConnection(connectionId, true), t("relation.accepted", { name }))}>
+            <UserCheckIcon aria-hidden />
+            {t("relation.accept")}
+          </Button>
+          <Button size="sm" variant="ghost" disabled={locked} onClick={() => run(() => actions.respondToConnection(connectionId, false))}>
+            {t("relation.decline")}
+          </Button>
+        </>
+      ) : connection === "connected" ? (
+        <span className="inline-flex h-9 items-center gap-1.5 rounded-full bg-muted px-3 text-[13px] font-medium">
+          <UsersIcon aria-hidden className="size-4" />
+          {t("relation.connected")}
+        </span>
+      ) : null}
+      <Button
+        size="sm"
+        variant="outline"
+        aria-pressed={following}
+        disabled={locked}
+        onClick={() => run(() => (following ? actions.unfollow(props.personId) : actions.follow(props.handle)))}
+      >
+        {following ? t("relation.unfollow") : t("relation.follow")}
+      </Button>
+      <Button size="sm" variant="ghost" disabled={busy} onClick={() => setConfirmingBlock(true)}>
+        <BanIcon aria-hidden />
+        {t("relation.block")}
+      </Button>
+      {props.canCommunicate ? null : (
+        <p id={hintId} className="basis-full text-right text-[12px] text-muted-foreground">
+          {t("relation.needsStatus")}
+        </p>
+      )}
+    </div>
   )
 }
 

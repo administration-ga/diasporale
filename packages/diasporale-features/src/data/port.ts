@@ -33,6 +33,7 @@ import type {
   PostView,
   ProfileView,
   ReactionKind,
+  RelationView,
   SessionView,
   SponsorDashboardView,
 } from "./types"
@@ -84,6 +85,15 @@ export interface DiasporaleActions {
   join(input: JoinInput): Promise<ActionResult<{ country: CountryCode }>>
   publish(input: PublishInput): Promise<ActionResult<{ moderation: ContentModerationState }>>
   react(postId: string, kind: ReactionKind | null): Promise<ActionResult>
+  /** Demander une connexion. Un blocage, dans un sens ou dans l'autre, rend la même réponse, sans rien écrire. */
+  connect(personId: string): Promise<ActionResult>
+  /** Répondre à une demande reçue (le destinataire seul). */
+  respondToConnection(connectionId: string, accept: boolean): Promise<ActionResult>
+  follow(handle: string): Promise<ActionResult>
+  unfollow(personId: string): Promise<ActionResult>
+  /** Bloquer : la relation et les abonnements de la paire tombent, partout. */
+  block(personId: string): Promise<ActionResult>
+  unblock(personId: string): Promise<ActionResult>
   sponsor(handle: string): Promise<ActionResult>
   revokeSponsorship(sponsorshipId: string): Promise<ActionResult>
   requestAttestation(): Promise<ActionResult<{ outcome: AttestationOutcome }>>
@@ -116,6 +126,8 @@ export interface DiasporaleDataSource {
   useCountryHub(country: CountryCode): Loadable<CountryHubView>
   useFeed(args: { scope: FeedScope; hubCountry?: CountryCode }): Loadable<readonly PostView[]>
   useProfile(handle: string): Loadable<ProfileView | null>
+  /** Ma relation avec une personne (connexion, abonnement, mon blocage). */
+  useRelation(personId: string): Loadable<RelationView>
   usePage(handle: string): Loadable<PageDetailView | null>
   useHandleSuggestions(displayName: string): readonly string[]
   useSponsorDashboard(): Loadable<SponsorDashboardView>

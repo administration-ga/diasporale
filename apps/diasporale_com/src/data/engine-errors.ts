@@ -31,7 +31,7 @@ const ENGINE_CODES: Readonly<Partial<Record<EngineErrorCode, ActionErrorCode>>> 
   conflict: "unknown",
   handleUnavailable: "handle_taken",
   membershipSuspended: "suspended",
-  statusInsufficient: "publish_not_allowed",
+  statusInsufficient: "status_insufficient",
   operatorRequired: "not_found",
   policyRefused: "unknown",
   consentRequired: "consent_social_profile_required",

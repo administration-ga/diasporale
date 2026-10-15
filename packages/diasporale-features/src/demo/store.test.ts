@@ -3,7 +3,7 @@ import { DAY_MS, HOUR_MS, type OnboardingConsentChoices } from "@diasporale/doma
 import { describe, expect, it } from "vitest"
 
 import type { JoinInput } from "../data/port"
-import { feedView, hubCounters, membershipView, sessionView } from "./selectors"
+import { feedView, hubCounters, membershipView, relationView, sessionView } from "./selectors"
 import { DEMO_STORAGE_KEY, DemoStore } from "./store"
 
 /**
@@ -300,5 +300,79 @@ describe("compteurs de hub et persistance", () => {
     storage.setItem(DEMO_STORAGE_KEY, "{pas du json")
     const store = new DemoStore(storage, () => T0 + DAY_MS, 0)
     expect(Object.keys(store.getState().persons)).toContain("p-mireille")
+  })
+})
+
+describe("relations (EXF-DG-11, EXF-DG-12)", () => {
+  it("demander, recevoir, accepter : le lien se voit des deux côtés ; l'abonnement est indépendant", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    expect(await store.connect("p-mireille")).toEqual({ ok: true, value: null })
+    expect(relationView(store.getState(), "p-steeve", "p-mireille")).toMatchObject({ connection: "requested_by_me", following: true })
+    const pending = relationView(store.getState(), "p-mireille", "p-steeve")
+    expect(pending.connection).toBe("requested_by_them")
+    // Seul le destinataire répond.
+    expect(await store.respondToConnection(pending.connectionId ?? "", true)).toEqual({ ok: false, code: "not_found" })
+    await store.switchTo("p-mireille")
+    expect(await store.respondToConnection(pending.connectionId ?? "", true)).toEqual({ ok: true, value: null })
+    expect(relationView(store.getState(), "p-mireille", "p-steeve").connection).toBe("connected")
+    expect(relationView(store.getState(), "p-steeve", "p-mireille").connection).toBe("connected")
+    // Redemander à quelqu'un de déjà lié ne double rien.
+    expect(await store.connect("p-steeve")).toEqual({ ok: true, value: null })
+    expect(store.getState().connectionRequests).toEqual([])
+    await store.follow("@Steeve.Ngounie")
+    expect(relationView(store.getState(), "p-mireille", "p-steeve").following).toBe(true)
+    await store.unfollow("p-steeve")
+    expect(relationView(store.getState(), "p-mireille", "p-steeve").following).toBe(false)
+  })
+
+  it("refuser une demande la fait disparaître, sans lien", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    await store.connect("p-mireille")
+    await store.switchTo("p-mireille")
+    const pending = relationView(store.getState(), "p-mireille", "p-steeve")
+    await store.respondToConnection(pending.connectionId ?? "", false)
+    expect(relationView(store.getState(), "p-mireille", "p-steeve")).toMatchObject({ connection: "none", connectionId: null })
+  })
+
+  it("bloquer défait le lien et les abonnements de la paire ; le bloqué ne voit rien et ses gestes sont muets", async () => {
+    const { store } = demo()
+    await store.switchTo("p-mireille")
+    expect(await store.block("p-steeve")).toEqual({ ok: true, value: null })
+    expect(relationView(store.getState(), "p-mireille", "p-steeve")).toMatchObject({ connection: "blocked_by_me", following: false })
+    // Le bloqué : « rien » — ni lien, ni abonnement (il suivait Mireille dans le jeu).
+    expect(relationView(store.getState(), "p-steeve", "p-mireille")).toEqual({ connection: "none", connectionId: null, following: false })
+    await store.switchTo("p-steeve")
+    expect(await store.connect("p-mireille")).toEqual({ ok: true, value: null })
+    expect(store.getState().connectionRequests).toEqual([])
+    expect(await store.follow("mireille.ivindo")).toEqual({ ok: false, code: "not_found" })
+    await store.switchTo("p-mireille")
+    await store.unblock("p-steeve")
+    expect(relationView(store.getState(), "p-mireille", "p-steeve").connection).toBe("none")
+  })
+
+  it("un compte en attente n'échange pas encore ; une cible inconnue ou soi-même : introuvable", async () => {
+    const { store } = demo()
+    await store.requestCode({ kind: "email", value: "nouveau@exemple.test" })
+    await store.verifyCode(store.getState().pendingCode?.code ?? "")
+    await store.join(joinInput({ handle: "nouveau.venu", displayName: "Nouveau Venu" }))
+    expect(await store.connect("p-mireille")).toEqual({ ok: false, code: "status_insufficient" })
+    await store.switchTo("p-mireille")
+    expect(await store.connect("p-inconnu")).toEqual({ ok: false, code: "not_found" })
+    expect(await store.connect("p-mireille")).toEqual({ ok: false, code: "not_found" })
+    expect(await store.block("p-mireille")).toEqual({ ok: false, code: "not_found" })
+  })
+
+  it("l'effacement purge les demandes, blocages et abonnements de la personne", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    await store.connect("p-mireille")
+    await store.block("p-prisca")
+    await store.deleteMyAccount()
+    const state = store.getState()
+    expect(state.connectionRequests).toEqual([])
+    expect(state.blocks).toEqual([])
+    expect(state.follows.some(([a, b]) => a === "p-steeve" || b === "p-steeve")).toBe(false)
   })
 })

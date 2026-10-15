@@ -40,6 +40,7 @@ import type {
   PostView,
   ProfileView,
   SessionView,
+  RelationView,
   SponsorDashboardView,
 } from "../data/types"
 import { maskDestination } from "../data/mask"
@@ -101,6 +102,30 @@ function authorOf(state: DemoState, author: DemoPost["author"], now: number): Au
     displayName: person?.profile?.displayName ?? "",
     badges: badgesOfPerson(state, author.id, now),
   }
+}
+
+/** Identifiant stable d'un lien établi (la paire, dans l'ordre). */
+export function connectionKey(a: string, b: string): string {
+  return a < b ? `${a}~${b}` : `${b}~${a}`
+}
+
+/**
+ * Ma relation avec une personne. Le blocage posé par l'AUTRE ne se voit pas :
+ * pour le bloqué, il n'y a « rien » — ni lien, ni demande, ni abonnement.
+ */
+export function relationView(state: DemoState, viewerId: string, otherId: string): RelationView {
+  const myBlock = state.blocks.find((block) => block.byId === viewerId && block.targetId === otherId)
+  if (myBlock) return { connection: "blocked_by_me", connectionId: myBlock.id, following: false }
+  if (state.blocks.some((block) => block.byId === otherId && block.targetId === viewerId)) {
+    return { connection: "none", connectionId: null, following: false }
+  }
+  const following = state.follows.some(([follower, target]) => follower === viewerId && target === otherId)
+  if (isConnected(state, viewerId, otherId)) return { connection: "connected", connectionId: connectionKey(viewerId, otherId), following }
+  const mine = state.connectionRequests.find((request) => request.fromId === viewerId && request.toId === otherId)
+  if (mine) return { connection: "requested_by_me", connectionId: mine.id, following }
+  const theirs = state.connectionRequests.find((request) => request.fromId === otherId && request.toId === viewerId)
+  if (theirs) return { connection: "requested_by_them", connectionId: theirs.id, following }
+  return { connection: "none", connectionId: null, following }
 }
 
 export function isConnected(state: DemoState, a: string, b: string): boolean {

@@ -18,6 +18,7 @@ import {
   checkSponsorshipRevocation,
   consentRecord,
   deriveMembershipStatus,
+  hasCapability,
   isConsentActive,
   onboardingConsentRecords,
   parseAttestationResponse,
@@ -41,7 +42,7 @@ import type { ActionResult, CodeDestination, IdnSignInInput, JoinInput, PublishI
 import type { ReactionKind } from "../data/types"
 import { handleRefusal, handleToken, normalizeHandle } from "../lib/handle"
 import { emailHash, fakeConsularAttestation } from "./attestation-provider"
-import { sponsorFacts, statusOf } from "./selectors"
+import { isConnected, sponsorFacts, statusOf } from "./selectors"
 import { DEMO_STATE_VERSION, createDemoSeed, type DemoMembership, type DemoPerson, type DemoState } from "./state"
 
 export const DEMO_STORAGE_KEY = "diasporale:demonstration:v1"
@@ -353,6 +354,119 @@ export class DemoStore {
     return OK
   }
 
+  // ── Relations (EXF-DG-11, EXF-DG-12) ─────────────────────────────────────
+  /** Un autre membre ACTIF du réseau (ni soi, ni parti), désigné par son identifiant interne. */
+  private memberTarget(personId: string, viewerId: string): DemoPerson | null {
+    const target = this.state.persons[personId]
+    const membership = target ? this.state.memberships[target.id] : undefined
+    if (!target?.profile || !membership || target.id === viewerId) return null
+    const status = deriveMembershipStatus(membership.grounds, this.clock())
+    return status === "partie" || status === "suspendue" ? null : target
+  }
+
+  private blockedBetween(a: string, b: string): boolean {
+    return this.state.blocks.some((block) => (block.byId === a && block.targetId === b) || (block.byId === b && block.targetId === a))
+  }
+
+  /** Le membre de la session, quand son statut lui permet d'échanger (déclaré ou vérifié). */
+  private communicatingViewer(): ActionResult<DemoPerson> {
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    if (!viewer.membership) return fail("not_member")
+    if (!hasCapability(deriveMembershipStatus(viewer.membership.grounds, this.clock()), "communicate")) return fail("status_insufficient")
+    return { ok: true, value: viewer.person }
+  }
+
+  async connect(personId: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.communicatingViewer()
+    if (!viewer.ok) return viewer
+    const target = this.memberTarget(personId, viewer.value.id)
+    if (!target) return fail("not_found")
+    // Bloqué dans un sens ou dans l'autre : la même réponse qu'une demande envoyée, sans rien écrire.
+    if (this.blockedBetween(viewer.value.id, target.id)) return OK
+    const known =
+      isConnected(this.state, viewer.value.id, target.id) ||
+      this.state.connectionRequests.some(
+        (request) => (request.fromId === viewer.value.id && request.toId === target.id) || (request.fromId === target.id && request.toId === viewer.value.id),
+      )
+    if (known) return OK
+    const [id, sequence] = this.nextId("cr")
+    this.commit({
+      ...this.state,
+      connectionRequests: [...this.state.connectionRequests, { id, fromId: viewer.value.id, toId: target.id, createdAt: this.clock() }],
+      sequence,
+    })
+    return OK
+  }
+
+  async respondToConnection(connectionId: string, accept: boolean): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.communicatingViewer()
+    if (!viewer.ok) return viewer
+    // Seul le DESTINATAIRE répond ; pour tout autre, la demande n'existe pas.
+    const request = this.state.connectionRequests.find((item) => item.id === connectionId && item.toId === viewer.value.id)
+    if (!request) return fail("not_found")
+    this.commit({
+      ...this.state,
+      connectionRequests: this.state.connectionRequests.filter((item) => item.id !== request.id),
+      connections: accept ? [...this.state.connections, [request.fromId, request.toId] as const] : this.state.connections,
+    })
+    return OK
+  }
+
+  async follow(rawHandle: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.communicatingViewer()
+    if (!viewer.ok) return viewer
+    const handle = normalizeHandle(rawHandle)
+    const person = Object.values(this.state.persons).find((candidate) => candidate.profile?.handle === handle)
+    const target = person ? this.memberTarget(person.id, viewer.value.id) : null
+    // Inconnu, soi-même ou bloqué : le même refus.
+    if (!target || this.blockedBetween(viewer.value.id, target.id)) return fail("not_found")
+    if (this.state.follows.some(([follower, followed]) => follower === viewer.value.id && followed === target.id)) return OK
+    this.commit({ ...this.state, follows: [...this.state.follows, [viewer.value.id, target.id] as const] })
+    return OK
+  }
+
+  async unfollow(personId: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    this.commit({ ...this.state, follows: this.state.follows.filter(([follower, followed]) => !(follower === viewer.person.id && followed === personId)) })
+    return OK
+  }
+
+  async block(personId: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    const target = this.state.persons[personId]
+    if (!target || target.id === viewer.person.id) return fail("not_found")
+    const me = viewer.person.id
+    const pair = (a: string, b: string) => (a === me && b === target.id) || (a === target.id && b === me)
+    const already = this.state.blocks.some((block) => block.byId === me && block.targetId === target.id)
+    const [id, sequence] = this.nextId("bl")
+    // Le lien, les demandes et les abonnements de la paire tombent, dans les deux sens.
+    this.commit({
+      ...this.state,
+      connections: this.state.connections.filter(([a, b]) => !pair(a, b)),
+      connectionRequests: this.state.connectionRequests.filter((request) => !pair(request.fromId, request.toId)),
+      follows: this.state.follows.filter(([a, b]) => !pair(a, b)),
+      blocks: already ? this.state.blocks : [...this.state.blocks, { id, byId: me, targetId: target.id, createdAt: this.clock() }],
+      sequence: already ? this.state.sequence : sequence,
+    })
+    return OK
+  }
+
+  async unblock(personId: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    this.commit({ ...this.state, blocks: this.state.blocks.filter((block) => !(block.byId === viewer.person.id && block.targetId === personId)) })
+    return OK
+  }
+
   // ── Parrainage ─────────────────────────────────────────────────────────
   async sponsor(rawHandle: string): Promise<ActionResult> {
     await this.pause()
@@ -558,6 +672,9 @@ export class DemoStore {
           return { ...post, reactions }
         }),
       connections: this.state.connections.filter(([a, b]) => a !== personId && b !== personId),
+      connectionRequests: this.state.connectionRequests.filter((request) => request.fromId !== personId && request.toId !== personId),
+      blocks: this.state.blocks.filter((block) => block.byId !== personId && block.targetId !== personId),
+      follows: this.state.follows.filter(([a, b]) => a !== personId && b !== personId),
       session: { personId: null },
     })
     return OK
