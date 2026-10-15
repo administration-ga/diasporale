@@ -368,7 +368,8 @@ export function PostComposerSheet(props: {
                           type="button"
                           onClick={() => detach(index, field.key)}
                           aria-label={t("composer.mediaRemove", { name: attachment.name })}
-                          className="absolute right-1.5 top-1.5 inline-flex size-8 items-center justify-center rounded-full bg-card text-foreground shadow-float transition-colors hover:bg-muted focus-visible:shadow-focus"
+                          // Pastille de 32 px, cible tactile de 44 px (le pseudo-élément déborde de 6 px).
+                          className="absolute right-1.5 top-1.5 inline-flex size-8 items-center justify-center rounded-full bg-card text-foreground shadow-float transition-colors before:absolute before:-inset-1.5 before:content-[''] hover:bg-muted focus-visible:shadow-focus"
                         >
                           <XIcon className="size-4" aria-hidden />
                         </button>
@@ -378,6 +379,7 @@ export function PostComposerSheet(props: {
                       </Label>
                       <Input
                         id={altId}
+                        autoComplete="off"
                         maxLength={POST_MEDIA_ALT_MAX_LENGTH}
                         placeholder={attachment.kind === "video" ? t("composer.mediaAltPlaceholderVideo") : t("composer.mediaAltPlaceholder")}
                         aria-invalid={altError ? true : undefined}
@@ -396,7 +398,7 @@ export function PostComposerSheet(props: {
                 <ImagePlusIcon aria-hidden />
                 {t("composer.mediaAdd")}
               </Button>
-              <p id={`${ids}-medias-aide`} className="text-[13px] text-muted-foreground">
+              <p id={`${ids}-medias-aide`} aria-live="polite" className="text-[13px] text-muted-foreground">
                 {uploading ? t("composer.mediaWaiting") : t("composer.mediaHint")}
               </p>
             </div>

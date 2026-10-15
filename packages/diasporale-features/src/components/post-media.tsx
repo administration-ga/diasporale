@@ -28,8 +28,14 @@ export function PostMediaGrid(props: { media: readonly PostMediaView[]; classNam
 function MediaTile(props: { item: PostMediaView; single: boolean; wide: boolean }) {
   const { t } = useDiasporaleT()
   const { item } = props
-  const frame = cn("overflow-hidden rounded-md bg-muted", props.wide && "col-span-2", props.single ? "" : props.wide ? "aspect-[2/1]" : "aspect-square")
-  const size = item.width && item.height ? { width: item.width, height: item.height } : {}
+  const size = item.width && item.height ? { width: item.width, height: item.height } : null
+  // Une photo seule déclare sa taille ; sans dimensions connues, elle réserve un cadre 16:9 (pas de saut au chargement).
+  const reserved = props.single && size === null
+  const frame = cn(
+    "overflow-hidden rounded-md bg-muted",
+    props.wide && "col-span-2",
+    props.single ? (reserved ? "aspect-video" : "") : props.wide ? "aspect-[2/1]" : "aspect-square",
+  )
 
   if (item.url === null) {
     const label =
@@ -56,8 +62,8 @@ function MediaTile(props: { item: PostMediaView; single: boolean; wide: boolean 
           preload="metadata"
           playsInline
           aria-label={item.altText ?? t("post.media.video")}
-          className={props.single ? "max-h-[32rem] w-full" : "size-full object-cover"}
-          {...size}
+          className={props.single && !reserved ? "max-h-[32rem] w-full" : "size-full object-cover"}
+          {...(size ?? {})}
         />
       </div>
     )
@@ -72,8 +78,8 @@ function MediaTile(props: { item: PostMediaView; single: boolean; wide: boolean 
         alt={item.altText ?? t("post.media.photo")}
         loading="lazy"
         decoding="async"
-        className={props.single ? "h-auto max-h-[32rem] w-full object-contain" : "size-full object-cover"}
-        {...size}
+        className={props.single && !reserved ? "h-auto max-h-[32rem] w-full object-contain" : reserved ? "size-full object-contain" : "size-full object-cover"}
+        {...(size ?? {})}
       />
     </div>
   )

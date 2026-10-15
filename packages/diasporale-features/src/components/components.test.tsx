@@ -300,7 +300,7 @@ describe("SharedPostEmbed — l'original d'un partage cité", () => {
         share={{ available: true, postId: "post-7", author: { kind: "person", handle: "prisca.abanga", displayName: "Prisca Abanga" }, body: "Une coiffeuse à Bordeaux ?", media: [], publishedAt: 4_000 }}
       />,
     )
-    const region = screen.getByRole("region", { name: "Publication partagée" })
+    const region = screen.getByRole("figure", { name: "Publication partagée" })
     expect(within(region).getByRole("link", { name: "Prisca Abanga" })).toHaveAttribute("href", "/@prisca.abanga")
     expect(region.querySelector('a[href="/publication/post-7"]')).not.toBeNull()
     expect(within(region).getByText("Une coiffeuse à Bordeaux ?")).toBeInTheDocument()
@@ -314,6 +314,6 @@ describe("SharedPostEmbed — l'original d'un partage cité", () => {
     unmount()
     withRouting(<SharedPostEmbed now={1} share={{ available: false }} />)
     expect(screen.getByText(/^Publication indisponible\s: retirée, ou hors de votre portée\.$/)).toBeInTheDocument()
-    expect(screen.queryByRole("region")).toBeNull()
+    expect(screen.queryByRole("figure")).toBeNull()
   })
 })

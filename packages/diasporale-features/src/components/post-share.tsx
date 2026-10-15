@@ -64,7 +64,8 @@ export function SharedPostEmbed(props: { share: SharedPostView; now: number; cla
   const author = share.author
   const authorHref = author.handle ? (author.kind === "page" ? routes.page(author.handle) : routes.profile(author.handle)) : null
   return (
-    <section aria-label={t("post.sharedLabel")} className={cn("rounded-md border border-border px-3 py-2.5", props.className)}>
+    // Une figure, pas une région : un fil de partages ne multiplie pas les repères de navigation.
+    <figure aria-label={t("post.sharedLabel")} className={cn("rounded-md border border-border px-3 py-2.5", props.className)}>
       <p className="flex flex-wrap items-center gap-x-2 text-[13px] text-muted-foreground">
         {authorHref ? (
           <Link href={authorHref} className="font-semibold text-foreground hover:underline focus-visible:shadow-focus">
@@ -85,6 +86,6 @@ export function SharedPostEmbed(props: { share: SharedPostView; now: number; cla
         </p>
       ) : null}
       <PostMediaGrid media={share.media} className="mt-2" />
-    </section>
+    </figure>
   )
 }

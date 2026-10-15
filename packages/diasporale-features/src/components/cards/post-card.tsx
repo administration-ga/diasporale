@@ -149,11 +149,12 @@ export function PostCard(props: {
               type="button"
               aria-haspopup="dialog"
               onClick={() => share(post)}
+              aria-label={post.shareCount > 0 ? t("post.shareCounted", { count: post.shareCount }) : undefined}
               className="inline-flex min-h-10 items-center gap-1.5 rounded-md px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:shadow-focus"
             >
               <Repeat2Icon className="size-4" aria-hidden />
               {t("post.share")}
-              {post.shareCount > 0 ? <span className="tabular-nums">· {post.shareCount}</span> : null}
+              {post.shareCount > 0 ? <span className="tabular-nums" aria-hidden>· {post.shareCount}</span> : null}
             </button>
           ) : null}
           {post.visibility === "root" ? (
