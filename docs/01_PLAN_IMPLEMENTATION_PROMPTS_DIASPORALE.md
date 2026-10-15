@@ -31,7 +31,7 @@ dependances:
 | PD1 Domaine diaspora et réseau `diasporale` dans le moteur | 2026-10-15 | domaine `7c5575e`, `c622cb9`, `c067746` ; tranche ANTIA `22b0383` (tables), `7cfafdd` (fonctions) ; côté moteur, par ANTIA : `97cec07` (`managedBy`, aides d'admission, `failAppRule`, seaux), `bf1f46c` (schéma) — reste la ligne de `convex/crons.ts` (demandée à ANTIA) |
 | PD2 Entrer dans DIASPORALE (IDN, compte léger, handle, consentements) | partiel (15/10) | DIASPORALE `140a82c`, `a8ea1a9` ; tranche ANTIA `8176491`, `ecae28d` ; ANTIA `187adb6` (`isHandleAvailable`, proxy d'authentification commun) — R3 joué contre le moteur local ; reste R1 (IDN dans le moteur : PA4 d'ANTIA ; client OIDC sandbox `diasporale`) |
 | PD3 Attestation consulaire `DIASPORA-ATTESTATION-V1` | partiel (15/10) | gabon-diplomatie : PR brouillon #184 (étape e) ; domaine `77fa3ff`, `3fa4213` ; tranche ANTIA `ac2eca3`, `be59fcf` ; application `34fa44a` — reste la recette R2 réelle (clé de service et URL de consulat.ga sur un déploiement, après validation juridique ; empreinte d'adresse d'un compte léger : PA4) |
-| PD4 Fil, hub pays, profils et relations | en cours (15/10) | DIASPORALE `000b89d` (profils), `758f46d` (relations) ; tranche ANTIA `010a5d8` (`memberFacet`, cloche), `759643b` (journal de la modération) — reste le fil par pays et la portée des publications (lot « posts » de PA3 d'ANTIA), l'annuaire opt-in (correction de l'annuaire du moteur demandée à ANTIA), les suggestions, le `CountrySwitch` mémorisé, la parité |
+| PD4 Fil, hub pays, profils et relations | en cours (15/10) | DIASPORALE `000b89d` (profils), `758f46d` (relations), `5c96109` (cloche), `1559188` (« Membres », annuaire opt-in), `492f4d0` (portée et pays, fil par voies, mur) ; tranche ANTIA `010a5d8` (`memberFacet`, cloche), `759643b` (journal de la modération), `bce7185` (annuaire de la tranche) ; ANTIA `817a433` (annuaire générique refusé sur un réseau gouverné), `3069a61` (fil par voies) — reste les commentaires (lot 8 d'ANTIA livré), les suggestions, le `CountrySwitch` mémorisé, stories et albums, la parité, la recette Chrome complète |
 | PD5 → PD10 | — | — |
 
 Vérifications des étapes closes :
@@ -102,7 +102,24 @@ Vérifications des étapes closes :
   `visibility: network` dans `diasporale`, sans « publier aussi sur ANTIA »). Vérifié : `bun run verify`
   vert (232 + 175 + 47 tests) ; tranche 35 tests, 53 cliquets. **Faille relevée** : l'annuaire
   générique du moteur listait les membres de `diasporale` sans leur accord (opt-in de DIASPORALE) —
-  correction générique demandée à ANTIA ; diasporale.com n'appelle pas cette recherche d'ici là.
+  corrigée par ANTIA (`817a433` : chemin générique refusé sur un réseau gouverné, drapeau
+  `directoryListed` posé par la tranche).
+  Suite du 15/10, toutes vérifiées par `bun run verify` vert (208 + 57 tests) puis en recette sur :3031 :
+  - **cloche** (`5c96109`) : demande de relation acceptée depuis la cloche, l'avis passe « acceptée » et lu ;
+    « Notifications » (cloche) et « Avis » (pile flottante) ne se confondent plus pour les lecteurs d'écran ;
+  - **annuaire opt-in** (tranche `bce7185`, 39 tests ; écran `/membres`, `1559188`) : chaque candidat
+    rejugé par `isListedInDirectoryFor` (niveau, consentement EN VIGUEUR, statut, pays du lecteur,
+    blocage) ; une fiche masquée est introuvable, même par identifiant exact ; en-tête mobile à 320, 360,
+    375 px sans débordement ;
+  - **portée et pays** (`492f4d0`) : « Mon pays », un hub et « Toute la diaspora » composent les voies du
+    moteur selon `isShownInHub` ; une publication « Dans le hub France » paraît dans « France » et
+    « Récents », pas dans « Toute la diaspora » ; mur de l'auteur.
+  **Écarts assumés** :
+  - relecture avant publication (invariant 10) : le moteur ne retient encore rien (PA5, crochet de
+    politique accordé par ANTIA) ; d'ici là, publication locale refusée à l'écran pour un pays non ouvert —
+    garde d'écran seulement, **bloquant pour la mise en ligne** ;
+  - les publications de développement d'avant le lot 7 n'ont pas de portée : aucune voie ne les sert
+    (données locales seulement).
 - **e)** Côté gabon-diplomatie, sur deux branches en worktree (le `main` partagé n'est pas
   touché) : #184 `DIASPORA-ATTESTATION-V1` (route signée HMAC, exclusions indiscernables,
   idempotence par `consentRef`, journal à empreinte, correspondance e-mail par
