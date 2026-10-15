@@ -57,11 +57,13 @@
 ## Vérification
 
 ```bash
-PATH="/opt/homebrew/opt/node@22/bin:$PATH" bun run --cwd ../ANTIA verify   # obligatoire avant tout commit : codegen, typecheck, tests, lint
+bun run --cwd ../ANTIA verify   # obligatoire avant tout commit : codegen, typecheck, tests, lint
 ```
 
-Node 22 en tête du PATH : le Mac a Node 25, sous lequel `codegen` échoue dès qu'une action
-`"use node"` existe dans le moteur (lot 15 d'ANTIA, voir son `CLAUDE.md`).
+Aucun préfixe de PATH : `codegen` passe par le lanceur Convex du moteur, qui met Node 22 en tête
+(le Mac a Node 25, refusé dès qu'une action `"use node"` existe ; ANTIA 24b0625). Ne pas lancer
+`verify` pendant qu'un `convex dev` publie (`409 ExistingModuleHashConflict`) : attendre
+« Convex functions ready », puis relancer.
 
 Cliquets attendus (verts avant toute PR) : réseau borné, aucun import inter-produit, charte,
 i18n, `.collect()` borné, `v.any()`, communication publique (aucun chiffre non mesuré, aucun
