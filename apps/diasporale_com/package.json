@@ -13,9 +13,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@antia/api": "workspace:*",
+    "@antia/social-contracts": "workspace:*",
+    "@antia/social-features": "workspace:*",
+    "@antia/ui": "workspace:*",
     "@diasporale/domain": "workspace:*",
     "@diasporale/features": "workspace:*",
     "@hookform/resolvers": "catalog:",
+    "convex": "catalog:",
     "i18next": "catalog:",
     "lucide-react": "catalog:",
     "next": "catalog:",
@@ -29,6 +34,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@antia/eslint-config": "workspace:*",
+    "@antia/tsconfig": "workspace:*",
     "@tailwindcss/postcss": "catalog:",
     "@testing-library/dom": "catalog:",
     "@testing-library/jest-dom": "catalog:",

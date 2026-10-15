@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
+    "@antia/tsconfig": "workspace:*",
     "@types/bun": "catalog:",
     "typescript": "catalog:"
   }
