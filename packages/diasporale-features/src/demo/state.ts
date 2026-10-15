@@ -27,8 +27,8 @@ import {
 
 import type { AssociationType, CompanySector, EventCategory, NotificationKind, ReactionKind } from "../data/types"
 
-/** Version de l'état persisté : v2 = relations (demandes, blocages, abonnements) ; v3 = cloche. */
-export const DEMO_STATE_VERSION = 3
+/** Version de l'état persisté : v2 = relations (demandes, blocages, abonnements) ; v3 = cloche ; v4 = commentaires. */
+export const DEMO_STATE_VERSION = 4
 
 export interface DemoPerson {
   readonly id: string
@@ -102,7 +102,18 @@ export interface DemoPost {
   readonly createdAt: number
   readonly reactions: Readonly<Record<string, ReactionKind>>
   readonly baseReactions: number
-  readonly commentCount: number
+}
+
+/** Un commentaire (EXF-DG-12) : un seul niveau de réponse, retiré et non supprimé. */
+export interface DemoComment {
+  readonly id: string
+  readonly postId: string
+  readonly authorId: string
+  readonly body: string
+  readonly createdAt: number
+  /** La racine à laquelle la réponse se rattache ; `null` pour une racine. */
+  readonly parentId: string | null
+  readonly removedAt: number | null
 }
 
 export interface DemoEvent {
@@ -165,6 +176,7 @@ export interface DemoState {
   /** Abonnements : [qui suit, qui est suivi]. */
   readonly follows: readonly (readonly [string, string])[]
   readonly notifications: readonly DemoNotification[]
+  readonly comments: readonly DemoComment[]
   readonly openCountries: readonly CountryCode[]
   readonly countryModerators: Readonly<Partial<Record<CountryCode, number>>>
   readonly networkModerators: number
@@ -378,7 +390,7 @@ export function createDemoSeed(now: number): DemoState {
     body: string,
     scope: ContentScope,
     ageMs: number,
-    extra: Partial<Pick<DemoPost, "visibility" | "audience" | "baseReactions" | "commentCount">> = {},
+    extra: Partial<Pick<DemoPost, "visibility" | "audience" | "baseReactions">> = {},
   ): DemoPost => ({
     id,
     author,
@@ -390,7 +402,16 @@ export function createDemoSeed(now: number): DemoState {
     createdAt: now - ageMs,
     reactions: {},
     baseReactions: extra.baseReactions ?? 0,
-    commentCount: extra.commentCount ?? 0,
+  })
+
+  const comment = (id: string, postId: string, authorId: string, body: string, ageMs: number, parentId: string | null = null): DemoComment => ({
+    id,
+    postId,
+    authorId,
+    body,
+    createdAt: now - ageMs,
+    parentId,
+    removedAt: null,
   })
 
   const posts: DemoPost[] = [
@@ -400,7 +421,7 @@ export function createDemoSeed(now: number): DemoState {
       "Permanence consulaire mobile à Lyon : la page officielle annonce la date et les modalités de rendez-vous. (Information de démonstration.)",
       { reach: "local", country: "FR" },
       3 * HOUR,
-      { baseReactions: 12, commentCount: 3 },
+      { baseReactions: 12 },
     ),
     post(
       "post-2",
@@ -408,7 +429,7 @@ export function createDemoSeed(now: number): DemoState {
       "Je rentre à Libreville en novembre : il me reste de la place dans ma valise pour des médicaments ou des courriers. Écrivez-moi par la messagerie.",
       { reach: "diaspora", country: "FR" },
       9 * HOUR,
-      { baseReactions: 8, commentCount: 5 },
+      { baseReactions: 8 },
     ),
     post(
       "post-3",
@@ -416,7 +437,7 @@ export function createDemoSeed(now: number): DemoState {
       "Merci à toutes celles et ceux qui sont venus à notre soirée culturelle ! Les photos arrivent dans l'album du collectif.",
       { reach: "local", country: "FR" },
       DAY + 2 * HOUR,
-      { baseReactions: 21, commentCount: 4 },
+      { baseReactions: 21 },
     ),
     post(
       "post-4",
@@ -424,7 +445,7 @@ export function createDemoSeed(now: number): DemoState {
       "Bienvenue aux étudiants arrivés à Montréal cette rentrée ! Une rencontre d'accueil se prépare avec l'amicale.",
       { reach: "local", country: "CA" },
       2 * DAY,
-      { baseReactions: 6, commentCount: 2 },
+      { baseReactions: 6 },
     ),
     post(
       "post-5",
@@ -432,7 +453,7 @@ export function createDemoSeed(now: number): DemoState {
       "Qui serait intéressé par un groupe « Entrepreneurs de la diaspora » ? Je lance l'idée, vos avis m'intéressent.",
       { reach: "diaspora", country: "BE" },
       2 * DAY + 5 * HOUR,
-      { baseReactions: 15, commentCount: 9 },
+      { baseReactions: 15 },
     ),
     post(
       "post-6",
@@ -440,7 +461,7 @@ export function createDemoSeed(now: number): DemoState {
       "Match de l'équipe nationale ce soir : on se retrouve où à Lyon pour le regarder ensemble ?",
       { reach: "local", country: "FR" },
       3 * DAY,
-      { visibility: "root", baseReactions: 4, commentCount: 7 },
+      { visibility: "root", baseReactions: 4 },
     ),
     post(
       "post-7",
@@ -448,7 +469,7 @@ export function createDemoSeed(now: number): DemoState {
       "Quelqu'un connaît une coiffeuse afro de confiance à Bordeaux ? Merci d'avance !",
       { reach: "local", country: "FR" },
       4 * DAY,
-      { baseReactions: 3, commentCount: 6 },
+      { baseReactions: 3 },
     ),
     post(
       "post-8",
@@ -456,7 +477,7 @@ export function createDemoSeed(now: number): DemoState {
       "Nouveau : plats à emporter le week-end. Les commandes passent par la messagerie de la page.",
       { reach: "local", country: "FR" },
       5 * DAY,
-      { baseReactions: 9, commentCount: 1 },
+      { baseReactions: 9 },
     ),
   ]
 
@@ -529,11 +550,22 @@ export function createDemoSeed(now: number): DemoState {
     blocks: [],
     follows: [["p-steeve", "p-mireille"]],
     notifications: [],
+    comments: [
+      comment("c-1", "post-2", "p-prisca", "Merci Mireille ! Je t'écris par la messagerie pour un petit colis.", 8 * HOUR),
+      comment("c-2", "post-2", "p-mireille", "Avec plaisir, écris-moi d'ici dimanche.", 7 * HOUR, "c-1"),
+      comment("c-3", "post-2", "p-steeve", "Belle initiative, je fais passer le message autour de moi.", 6 * HOUR),
+      comment("c-4", "post-5", "p-mireille", "Bonne idée ! Les associations relais pourraient aider à le lancer.", 2 * DAY),
+      comment("c-5", "post-5", "p-rodrigue", "Intéressé depuis Montréal.", 2 * DAY - HOUR),
+      comment("c-6", "post-6", "p-prisca", "Je suis à Bordeaux, mais je suivrai le match de loin !", 3 * DAY - 2 * HOUR),
+      comment("c-7", "post-7", "p-mireille", "Je t'envoie une adresse par la messagerie.", 4 * DAY - HOUR),
+    ],
     openCountries: ["FR"],
     countryModerators: { FR: 2 },
     networkModerators: 2,
     session: { personId: null },
     pendingCode: null,
-    sequence: 1,
+    // Les identifiants du jeu d'essai (`post-1`, `c-1`…) restent sous 100 : les écritures
+    // numérotent au-delà, jamais un identifiant déjà pris.
+    sequence: 100,
   }
 }

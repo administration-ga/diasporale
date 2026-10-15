@@ -38,11 +38,11 @@ import {
 } from "@diasporale/domain"
 
 import type { ActionErrorCode } from "../data/errors"
-import type { ActionResult, CodeDestination, IdnSignInInput, JoinInput, PublishInput } from "../data/port"
-import type { ReactionKind } from "../data/types"
+import type { ActionResult, CodeDestination, CommentInput, IdnSignInInput, JoinInput, PublishInput } from "../data/port"
+import { COMMENT_MAX_LENGTH, type ReactionKind } from "../data/types"
 import { handleRefusal, handleToken, normalizeHandle } from "../lib/handle"
 import { emailHash, fakeConsularAttestation } from "./attestation-provider"
-import { isConnected, sponsorFacts, statusOf } from "./selectors"
+import { canRead, isConnected, sponsorFacts, statusOf } from "./selectors"
 import { DEMO_STATE_VERSION, createDemoSeed, type DemoMembership, type DemoNotification, type DemoPerson, type DemoState } from "./state"
 
 export const DEMO_STORAGE_KEY = "diasporale:demonstration:v1"
@@ -328,7 +328,6 @@ export class DemoStore {
           createdAt: now,
           reactions: {},
           baseReactions: 0,
-          commentCount: 0,
         },
         ...this.state.posts,
       ],
@@ -351,6 +350,56 @@ export class DemoStore {
       ...this.state,
       posts: this.state.posts.map((candidate) => (candidate.id === postId ? { ...candidate, reactions } : candidate)),
     })
+    return OK
+  }
+
+  // ── Commentaires (EXF-DG-12) ───────────────────────────────────────────
+  async comment(input: CommentInput): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer?.membership) return fail("not_member")
+    const now = this.clock()
+    if (!capabilitiesOf(deriveMembershipStatus(viewer.membership.grounds, now)).has("publish")) return fail("publish_not_allowed")
+    const post = this.state.posts.find((candidate) => candidate.id === input.postId)
+    // Une publication illisible ou non publiée n'existe pas pour le lecteur.
+    if (!post || post.moderation !== "published" || !canRead(this.state, post, viewer.person.id, now)) return fail("not_found")
+    const body = input.body.trim()
+    if (body.length === 0) return fail("comment_empty")
+    if (body.length > COMMENT_MAX_LENGTH) return fail("comment_too_long")
+    let parentId: string | null = null
+    let answeredId: string | null = null
+    if (input.parentCommentId !== undefined) {
+      const parent = this.state.comments.find((item) => item.id === input.parentCommentId && item.postId === post.id && item.removedAt === null)
+      if (!parent) return fail("not_found")
+      // Un seul niveau : une réponse à une réponse rejoint sa racine ; on avise la personne à qui l'on répond.
+      answeredId = parent.authorId
+      parentId = parent.parentId ?? parent.id
+    }
+    const [id, sequence] = this.nextId("c")
+    let next: DemoState = {
+      ...this.state,
+      comments: [...this.state.comments, { id, postId: post.id, authorId: viewer.person.id, body, createdAt: now, parentId, removedAt: null }],
+      sequence,
+    }
+    const postAuthorId = post.author.kind === "person" ? post.author.id : null
+    if (postAuthorId) next = this.notified(next, { recipientId: postAuthorId, kind: "post_comment", actorId: viewer.person.id })
+    if (answeredId && answeredId !== postAuthorId) next = this.notified(next, { recipientId: answeredId, kind: "post_comment", actorId: viewer.person.id })
+    this.commit(next)
+    return OK
+  }
+
+  /** Retiré, pas supprimé ; par son auteur, ou par l'auteur de la publication (chez soi). Idempotent. */
+  async removeComment(commentId: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    const target = this.state.comments.find((item) => item.id === commentId)
+    const post = target ? this.state.posts.find((candidate) => candidate.id === target.postId) : undefined
+    const postAuthorId = post?.author.kind === "person" ? post.author.id : null
+    if (!target || (target.authorId !== viewer.person.id && postAuthorId !== viewer.person.id)) return fail("not_found")
+    if (target.removedAt !== null) return OK
+    const now = this.clock()
+    this.commit({ ...this.state, comments: this.state.comments.map((item) => (item.id === commentId ? { ...item, removedAt: now } : item)) })
     return OK
   }
 
@@ -747,6 +796,10 @@ export class DemoStore {
       blocks: this.state.blocks.filter((block) => block.byId !== personId && block.targetId !== personId),
       follows: this.state.follows.filter(([a, b]) => a !== personId && b !== personId),
       notifications: this.state.notifications.filter((item) => item.recipientId !== personId && item.actorId !== personId),
+      // Ses commentaires, et ceux portés par ses publications effacées.
+      comments: this.state.comments.filter(
+        (item) => item.authorId !== personId && this.state.posts.some((post) => post.id === item.postId && !(post.author.kind === "person" && post.author.id === personId)),
+      ),
       session: { personId: null },
     })
     return OK

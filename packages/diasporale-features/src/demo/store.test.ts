@@ -3,7 +3,7 @@ import { DAY_MS, HOUR_MS, type OnboardingConsentChoices } from "@diasporale/doma
 import { describe, expect, it } from "vitest"
 
 import type { JoinInput } from "../data/port"
-import { NOTIFICATIONS_PAGE, feedView, hubCounters, memberSearchView, membershipView, notificationsView, relationView, sessionView, unreadCountView } from "./selectors"
+import { NOTIFICATIONS_PAGE, commentsView, feedView, hubCounters, memberSearchView, membershipView, notificationsView, relationView, repliesView, sessionView, unreadCountView } from "./selectors"
 import { DEMO_STORAGE_KEY, DemoStore } from "./store"
 
 /**
@@ -540,5 +540,72 @@ describe("annuaire opt-in (EXF-DG-19, EXF-DG-46)", () => {
     await store.switchTo("p-prisca")
     await store.setConsent("directory", false)
     expect(memberSearchView(store.getState(), "p-nadia", "prisca", undefined, T0)).toEqual([])
+  })
+})
+
+describe("commentaires (EXF-DG-12)", () => {
+  const bodies = (threads: readonly { body: string }[] | null) => (threads ?? []).map((item) => item.body)
+  const countOf = (store: DemoStore, viewerId: string, postId: string) =>
+    feedView(store.getState(), viewerId, "recents", T0).find((post) => post.id === postId)?.commentCount
+
+  it("commenter, répondre sur un seul niveau, aviser l'autrice et la personne à qui l'on répond ; le compte suit", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    expect(countOf(store, "p-steeve", "post-7")).toBe(1)
+    expect(await store.comment({ postId: "post-7", body: "  Je connais une adresse à Bordeaux.  " })).toEqual({ ok: true, value: null })
+    const [root, mine] = commentsView(store.getState(), "post-7", "p-steeve", T0) ?? []
+    expect(mine).toMatchObject({ body: "Je connais une adresse à Bordeaux.", isMine: true, replyCount: 0 })
+    // Une réponse à une réponse rejoint la racine.
+    await store.comment({ postId: "post-7", body: "Merci Mireille !", parentCommentId: root?.id ?? "" })
+    const [reply] = repliesView(store.getState(), "post-7", root?.id ?? "", "p-steeve", T0) ?? []
+    await store.switchTo("p-mireille")
+    await store.comment({ postId: "post-7", body: "Avec plaisir.", parentCommentId: reply?.id ?? "" })
+    expect(bodies(repliesView(store.getState(), "post-7", root?.id ?? "", "p-mireille", T0))).toEqual(["Merci Mireille !", "Avec plaisir."])
+    expect(commentsView(store.getState(), "post-7", "p-mireille", T0)?.[0]).toMatchObject({ replyCount: 2 })
+    expect(countOf(store, "p-mireille", "post-7")).toBe(4)
+    // L'autrice de la publication et la personne à qui l'on répond sont avisées ; personne pour soi.
+    const prisca = notificationsView(store.getState(), "p-prisca")
+    expect(prisca.some((item) => item.kind === "post_comment" && item.actor?.handle === "steeve.ngounie")).toBe(true)
+    expect(notificationsView(store.getState(), "p-mireille").some((item) => item.kind === "post_comment" && item.actor?.handle === "steeve.ngounie")).toBe(true)
+    expect(notificationsView(store.getState(), "p-steeve").some((item) => item.kind === "post_comment" && item.actor?.handle === "mireille.ivindo")).toBe(true)
+  })
+
+  it("refus : vide, trop long, publication inconnue, réponse à un commentaire d'une autre publication, compte en attente", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    expect(await store.comment({ postId: "post-7", body: "   " })).toEqual({ ok: false, code: "comment_empty" })
+    expect(await store.comment({ postId: "post-7", body: "x".repeat(1001) })).toEqual({ ok: false, code: "comment_too_long" })
+    expect(await store.comment({ postId: "post-inconnue", body: "Bonjour" })).toEqual({ ok: false, code: "not_found" })
+    expect(await store.comment({ postId: "post-7", body: "Bonjour", parentCommentId: "c-1" })).toEqual({ ok: false, code: "not_found" })
+    await store.requestCode({ kind: "email", value: "attente@exemple.test" })
+    await store.verifyCode(store.getState().pendingCode?.code ?? "")
+    await store.join(joinInput({ handle: "compte.attente", displayName: "Compte Attente" }))
+    expect(await store.comment({ postId: "post-7", body: "Bonjour" })).toEqual({ ok: false, code: "publish_not_allowed" })
+  })
+
+  it("retirer : le sien, ou n'importe lequel sous sa publication ; une racine retirée emporte ses réponses ; autrui : introuvable", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    expect(await store.removeComment("c-1")).toEqual({ ok: false, code: "not_found" })
+    expect(await store.removeComment("c-3")).toEqual({ ok: true, value: null })
+    expect(await store.removeComment("c-3")).toEqual({ ok: true, value: null })
+    // Mireille, autrice de post-2, retire la racine de Prisca : sa réponse part avec.
+    await store.switchTo("p-mireille")
+    expect(countOf(store, "p-mireille", "post-2")).toBe(2)
+    expect(await store.removeComment("c-1")).toEqual({ ok: true, value: null })
+    expect(commentsView(store.getState(), "post-2", "p-mireille", T0)).toEqual([])
+    expect(countOf(store, "p-mireille", "post-2")).toBe(0)
+  })
+
+  it("un blocage écarte les commentaires de la paire ; l'effacement purge ses commentaires et ceux de ses publications", async () => {
+    const { store } = demo()
+    await store.switchTo("p-prisca")
+    await store.block("p-mireille")
+    expect(commentsView(store.getState(), "post-7", "p-prisca", T0)).toEqual([])
+    await store.switchTo("p-mireille")
+    await store.deleteMyAccount()
+    const left = store.getState().comments
+    expect(left.some((item) => item.authorId === "p-mireille" || item.postId === "post-2")).toBe(false)
+    expect(left.map((item) => item.id).sort()).toEqual(["c-5", "c-6"])
   })
 })

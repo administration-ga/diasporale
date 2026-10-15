@@ -29,6 +29,8 @@ import {
 import type {
   ActionErrorCode,
   ActionResult,
+  CommentThreadView,
+  CommentView,
   ConsentView,
   CountryHubView,
   DiasporaleActions,
@@ -45,7 +47,7 @@ import type {
   SponsorDashboardView,
   UnreadCountView,
 } from "@diasporale/features/data"
-import { MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
+import { COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
 import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
@@ -60,6 +62,8 @@ import {
   toCountryHubView,
   toFacetArgs,
   toFeed,
+  toCommentThreadView,
+  toCommentView,
   toMemberHitView,
   toMembershipView,
   toWall,
@@ -92,6 +96,8 @@ export function feedRequest(scope: FeedScope, country: CountryCode) {
 }
 /** La première page de la cloche. */
 const BELL_PAGE = 30
+/** Les réponses d'une racine, lues d'un coup à la demande. */
+const REPLIES_PAGE = 50
 
 const LOADING = { status: "loading" } as const
 
@@ -265,6 +271,36 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       return hits.state === "ready" ? ready(hits.value.map(toMemberHitView)) : LOADING
     },
 
+    useComments(postId: string): Loadable<readonly CommentThreadView[]> {
+      const { networkId } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const page = useLoaded(
+        api.modules.engagement.engagement.paginateComments,
+        id ? { networkId: id, postId: postId as Id<"posts">, paginationOpts: { numItems: COMMENTS_PAGE, cursor: null } } : "skip",
+      )
+      for (const loaded of [networkId, page]) if (loaded.state === "error") return failed(loaded.code)
+      return page.state === "ready" ? ready(page.value.page.map(toCommentThreadView)) : LOADING
+    },
+
+    useReplies(args: { postId: string; commentId: string | null }): Loadable<readonly CommentView[]> {
+      const { networkId } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const page = useLoaded(
+        api.modules.engagement.engagement.paginateReplies,
+        id && args.commentId
+          ? {
+              networkId: id,
+              postId: args.postId as Id<"posts">,
+              commentId: args.commentId as Id<"postComments">,
+              paginationOpts: { numItems: REPLIES_PAGE, cursor: null },
+            }
+          : "skip",
+      )
+      if (args.commentId === null) return ready([])
+      for (const loaded of [networkId, page]) if (loaded.state === "error") return failed(loaded.code)
+      return page.state === "ready" ? ready(page.value.page.map(toCommentView)) : LOADING
+    },
+
     useNotifications(): Loadable<readonly NotificationView[]> {
       const { networkId } = useMember()
       const id = networkId.state === "ready" ? networkId.value : null
@@ -422,6 +458,26 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           alsoOnRoot: input.alsoOnRoot && input.audience === "public",
         })
         return { moderation: "published" as const }
+      }),
+
+    comment: (input) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.engagement.engagement.comment, {
+          networkId: await diasporale(),
+          postId: input.postId as Id<"posts">,
+          body: input.body,
+          ...(input.parentCommentId !== undefined ? { parentCommentId: input.parentCommentId as Id<"postComments"> } : {}),
+        })
+        return null
+      }),
+
+    removeComment: (commentId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.engagement.engagement.removeComment, {
+          networkId: await diasporale(),
+          commentId: commentId as Id<"postComments">,
+        })
+        return null
       }),
 
     react: (postId, kind) =>

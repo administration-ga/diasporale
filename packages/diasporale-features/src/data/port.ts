@@ -25,6 +25,8 @@ import type {
 } from "@diasporale/domain"
 
 import type {
+  CommentThreadView,
+  CommentView,
   CountryHubView,
   ConsentView,
   Loadable,
@@ -78,6 +80,13 @@ export interface PublishInput {
   readonly alsoOnRoot: boolean
 }
 
+/** Commenter une publication ; une réponse à une réponse rejoint sa racine (un seul niveau). */
+export interface CommentInput {
+  readonly postId: string
+  readonly body: string
+  readonly parentCommentId?: string
+}
+
 export interface DiasporaleActions {
   signInWithIdn(input: IdnSignInInput): Promise<ActionResult>
   requestCode(destination: CodeDestination): Promise<ActionResult<{ demoCode: string | null }>>
@@ -88,6 +97,10 @@ export interface DiasporaleActions {
   join(input: JoinInput): Promise<ActionResult<{ country: CountryCode }>>
   publish(input: PublishInput): Promise<ActionResult<{ moderation: ContentModerationState }>>
   react(postId: string, kind: ReactionKind | null): Promise<ActionResult>
+  /** Commenter ou répondre (EXF-DG-12) ; l'auteur de la publication et la personne à qui l'on répond sont avisés. */
+  comment(input: CommentInput): Promise<ActionResult>
+  /** Retirer un commentaire — le sien, ou n'importe lequel sous sa propre publication. */
+  removeComment(commentId: string): Promise<ActionResult>
   /** Demander une connexion. Un blocage, dans un sens ou dans l'autre, rend la même réponse, sans rien écrire. */
   connect(personId: string): Promise<ActionResult>
   /** Répondre à une demande reçue (le destinataire seul). */
@@ -139,6 +152,10 @@ export interface DiasporaleDataSource {
    * aux membres actifs ; le filtre de pays restreint, il n'ouvre jamais rien.
    */
   useMemberSearch(args: { query: string; country?: CountryCode }): Loadable<readonly MemberHitView[]>
+  /** Les commentaires d'une publication, des plus anciens aux plus récents, avec leurs premières réponses. */
+  useComments(postId: string): Loadable<readonly CommentThreadView[]>
+  /** Toutes les réponses d'une racine (`commentId` à `null` : rien à lire). */
+  useReplies(args: { postId: string; commentId: string | null }): Loadable<readonly CommentView[]>
   /** La cloche : les avis les plus récents, et le compte des non-lus. */
   useNotifications(): Loadable<readonly NotificationView[]>
   useUnreadCount(): Loadable<UnreadCountView>

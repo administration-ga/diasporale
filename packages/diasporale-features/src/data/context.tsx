@@ -30,6 +30,8 @@ export const useFeed = (args: { scope: FeedScope; hubCountry?: CountryCode }) =>
 export const useProfile = (handle: string) => useDataSource().useProfile(handle)
 export const useRelation = (personId: string) => useDataSource().useRelation(personId)
 export const useMemberSearch = (args: { query: string; country?: CountryCode }) => useDataSource().useMemberSearch(args)
+export const useComments = (postId: string) => useDataSource().useComments(postId)
+export const useReplies = (args: { postId: string; commentId: string | null }) => useDataSource().useReplies(args)
 export const useNotifications = () => useDataSource().useNotifications()
 export const useUnreadCount = () => useDataSource().useUnreadCount()
 export const usePage = (handle: string) => useDataSource().usePage(handle)

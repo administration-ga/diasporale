@@ -38,6 +38,8 @@ export const DATA_ERROR_CODES = [
   "consent_directory_required",
   "publish_not_allowed",
   "post_empty",
+  "comment_empty",
+  "comment_too_long",
   "post_too_long",
   "attestation_not_needed",
   "attestation_too_soon",

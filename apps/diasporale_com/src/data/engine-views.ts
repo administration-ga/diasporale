@@ -21,6 +21,8 @@ import {
 } from "@diasporale/domain"
 import {
   type AccountView,
+  type CommentThreadView,
+  type CommentView,
   type ConsentView,
   type CountryHubView,
   maskDestination,
@@ -306,4 +308,23 @@ export function toNotificationView(item: EngineNotification): NotificationView {
     pendingConnectionId,
     inviteOutcome,
   }
+}
+
+type EngineComment = FunctionReturnType<typeof api.modules.engagement.engagement.paginateComments>["page"][number]
+type EngineReply = EngineComment["replies"][number]
+
+/** Un commentaire du moteur : l'auteur par son profil publié (nom neutre s'il est retiré), jamais un corps relu ailleurs. */
+export function toCommentView(item: EngineReply): CommentView {
+  return {
+    id: item.commentId,
+    author: { personId: item.author.personId, handle: item.author.handle, displayName: item.author.displayName },
+    body: item.body,
+    createdAt: item.createdAt,
+    edited: item.editedAt !== null,
+    isMine: item.isMine,
+  }
+}
+
+export function toCommentThreadView(item: EngineComment): CommentThreadView {
+  return { ...toCommentView(item), replyCount: item.replyCount, replies: item.replies.map(toCommentView) }
 }

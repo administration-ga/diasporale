@@ -32,6 +32,8 @@ import { CONSENT_PURPOSES, CONSENT_TEXT_VERSIONS, isConsentActive } from "@diasp
 
 import type {
   AuthorView,
+  CommentThreadView,
+  CommentView,
   ConsentView,
   CountryHubView,
   EventView,
@@ -48,10 +50,10 @@ import type {
   SponsorDashboardView,
   UnreadCountView,
 } from "../data/types"
-import { MEMBER_SEARCH_MIN_LENGTH } from "../data/types"
+import { COMMENT_REPLIES_PREVIEW, COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH } from "../data/types"
 import { maskDestination } from "../data/mask"
 import type { DemoAccountView } from "../data/port"
-import type { DemoPage, DemoPost, DemoState } from "./state"
+import type { DemoComment, DemoPage, DemoPost, DemoState } from "./state"
 
 export function statusOf(state: DemoState, personId: string, now: number): MembershipStatus | null {
   const membership = state.memberships[personId]
@@ -247,7 +249,7 @@ export function isConnected(state: DemoState, a: string, b: string): boolean {
  * droit de lecture (un suspendu sans lecture ne lit rien). Puis l'audience
  * héritée tranche ; un contenu non publié n'existe que pour son auteur.
  */
-function canRead(state: DemoState, post: DemoPost, viewerId: string, now: number): boolean {
+export function canRead(state: DemoState, post: DemoPost, viewerId: string, now: number): boolean {
   const isMine = post.author.kind === "person" && post.author.id === viewerId
   if (!isReadableByOthers(post.moderation) && !isMine) return false
   const status = statusOf(state, viewerId, now)
@@ -272,10 +274,69 @@ export function postView(state: DemoState, post: DemoPost, viewerId: string, now
     moderation: post.moderation,
     createdAt: post.createdAt,
     reactionCount: post.baseReactions + reactionsByOthers + (mine ? 1 : 0),
-    commentCount: post.commentCount,
+    commentCount: liveComments(state, post.id, viewerId).length,
     myReaction: mine,
     isMine: post.author.kind === "person" && post.author.id === viewerId,
   }
+}
+
+/**
+ * Les commentaires vivants d'une publication pour ce lecteur, comme le moteur
+ * les rend : retirés écartés, réponses d'une racine retirée écartées, auteurs
+ * bloqués (dans un sens ou dans l'autre) écartés.
+ */
+function liveComments(state: DemoState, postId: string, viewerId: string): DemoComment[] {
+  const blocked = (personId: string) =>
+    personId !== viewerId &&
+    state.blocks.some((block) => (block.byId === viewerId && block.targetId === personId) || (block.byId === personId && block.targetId === viewerId))
+  const live = state.comments.filter((item) => item.postId === postId && item.removedAt === null && !blocked(item.authorId))
+  const liveRoots = new Set(live.filter((item) => item.parentId === null).map((item) => item.id))
+  return live.filter((item) => item.parentId === null || liveRoots.has(item.parentId))
+}
+
+function commentView(state: DemoState, item: DemoComment, viewerId: string): CommentView {
+  const profile = state.persons[item.authorId]?.profile
+  return {
+    id: item.id,
+    author: { personId: item.authorId, handle: profile?.handle ?? null, displayName: profile?.displayName ?? null },
+    body: item.body,
+    createdAt: item.createdAt,
+    edited: false,
+    isMine: item.authorId === viewerId,
+  }
+}
+
+const byAge = (a: DemoComment, b: DemoComment) => a.createdAt - b.createdAt
+
+/** Les commentaires d'une publication lisible : racines des plus anciennes, trois réponses au plus en aperçu. */
+export function commentsView(state: DemoState, postId: string, viewerId: string, now: number): CommentThreadView[] | null {
+  const post = state.posts.find((candidate) => candidate.id === postId)
+  if (!post || !canRead(state, post, viewerId, now)) return null
+  const live = liveComments(state, postId, viewerId)
+  return live
+    .filter((item) => item.parentId === null)
+    .sort(byAge)
+    .slice(0, COMMENTS_PAGE)
+    .map((root) => {
+      const replies = live.filter((item) => item.parentId === root.id).sort(byAge)
+      return {
+        ...commentView(state, root, viewerId),
+        replyCount: replies.length,
+        replies: replies.slice(0, COMMENT_REPLIES_PREVIEW).map((reply) => commentView(state, reply, viewerId)),
+      }
+    })
+}
+
+/** Toutes les réponses d'une racine vivante, des plus anciennes aux plus récentes. */
+export function repliesView(state: DemoState, postId: string, commentId: string, viewerId: string, now: number): CommentView[] | null {
+  const post = state.posts.find((candidate) => candidate.id === postId)
+  if (!post || !canRead(state, post, viewerId, now)) return null
+  const live = liveComments(state, postId, viewerId)
+  if (!live.some((item) => item.id === commentId && item.parentId === null)) return null
+  return live
+    .filter((item) => item.parentId === commentId)
+    .sort(byAge)
+    .map((reply) => commentView(state, reply, viewerId))
 }
 
 export function feedView(

@@ -48,6 +48,8 @@ const ENGINE_RULES: Readonly<Record<string, ActionErrorCode>> = {
   POST_REACH_INVALID: "scope_reach_invalid",
   POST_COUNTRY_INVALID: "scope_country_invalid",
   POST_COUNTRY_REQUIRED: "scope_country_required",
+  COMMENT_EMPTY: "comment_empty",
+  COMMENT_TOO_LONG: "comment_too_long",
 }
 
 /** Le code FERMÉ d'une erreur levée par une fonction du moteur. */

@@ -4,9 +4,10 @@ import { hasCapability, type CountryCode, type FeedScope } from "@diasporale/dom
 import { useMemo, useSyncExternalStore } from "react"
 
 import type { DemoAccountView, DiasporaleDataSource } from "../data/port"
-import type { Loadable, MemberHitView, NotificationView, RelationView, UnreadCountView } from "../data/types"
+import type { CommentThreadView, CommentView, Loadable, MemberHitView, NotificationView, RelationView, UnreadCountView } from "../data/types"
 import { splitDisplayName, suggestHandles } from "../lib/handle"
 import {
+  commentsView,
   consentsView,
   countryHubView,
   demoAccountsView,
@@ -17,6 +18,7 @@ import {
   notificationsView,
   profileView,
   relationView,
+  repliesView,
   sessionView,
   sponsorDashboardView,
   statusOf,
@@ -115,6 +117,32 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       }, [version, query, country])
     },
 
+    useComments(postId: string) {
+      const version = useVersion()
+      return useMemo<Loadable<readonly CommentThreadView[]>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return { status: "error", code: "not_signed_in" }
+        const threads = commentsView(state, postId, viewerId, store.now())
+        return threads ? ready(threads) : { status: "error", code: "not_found" }
+      }, [version, postId])
+    },
+
+    useReplies(args: { postId: string; commentId: string | null }) {
+      const version = useVersion()
+      const { postId, commentId } = args
+      return useMemo<Loadable<readonly CommentView[]>>(() => {
+        if (version < 0) return LOADING
+        if (commentId === null) return ready([])
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return { status: "error", code: "not_signed_in" }
+        const replies = repliesView(state, postId, commentId, viewerId, store.now())
+        return replies ? ready(replies) : { status: "error", code: "not_found" }
+      }, [version, postId, commentId])
+    },
+
     useNotifications() {
       const version = useVersion()
       return useMemo<Loadable<readonly NotificationView[]>>(() => {
@@ -179,6 +207,8 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       join: (input) => store.join(input),
       publish: (input) => store.publish(input),
       react: (postId, kind) => store.react(postId, kind),
+      comment: (input) => store.comment(input),
+      removeComment: (commentId) => store.removeComment(commentId),
       connect: (personId) => store.connect(personId),
       respondToConnection: (connectionId, accept) => store.respondToConnection(connectionId, accept),
       follow: (handle) => store.follow(handle),

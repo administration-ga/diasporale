@@ -55,6 +55,29 @@ export interface PostView {
   readonly isMine: boolean
 }
 
+/** Un commentaire (EXF-DG-12) : l'auteur par son profil PUBLIÉ (`null` : nom neutre, profil retiré). */
+export interface CommentView {
+  readonly id: string
+  readonly author: { readonly personId: string; readonly handle: string | null; readonly displayName: string | null }
+  readonly body: string
+  readonly createdAt: number
+  readonly edited: boolean
+  readonly isMine: boolean
+}
+
+/** Un commentaire racine et ses premières réponses ; la suite se lit à la demande (un seul niveau). */
+export interface CommentThreadView extends CommentView {
+  readonly replyCount: number
+  readonly replies: readonly CommentView[]
+}
+
+/** Longueur d'un commentaire, règle du moteur (`PERSONAL_COMMENT_MAX_LENGTH`). */
+export const COMMENT_MAX_LENGTH = 1000
+/** Réponses montrées sous une racine avant « voir les réponses », comme le moteur. */
+export const COMMENT_REPLIES_PREVIEW = 3
+/** Racines lues par ouverture des commentaires. */
+export const COMMENTS_PAGE = 20
+
 export const EVENT_CATEGORIES = ["celebration", "culture", "sport", "charity", "diplomacy"] as const
 export type EventCategory = (typeof EVENT_CATEGORIES)[number]
 

@@ -3,6 +3,7 @@
 import type { CountryCode } from "@diasporale/domain"
 import { GlobeIcon, HandHeartIcon, HeartIcon, LightbulbIcon, MessageCircleIcon, PartyPopperIcon, type LucideIcon } from "lucide-react"
 import { DropdownMenu } from "radix-ui"
+import { useState } from "react"
 
 import type { PostView, ReactionKind } from "../../data/types"
 import { useDiasporaleT } from "../../i18n/client"
@@ -10,6 +11,7 @@ import { cn } from "../../lib/cn"
 import { formatDate, formatRelative } from "../../lib/format"
 import { Avatar, Card } from "../../primitives/surface"
 import { useRouting } from "../../routing"
+import { PostCommentsSheet } from "../comments"
 import { ContentScopeTag } from "../country-tag"
 import { ModerationBanner } from "../moderation-banner"
 import { TrustBadges } from "../trust-badge"
@@ -35,11 +37,14 @@ export function PostCard(props: {
   hubCountry?: CountryCode
   canReact: boolean
   onReact?: (kind: ReactionKind | null) => void
+  /** Commenter suit le même droit que réagir, sauf avis contraire. */
+  canComment?: boolean
   className?: string
 }) {
   const { t, locale } = useDiasporaleT()
   const { routes, Link } = useRouting()
   const { post } = props
+  const [commentsOpen, setCommentsOpen] = useState(false)
   const authorHref = post.author.kind === "page" ? routes.page(post.author.handle) : routes.profile(post.author.handle)
   const mine = post.myReaction
   const MineIcon = mine ? REACTIONS[mine].icon : HeartIcon
@@ -114,10 +119,16 @@ export function PostCard(props: {
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
-          <span className="inline-flex min-h-10 items-center gap-1.5 px-2.5 text-sm text-muted-foreground">
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            aria-expanded={commentsOpen}
+            onClick={() => setCommentsOpen(true)}
+            className="inline-flex min-h-10 items-center gap-1.5 rounded-md px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:shadow-focus"
+          >
             <MessageCircleIcon className="size-4" aria-hidden />
             {t("post.comments", { count: post.commentCount })}
-          </span>
+          </button>
           {post.visibility === "root" ? (
             <span className="ml-auto inline-flex items-center gap-1 rounded-[var(--radius-xs)] bg-tag-diaspora px-2 py-1 text-[11px] font-semibold text-tag-diaspora-foreground">
               <GlobeIcon className="size-3.5" aria-hidden />
@@ -126,6 +137,13 @@ export function PostCard(props: {
           ) : null}
         </footer>
       </article>
+      <PostCommentsSheet
+        postId={post.id}
+        postIsMine={post.isMine}
+        canComment={props.canComment ?? props.canReact}
+        open={commentsOpen}
+        onOpenChange={setCommentsOpen}
+      />
     </Card>
   )
 }

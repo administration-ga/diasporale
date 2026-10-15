@@ -7,7 +7,18 @@ import { describe, expect, it, vi } from "vitest"
 
 import { authActionErrorCode, engineActionErrorCode } from "./engine-errors"
 import { createEngineActions, feedRequest } from "./engine-source"
-import { toFacetArgs, toFeed, toMemberHitView, toMembershipView, toNotificationView, toOpenCountries, toProfileView, toRelationView, toWall } from "./engine-views"
+import {
+  toCommentThreadView,
+  toFacetArgs,
+  toFeed,
+  toMemberHitView,
+  toMembershipView,
+  toNotificationView,
+  toOpenCountries,
+  toProfileView,
+  toRelationView,
+  toWall,
+} from "./engine-views"
 
 /**
  * La source « moteur » sans moteur : traduction des refus, projections pures, et
@@ -536,5 +547,52 @@ describe("publications à portée et pays (PD4, lot 7 d'ANTIA)", () => {
     })
     expect(calls).toEqual([])
     expect(await actions.publish({ body: "x", reach: "diaspora", audience: "public", alsoOnRoot: false })).toEqual({ ok: false, code: "scope_reach_invalid" })
+  })
+})
+
+describe("commentaires par le moteur (PD4, lot 8 d'ANTIA)", () => {
+  it("un fil du moteur : l'auteur par son profil publié (nom neutre s'il est retiré), modifié se dit, les réponses suivent", () => {
+    const reply = { commentId: "r1", author: { personId: "p3", displayName: null, handle: null, avatarUrl: null }, body: "Merci", createdAt: 2, editedAt: 3, isMine: true }
+    const thread = {
+      commentId: "c1",
+      author: { personId: "p2", displayName: "Ada", handle: "ada", avatarUrl: null },
+      body: "Bonjour",
+      createdAt: 1,
+      editedAt: null,
+      isMine: false,
+      replyCount: 4,
+      replies: [reply],
+    } as never
+    expect(toCommentThreadView(thread)).toEqual({
+      id: "c1",
+      author: { personId: "p2", handle: "ada", displayName: "Ada" },
+      body: "Bonjour",
+      createdAt: 1,
+      edited: false,
+      isMine: false,
+      replyCount: 4,
+      replies: [{ id: "r1", author: { personId: "p3", handle: null, displayName: null }, body: "Merci", createdAt: 2, edited: true, isMine: true }],
+    })
+  })
+
+  it("commenter, répondre et retirer partent vers l'engagement du moteur, bornés par le réseau ; un refus du domaine se traduit", async () => {
+    const { convex, calls } = fakeConvex({
+      ...NETWORK,
+      "modules/engagement/engagement:comment": (args) => {
+        if (String(args.body).length > 1000) throw engineError({ code: "invalidArgument", rule: "COMMENT_TOO_LONG", params: { max: 1000 } })
+        return { commentId: "c9" }
+      },
+      "modules/engagement/engagement:removeComment": () => ({ removed: true }),
+    })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.comment({ postId: "post-1", body: "Bonjour" })).toEqual({ ok: true, value: null })
+    expect(await actions.comment({ postId: "post-1", body: "Merci", parentCommentId: "c1" })).toEqual({ ok: true, value: null })
+    expect(await actions.removeComment("c9")).toEqual({ ok: true, value: null })
+    expect(await actions.comment({ postId: "post-1", body: "x".repeat(1001) })).toEqual({ ok: false, code: "comment_too_long" })
+    expect(calls.slice(1, 4)).toEqual([
+      { name: "modules/engagement/engagement:comment", args: { networkId: "n-diasporale", postId: "post-1", body: "Bonjour" } },
+      { name: "modules/engagement/engagement:comment", args: { networkId: "n-diasporale", postId: "post-1", body: "Merci", parentCommentId: "c1" } },
+      { name: "modules/engagement/engagement:removeComment", args: { networkId: "n-diasporale", commentId: "c9" } },
+    ])
   })
 })
