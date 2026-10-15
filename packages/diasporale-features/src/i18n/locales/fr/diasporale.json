@@ -284,7 +284,8 @@
     "charteLink": "Voir la charte graphique et tous les composants"
   },
   "notice": {
-    "dismiss": "Écarter cet avis"
+    "dismiss": "Écarter cet avis",
+    "region": "Avis"
   },
   "feed": {
     "title": "Fil",
@@ -302,10 +303,11 @@
       "pour_vous": "Vos relations, les pages et les groupes que vous suivez."
     },
     "prompt": "Quoi de neuf à {{city}} ?",
+    "promptNoCity": "Quoi de neuf de votre côté ?",
     "empty": {
       "action": "Publier",
       "mon_pays": {
-        "title": "Rien encore en {{country}}.",
+        "title": "Rien encore dans le hub {{country}}.",
         "body": "Les premières publications font vivre un hub. Lancez-vous."
       },
       "diaspora": {
@@ -502,7 +504,7 @@
     },
     "welcomeTitle": "Bienvenue, {{name}}.",
     "welcomeBody": "Vous êtes aussi membre d'ANTIA, le réseau public, avec le même profil. Ce que vous publiez ici reste dans DIASPORALE, sauf si vous cochez « Publier aussi sur ANTIA ».",
-    "emptyPosts": "Aucune publication en {{country}} pour l'instant.",
+    "emptyPosts": "Aucune publication dans le hub {{country}} pour l'instant.",
     "emptyPostsBody": "Une information pratique, une question, un bon plan : la première publication lance le hub.",
     "emptyEvents": "Aucun évènement prévu — {{country}}.",
     "emptyEventsBody": "Les évènements des associations et des postes apparaîtront ici.",
@@ -908,6 +910,41 @@
       "advertiser": "Annonceur d'exemple",
       "advertiserMessage": "Un encart étiqueté, jamais plus d'un par écran, jamais dans la messagerie.",
       "postMine": "Ma publication, en relecture : la carte flottante n'est montrée qu'à son autrice ou son auteur."
+    }
+  },
+  "bell": {
+    "open": "Notifications",
+    "openUnread_one": "Notifications, {{count}} non lue",
+    "openUnread_other": "Notifications, {{count}} non lues",
+    "title": "Notifications",
+    "description": "Ce qui s'est passé pour vous dans DIASPORALE.",
+    "close": "Fermer les notifications",
+    "emptyTitle": "Aucune notification pour l'instant.",
+    "emptyBody": "Les demandes de relation, les parrainages et les réponses à vos publications s'afficheront ici.",
+    "markAll": "Tout marquer comme lu",
+    "markRead": "Marquer comme lue",
+    "unread": "non lue",
+    "someone": "Un membre",
+    "kind": {
+      "connection_request": "souhaite entrer en relation avec vous.",
+      "connection_accepted": "a accepté votre demande de relation.",
+      "new_follower": "suit désormais votre activité.",
+      "post_reaction": "a réagi à votre publication.",
+      "post_comment": "a commenté votre publication.",
+      "mention": "vous mentionne dans une publication.",
+      "sponsorship_received": "vous parraine dans DIASPORALE.",
+      "sponsorship_withdrawn": "a retiré son parrainage."
+    },
+    "system": {
+      "sponsorship_withdrawn": "Votre parrainage a été retiré.",
+      "attestation_verified": "Votre inscription consulaire est confirmée : votre compte est vérifié.",
+      "attestation_not_confirmed": "Nous n'avons pas pu confirmer votre inscription consulaire.",
+      "other": "Nouvelle activité dans DIASPORALE."
+    },
+    "outcome": {
+      "accepted": "acceptée",
+      "declined": "refusée",
+      "gone": "n'est plus d'actualité"
     }
   },
   "relation": {

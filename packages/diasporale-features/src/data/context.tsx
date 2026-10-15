@@ -29,6 +29,8 @@ export const useCountryHub = (country: CountryCode) => useDataSource().useCountr
 export const useFeed = (args: { scope: FeedScope; hubCountry?: CountryCode }) => useDataSource().useFeed(args)
 export const useProfile = (handle: string) => useDataSource().useProfile(handle)
 export const useRelation = (personId: string) => useDataSource().useRelation(personId)
+export const useNotifications = () => useDataSource().useNotifications()
+export const useUnreadCount = () => useDataSource().useUnreadCount()
 export const usePage = (handle: string) => useDataSource().usePage(handle)
 export const useHandleSuggestions = (displayName: string) => useDataSource().useHandleSuggestions(displayName)
 export const useSponsorDashboard = () => useDataSource().useSponsorDashboard()

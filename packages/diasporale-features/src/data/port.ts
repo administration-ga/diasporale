@@ -31,11 +31,13 @@ import type {
   PageDetailView,
   OpenCountryView,
   PostView,
+  NotificationView,
   ProfileView,
   ReactionKind,
   RelationView,
   SessionView,
   SponsorDashboardView,
+  UnreadCountView,
 } from "./types"
 
 import type { ActionErrorCode } from "./errors"
@@ -94,6 +96,9 @@ export interface DiasporaleActions {
   /** Bloquer : la relation et les abonnements de la paire tombent, partout. */
   block(personId: string): Promise<ActionResult>
   unblock(personId: string): Promise<ActionResult>
+  /** Marquer un avis lu (destinataire seul) ; tout marquer lu. */
+  markNotificationRead(notificationId: string): Promise<ActionResult>
+  markAllNotificationsRead(): Promise<ActionResult>
   sponsor(handle: string): Promise<ActionResult>
   revokeSponsorship(sponsorshipId: string): Promise<ActionResult>
   requestAttestation(): Promise<ActionResult<{ outcome: AttestationOutcome }>>
@@ -128,6 +133,9 @@ export interface DiasporaleDataSource {
   useProfile(handle: string): Loadable<ProfileView | null>
   /** Ma relation avec une personne (connexion, abonnement, mon blocage). */
   useRelation(personId: string): Loadable<RelationView>
+  /** La cloche : les avis les plus récents, et le compte des non-lus. */
+  useNotifications(): Loadable<readonly NotificationView[]>
+  useUnreadCount(): Loadable<UnreadCountView>
   usePage(handle: string): Loadable<PageDetailView | null>
   useHandleSuggestions(displayName: string): readonly string[]
   useSponsorDashboard(): Loadable<SponsorDashboardView>

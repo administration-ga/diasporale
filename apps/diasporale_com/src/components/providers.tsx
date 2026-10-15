@@ -3,7 +3,7 @@
 import { RoutingProvider, type FeatureRoutes, type LinkComponent } from "@diasporale/features"
 import { DataSourceProvider } from "@diasporale/features/data"
 import { DemoStore, createDemoDataSource } from "@diasporale/features/demo"
-import { I18nProvider } from "@diasporale/features/i18n/client"
+import { I18nProvider, useDiasporaleT } from "@diasporale/features/i18n/client"
 import type { Locale } from "@diasporale/features/i18n"
 import { ThemeProvider } from "next-themes"
 import NextLink from "next/link"
@@ -50,6 +50,33 @@ function DataProviders(props: { children: ReactNode }) {
   return <DemoDataProvider>{props.children}</DemoDataProvider>
 }
 
+/**
+ * Une seule pile pour tout ce qui flotte (charte v2 §7) : cartes flottantes et
+ * confirmations, en bas à droite ; au téléphone, pleine largeur au-dessus de la
+ * barre basse. Déployée : une carte flottante n'est jamais cachée derrière une
+ * autre. Sa zone s'annonce « Avis » : « Notifications », c'est la cloche.
+ */
+function FloatingStack() {
+  const { t } = useDiasporaleT()
+  return (
+    <Toaster
+      containerAriaLabel={t("notice.region")}
+      position="bottom-right"
+      offset={{ bottom: 88, right: 24 }}
+      mobileOffset={{ bottom: 88, left: 12, right: 12 }}
+      expand
+      visibleToasts={4}
+      gap={10}
+      toastOptions={{
+        classNames: {
+          toast: "!rounded-xl !border-0 !bg-popover !text-popover-foreground !shadow-float !font-sans",
+          description: "!text-muted-foreground",
+        },
+      }}
+    />
+  )
+}
+
 export function Providers(props: { locale: Locale; children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
@@ -57,23 +84,7 @@ export function Providers(props: { locale: Locale; children: ReactNode }) {
         <DataProviders>
           <RoutingProvider routes={featureRoutes} Link={AppLink}>
             {props.children}
-            {/* Une seule pile pour tout ce qui flotte (charte v2 §7) : cartes flottantes et
-                notifications, en bas à droite ; au téléphone, pleine largeur au-dessus de la
-                barre basse. Déployée : une carte flottante n'est jamais cachée derrière une autre. */}
-            <Toaster
-              position="bottom-right"
-              offset={{ bottom: 88, right: 24 }}
-              mobileOffset={{ bottom: 88, left: 12, right: 12 }}
-              expand
-              visibleToasts={4}
-              gap={10}
-              toastOptions={{
-                classNames: {
-                  toast: "!rounded-xl !border-0 !bg-popover !text-popover-foreground !shadow-float !font-sans",
-                  description: "!text-muted-foreground",
-                },
-              }}
-            />
+            <FloatingStack />
             <DemoFloatingCard />
           </RoutingProvider>
         </DataProviders>

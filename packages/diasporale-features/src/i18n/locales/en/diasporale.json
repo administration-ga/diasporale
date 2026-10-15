@@ -284,7 +284,8 @@
     "charteLink": "See the design charter and every component"
   },
   "notice": {
-    "dismiss": "Dismiss this notice"
+    "dismiss": "Dismiss this notice",
+    "region": "Notices"
   },
   "feed": {
     "title": "Feed",
@@ -302,10 +303,11 @@
       "pour_vous": "Your connections, and the pages and groups you follow."
     },
     "prompt": "What's new in {{city}}?",
+    "promptNoCity": "What's new on your side?",
     "empty": {
       "action": "Post",
       "mon_pays": {
-        "title": "Nothing yet in {{country}}.",
+        "title": "Nothing yet in the {{country}} hub.",
         "body": "The first posts bring a hub to life. Go ahead."
       },
       "diaspora": {
@@ -502,7 +504,7 @@
     },
     "welcomeTitle": "Welcome, {{name}}.",
     "welcomeBody": "You are also a member of ANTIA, the public network, with the same profile. What you post here stays in DIASPORALE, unless you tick “Also post on ANTIA”.",
-    "emptyPosts": "No post in {{country}} yet.",
+    "emptyPosts": "No post in the {{country}} hub yet.",
     "emptyPostsBody": "Practical information, a question, a good tip: the first post launches the hub.",
     "emptyEvents": "No event planned — {{country}}.",
     "emptyEventsBody": "Events from associations and consular posts will appear here.",
@@ -908,6 +910,41 @@
       "advertiser": "Sample advertiser",
       "advertiserMessage": "A labelled slot, never more than one per screen, never in messaging.",
       "postMine": "My post, under review: the floating card is shown to its author only."
+    }
+  },
+  "bell": {
+    "open": "Notifications",
+    "openUnread_one": "Notifications, {{count}} unread",
+    "openUnread_other": "Notifications, {{count}} unread",
+    "title": "Notifications",
+    "description": "What happened for you in DIASPORALE.",
+    "close": "Close notifications",
+    "emptyTitle": "No notifications yet.",
+    "emptyBody": "Connection requests, sponsorships and replies to your posts will show up here.",
+    "markAll": "Mark all as read",
+    "markRead": "Mark as read",
+    "unread": "unread",
+    "someone": "A member",
+    "kind": {
+      "connection_request": "would like to connect with you.",
+      "connection_accepted": "accepted your connection request.",
+      "new_follower": "now follows your activity.",
+      "post_reaction": "reacted to your post.",
+      "post_comment": "commented on your post.",
+      "mention": "mentioned you in a post.",
+      "sponsorship_received": "is now sponsoring you in DIASPORALE.",
+      "sponsorship_withdrawn": "withdrew their sponsorship."
+    },
+    "system": {
+      "sponsorship_withdrawn": "Your sponsorship was withdrawn.",
+      "attestation_verified": "Your consular registration is confirmed: your account is verified.",
+      "attestation_not_confirmed": "We couldn't confirm your consular registration.",
+      "other": "New activity in DIASPORALE."
+    },
+    "outcome": {
+      "accepted": "accepted",
+      "declined": "declined",
+      "gone": "no longer current"
     }
   },
   "relation": {

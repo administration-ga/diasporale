@@ -25,6 +25,9 @@ import {
   type MembershipView,
   type OpenCountryView,
   type PostView,
+  NOTIFICATION_KINDS,
+  type NotificationKind,
+  type NotificationView,
   type ProfileView,
   type RelationView,
   type SponsorDashboardView,
@@ -238,5 +241,39 @@ export function toRelationView(connection: ConnectionWith, following: boolean): 
       return { connection: "blocked_by_me", connectionId: connection.connectionId, following: false }
     default:
       return { connection: connection.state, connectionId: connection.connectionId, following }
+  }
+}
+
+type EngineNotification = FunctionReturnType<typeof api.modules.notifications.bell.paginateNotifications>["page"][number]
+
+const SPOKEN_KINDS: ReadonlySet<string> = new Set(NOTIFICATION_KINDS)
+
+/**
+ * Un avis de la cloche du moteur. Un genre que DIASPORALE ne sait pas dire se dit
+ * « nouvelle activité » ; une demande de relation porte son état VIVANT (encore à
+ * trancher par moi, acceptée, refusée, ou disparue).
+ */
+export function toNotificationView(item: EngineNotification): NotificationView {
+  const kind = (SPOKEN_KINDS.has(item.kind) ? item.kind : "other") as NotificationKind
+  const invite = item.inviteState
+  const subject = item.subject
+  const pendingConnectionId =
+    item.kind === "connection_request" && invite?.status === "requested" && invite.iAmRecipient && subject?.kind === "connection" ? subject.id : null
+  const inviteOutcome =
+    item.kind !== "connection_request" || !invite || invite.status === "requested"
+      ? null
+      : invite.status === "accepted"
+        ? "accepted"
+        : invite.status === "declined"
+          ? "declined"
+          : "gone"
+  return {
+    id: item.notificationId,
+    kind,
+    actor: item.actor?.handle && item.actor.displayName ? { handle: item.actor.handle, displayName: item.actor.displayName } : null,
+    createdAt: item.createdAt,
+    read: item.readAt !== null,
+    pendingConnectionId,
+    inviteOutcome,
   }
 }

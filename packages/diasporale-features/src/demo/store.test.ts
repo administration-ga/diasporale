@@ -3,7 +3,7 @@ import { DAY_MS, HOUR_MS, type OnboardingConsentChoices } from "@diasporale/doma
 import { describe, expect, it } from "vitest"
 
 import type { JoinInput } from "../data/port"
-import { feedView, hubCounters, membershipView, relationView, sessionView } from "./selectors"
+import { NOTIFICATIONS_PAGE, feedView, hubCounters, membershipView, notificationsView, relationView, sessionView, unreadCountView } from "./selectors"
 import { DEMO_STORAGE_KEY, DemoStore } from "./store"
 
 /**
@@ -374,5 +374,135 @@ describe("relations (EXF-DG-11, EXF-DG-12)", () => {
     expect(state.connectionRequests).toEqual([])
     expect(state.blocks).toEqual([])
     expect(state.follows.some(([a, b]) => a === "p-steeve" || b === "p-steeve")).toBe(false)
+  })
+})
+
+describe("la cloche", () => {
+  it("une demande de relation s'annonce au destinataire, s'accepte d'ici, puis dit ce qu'elle est devenue", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    await store.connect("p-mireille")
+    // Rien pour l'auteur du geste.
+    expect(notificationsView(store.getState(), "p-steeve")).toEqual([])
+    const [request] = notificationsView(store.getState(), "p-mireille")
+    expect(request).toMatchObject({
+      kind: "connection_request",
+      actor: { handle: "steeve.ngounie", displayName: "Steeve Ngounié" },
+      read: false,
+      inviteOutcome: null,
+    })
+    expect(request?.pendingConnectionId).toBe(relationView(store.getState(), "p-mireille", "p-steeve").connectionId)
+    expect(unreadCountView(store.getState(), "p-mireille")).toEqual({ count: 1, capped: false })
+
+    await store.switchTo("p-mireille")
+    expect(await store.respondToConnection(request?.pendingConnectionId ?? "", true)).toEqual({ ok: true, value: null })
+    expect(notificationsView(store.getState(), "p-mireille")[0]).toMatchObject({ pendingConnectionId: null, inviteOutcome: "accepted" })
+    // Le demandeur apprend l'acceptation, de la main de la destinataire.
+    expect(notificationsView(store.getState(), "p-steeve")).toMatchObject([
+      { kind: "connection_accepted", actor: { handle: "mireille.ivindo" }, pendingConnectionId: null, inviteOutcome: null },
+    ])
+  })
+
+  it("une demande refusée se dit refusée, et le refus n'avise pas le demandeur", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    await store.connect("p-mireille")
+    await store.switchTo("p-mireille")
+    const [request] = notificationsView(store.getState(), "p-mireille")
+    await store.respondToConnection(request?.pendingConnectionId ?? "", false)
+    expect(notificationsView(store.getState(), "p-mireille")[0]).toMatchObject({ pendingConnectionId: null, inviteOutcome: "declined" })
+    expect(notificationsView(store.getState(), "p-steeve")).toEqual([])
+  })
+
+  it("un même avis se rafraîchit au lieu de se doubler ; un geste à travers un blocage n'avise personne", async () => {
+    const { store, advance } = demo()
+    await store.switchTo("p-mireille")
+    await store.follow("steeve.ngounie")
+    const [first] = notificationsView(store.getState(), "p-steeve")
+    await store.switchTo("p-steeve")
+    expect(await store.markNotificationRead(first?.id ?? "")).toEqual({ ok: true, value: null })
+    await store.switchTo("p-mireille")
+    await store.unfollow("p-steeve")
+    advance(HOUR_MS)
+    await store.follow("steeve.ngounie")
+    const again = notificationsView(store.getState(), "p-steeve")
+    expect(again).toHaveLength(1)
+    expect(again[0]).toMatchObject({ id: first?.id, kind: "new_follower", read: false, createdAt: T0 + HOUR_MS })
+
+    await store.switchTo("p-prisca")
+    await store.block("p-steeve")
+    await store.switchTo("p-steeve")
+    await store.connect("p-prisca")
+    expect(notificationsView(store.getState(), "p-prisca")).toEqual([])
+  })
+
+  it("marquer lu : un avis à soi, ou tous d'un geste ; l'avis d'autrui est introuvable", async () => {
+    const { store } = demo()
+    await store.switchTo("p-mireille")
+    await store.follow("steeve.ngounie")
+    await store.connect("p-steeve")
+    const mine = notificationsView(store.getState(), "p-steeve")
+    expect(mine).toHaveLength(2)
+    // Mireille ne marque pas les avis de Steeve.
+    expect(await store.markNotificationRead(mine[0]?.id ?? "")).toEqual({ ok: false, code: "not_found" })
+    await store.switchTo("p-steeve")
+    expect(await store.markNotificationRead(mine[0]?.id ?? "")).toEqual({ ok: true, value: null })
+    expect(unreadCountView(store.getState(), "p-steeve")).toEqual({ count: 1, capped: false })
+    expect(await store.markAllNotificationsRead()).toEqual({ ok: true, value: null })
+    expect(unreadCountView(store.getState(), "p-steeve")).toEqual({ count: 0, capped: false })
+    // Marquer un avis déjà lu ne change rien.
+    expect(await store.markNotificationRead(mine[0]?.id ?? "")).toEqual({ ok: true, value: null })
+  })
+
+  it("au-delà de 99 non lus, le compte se borne et le dit ; la cloche montre les plus récents d'abord", () => {
+    const { store } = demo()
+    const notifications = Array.from({ length: 120 }, (_, index) => ({
+      id: `n-x${index}`,
+      recipientId: "p-mireille",
+      kind: "new_follower" as const,
+      actorId: "p-steeve",
+      createdAt: T0 + index,
+      readAt: null,
+      connectionRequestId: null,
+      inviteDeclined: false,
+    }))
+    const state = { ...store.getState(), notifications }
+    expect(unreadCountView(state, "p-mireille")).toEqual({ count: 99, capped: true })
+    const page = notificationsView(state, "p-mireille")
+    expect(page).toHaveLength(NOTIFICATIONS_PAGE)
+    expect(page[0]?.createdAt).toBe(T0 + 119)
+  })
+
+  it("parrainage, retrait et issue d'une attestation s'annoncent à la personne concernée", async () => {
+    const { store, me } = demo()
+    await store.switchTo("p-nadia")
+    await store.revokeSponsorship("s-2")
+    expect(notificationsView(store.getState(), "p-rodrigue")).toMatchObject([{ kind: "sponsorship_withdrawn", actor: { handle: "nadia.mpassa" } }])
+
+    const sent = await store.requestCode({ kind: "email", value: "filleule@exemple.test" })
+    if (!sent.ok || !sent.value.demoCode) throw new Error("code non émis")
+    await store.verifyCode(sent.value.demoCode)
+    const newcomer = me()
+    await store.join(joinInput({ handle: "filleule.demo", displayName: "Filleule Démo" }))
+    await store.switchTo("p-mireille")
+    await store.sponsor("filleule.demo")
+    expect(notificationsView(store.getState(), newcomer)).toMatchObject([{ kind: "sponsorship_received", actor: { handle: "mireille.ivindo" } }])
+
+    await store.signInWithIdn(AWA)
+    await store.join(joinInput())
+    await store.requestAttestation()
+    // Un avis du système : personne derrière.
+    expect(notificationsView(store.getState(), me())).toMatchObject([{ kind: "attestation_verified", actor: null }])
+  })
+
+  it("l'effacement purge les avis reçus et ceux dont la personne est l'autrice", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    await store.connect("p-mireille")
+    await store.switchTo("p-mireille")
+    await store.follow("steeve.ngounie")
+    await store.switchTo("p-steeve")
+    await store.deleteMyAccount()
+    expect(store.getState().notifications).toEqual([])
   })
 })

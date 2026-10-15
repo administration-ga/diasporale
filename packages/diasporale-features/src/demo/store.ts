@@ -43,7 +43,7 @@ import type { ReactionKind } from "../data/types"
 import { handleRefusal, handleToken, normalizeHandle } from "../lib/handle"
 import { emailHash, fakeConsularAttestation } from "./attestation-provider"
 import { isConnected, sponsorFacts, statusOf } from "./selectors"
-import { DEMO_STATE_VERSION, createDemoSeed, type DemoMembership, type DemoPerson, type DemoState } from "./state"
+import { DEMO_STATE_VERSION, createDemoSeed, type DemoMembership, type DemoNotification, type DemoPerson, type DemoState } from "./state"
 
 export const DEMO_STORAGE_KEY = "diasporale:demonstration:v1"
 export const POST_MAX_LENGTH = 2000
@@ -354,6 +354,66 @@ export class DemoStore {
     return OK
   }
 
+  // ── Cloche ─────────────────────────────────────────────────────────────
+  /**
+   * Ajoute un avis à l'état `next`, comme le moteur : rien pour soi-même ni à
+   * travers un blocage ; un même avis encore présent est rafraîchi, pas doublé.
+   */
+  private notified(
+    next: DemoState,
+    input: { recipientId: string; kind: DemoNotification["kind"]; actorId: string | null; connectionRequestId?: string },
+  ): DemoState {
+    if (input.actorId === input.recipientId) return next
+    const actorId = input.actorId
+    if (actorId !== null && next.blocks.some((block) => (block.byId === actorId && block.targetId === input.recipientId) || (block.byId === input.recipientId && block.targetId === actorId))) {
+      return next
+    }
+    const now = this.clock()
+    const requestId = input.connectionRequestId ?? null
+    const existing = next.notifications.find(
+      (item) => item.recipientId === input.recipientId && item.kind === input.kind && item.actorId === actorId && item.connectionRequestId === requestId,
+    )
+    if (existing) {
+      return { ...next, notifications: next.notifications.map((item) => (item === existing ? { ...item, createdAt: now, readAt: null } : item)) }
+    }
+    const notification: DemoNotification = {
+      id: `n-${next.sequence}`,
+      recipientId: input.recipientId,
+      kind: input.kind,
+      actorId,
+      createdAt: now,
+      readAt: null,
+      connectionRequestId: requestId,
+      inviteDeclined: false,
+    }
+    return { ...next, notifications: [...next.notifications, notification], sequence: next.sequence + 1 }
+  }
+
+  async markNotificationRead(notificationId: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    // L'avis d'autrui n'existe pas pour le lecteur.
+    const target = this.state.notifications.find((item) => item.id === notificationId && item.recipientId === viewer.person.id)
+    if (!target) return fail("not_found")
+    if (target.readAt !== null) return OK
+    const now = this.clock()
+    this.commit({ ...this.state, notifications: this.state.notifications.map((item) => (item === target ? { ...item, readAt: now } : item)) })
+    return OK
+  }
+
+  async markAllNotificationsRead(): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    const now = this.clock()
+    this.commit({
+      ...this.state,
+      notifications: this.state.notifications.map((item) => (item.recipientId === viewer.person.id && item.readAt === null ? { ...item, readAt: now } : item)),
+    })
+    return OK
+  }
+
   // ── Relations (EXF-DG-11, EXF-DG-12) ─────────────────────────────────────
   /** Un autre membre ACTIF du réseau (ni soi, ni parti), désigné par son identifiant interne. */
   private memberTarget(personId: string, viewerId: string): DemoPerson | null {
@@ -392,11 +452,12 @@ export class DemoStore {
       )
     if (known) return OK
     const [id, sequence] = this.nextId("cr")
-    this.commit({
+    const next: DemoState = {
       ...this.state,
       connectionRequests: [...this.state.connectionRequests, { id, fromId: viewer.value.id, toId: target.id, createdAt: this.clock() }],
       sequence,
-    })
+    }
+    this.commit(this.notified(next, { recipientId: target.id, kind: "connection_request", actorId: viewer.value.id, connectionRequestId: id }))
     return OK
   }
 
@@ -407,11 +468,16 @@ export class DemoStore {
     // Seul le DESTINATAIRE répond ; pour tout autre, la demande n'existe pas.
     const request = this.state.connectionRequests.find((item) => item.id === connectionId && item.toId === viewer.value.id)
     if (!request) return fail("not_found")
-    this.commit({
+    const next: DemoState = {
       ...this.state,
       connectionRequests: this.state.connectionRequests.filter((item) => item.id !== request.id),
       connections: accept ? [...this.state.connections, [request.fromId, request.toId] as const] : this.state.connections,
-    })
+      // Le moteur garde la demande refusée : l'avis la dira « refusée », pas « disparue ».
+      notifications: accept
+        ? this.state.notifications
+        : this.state.notifications.map((item) => (item.connectionRequestId === request.id ? { ...item, inviteDeclined: true } : item)),
+    }
+    this.commit(accept ? this.notified(next, { recipientId: request.fromId, kind: "connection_accepted", actorId: viewer.value.id }) : next)
     return OK
   }
 
@@ -425,7 +491,8 @@ export class DemoStore {
     // Inconnu, soi-même ou bloqué : le même refus.
     if (!target || this.blockedBetween(viewer.value.id, target.id)) return fail("not_found")
     if (this.state.follows.some(([follower, followed]) => follower === viewer.value.id && followed === target.id)) return OK
-    this.commit({ ...this.state, follows: [...this.state.follows, [viewer.value.id, target.id] as const] })
+    const next: DemoState = { ...this.state, follows: [...this.state.follows, [viewer.value.id, target.id] as const] }
+    this.commit(this.notified(next, { recipientId: target.id, kind: "new_follower", actorId: viewer.value.id }))
     return OK
   }
 
@@ -492,7 +559,7 @@ export class DemoStore {
     const updated = this.withEvent(targetMembership, { kind: "sponsored" }, now)
     if (!updated) return fail("target_not_eligible")
     const [id, sequence] = this.nextId("s")
-    this.commit({
+    const next: DemoState = {
       ...this.state,
       memberships: { ...this.state.memberships, [target.id]: updated },
       sponsorships: [
@@ -500,7 +567,8 @@ export class DemoStore {
         { id, sponsorId: viewer.person.id, sponsoredId: target.id, createdAt: now, revokedAt: null },
       ],
       sequence,
-    })
+    }
+    this.commit(this.notified(next, { recipientId: target.id, kind: "sponsorship_received", actorId: viewer.person.id }))
     return OK
   }
 
@@ -517,11 +585,12 @@ export class DemoStore {
     const now = this.clock()
     const sponsored = this.state.memberships[sponsorship.sponsoredId]
     const updated = sponsored ? this.withEvent(sponsored, { kind: "sponsorship_revoked" }, now) : null
-    this.commit({
+    const next: DemoState = {
       ...this.state,
       memberships: updated ? { ...this.state.memberships, [sponsorship.sponsoredId]: updated } : this.state.memberships,
       sponsorships: this.state.sponsorships.map((item) => (item.id === sponsorshipId ? { ...item, revokedAt: now } : item)),
-    })
+    }
+    this.commit(this.notified(next, { recipientId: sponsorship.sponsoredId, kind: "sponsorship_withdrawn", actorId: viewer.person.id }))
     return OK
   }
 
@@ -562,11 +631,13 @@ export class DemoStore {
         }
       }
     }
-    this.commit({
+    const next: DemoState = {
       ...this.state,
       memberships: { ...this.state.memberships, [viewer.person.id]: membership },
       consents: [...this.state.consents, { ...consent, personId: viewer.person.id }],
-    })
+    }
+    const kind = outcome === "verified" ? "attestation_verified" : "attestation_not_confirmed"
+    this.commit(this.notified(next, { recipientId: viewer.person.id, kind, actorId: null }))
     return { ok: true, value: { outcome } }
   }
 
@@ -675,6 +746,7 @@ export class DemoStore {
       connectionRequests: this.state.connectionRequests.filter((request) => request.fromId !== personId && request.toId !== personId),
       blocks: this.state.blocks.filter((block) => block.byId !== personId && block.targetId !== personId),
       follows: this.state.follows.filter(([a, b]) => a !== personId && b !== personId),
+      notifications: this.state.notifications.filter((item) => item.recipientId !== personId && item.actorId !== personId),
       session: { personId: null },
     })
     return OK

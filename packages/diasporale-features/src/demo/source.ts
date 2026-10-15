@@ -4,7 +4,7 @@ import type { CountryCode, FeedScope } from "@diasporale/domain"
 import { useMemo, useSyncExternalStore } from "react"
 
 import type { DemoAccountView, DiasporaleDataSource } from "../data/port"
-import type { Loadable, RelationView } from "../data/types"
+import type { Loadable, NotificationView, RelationView, UnreadCountView } from "../data/types"
 import { splitDisplayName, suggestHandles } from "../lib/handle"
 import {
   consentsView,
@@ -13,10 +13,12 @@ import {
   feedView,
   openCountriesView,
   pageDetailView,
+  notificationsView,
   profileView,
   relationView,
   sessionView,
   sponsorDashboardView,
+  unreadCountView,
 } from "./selectors"
 import type { DemoStore } from "./store"
 
@@ -96,6 +98,26 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       }, [version, personId])
     },
 
+    useNotifications() {
+      const version = useVersion()
+      return useMemo<Loadable<readonly NotificationView[]>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        return viewerId ? ready(notificationsView(state, viewerId)) : { status: "error", code: "not_signed_in" }
+      }, [version])
+    },
+
+    useUnreadCount() {
+      const version = useVersion()
+      return useMemo<Loadable<UnreadCountView>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        return viewerId ? ready(unreadCountView(state, viewerId)) : { status: "error", code: "not_signed_in" }
+      }, [version])
+    },
+
     useHandleSuggestions(displayName: string) {
       const version = useVersion()
       return useMemo(() => {
@@ -146,6 +168,8 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       unfollow: (personId) => store.unfollow(personId),
       block: (personId) => store.block(personId),
       unblock: (personId) => store.unblock(personId),
+      markNotificationRead: (notificationId) => store.markNotificationRead(notificationId),
+      markAllNotificationsRead: () => store.markAllNotificationsRead(),
       sponsor: (handle) => store.sponsor(handle),
       revokeSponsorship: (id) => store.revokeSponsorship(id),
       requestAttestation: () => store.requestAttestation(),

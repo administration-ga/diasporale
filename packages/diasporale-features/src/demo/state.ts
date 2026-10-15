@@ -25,10 +25,10 @@ import {
   type Visibility,
 } from "@diasporale/domain"
 
-import type { AssociationType, CompanySector, EventCategory, ReactionKind } from "../data/types"
+import type { AssociationType, CompanySector, EventCategory, NotificationKind, ReactionKind } from "../data/types"
 
-/** Version de l'état persisté : la v2 ajoute demandes de connexion, blocages et abonnements. */
-export const DEMO_STATE_VERSION = 2
+/** Version de l'état persisté : v2 = relations (demandes, blocages, abonnements) ; v3 = cloche. */
+export const DEMO_STATE_VERSION = 3
 
 export interface DemoPerson {
   readonly id: string
@@ -134,6 +134,21 @@ export interface DemoBlock {
   readonly createdAt: number
 }
 
+/** Un avis de la cloche (genres DIASPORALE, comme le moteur les émet). */
+export interface DemoNotification {
+  readonly id: string
+  readonly recipientId: string
+  readonly kind: Exclude<NotificationKind, "other">
+  /** Qui a agi ; `null` pour un avis du système (issue d'une attestation). */
+  readonly actorId: string | null
+  readonly createdAt: number
+  readonly readAt: number | null
+  /** La demande de relation que l'avis annonce, pour y répondre d'ici. */
+  readonly connectionRequestId: string | null
+  /** La demande annoncée, refusée par la personne avisée : le moteur garde cet état, l'avis le dit. */
+  readonly inviteDeclined: boolean
+}
+
 export interface DemoState {
   readonly version: number
   readonly createdAt: number
@@ -149,6 +164,7 @@ export interface DemoState {
   readonly blocks: readonly DemoBlock[]
   /** Abonnements : [qui suit, qui est suivi]. */
   readonly follows: readonly (readonly [string, string])[]
+  readonly notifications: readonly DemoNotification[]
   readonly openCountries: readonly CountryCode[]
   readonly countryModerators: Readonly<Partial<Record<CountryCode, number>>>
   readonly networkModerators: number
@@ -512,6 +528,7 @@ export function createDemoSeed(now: number): DemoState {
     connectionRequests: [],
     blocks: [],
     follows: [["p-steeve", "p-mireille"]],
+    notifications: [],
     openCountries: ["FR"],
     countryModerators: { FR: 2 },
     networkModerators: 2,

@@ -1,6 +1,6 @@
 "use client"
 
-import { Avatar, Button, CountryTag, PostComposerSheet, TrustBadges, cn } from "@diasporale/features"
+import { Avatar, Button, CountryTag, NotificationBell, PostComposerSheet, TrustBadges, cn } from "@diasporale/features"
 import { useOpenCountries, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import {
@@ -79,6 +79,7 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
               <Wordmark />
             </NextLink>
             <AppDemoChip />
+            <NotificationBell className="ml-auto" />
           </div>
           <nav aria-label={t("nav.label")} className="flex flex-col gap-1">
             {items.map((item) => {
@@ -121,13 +122,16 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
               </NextLink>
               <AppDemoChip />
             </div>
-            <NextLink
-              href={routes.hub(props.membership.facet.countryOfResidence)}
-              aria-label={t("nav.hub")}
-              className="rounded-md focus-visible:shadow-focus"
-            >
-              <CountryTag country={props.membership.facet.countryOfResidence} city={props.membership.facet.city} />
-            </NextLink>
+            <div className="flex shrink-0 items-center gap-1">
+              <NotificationBell />
+              <NextLink
+                href={routes.hub(props.membership.facet.countryOfResidence)}
+                aria-label={t("nav.hub")}
+                className="rounded-md focus-visible:shadow-focus"
+              >
+                <CountryTag country={props.membership.facet.countryOfResidence} city={props.membership.facet.city} />
+              </NextLink>
+            </div>
           </header>
           <main
             id="contenu"

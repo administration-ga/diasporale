@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { authActionErrorCode, engineActionErrorCode } from "./engine-errors"
 import { createEngineActions } from "./engine-source"
-import { toFacetArgs, toFeed, toMembershipView, toOpenCountries, toProfileView, toRelationView } from "./engine-views"
+import { toFacetArgs, toFeed, toMembershipView, toNotificationView, toOpenCountries, toProfileView, toRelationView } from "./engine-views"
 
 /**
  * La source « moteur » sans moteur : traduction des refus, projections pures, et
@@ -373,5 +373,61 @@ describe("relations par le graphe du moteur (PD4)", () => {
       },
     })
     expect(await createEngineActions({ convex, authClient: fakeAuth().client }).connect("p2")).toEqual({ ok: false, code: "status_insufficient" })
+  })
+})
+
+describe("la cloche du moteur (PD4)", () => {
+  const notice = (overrides: Record<string, unknown> = {}) =>
+    ({
+      notificationId: "nt1",
+      kind: "connection_request",
+      subject: { kind: "connection", id: "c1" },
+      createdAt: 5,
+      readAt: null,
+      resolution: null,
+      inviteState: { status: "requested", iAmRecipient: true },
+      fileScanStatus: null,
+      actor: { personId: "p2", displayName: "Ada", handle: "ada", avatarUrl: null, badges: [] },
+      ...overrides,
+    }) as never
+
+  it("une demande encore à trancher par moi se tranche d'ici ; une demande tranchée dit ce qu'elle est devenue", () => {
+    expect(toNotificationView(notice())).toEqual({
+      id: "nt1",
+      kind: "connection_request",
+      actor: { handle: "ada", displayName: "Ada" },
+      createdAt: 5,
+      read: false,
+      pendingConnectionId: "c1",
+      inviteOutcome: null,
+    })
+    expect(toNotificationView(notice({ inviteState: { status: "accepted", iAmRecipient: true } }))).toMatchObject({ pendingConnectionId: null, inviteOutcome: "accepted" })
+    expect(toNotificationView(notice({ inviteState: { status: "declined", iAmRecipient: true } }))).toMatchObject({ inviteOutcome: "declined" })
+    // Ligne disparue ou blocage : la demande n'est plus d'actualité.
+    expect(toNotificationView(notice({ inviteState: { status: "missing", iAmRecipient: false } }))).toMatchObject({ pendingConnectionId: null, inviteOutcome: "gone" })
+    expect(toNotificationView(notice({ inviteState: { status: "blocked", iAmRecipient: true } }))).toMatchObject({ inviteOutcome: "gone" })
+    // Sans état (je ne suis pas partie à la demande), rien n'est inventé.
+    expect(toNotificationView(notice({ inviteState: null }))).toMatchObject({ pendingConnectionId: null, inviteOutcome: null })
+  })
+
+  it("un genre inconnu se dit « nouvelle activité » ; un profil non publié ne nomme personne ; lu, c'est lu", () => {
+    const view = toNotificationView(notice({ kind: "file_withheld", subject: null, inviteState: null, readAt: 9, actor: { personId: "p3", displayName: null, handle: null, avatarUrl: null, badges: [] } }))
+    expect(view).toEqual({ id: "nt1", kind: "other", actor: null, createdAt: 5, read: true, pendingConnectionId: null, inviteOutcome: null })
+    expect(toNotificationView(notice({ kind: "sponsorship_withdrawn", inviteState: null, actor: null }))).toMatchObject({ kind: "sponsorship_withdrawn", actor: null })
+  })
+
+  it("marquer lu : un avis ou tous, dans le réseau diasporale", async () => {
+    const { convex, calls } = fakeConvex({
+      ...NETWORK,
+      "modules/notifications/bell:markRead": () => null,
+      "modules/notifications/bell:markAllRead": () => ({ marked: 2 }),
+    })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.markNotificationRead("nt1")).toEqual({ ok: true, value: null })
+    expect(await actions.markAllNotificationsRead()).toEqual({ ok: true, value: null })
+    expect(calls.slice(1)).toEqual([
+      { name: "modules/notifications/bell:markRead", args: { networkId: "n-diasporale", notificationId: "nt1" } },
+      { name: "modules/notifications/bell:markAllRead", args: { networkId: "n-diasporale" } },
+    ])
   })
 })

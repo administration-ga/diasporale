@@ -6,13 +6,14 @@ import {
   FIELD_VISIBILITY_LEVELS,
   MEMBERSHIP_STATUSES,
 } from "@diasporale/domain"
-import { COMMUNITY_TABS } from "@diasporale/features"
+import { BELL_ACTOR_LED_KINDS, BELL_SYSTEM_KINDS, COMMUNITY_TABS } from "@diasporale/features"
 import {
   ASSOCIATION_TYPES,
   CLASSIFIED_CATEGORIES,
   COMPANY_SECTORS,
   ERROR_CODES,
   EVENT_CATEGORIES,
+  INVITE_OUTCOMES,
   JOB_CONTRACTS,
   MENTOR_DOMAINS,
   REACTION_KINDS,
@@ -82,6 +83,9 @@ const FAMILIES: string[] = [
   ...each(CLASSIFIED_CATEGORIES, (category) => [`classified.category.${category}`]),
   ...each(MENTOR_DOMAINS, (domain) => [`mentor.domain.${domain}`]),
   ...each(COMMUNITY_TABS, (tab) => [`hub.tab.${tab}`]),
+  ...each(BELL_ACTOR_LED_KINDS, (kind) => [`bell.kind.${kind}`]),
+  ...each(BELL_SYSTEM_KINDS, (kind) => [`bell.system.${kind}`]),
+  ...each(INVITE_OUTCOMES, (outcome) => [`bell.outcome.${outcome}`]),
   ...each(FACET_FIELDS, (field) => [`facet.field.${field}`]),
   ...each(FIELD_VISIBILITY_LEVELS, (level) => [`facet.visibility.${level}`]),
   ...each(DIRECTORY_VISIBILITY_LEVELS, (level) => [`settings.directoryLevel.${level}`]),

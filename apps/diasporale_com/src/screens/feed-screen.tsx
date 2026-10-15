@@ -67,7 +67,7 @@ function Feed(props: { membership: MembershipView }) {
             onClick={composer.open}
             className="flex min-h-11 flex-1 items-center rounded-[var(--esp-r-chrome)] bg-muted px-4 text-left text-[15px] text-muted-foreground transition-colors hover:bg-[var(--ink-150)] focus-visible:shadow-focus"
           >
-            {t("feed.prompt", { city: props.membership.facet.city ?? countryName(country, locale) })}
+            {props.membership.facet.city ? t("feed.prompt", { city: props.membership.facet.city }) : t("feed.promptNoCity")}
           </button>
         </Card>
       ) : null}

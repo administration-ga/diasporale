@@ -35,11 +35,13 @@ import type {
   Loadable,
   OpenCountryView,
   PostView,
+  NotificationView,
   ProfileView,
   ReactionKind,
   RelationView,
   SessionView,
   SponsorDashboardView,
+  UnreadCountView,
 } from "@diasporale/features/data"
 import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
@@ -56,6 +58,7 @@ import {
   toFacetArgs,
   toFeed,
   toMembershipView,
+  toNotificationView,
   toOpenCountries,
   toProfileView,
   toRelationView,
@@ -64,6 +67,8 @@ import {
 
 /** Une page du fil, la plus grande que le moteur serve. */
 const FEED_PAGE = 30
+/** La première page de la cloche. */
+const BELL_PAGE = 30
 
 const LOADING = { status: "loading" } as const
 
@@ -215,6 +220,22 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       for (const loaded of [networkId, connection, following]) if (loaded.state === "error") return failed(loaded.code)
       if (connection.state !== "ready" || following.state !== "ready") return LOADING
       return ready(toRelationView(connection.value, following.value))
+    },
+
+    useNotifications(): Loadable<readonly NotificationView[]> {
+      const { networkId } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const page = useLoaded(api.modules.notifications.bell.paginateNotifications, id ? { networkId: id, paginationOpts: { numItems: BELL_PAGE, cursor: null } } : "skip")
+      for (const loaded of [networkId, page]) if (loaded.state === "error") return failed(loaded.code)
+      return page.state === "ready" ? ready(page.value.page.map(toNotificationView)) : LOADING
+    },
+
+    useUnreadCount(): Loadable<UnreadCountView> {
+      const { networkId } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const count = useLoaded(api.modules.notifications.bell.unreadCount, id ? { networkId: id } : "skip")
+      for (const loaded of [networkId, count]) if (loaded.state === "error") return failed(loaded.code)
+      return count.state === "ready" ? ready(count.value) : LOADING
     },
 
     // Les pages du réseau (officielles, associations, entreprises) : PD5. Rien n'est inventé d'ici là.
@@ -400,6 +421,21 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     unblock: (personId) =>
       attempt(async () => {
         await deps.convex.mutation(api.modules.graph.connections.unblockPerson, { networkId: await diasporale(), targetPersonId: personId as Id<"persons"> })
+        return null
+      }),
+
+    markNotificationRead: (notificationId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.notifications.bell.markRead, {
+          networkId: await diasporale(),
+          notificationId: notificationId as Id<"notifications">,
+        })
+        return null
+      }),
+
+    markAllNotificationsRead: () =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.notifications.bell.markAllRead, { networkId: await diasporale() })
         return null
       }),
 

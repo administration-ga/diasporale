@@ -187,6 +187,47 @@ export interface RelationView {
   readonly following: boolean
 }
 
+/**
+ * Les avis de la cloche que DIASPORALE sait dire. Tout autre genre du moteur se
+ * dit « nouvelle activité » (`other`) : jamais un libellé inventé.
+ */
+export const NOTIFICATION_KINDS = [
+  "connection_request",
+  "connection_accepted",
+  "new_follower",
+  "post_reaction",
+  "post_comment",
+  "mention",
+  "sponsorship_received",
+  "sponsorship_withdrawn",
+  "attestation_verified",
+  "attestation_not_confirmed",
+  "other",
+] as const
+export type NotificationKind = (typeof NOTIFICATION_KINDS)[number]
+
+/** Ce qu'est DEVENUE une demande de relation reçue (relu à l'instant). */
+export const INVITE_OUTCOMES = ["accepted", "declined", "gone"] as const
+export type InviteOutcome = (typeof INVITE_OUTCOMES)[number]
+
+export interface NotificationView {
+  readonly id: string
+  readonly kind: NotificationKind
+  /** Qui a agi, par son profil PUBLIÉ ; `null` pour un avis du système ou un profil retiré. */
+  readonly actor: { readonly handle: string; readonly displayName: string } | null
+  readonly createdAt: number
+  readonly read: boolean
+  /** Une demande de relation encore à trancher PAR MOI : de quoi l'accepter ou la refuser d'ici. */
+  readonly pendingConnectionId: string | null
+  readonly inviteOutcome: InviteOutcome | null
+}
+
+/** Les non-lues, bornées : au-delà de 99, la cloche dit « 99+ ». */
+export interface UnreadCountView {
+  readonly count: number
+  readonly capped: boolean
+}
+
 export interface SponsorshipView {
   readonly id: string
   readonly sponsored: { readonly handle: string; readonly displayName: string }

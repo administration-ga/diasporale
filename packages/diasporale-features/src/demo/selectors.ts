@@ -40,8 +40,10 @@ import type {
   PostView,
   ProfileView,
   SessionView,
+  NotificationView,
   RelationView,
   SponsorDashboardView,
+  UnreadCountView,
 } from "../data/types"
 import { maskDestination } from "../data/mask"
 import type { DemoAccountView } from "../data/port"
@@ -126,6 +128,37 @@ export function relationView(state: DemoState, viewerId: string, otherId: string
   const theirs = state.connectionRequests.find((request) => request.fromId === otherId && request.toId === viewerId)
   if (theirs) return { connection: "requested_by_them", connectionId: theirs.id, following }
   return { connection: "none", connectionId: null, following }
+}
+
+/** La cloche : mes avis, du plus récent, et l'état vivant d'une demande de relation reçue. */
+export function notificationsView(state: DemoState, viewerId: string): NotificationView[] {
+  return state.notifications
+    .filter((item) => item.recipientId === viewerId)
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .slice(0, NOTIFICATIONS_PAGE)
+    .map((item) => {
+      const actor = item.actorId ? state.persons[item.actorId]?.profile : undefined
+      const request = item.connectionRequestId ? state.connectionRequests.find((candidate) => candidate.id === item.connectionRequestId) : undefined
+      const isRequest = item.kind === "connection_request"
+      return {
+        id: item.id,
+        kind: item.kind,
+        actor: actor ? { handle: actor.handle, displayName: actor.displayName } : null,
+        createdAt: item.createdAt,
+        read: item.readAt !== null,
+        pendingConnectionId: isRequest && request && request.toId === viewerId ? request.id : null,
+        // Une demande tranchée : refusée par moi, acceptée (le lien existe), sinon disparue (retirée, défaite).
+        inviteOutcome: !isRequest || request ? null : item.inviteDeclined ? "declined" : item.actorId && isConnected(state, viewerId, item.actorId) ? "accepted" : "gone",
+      }
+    })
+}
+
+/** Les avis de la première page de la cloche. */
+export const NOTIFICATIONS_PAGE = 30
+
+export function unreadCountView(state: DemoState, viewerId: string): UnreadCountView {
+  const count = state.notifications.filter((item) => item.recipientId === viewerId && item.readAt === null).length
+  return { count: Math.min(count, 99), capped: count > 99 }
 }
 
 export function isConnected(state: DemoState, a: string, b: string): boolean {
