@@ -107,6 +107,7 @@ const CONTRAST_ROWS = [
   { label: "charte.contrast.row.mutedBackground", fg: "--muted-foreground", bg: "--background", kind: "text", sample: "bg-background text-muted-foreground" },
   { label: "charte.contrast.row.faintCard", fg: "--ink-500", bg: "--card", kind: "text", sample: "bg-card text-[var(--ink-500)]" },
   { label: "charte.contrast.row.linkCard", fg: "--primary", bg: "--card", kind: "text", sample: "bg-card text-primary" },
+  { label: "charte.contrast.row.linkBackground", fg: "--primary", bg: "--background", kind: "text", sample: "bg-background text-primary" },
   { label: "charte.contrast.row.primaryButton", fg: "--primary-foreground", bg: "--primary", kind: "text", sample: "bg-primary text-primary-foreground" },
   { label: "charte.contrast.row.fieldEdge", fg: "--input", bg: "--card", kind: "component", sample: "bg-card" },
 ] as const

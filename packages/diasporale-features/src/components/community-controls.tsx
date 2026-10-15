@@ -47,7 +47,9 @@ export function ContactButton(props: { onContact?: () => void; recipientName: st
 
 /**
  * Barre de filtres (C15) : puces bascules défilantes (état porté par
- * `aria-pressed`, jamais par la seule couleur) + filtres avancés.
+ * `aria-pressed`, jamais par la seule couleur) + filtres avancés. La puce choisie
+ * passe à l'encre inversée, sans contour (charte v3.2) : la clarté s'inverse, ce
+ * qui se lit aussi sans voir les couleurs.
  */
 export function FilterBar<T extends string>(props: {
   label: string
@@ -76,7 +78,7 @@ export function FilterBar<T extends string>(props: {
               className={cn(
                 "inline-flex min-h-10 shrink-0 items-center rounded-[var(--esp-r-chrome)] px-3.5 text-sm transition-colors focus-visible:shadow-focus",
                 active
-                  ? "bg-[var(--primary-50)] font-semibold text-[var(--primary-700)] ring-1 ring-primary"
+                  ? "bg-chosen font-semibold text-chosen-foreground"
                   : "bg-[var(--esp-neutral-chip)] font-medium text-muted-foreground hover:text-foreground",
               )}
             >

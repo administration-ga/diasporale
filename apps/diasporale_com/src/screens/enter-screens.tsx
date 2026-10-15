@@ -322,7 +322,7 @@ export function CodeScreen() {
                 }}
                 className={cn(
                   "inline-flex min-h-10 items-center gap-1.5 rounded-[var(--esp-r-chrome)] px-4 text-sm font-medium focus-visible:shadow-focus",
-                  kind === option ? "bg-card text-foreground shadow-card" : "text-muted-foreground",
+                  kind === option ? "bg-thumb text-foreground shadow-card" : "text-muted-foreground",
                 )}
               >
                 {option === "email" ? <MailIcon className="size-4" aria-hidden /> : <PhoneIcon className="size-4" aria-hidden />}

@@ -1,8 +1,8 @@
 ---
 title: "DIASPORALE.COM — Charte graphique « Sable de la diaspora »"
-version: "3.1"
+version: "3.2"
 date: "2026-10-15"
-statut: "Charte de travail v3 — arbitrage A7 (famille Consulaire / Sable) ; refonte demandée par le propriétaire le 15/10/2026 : épurée, contraste renforcé, couches du sombre renforcées (le fond reste le plus sombre), rayons resserrés, sans drapeau, avis en cartes flottantes ; v3 : palette confort (une teinte par thème, chroma basse, texte sans éblouissement, focus plein)"
+statut: "Charte de travail v3 — arbitrage A7 (famille Consulaire / Sable) ; refonte demandée par le propriétaire le 15/10/2026 : épurée, contraste renforcé, couches du sombre renforcées (le fond reste le plus sombre), rayons resserrés, sans drapeau, avis en cartes flottantes ; v3 : palette confort (une teinte par thème, chroma basse, texte sans éblouissement, focus plein) ; v3.1 : avatars, teintes de statut, aplats ; v3.2 : bleu Gabon légèrement foncé (`#0167A8`, décision du propriétaire), sable posé, sélection sans contour"
 projet: "DIASPORALE"
 jetons: "ANTIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diasporale-features/src/styles/extras.css (rôles propres) — [data-charte=\"diasporale\"]"
 ---
@@ -35,6 +35,15 @@ jetons: "ANTIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diaspo
 > ni de brun olive en sombre. Texte principal ramené dans la zone 12–16:1 (15,68:1 sur le papier,
 > 14,99:1 sur le fond sombre, au lieu de 18,59 et 17,19), papier `#FDFDFB` au lieu du blanc pur,
 > bleu et tons du sombre adoucis, anneau de focus plein (5:1 au lieu d'un halo à 1,67:1).
+>
+> **Version 3.2 (même jour, décision du propriétaire).** Le bleu Gabon est légèrement foncé à
+> teinte égale (`#0072B9` → `#0167A8`) : le lien tient 5,21:1 sur le sable au lieu de 4,57. Le
+> sable se pose d'un cran (`#F1EFEB`) pour que le papier s'en détache à 1,13:1, comme les cartes des
+> grands réseaux. Les textes secondaires et discrets sont plus fermes dans les deux thèmes, et
+> l'échelle sombre est requantifiée à teinte constante. **Une sélection ne porte plus jamais de
+> contour** : la pilule choisie passe à l'encre inversée, le curseur d'un sélecteur est la
+> surface la plus claire de sa piste, l'option choisie prend une teinte qui se lève au-dessus de la
+> carte en sombre au lieu d'un bleu nuit qui creusait (§4).
 
 ## 1. Le sujet, et la seule tâche de l'identité
 
@@ -56,34 +65,38 @@ Six couleurs nommées portent toute l'interface. Le reste dérive de rampes rég
 
 | Nom | Hex | Rôle |
 |---|---|---|
-| **Sable** | `#F4F2EE` | fond de page : le sable de la famille, un ton plus posé en v3 (moins d'éblouissement) |
+| **Sable** | `#F1EFEB` | fond de page : le sable de la famille, posé en v3 puis d'un cran en v3.2 (le papier s'en détache à 1,13:1) |
 | **Papier** | `#FDFDFB` | cartes posées sur le sable (adouci en v3 : jamais de blanc pur) |
 | **Encre** | `#25211E` | texte (15,68:1 sur le papier : fort sans dureté) ; fond du tampon « Officiel » |
-| **Bleu Gabon** | `#0072B9` | action, lien, sélection, focus : palier 600 de la rampe H 246,6 |
-| **Grès** | `#5E5A55` | texte secondaire, icônes au repos (6,12:1 sur le sable) |
-| **Nuit** | `#151311` | fond du thème sombre, la couche la plus basse ; la carte `#24211F` se pose dessus, plus claire |
+| **Bleu Gabon** | `#0167A8` | action, lien, focus : barreau 500 du contrat, teinte H 246,6 ; légèrement foncé en v3.2 (`#0072B9` avant), 5,21:1 sur le sable |
+| **Grès** | `#595550` | texte secondaire, icônes au repos (6,44:1 sur le sable, 7,26:1 sur le papier) |
+| **Nuit** | `#151311` | fond du thème sombre, la couche la plus basse ; la carte `#24221F` se pose dessus, plus claire |
 
-**Rampe Bleu Gabon** (identique à Consulaire et Sable, `#0072B9` épinglé au palier 600) :
-`50 #EEF7FF · 100 #D7ECFF · 200 #B4DBFF · 300 #7EC2FF · 400 #449FE9 · 500 #2786CF ·
-600 #0072B9 · 700 #005D98 · 800 #004C7D · 900 #003458 · 950 #001D35`.
+**Rampe Bleu Gabon** (barreaux du contrat du moteur, teinte H 246,6) : `50 #EEF7FF · 100 #D7ECFF ·
+200 #B4DBFF · 300 #7EC2FF · 400 #5BA5E5 (bleu du sombre) · 500 #0167A8 (bleu d'action) ·
+600 #005791 (survol) · 700 #004C7D · 800 #003458 · 900 #17293F · 950 #001D35`. Jusqu'à la v3.1,
+le bleu d'action était `#0072B9`, celui de la famille Consulaire ; la v3.2 le fonce de 3,7 points
+de clarté (OKLCH), sans changer sa teinte.
 
-**Neutres chauds (v3, une seule teinte OKLCH h 85, chroma ≤ 0,011)** : `0 #FDFDFB · 50 #F9F8F5 ·
-100 #F4F2EE · 150 #EEECE7 (creux) · 200 #E9E7E1 (puce) · filet #E0DED8 · 300 #CDCAC4`.
-**Grès** : `#8B8882` (contour de champ, 3,47:1 sur le papier) · `#6F6B65` (texte discret,
-4,73:1 sur le sable) · `#5E5A55` (texte secondaire, 6,12:1) · `#3F3B37` · `#312D29`.
+**Neutres chauds (v3.2, une seule teinte OKLCH h 85, chroma ≤ 0,011)** : `0 #FDFDFB · 50 #F9F8F5 ·
+100 #F1EFEB · 150 #ECEAE5 (creux) · 200 #E7E4DE (puce) · filet #DDDAD4 · 300 #CDCAC4`.
+**Grès** : `#8B8882` (contour de champ, 3,47:1 sur le papier, 3,08:1 sur le sable) · `#6B6761`
+(texte discret, 4,89:1 sur le sable, 4,67:1 sur le creux) · `#595550` (texte secondaire, 6,44:1) ·
+`#3F3B37` · `#312D29`.
 En v2, le creux, la puce et le filet étaient trois fois plus saturés que le fond (beige) ;
 la v3 les aligne sur la même teinte.
 
 **Élévation par la clarté.** Dans les deux thèmes, le fond est la couche la plus basse et
 chaque surface qui monte s'éclaircit : papier sur sable en clair, carte relevée sur la nuit en
-sombre. Sans filet, chaque marche se lit par la clarté. Échelle sombre (v3, une seule teinte
-OKLCH h 75, plus de brun olive), du plus sombre au plus clair : fond `#151311` < carte `#24211F`
-(1,16:1 sur le fond) < aplats `#2B2825` (survol, petites étiquettes, squelettes : en v3.1 ils
-éclaircissent au lieu de creuser) < puce, piste des pilules et carte flottante `#2E2C28` (1,15:1
-sur la carte) < survol fort `#393632` ; texte sable adouci
-`#E9E7E1` (14,99:1 sur le fond, 12,94:1 sur la carte : pas de halo), grès clair `#B3AFA7`
-(7,32:1 sur la carte), discret `#96918A` (5,12:1). Le bleu du sombre est adouci (`#5BA5E5`),
-les tons aussi (vert `#6EBE85`, ambre `#D7AD63`, rose `#E18C85`).
+sombre. Sans filet, chaque marche se lit par la clarté. Échelle sombre (v3.2, une seule teinte
+OKLCH h 75, requantifiée : la carte virait au rouge), du plus sombre au plus clair : fond
+`#151311` < carte `#24221F` (1,17:1 sur le fond) < aplats `#2B2926` (survol, petites étiquettes,
+squelettes : ils éclaircissent au lieu de creuser) < puce, piste des pilules et carte flottante
+`#302E2A` (1,17:1 sur la carte) < survol fort et curseur des sélecteurs `#3B3834` ; teinte de
+sélection `#243849`, une ardoise levée (1,31:1 sur la carte). Texte sable adouci `#E9E7E1`
+(14,99:1 sur le fond, 12,83:1 sur la carte : pas de halo), grès clair `#B8B4AC` (7,68:1 sur la
+carte), discret `#9C9790` (5,47:1 sur la carte, 4,67:1 sur ce qui flotte). Le bleu du sombre est
+adouci (`#5BA5E5`), les tons aussi (vert `#6EBE85`, ambre `#D7AD63`, rose `#E18C85`).
 
 **Statuts.** Le cahier prévoit quatre accents réservés aux statuts. Chaque statut a une
 paire texte / teinte mesurée. En v3.1, les quatre teintes partagent la même clarté et la même
@@ -95,7 +108,7 @@ toujours au-dessus de la carte) : l'ambre ne crie plus, la pastille rose ne se f
 | succès / vérifié | `#0F5F2F` | `#157A3D` | `#E3F7E7` (sombre `#1A3321`) | vérifié, publié, inscrit |
 | alerte / en attente | `#8A5E00` | `#A16E00` | `#FBF0DB` (sombre `#382A10`) | en relecture, en attente de parrainage |
 | danger / refus | `#B3261E` | `#B3261E` | `#FFEAE7` (sombre `#402321`) | refusé, signalé, erreur |
-| information | `#004C7D` | `#0072B9` | `#E1F4FF` (sombre `#182F42`) | consignes, aides |
+| information | `#004C7D` | `#0167A8` | `#E1F4FF` (sombre `#182F42`) | consignes, aides ; pastille des cartes flottantes « info » (v3.2) |
 
 **Aucune référence au drapeau (v2).** Le filet tricolore de la vitrine et les trois couleurs
 du drapeau sont retirés de la charte, des jetons et des écrans (décision du propriétaire du
@@ -137,6 +150,14 @@ noms du contrat (`--font-sans`, `--font-display`, `--font-mono`) qui y renvoient
   d'ombre teinté d'encre (`0 1px 2px` à 5 %). Ce qui passe DEVANT la page (carte flottante,
   barre basse) prend un souffle de plus (`0 4px 14px -4px` à 8 %). Les seuls traits restants
   sont fonctionnels : contour de champ (3:1, WCAG 1.4.11) et filets de séparation internes.
+- **Sélection : jamais par un contour (v3.2)**. La pilule choisie d'un filtre passe à l'encre
+  inversée : encre sur sable en clair, sable sur nuit en sombre (15:1). Le curseur d'un sélecteur
+  (onglets chemise, thème, langue, courriel ou téléphone) est la surface la plus claire de sa
+  piste : papier en clair, survol levé en sombre. Une option en carte, un pays ou une ligne non lue
+  choisis prennent la teinte de sélection `--primary-50` : bleu très pâle en clair, ardoise
+  `#243849` en sombre, plus claire que la carte et que ce qui flotte (le bleu 950 creusait un trou
+  cerclé de bleu). L'état se lit toujours aussi sans la couleur : inversion de clarté, pastille
+  radio remplie, coche.
 - **Thème sombre** : le fond est le plus sombre ; la carte, puis ce qui flotte, s'éclaircissent
   (voir §2).
 
@@ -216,7 +237,8 @@ Le squelette se duplique avec le code (cahier §15). Seuls les jetons changent.
   colonnes dès 1 008 px de conteneur (`@container`).
 - **Onglets chemise** : les volets et les portées du fil (« Mon pays », « Toute la
   diaspora », « Récents », « Pour vous ») sont des onglets à languette sur une piste en
-  pilule. L'onglet actif est en papier, les autres en sable.
+  pilule. L'onglet actif est la surface la plus claire de la piste : papier en clair, survol
+  levé en sombre (v3.2).
 - **Composeur en feuille** : la création s'ouvre en feuille (bas d'écran au téléphone,
   centrée au bureau). La portée (étiquette pays ou diaspora) et la case « Publier aussi
   sur ANTIA » y sont visibles avant l'envoi.
@@ -242,36 +264,41 @@ Pas d'animation sur une action au clavier. `prefers-reduced-motion` coupe tout.
 
 ## 10. Accessibilité — paires mesurées (WCAG 2.1)
 
-Valeurs de la v3 (15/10/2026). Elles sont aussi **mesurées en direct** sur `/charte`, dans le
+Valeurs de la v3.2 (15/10/2026). Elles sont aussi **mesurées en direct** sur `/charte`, dans le
 thème affiché. Zone de confort (v3, tenue par le cliquet) : le texte principal reste entre 12 et
 16:1 — fort, sans le noir sur blanc pur ni le halo du blanc sur noir.
 
 | Paire | Ratio | | Paire (sombre) | Ratio |
 |---|---|---|---|---|
-| Encre `#25211E` / Sable `#F4F2EE` | 14,28 | | texte `#E9E7E1` / fond `#151311` | 14,99 |
-| Encre / Papier `#FDFDFB` | 15,68 | | texte / carte `#24211F` | 12,94 |
-| Grès `#5E5A55` / Sable | 6,12 | | grès clair `#B3AFA7` / carte | 7,32 |
-| Grès / Papier | 6,72 | | grès clair / fond | 8,48 |
-| Bleu Gabon / Papier (lien) | 5,02 | | bleu `#5BA5E5` / carte (lien) | 6,06 |
-| Bleu Gabon / Sable (lien) | 4,57 | | encre `#151311` / bleu `#5BA5E5` (bouton) | 7,02 |
-| papier / Bleu Gabon (bouton) | 5,02 | | vert `#6EBE85` / carte | 7,14 |
-| vert `#0F5F2F` / teinte `#E3F7E7` | 6,94 | | ambre `#D7AD63` / carte | 7,66 |
-| ambre `#8A5E00` / teinte `#FBF0DB` | 5,05 | | rose `#E18C85` / carte | 6,32 |
-| rose `#B3261E` / teinte `#FFEAE7` | 5,66 | | contour de champ `#78746E` / carte | 3,45 |
-| contour de champ `#8B8882` / Papier | 3,47 | | texte discret `#96918A` / carte | 5,12 |
-| texte discret `#6F6B65` / Sable | 4,73 | | grès clair / carte flottante `#2E2C28` | 6,37 |
-| anneau de focus (bleu plein) / Papier | 5,02 | | anneau de focus / carte | 6,06 |
+| Encre `#25211E` / Sable `#F1EFEB` | 13,91 | | texte `#E9E7E1` / fond `#151311` | 14,99 |
+| Encre / Papier `#FDFDFB` | 15,68 | | texte / carte `#24221F` | 12,83 |
+| Grès `#595550` / Sable | 6,44 | | grès clair `#B8B4AC` / carte | 7,68 |
+| Grès / Papier | 7,26 | | grès clair / fond | 8,97 |
+| Bleu Gabon `#0167A8` / Papier (lien) | 5,88 | | bleu `#5BA5E5` / carte (lien) | 6,01 |
+| Bleu Gabon / Sable (lien) | 5,21 | | encre `#151311` / bleu `#5BA5E5` (bouton) | 7,02 |
+| Bleu Gabon / creux `#ECEAE5` (lien sur un aplat) | 4,98 | | texte / teinte de sélection `#243849` | 9,78 |
+| papier / Bleu Gabon (bouton) | 5,88 | | vert `#6EBE85` / carte | 7,08 |
+| vert `#0F5F2F` / teinte `#E3F7E7` | 6,94 | | ambre `#D7AD63` / carte | 7,59 |
+| ambre `#8A5E00` / teinte `#FBF0DB` | 5,05 | | rose `#E18C85` / carte | 6,26 |
+| rose `#B3261E` / teinte `#FFEAE7` | 5,66 | | contour de champ `#78746E` / carte | 3,42 |
+| contour de champ `#8B8882` / Papier | 3,47 | | texte discret `#9C9790` / carte | 5,47 |
+| texte discret `#6B6761` / Sable | 4,89 | | texte discret / carte flottante `#302E2A` | 4,67 |
+| texte discret / creux | 4,67 | | grès clair / carte flottante | 6,56 |
+| pilule choisie : papier `#F9F8F5` / encre | 15,04 | | pilule choisie : nuit / sable `#E9E7E1` | 14,99 |
+| anneau de focus (bleu plein) / Papier | 5,88 | | anneau de focus / carte | 6,01 |
 
 Règles non chromatiques :
-- focus toujours visible (v3) : liseré de fond de 2 px puis anneau bleu plein de 2 px (`--shadow-focus`), 5,02:1 sur le papier, 6,06:1 sur la carte sombre (le halo à 35 % de la v2 ne tenait que 1,67:1) ;
+- focus toujours visible (v3) : liseré de fond de 2 px puis anneau bleu plein de 2 px (`--shadow-focus`), 5,88:1 sur le papier, 6,01:1 sur la carte sombre (le halo à 35 % de la v2 ne tenait que 1,67:1) ;
 - cibles de 44 px au minimum ;
 - une information n'est jamais portée par la seule couleur : chaque badge a son icône et
   son libellé ;
 - les titres se suivent sans saut de niveau ;
 - tout tient sans défilement horizontal à 320 px.
 
-Le cliquet `tokens-contrast.test.ts` (paquet `@diasporale/features`) recalcule ces
-paires depuis le fichier de jetons, dans les deux thèmes.
+Le cliquet `engine-theme-contrast.test.ts` (paquet `@diasporale/features`) recalcule ces
+paires depuis la cascade réelle (base du moteur, thème, rôles propres), dans les deux thèmes ;
+depuis la v3.2, il tient aussi la sélection sans contour (teinte levée en sombre, curseur plus clair
+que sa piste, pilule choisie à 7:1 au moins sur le fond).
 
 ## 11. Mise en œuvre (depuis PD0, sur le moteur ANTIA)
 
@@ -282,7 +309,7 @@ La charte vit en trois couches, importées dans cet ordre par
    sur `[data-charte]` (échelles ui-v2, noms sémantiques shadcn, primitives et rôles `--esp-*`),
    relie les utilitaires Tailwind et pose la base (corps, titres, barres de défilement).
 2. **Thème DIASPORALE** — `ANTIA/packages/ui/src/themes/diasporale.css` (écrit par la session
-   DIASPORALE) : réaccorde les primitives du contrat à la palette Sable (bleu Gabon `#0072B9` au
+   DIASPORALE) : réaccorde les primitives du contrat à la palette Sable (bleu Gabon `#0167A8` au
    barreau 500, sable, grès, encre, nuit brune, tons, avatars) et redéclare tous les rôles, en
    clair comme en sombre. Il ne déclare QUE des jetons du contrat (cliquet `theme-contract` du
    moteur) et c'est le SEUL endroit où vivent les couleurs de DIASPORALE.
@@ -337,7 +364,9 @@ La charte vit en trois couches, importées dans cet ordre par
    valeurs qui tiennent 4,5:1 sur la teinte d'alerte comme sur le sable.
 5. **Le bleu Gabon `#0072B9`** (cahier §15) plutôt que le `#0B4F9C` de l'espace agent et
    de consulat.ga. Le bleu profond reste celui de l'administration ; DIASPORALE prend le
-   bleu de la famille Consulaire, plus clair et plus chaleureux sur le sable.
+   bleu de la famille Consulaire, plus clair et plus chaleureux sur le sable. En v3.2, sur décision
+   du propriétaire, il est légèrement foncé à teinte égale : `#0167A8`. Le lien tient ainsi 5,21:1
+   sur le sable au lieu de 4,57, et 4,98:1 sur un aplat au lieu de 4,33.
 6. **Trois teintes d'avatar assombries.** Le socle affirme que le blanc tient sur ses six
    teintes ; mesuré sous des initiales de 13 px, trois échouent : `#0E8A4D` (4,41:1),
    `#DF7F0A` (2,93:1) et `#1D8B96` (4,05:1). Elles sont assombries dans la même teinte —
@@ -376,4 +405,12 @@ La charte vit en trois couches, importées dans cet ordre par
     validateur de palette (voir n° 6) ; étiquette « Toute la diaspora » sur la teinte bleue de
     statut dans les deux thèmes.
 
-*Fin de la charte DIASPORALE — version 3.1 du 15 octobre 2026.*
+13. **Bleu foncé, fond posé, sélection sans contour (v3.2, même jour, décision du propriétaire)** :
+    bleu Gabon `#0167A8` (voir n° 5) ; sable `#F1EFEB`, creux, puce et filet d'un même pas (carte à
+    1,13:1 du fond au lieu de 1,10) ; grès `#595550` et discret `#6B6761` plus fermes, et en
+    sombre grès clair `#B8B4AC` et discret `#9C9790` (4,45:1 sur ce qui flotte avant : sous le
+    seuil) ; échelle sombre requantifiée à teinte constante ; sélection sans contour ni bleu nuit
+    (§4) ; la navigation active et la barre basse redéclarent `--esp-accent-*` en sombre (le libellé
+    actif de la barre basse tombait à 1,8:1) ; la pastille « info » prend la teinte de statut bleue.
+
+*Fin de la charte DIASPORALE — version 3.2 du 15 octobre 2026.*

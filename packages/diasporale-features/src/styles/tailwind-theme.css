@@ -38,6 +38,9 @@
   --color-rejected-foreground: var(--dg-moderation-rejected-fg);
   --color-demo: var(--dg-demo-bg);
   --color-demo-foreground: var(--dg-demo-fg);
+  --color-chosen: var(--dg-chosen-bg);
+  --color-chosen-foreground: var(--dg-chosen-fg);
+  --color-thumb: var(--dg-thumb);
   --color-ink-subtle: var(--ink-500);
   --color-scrim: var(--dg-scrim);
   --color-avatar-foreground: var(--esp-on-avatar);

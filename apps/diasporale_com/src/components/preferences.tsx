@@ -36,7 +36,7 @@ export function LanguageSwitch(props: { className?: string }) {
           lang={option}
           aria-pressed={locale === option}
           onClick={() => choose(option)}
-          className={cn(segment, locale === option ? "bg-card text-foreground shadow-card" : "text-muted-foreground hover:text-foreground")}
+          className={cn(segment, locale === option ? "bg-thumb text-foreground shadow-card" : "text-muted-foreground hover:text-foreground")}
         >
           {t(`preferences.locale.${option}`)}
         </button>
@@ -67,7 +67,7 @@ export function ThemeSwitch(props: { className?: string }) {
             type="button"
             aria-pressed={active}
             onClick={() => setTheme(id)}
-            className={cn(segment, active ? "bg-card text-foreground shadow-card" : "text-muted-foreground hover:text-foreground")}
+            className={cn(segment, active ? "bg-thumb text-foreground shadow-card" : "text-muted-foreground hover:text-foreground")}
           >
             <Icon className="size-4" aria-hidden />
             {t(`preferences.themeOption.${id}`)}

@@ -694,7 +694,7 @@
   },
   "charte": {
     "title": "“Diaspora sand” charter",
-    "eyebrow": "Design charter · version 3 · 15 October 2026",
+    "eyebrow": "Design charter · version 3.2 · 15 October 2026",
     "heading": "Diaspora sand",
     "lead": "DIASPORALE's components, mounted with fictitious data, to review and accept the interface in both themes.",
     "tocLabel": "Charter contents",
@@ -733,7 +733,7 @@
       },
       "controls": {
         "title": "Controls",
-        "lead": "Pills to toggle, buttons to act. One primary button per area; 44-pixel targets."
+        "lead": "Pills to toggle, buttons to act. A choice reads without an outline: the chosen pill turns to ink, the chosen option takes the selection tint, lighter than the card in dark mode. One primary button per area; 44-pixel targets."
       }
     },
     "theme": {
@@ -787,6 +787,7 @@
         "mutedBackground": "Secondary on background",
         "faintCard": "Quiet on card",
         "linkCard": "Link on card",
+        "linkBackground": "Link on background",
         "primaryButton": "Primary button",
         "fieldEdge": "Field outline"
       },

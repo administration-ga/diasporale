@@ -694,7 +694,7 @@
   },
   "charte": {
     "title": "Charte « Sable de la diaspora »",
-    "eyebrow": "Charte graphique · version 3 · 15 octobre 2026",
+    "eyebrow": "Charte graphique · version 3.2 · 15 octobre 2026",
     "heading": "Sable de la diaspora",
     "lead": "Les composants de DIASPORALE, montés avec des données fictives, pour relire et recetter l'interface dans les deux thèmes.",
     "tocLabel": "Sommaire de la charte",
@@ -733,7 +733,7 @@
       },
       "controls": {
         "title": "Commandes",
-        "lead": "Les pilules pour basculer, les boutons pour agir. Un seul bouton principal par zone ; des cibles de 44 pixels."
+        "lead": "Les pilules pour basculer, les boutons pour agir. Un choix se lit sans contour : la pilule choisie passe à l'encre, l'option choisie prend la teinte de sélection, plus claire que la carte en sombre. Un seul bouton principal par zone ; des cibles de 44 pixels."
       }
     },
     "theme": {
@@ -787,6 +787,7 @@
         "mutedBackground": "Secondaire sur fond",
         "faintCard": "Discret sur carte",
         "linkCard": "Lien sur carte",
+        "linkBackground": "Lien sur fond",
         "primaryButton": "Bouton principal",
         "fieldEdge": "Contour de champ"
       },

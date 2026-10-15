@@ -53,6 +53,10 @@ const EXTRA_TEXT_PAIRS: readonly (readonly [string, string])[] = [
   ["--dg-moderation-rejected-fg", "--dg-moderation-rejected-bg"],
   ["--dg-demo-fg", "--dg-demo-bg"],
   ["--destructive-foreground", "--destructive"],
+  // Sélection sans contour (v3.2) : la pilule choisie, le curseur des sélecteurs.
+  ["--dg-chosen-fg", "--dg-chosen-bg"],
+  ["--foreground", "--dg-thumb"],
+  ["--primary-700", "--dg-thumb"],
 ]
 
 const TEXT_PAIRS: readonly (readonly [string, string])[] = [
@@ -68,6 +72,17 @@ const TEXT_PAIRS: readonly (readonly [string, string])[] = [
   ["--primary-foreground", "--primary"],
   ["--primary", "--card"],
   ["--primary", "--background"],
+  // v3.2 : le lien et le texte discret tiennent aussi sur l'aplat (4,33 et 4,48 avant, en clair).
+  ["--primary", "--muted"],
+  ["--ink-500", "--muted"],
+  ["--ink-500", "--popover"],
+  // La teinte de sélection (option choisie, puce de pays, ligne non lue) et la navigation active.
+  ["--foreground", "--primary-50"],
+  ["--primary-700", "--primary-50"],
+  ["--esp-accent-deep", "--esp-accent-soft"],
+  // La barre basse lit `--esp-accent-deep` sur la carte : 1,8:1 en sombre avant la v3.2.
+  ["--esp-accent-deep", "--card"],
+  ["--info-600", "--info-50"],
   ["--destructive", "--card"],
   ["--success", "--card"],
   ["--warning", "--card"],
@@ -143,9 +158,26 @@ describe("thème DIASPORALE servi par le moteur — cascade base + thème", () =
       expect(tokenLuminance(theme, "--card")).toBeGreaterThan(tokenLuminance(theme, "--background"))
       expect(tokenLuminance(theme, "--popover")).toBeGreaterThanOrEqual(tokenLuminance(theme, "--card"))
     }
-    // En sombre, sans filet, chaque marche se voit : la carte et ce qui flotte s'écartent nettement.
+    // Sans filet, chaque marche se voit : la carte et ce qui flotte s'écartent nettement.
     expect(contrastRatio(THEMES.sombre, "--card", "--background")).toBeGreaterThanOrEqual(1.15)
     expect(contrastRatio(THEMES.sombre, "--popover", "--card")).toBeGreaterThanOrEqual(1.12)
+    // En clair (v3.2), le papier se détache du sable comme une carte des grands réseaux (1,10 avant).
+    expect(contrastRatio(THEMES.clair, "--card", "--background")).toBeGreaterThanOrEqual(1.12)
+  })
+
+  it("une sélection se lit sans contour : en sombre, sa teinte se lève au-dessus de la carte et de ce qui flotte", () => {
+    for (const selection of ["--primary-50", "--esp-accent-soft"]) {
+      expect(tokenLuminance(THEMES.sombre, selection), selection).toBeGreaterThan(tokenLuminance(THEMES.sombre, "--card"))
+      expect(tokenLuminance(THEMES.sombre, selection), selection).toBeGreaterThan(tokenLuminance(THEMES.sombre, "--popover"))
+      expect(contrastRatio(THEMES.sombre, selection, "--card"), selection).toBeGreaterThanOrEqual(1.2)
+    }
+    // Le curseur d'un sélecteur est la surface la plus claire de sa piste, dans les deux thèmes.
+    for (const theme of [WITH_EXTRAS.clair, WITH_EXTRAS.sombre]) {
+      expect(tokenLuminance(theme, "--dg-thumb")).toBeGreaterThan(tokenLuminance(theme, "--esp-neutral-chip"))
+    }
+    // La pilule choisie inverse la clarté (encre sur sable, sable sur nuit) : elle se lit sans la couleur.
+    expect(contrastRatio(WITH_EXTRAS.clair, "--dg-chosen-bg", "--background")).toBeGreaterThanOrEqual(7)
+    expect(contrastRatio(WITH_EXTRAS.sombre, "--dg-chosen-bg", "--background")).toBeGreaterThanOrEqual(7)
   })
 
   it("en sombre, les aplats et les teintes de statut se lèvent au-dessus de la carte (jamais un trou)", () => {
@@ -178,8 +210,8 @@ describe("thème DIASPORALE servi par le moteur — cascade base + thème", () =
     }
   })
 
-  it("garde le bleu Gabon comme bleu d'action et le sable (v3) comme fond", () => {
-    expect(THEMES.clair.get("--esp-blue-500")).toBe("#0072b9")
-    expect(THEMES.clair.get("--esp-neutral-100")).toBe("#f4f2ee")
+  it("garde le bleu Gabon foncé (v3.2, décision du propriétaire) comme bleu d'action et le sable v3.2 comme fond", () => {
+    expect(THEMES.clair.get("--esp-blue-500")).toBe("#0167a8")
+    expect(THEMES.clair.get("--esp-neutral-100")).toBe("#f1efeb")
   })
 })

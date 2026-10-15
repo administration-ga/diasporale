@@ -19,7 +19,8 @@ const trackClass =
   "flex w-full gap-1 overflow-x-auto rounded-[var(--esp-r-chrome)] bg-[var(--esp-neutral-chip)] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
 const tabClass =
   "inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-[var(--esp-r-chrome)] px-4 text-sm font-medium text-muted-foreground transition-[background-color,color,box-shadow] duration-150 ease-charte hover:text-foreground focus-visible:shadow-focus"
-const activeClass = "bg-card text-[var(--primary-700)] shadow-card"
+// Le curseur est la surface la plus claire de la piste, dans les deux thèmes (v3.2).
+const activeClass = "bg-thumb text-[var(--primary-700)] shadow-card"
 
 export interface FolderNavItem {
   readonly id: string
@@ -61,7 +62,7 @@ export function FolderTabsTrigger({ className, ...props }: ComponentProps<typeof
   return (
     <TabsPrimitive.Trigger
       data-slot="folder-tabs-trigger"
-      className={cn(tabClass, "data-[state=active]:bg-card data-[state=active]:text-[var(--primary-700)] data-[state=active]:shadow-card", className)}
+      className={cn(tabClass, "data-[state=active]:bg-thumb data-[state=active]:text-[var(--primary-700)] data-[state=active]:shadow-card", className)}
       {...props}
     />
   )

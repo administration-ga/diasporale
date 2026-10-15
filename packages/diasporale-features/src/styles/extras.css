@@ -48,6 +48,13 @@
   --dg-demo-bg: var(--esp-tone-amber-bg);
   --dg-demo-fg: var(--esp-tone-amber);
 
+  /* Sélection, jamais par un contour (charte v3.2, §8) : la pilule choisie passe à
+     l'encre inversée ; le curseur d'un sélecteur (onglets, thème, langue) est la
+     surface la plus claire de sa piste — papier en clair, survol levé en sombre. */
+  --dg-chosen-bg: var(--esp-segment-on);
+  --dg-chosen-fg: var(--esp-segment-on-fg);
+  --dg-thumb: var(--card);
+
   /* Bouton destructif : hors du contrat du moteur, dérivé de lui. Le survol
      se rapproche de l'encre (plus sombre en clair, plus clair en sombre). */
   --destructive-foreground: var(--esp-neutral-0);
@@ -68,6 +75,8 @@
 .dark [data-charte="diasporale"] {
   /* En sombre, l'encre se pose sur le rouge éclairci (6,81:1). */
   --destructive-foreground: var(--esp-neutral-900);
+  /* La carte est plus sombre que la piste : le curseur prend le survol, plus clair. */
+  --dg-thumb: var(--esp-neutral-hover);
   --dg-scrim: color-mix(in srgb, var(--esp-neutral-900) 72%, transparent);
   --dg-shadow-sheet: 0 12px 32px -20px color-mix(in srgb, var(--esp-neutral-900) 60%, transparent);
 }
