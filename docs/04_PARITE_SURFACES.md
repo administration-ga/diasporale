@@ -30,7 +30,7 @@
 | Hub pays | `/pays/[iso]` | EXF-DG-15, 16 | 🟡 | `diaspora.hubs.getCountryHub`, voies du fil | compteurs et fil local ; pages, associations, entreprises (PD5) et évènements (PD7) vides ; membres opt-in par la recherche filtrée |
 | Sélecteur de pays (C11) | `CountrySwitch` | EXF-DG-15 | ✅ | — | accès rapide : mon pays, puis les trois derniers choisis (ce navigateur) |
 | Stories 24 h (`StoriesTray`) | — | EXF-DG-14 | ⬜ | `stories.*` (lot 12b d'ANTIA, servi) | à brancher |
-| Albums (`AlbumPage`) | — | EXF-DG-14 | ⏳ | lot 14 d'ANTIA | — |
+| Albums (`AlbumPage`) | — | EXF-DG-14 | ⬜ | `albums.*` (lot 14 d'ANTIA, servi) | à brancher |
 | Coquille mobile et bureau | `AppShell` | EXT-DG-05 | ✅ | — | colonne (Fil, Mon pays, Membres, Profil, Parrainer, Réglages), barre basse, en-tête (Membres, cloche, pays) |
 | Cartes flottantes | `FloatingNotice`, pile « Avis » | charte v2 §7 | ✅ | — | échelle de couches de la charte : barres 40 < feuilles 50 < pile 55 < menus 60 |
 
