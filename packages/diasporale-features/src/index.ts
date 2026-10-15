@@ -4,8 +4,8 @@
  * Les surfaces du réseau social (fil complet, profil, relations, groupes,
  * messagerie, appels…) viendront de `@antia/social-features` (PA6) ; ce paquet
  * porte ce que la diaspora AJOUTE : l'étiquette pays, le sélecteur de pays,
- * les badges de confiance, les cartes C1–C17, la bannière de statut, les
- * bandeaux de modération et de démonstration, le composeur à portée.
+ * les badges de confiance, les cartes C1–C17, les cartes flottantes (statut,
+ * modération, démonstration), le composeur à portée.
  */
 export { cn } from "./lib/cn"
 export { countryName, residenceCountryOptions, filterCountryOptions, searchKey } from "./lib/countries"
@@ -28,13 +28,14 @@ export {
   type FolderNavItem,
 } from "./primitives/folder-tabs"
 export { Avatar, Card, Separator, Skeleton } from "./primitives/surface"
+export { FloatingNotice, type NoticeTone } from "./primitives/floating-notice"
 
 export { ContentScopeTag, CountryMonument, CountryTag, ScopeTag } from "./components/country-tag"
 export { SponsoredBadge, TrustBadge, TrustBadges } from "./components/trust-badge"
 export { StatCounter } from "./components/stat-counter"
 export { EmptyState } from "./components/empty-state"
 export { ModerationBanner } from "./components/moderation-banner"
-export { DemoBanner } from "./components/demo-banner"
+export { DemoBanner, DemoChip } from "./components/demo-banner"
 export { MembershipStatusBanner, type StatusBannerActions } from "./components/membership-status-banner"
 export { CountrySwitch } from "./components/country-switch"
 export { PostCard } from "./components/cards/post-card"

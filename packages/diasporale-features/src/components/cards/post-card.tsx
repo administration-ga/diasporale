@@ -25,7 +25,8 @@ const REACTIONS: Record<ReactionKind, { icon: LucideIcon; key: string }> = {
  * Publication (C8 — héritée du PostCard de l'espace agent, simplifiée tant que
  * `social-features` n'est pas dupliqué) : auteur et badges P1, étiquette pays
  * ou portée, corps, réactions. L'auteur voit l'état de modération de sa
- * publication ; une publication `root` dit qu'elle est aussi lue dans ANTIA.
+ * publication (carte flottante en tête, qu'il peut écarter) ; une publication
+ * `root` dit qu'elle est aussi lue dans ANTIA.
  */
 export function PostCard(props: {
   post: PostView
@@ -47,7 +48,9 @@ export function PostCard(props: {
     <Card className={cn("animate-rise overflow-hidden", props.className)}>
       <article aria-labelledby={`post-${post.id}-auteur`}>
         {post.isMine && post.moderation !== "published" ? (
-          <ModerationBanner state={post.moderation} className="rounded-none" />
+          <div className="px-3 pt-3">
+            <ModerationBanner state={post.moderation} />
+          </div>
         ) : null}
         <header className="flex items-start gap-3 px-4 pt-4">
           <Avatar id={post.author.id} name={post.author.displayName} shape={post.author.kind === "page" ? "square" : "round"} />
@@ -89,7 +92,7 @@ export function PostCard(props: {
               <DropdownMenu.Content
                 sideOffset={6}
                 align="start"
-                className="z-50 flex gap-1 rounded-xl border border-border bg-popover p-1.5 text-popover-foreground shadow-md"
+                className="z-50 flex gap-1 rounded-xl bg-popover p-1.5 text-popover-foreground shadow-float"
               >
                 {(Object.keys(REACTIONS) as ReactionKind[]).map((kind) => {
                   const Icon = REACTIONS[kind].icon

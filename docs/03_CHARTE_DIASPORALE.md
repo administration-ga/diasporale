@@ -1,8 +1,8 @@
 ---
 title: "DIASPORALE.COM — Charte graphique « Sable de la diaspora »"
-version: "1.0"
-date: "2026-10-14"
-statut: "Charte de travail — arbitrage A7 pris par défaut (famille Consulaire / Sable), à confirmer par le propriétaire"
+version: "2.0"
+date: "2026-10-15"
+statut: "Charte de travail v2 — arbitrage A7 (famille Consulaire / Sable) ; refonte demandée par le propriétaire le 15/10/2026 : épurée, contraste renforcé, sombre inversé, rayons resserrés, sans drapeau, avis en cartes flottantes"
 projet: "DIASPORALE"
 jetons: "ANTIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diasporale-features/src/styles/extras.css (rôles propres) — [data-charte=\"diasporale\"]"
 ---
@@ -20,6 +20,14 @@ jetons: "ANTIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diaspo
 > thème du moteur ANTIA : échelles ui-v2, noms sémantiques shadcn, rôles `--esp-*` de
 > l'espace personnel. Les composants dupliqués du socle s'y branchent **sans fork**
 > (règle de duplication n° 7).
+>
+> **Version 2 (15/10/2026, demande du propriétaire).** Plus épurée : aucun filet autour des
+> cartes, aucun liseré, presque pas d'ombre. Contraste renforcé (grès 6,46:1 sur le sable,
+> texte 17,19:1 sur la carte sombre). Le sombre **retourne la page** : la carte est l'encre,
+> plus profonde que le fond. Boutons et cartes moins arrondis (6 et 8 px) ; pilules et
+> interrupteur inchangés. Plus aucune référence au drapeau. Les bandeaux deviennent des
+> **cartes flottantes** qu'on écarte d'une croix. Vitrine vivante : `/charte`, contrastes
+> mesurés en direct.
 
 ## 1. Le sujet, et la seule tâche de l'identité
 
@@ -45,16 +53,22 @@ Six couleurs nommées portent toute l'interface. Le reste dérive de rampes rég
 | **Papier** | `#FFFFFF` | cartes posées sur le sable |
 | **Encre** | `#14130F` | texte ; fond du tampon « Officiel » (brun-noir chaud, jamais noir pur) |
 | **Bleu Gabon** | `#0072B9` | action, lien, sélection, focus : palier 600 de la rampe H 246,6 |
-| **Grès** | `#66635D` | texte secondaire, icônes au repos |
-| **Nuit brune** | `#14130F` → `#201D18` | fond et cartes du thème sombre (jamais de noir pur) |
+| **Grès** | `#5C5952` | texte secondaire, icônes au repos (assombri en v2 : 6,46:1 sur le sable) |
+| **Nuit** | `#201D18` | fond du thème sombre ; la carte y est l'**Encre** `#14130F`, plus profonde (jamais de noir pur) |
 
 **Rampe Bleu Gabon** (identique à Consulaire et Sable, `#0072B9` épinglé au palier 600) :
 `50 #EEF7FF · 100 #D7ECFF · 200 #B4DBFF · 300 #7EC2FF · 400 #449FE9 · 500 #2786CF ·
 600 #0072B9 · 700 #005D98 · 800 #004C7D · 900 #003458 · 950 #001D35`.
 
 **Neutres chauds (sable)** : `50 #FBFAF6 · 100 #F7F6F2 · 150 #F3EFE4 · 200 #EFEBE0 ·
-300 #E6E2D8 · 400 #D2CDBF`. **Grès** : `500 #918E89` (contour de champ) ·
-`600 #736E61` (texte discret, 4,70:1 sur sable) · `700 #66635D` (texte secondaire) · `800 #3A3833`.
+300 #E6E2D8 · 400 #D2CDBF`. **Grès** : `#918E89` (contour de champ, 3,26:1) ·
+`#6B675D` (texte discret, 5,22:1 sur sable) · `#5C5952` (texte secondaire, 6,46:1) · `#3A3833`.
+
+**Le sombre retourne la page (v2).** En clair, la carte est plus claire que le fond (papier sur
+sable) ; en sombre, elle est plus profonde (encre sur nuit). Dans les deux thèmes, le contenu
+se pose sur la surface la plus contrastée. Échelle sombre : carte `#14130F` < fond `#201D18` <
+section, puce et carte flottante `#2A2620` < survol `#322E27` ; texte sable `#F7F6F2`, grès
+clair `#B0AA99` (8,02:1 sur la carte), discret `#948E7E`.
 
 **Statuts.** Le cahier prévoit quatre accents réservés aux statuts. Chaque statut a une
 paire texte / teinte mesurée :
@@ -66,11 +80,9 @@ paire texte / teinte mesurée :
 | danger / refus | `#B3261E` | `#B3261E` | `#FDECEA` | refusé, signalé, erreur |
 | information | `#004C7D` | `#0072B9` | `#EEF7FF` | consignes, aides |
 
-**Le drapeau est décoratif, jamais fonctionnel.** On prend les valeurs officielles, seule
-source de vérité du programme (`DESIGN_SYSTEMS/README.md`) : vert `#009E60`, jaune
-`#FCD116`, bleu `#3A75C4`. Il n'apparaît qu'en **un** endroit : le filet tricolore de
-2 px en tête de la vitrine (spec E01). Il ne sert jamais de texte, de fond de bouton ni
-d'état.
+**Aucune référence au drapeau (v2).** Le filet tricolore de la vitrine et les trois couleurs
+du drapeau sont retirés de la charte, des jetons et des écrans (décision du propriétaire du
+15/10/2026). Le cliquet de couleurs n'admet plus aucune exception.
 
 ## 3. Typographie — la superfamille IBM Plex en trois largeurs
 
@@ -86,7 +98,10 @@ caractère vient ainsi de la largeur, pas d'une police étrangère.
 | **Codes** | IBM Plex Mono | 500, 600 | codes pays ISO, compteurs, quotas (« 3/10 »), horodatages d'étiquette |
 
 Échelle : display 40/32 (`clamp`) · h1 24 · h2 20 · h3 17 · corps 15 · légende 13 ·
-étiquette 11 (mono, capitales, interlettrage +0,06 em). Le corps ne descend jamais sous
+étiquette 11 (mono, capitales, interlettrage +0,06 em). Depuis la v2, la règle « un titre en
+Condensed par écran » est tenue par le code : la base du moteur met tous les titres en
+display, la couche DIASPORALE ramène `h2`–`h6` à Plex Sans 600 ; un titre qui doit rester en
+display le demande (`font-display`). Le corps ne descend jamais sous
 13 px ; aucune information n'est portée par une taille inférieure à 11 px.
 
 Les polices sont auto-hébergées au build (`next/font`), sans requête externe à
@@ -95,15 +110,18 @@ noms du contrat (`--font-sans`, `--font-display`, `--font-mono`) qui y renvoient
 
 ## 4. Géométrie et relief
 
-- **Rayon de base 10 px** (A7) : `xs 4 · sm 6 · md 10 · lg 14 · xl 16 · 2xl 20 · 3xl 24`.
-  Les pastilles, la piste des onglets et la barre basse sont en pilule (`--esp-r-chrome:
-  999px`).
-- **Relief chaud** : les ombres sont teintées d'encre (`rgb(20 19 15 / α)`), jamais
-  noires, comme dans Sable. Une carte se détache du sable par le papier blanc, un filet
-  `#E6E2D8` et une ombre de 1 à 2 px. Seuls les éléments qui passent DEVANT la page
-  (feuille, barre basse, carte iCom détachée) portent une ombre large.
-- **Thème sombre** : l'élévation se lit par la clarté. Fond `#14130F` < section
-  `#1C1A15` < carte `#201D18` < puce `#2A2620`.
+- **Rayons resserrés (v2)** : `xs 4 · sm 4 · md 6 · lg 6 · xl 8 · 2xl 12 · 3xl 16 · 4xl 20`.
+  4 px pour les badges et l'étiquette, 6 px pour les contrôles (bouton, champ, option), 8 px
+  pour les cartes et les cartes flottantes, 12 px pour les panneaux et les feuilles. Les
+  pilules (onglets, filtres, sélecteurs de langue et de thème) et l'interrupteur restent en
+  pilule (`--esp-r-chrome: 999px`), sans changement.
+- **Relief : presque rien (v2)**. Aucun filet autour d'une carte, aucun liseré, aucun contour
+  épais. Une carte se détache par la clarté (papier sur sable, encre sur nuit) et un souffle
+  d'ombre teinté d'encre (`0 1px 2px` à 5 %). Ce qui passe DEVANT la page (carte flottante,
+  barre basse) prend un souffle de plus (`0 4px 14px -4px` à 8 %). Les seuls traits restants
+  sont fonctionnels : contour de champ (3:1, WCAG 1.4.11) et filets de séparation internes.
+- **Thème sombre** : la carte est la surface la plus profonde ; ce qui flotte remonte vers la
+  clarté (voir §2).
 
 ## 5. La signature : l'étiquette pays
 
@@ -149,19 +167,27 @@ communautaire. Le gris S2 est trop proche de la puce « Communauté ».
 
 ## 7. États de modération (P4) et états vides (P5)
 
-- **Bandeau de modération** pour l'auteur seulement, en tête de carte ou de page :
+- **Cartes flottantes (v2)** — la forme unique des avis (`FloatingNotice`) : une carte posée
+  devant la page, sans contour ni liseré, le ton porté par la seule pastille d'icône, le titre
+  en encre, une **croix** (cible de 44 px) pour l'écarter. Les avis de page (démonstration,
+  statut d'adhésion) passent dans la pile flottante de l'application (sonner : en bas à
+  droite au bureau, pleine largeur au-dessus de la barre basse au téléphone). Une carte
+  écartée le reste (stockage du navigateur : la session pour la démonstration, durablement
+  pour un statut, jusqu'au prochain changement). Seuls un marqueur bloquant (« TODO
+  JURISTE ») et un code à recopier n'ont pas de croix.
+- **Avis de modération** pour l'auteur seulement, en carte flottante en tête de la carte :
   - *En relecture* : ambre, `Clock` ;
   - *Publié* : vert, `CircleCheck` ;
   - *Refusé* : rose, `CircleAlert`, avec le motif.
 
-  Fond de teinte plein, liseré gauche de 3 px dans la couleur pleine. Les autres membres
-  ne voient jamais un contenu non publié.
+  Les autres membres ne voient jamais un contenu non publié.
 - **États vides génératifs** : une phrase qui dit ce qui manque, puis l'action qui le
   comble (« Aucun évènement en Belgique pour l'instant. Proposez le premier. »). Jamais
   un écran muet, jamais un compteur à zéro en vitrine : un hub sans contenu dit
   « bientôt » (`hubs.ts`).
-- **Mode démonstration** : tant que le fournisseur factice est actif, un bandeau ambre
-  permanent l'annonce (« Démonstration : toutes les données sont fictives »). Aucune
+- **Mode démonstration** : tant que le fournisseur factice est actif, une carte flottante
+  l'explique (« Démonstration : toutes les données sont fictives »), et un **repère
+  permanent « Démo »** reste dans l'en-tête, même la carte écartée (un clic la rouvre). Aucune
   capture ne peut faire passer une donnée de démonstration pour réelle.
 
 ## 8. Le squelette, hérité de l'espace agent
@@ -199,20 +225,23 @@ Pas d'animation sur une action au clavier. `prefers-reduced-motion` coupe tout.
 
 ## 10. Accessibilité — paires mesurées (WCAG 2.1)
 
+Valeurs de la v2 (15/10/2026). Elles sont aussi **mesurées en direct** sur `/charte`, dans le
+thème affiché.
+
 | Paire | Ratio | | Paire (sombre) | Ratio |
 |---|---|---|---|---|
-| Encre / Sable | 17,19 | | texte `#F4F1E8` / fond `#14130F` | 16,46 |
-| Encre / Papier | 18,59 | | texte / carte `#201D18` | 14,87 |
-| Grès / Sable | 5,54 | | secondaire `#A8A291` / carte | 6,59 |
-| Bleu Gabon / Papier (lien) | 5,11 | | bleu `#449FE9` / carte (lien) | 5,90 |
+| Encre / Sable | 17,19 | | texte sable / fond nuit `#201D18` | 15,53 |
+| Encre / Papier | 18,59 | | texte sable / carte encre `#14130F` | 17,19 |
+| Grès `#5C5952` / Sable | 6,46 | | grès clair `#B0AA99` / carte | 8,02 |
+| Grès / Papier | 6,99 | | grès clair / fond | 7,24 |
+| Bleu Gabon / Papier (lien) | 5,11 | | bleu `#449FE9` / carte (lien) | 6,53 |
 | Bleu Gabon / Sable (lien) | 4,73 | | encre `#14130F` / bleu `#449FE9` (bouton) | 6,53 |
-| blanc / Bleu Gabon (bouton) | 5,11 | | vert `#4CBB75` / carte | 6,94 |
-| Bleu 700 / puce `#EFEBE0` (onglet actif) | 5,84 | | ambre `#D8A53C` / carte | 7,49 |
-| vert `#0F5F2F` / teinte `#E3F1E8` | 6,68 | | rose `#E58079` / carte | 6,15 |
-| ambre `#8A5E00` / teinte `#FAEDCA` | 4,90 | | contour de champ `#7D7666` / carte | 3,72 |
-| rose `#B3261E` / teinte `#FDECEA` | 5,72 | | bleu `#449FE9` / puce `#2A2620` | 5,29 |
-| contour de champ `#918E89` / Papier | 3,26 | | texte discret `#8C8676` / carte | 4,63 |
-| texte discret `#736E61` / Sable | 4,70 | | | |
+| blanc / Bleu Gabon (bouton) | 5,11 | | vert `#4CBB75` / carte | 7,68 |
+| vert `#0F5F2F` / teinte `#E3F1E8` | 6,68 | | ambre `#D8A53C` / carte | 8,29 |
+| ambre `#8A5E00` / teinte `#FAEDCA` | 4,90 | | rose `#E58079` / carte | 6,81 |
+| rose `#B3261E` / teinte `#FDECEA` | 5,72 | | contour de champ `#7D7666` / carte | 4,12 |
+| contour de champ `#918E89` / Papier | 3,26 | | texte discret `#948E7E` / carte | 5,69 |
+| texte discret `#6B675D` / Sable | 5,22 | | grès clair / carte flottante `#2A2620` | 6,48 |
 | tampon Sable / Encre | 17,19 | | | |
 
 Règles non chromatiques :
@@ -241,28 +270,35 @@ La charte vit en trois couches, importées dans cet ordre par
    moteur) et c'est le SEUL endroit où vivent les couleurs de DIASPORALE.
 3. **Rôles propres** — `packages/diasporale-features/src/styles/extras.css` : étiquette pays,
    badges, bandeaux de modération et de démonstration, bouton destructif, voile, mouvement.
-   Chaque rôle RENVOIE à un jeton du contrat ; seules les trois couleurs du drapeau du filet
-   décoratif y sont littérales. Puis `tailwind-theme.css` : les utilitaires de ces rôles
-   (`bg-tag`, `text-official-foreground`…), les reliefs nommés, deux écarts de base bornés au nœud
-   DIASPORALE (un lien d'interface hérite sa couleur ; anneau de focus de la charte).
+   Chaque rôle RENVOIE à un jeton du contrat ; aucune couleur n'y est littérale (v2). Puis
+   `tailwind-theme.css` : les utilitaires de ces rôles (`bg-tag`, `text-official-foreground`…),
+   les reliefs nommés, trois écarts de base bornés au nœud DIASPORALE (un lien d'interface hérite
+   sa couleur ; anneau de focus de la charte ; sous-titres `h2`–`h6` en Plex Sans 600).
 
 - **Pose** : `data-charte="diasporale"` sur `<html>`, où `next-themes` pose aussi la classe
   `dark`. Les portails (feuilles, menus, toasts) héritent donc de la charte.
 - **Cascade sombre** : le bloc sombre de la base (`.dark[data-charte]`, spécificité 0,2,0)
   l'emporte sur le bloc clair du thème (0,1,0). Le thème redéclare donc en sombre CHAQUE rôle du
   bloc sombre de la base, sinon le bleu du moteur reparaîtrait.
+- **Cartes flottantes** : la primitive `FloatingNotice` (`@diasporale/features`) ; la pile
+  flottante et la mémoire des cartes écartées dans `apps/diasporale_com/src/components/floating-cards.tsx`
+  (sonner, `useFloatingCard`, `useDismissal`).
 - **Cliquets** : `engine-theme-contrast.test.ts` rejoue la cascade base, thème, rôles propres
   dans les deux thèmes (texte ≥ 4,5:1, contours et focus ≥ 3:1, titre de bannière sur les deux
-  arrêts du dégradé) ; `theme-contract` et `no-hardcoded-colors` côté moteur ; le cliquet de
-  couleurs de l'application n'admet que les trois lignes du drapeau.
+  arrêts du dégradé), vérifie l'inversion du sombre (carte plus profonde que le fond, carte
+  flottante plus claire), les rayons de la v2 et l'absence de toute couleur du drapeau ;
+  `theme-contract` et `no-hardcoded-colors` côté moteur ; le cliquet de couleurs de
+  l'application n'admet plus aucune couleur littérale.
 
 ## 12. Interdits
 
 | Interdit | À la place |
 |---|---|
 | Une couleur littérale hors du fichier de jetons (hex, `rgb()`, classe Tailwind brute `bg-blue-500`) | un rôle (`bg-card`, `text-muted-foreground`, `var(--dg-tag-bg)`) |
-| Les couleurs du drapeau en texte, fond de bouton ou état | un statut, ou le bleu Gabon |
-| Noir pur ou blanc pur en thème sombre | nuit brune et texte `#F4F1E8` |
+| Toute référence au drapeau (filet tricolore, couleurs du drapeau) | rien : la v2 l'a retirée |
+| Un contour épais, un liseré coloré, une ombre large | une carte sans filet, un souffle d'ombre |
+| Un bandeau à plat pour un avis | une carte flottante, avec sa croix |
+| Noir pur ou blanc pur en thème sombre | nuit, encre et texte sable `#F7F6F2` |
 | Blanc sur le bouton primaire en sombre | encre `#14130F` sur `#449FE9` (6,53) |
 | Un drapeau emoji comme seul indicateur de pays | l'étiquette : code ISO + nom calculé |
 | Un chiffre en vitrine qui n'est pas un compteur matérialisé | « bientôt », ou rien |
@@ -292,4 +328,13 @@ La charte vit en trois couches, importées dans cet ordre par
    4,50:1 sur le sable, mesurait en réalité 4,499:1. Le cliquet de contraste l'a refusée
    le 14 octobre 2026 ; la nouvelle valeur tient 4,70:1 sur le sable et 5,08:1 sur le papier.
 
-*Fin de la charte DIASPORALE — version 1.0 du 14 octobre 2026.*
+8. **Sombre inversé (v2)** : la carte est plus profonde que le fond, à rebours de l'élévation
+   « par la clarté » de la v1 et du socle. Demande du propriétaire : en clair comme en sombre, le
+   contenu se pose sur la surface la plus contrastée. Ce qui flotte (carte flottante, menu)
+   remonte vers la clarté.
+9. **Démonstration fermable (v2)** : la carte de démonstration a une croix, à rebours du bandeau
+   permanent de la v1 ; l'invariant est tenu par le repère « Démo » permanent de l'en-tête.
+10. **Texte secondaire assombri (v2)** : `#5C5952` plutôt que `#66635D` (6,46:1 au lieu de
+    5,54:1 sur le sable), texte discret `#6B675D` (5,22:1) ; en sombre, grès clair `#B0AA99`.
+
+*Fin de la charte DIASPORALE — version 2.0 du 15 octobre 2026.*

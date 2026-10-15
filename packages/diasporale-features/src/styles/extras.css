@@ -1,13 +1,13 @@
 /* ════════════════════════════════════════════════════════════════════════
    DIASPORALE — rôles PROPRES à l'application (étiquette pays, badges de
-   confiance, bandeaux, bouton destructif, voile, mouvement).
+   confiance, tons des cartes flottantes, bouton destructif, voile, mouvement).
 
    Posés APRÈS la charte de base du moteur (`@antia/ui/styles.css`) et le
    thème `@antia/ui/themes/diasporale.css`, qui portent tout le contrat de
-   couleurs (PD0). Ici, AUCUNE couleur littérale, sauf les trois couleurs du
-   drapeau du filet décoratif : chaque rôle RENVOIE à un jeton du contrat,
-   déjà réaccordé à la palette Sable par le thème. Une teinte se règle donc
-   à un seul endroit : le thème.
+   couleurs (PD0). Ici, AUCUNE couleur littérale : chaque rôle RENVOIE à un
+   jeton du contrat, déjà réaccordé à la palette Sable par le thème. Une
+   teinte se règle donc à un seul endroit : le thème. Aucune couleur du
+   drapeau (charte v2, 15/10/2026).
 
    Mêmes sélecteurs que le thème, importés après lui : à spécificité égale,
    l'ordre d'import tranche. Le cliquet `engine-theme-contrast.test.ts`
@@ -37,40 +37,26 @@
   --dg-sponsored-bg: var(--esp-neutral-chip);
   --dg-sponsored-fg: var(--foreground);
 
-  /* Bandeaux de modération (P4) et de démonstration. */
+  /* Tons des cartes flottantes (modération, statut, démonstration — charte §7) :
+     ils ne colorent que la pastille d'icône ; la carte, elle, reste neutre. */
   --dg-moderation-pending-bg: var(--esp-tone-amber-bg);
   --dg-moderation-pending-fg: var(--esp-tone-amber);
-  --dg-moderation-pending-edge: var(--warning);
   --dg-moderation-published-bg: var(--esp-tone-green-bg);
   --dg-moderation-published-fg: var(--esp-tone-green);
-  --dg-moderation-published-edge: var(--success);
   --dg-moderation-rejected-bg: var(--esp-tone-rose-bg);
   --dg-moderation-rejected-fg: var(--esp-tone-rose);
-  --dg-moderation-rejected-edge: var(--destructive);
   --dg-demo-bg: var(--esp-tone-amber-bg);
   --dg-demo-fg: var(--esp-tone-amber);
-  --dg-demo-edge: var(--warning);
 
   /* Bouton destructif : hors du contrat du moteur, dérivé de lui. Le survol
      se rapproche de l'encre (plus sombre en clair, plus clair en sombre). */
   --destructive-foreground: var(--esp-neutral-0);
   --danger-fill-hover: color-mix(in srgb, var(--destructive) 82%, var(--foreground));
 
-  /* Voile sous une feuille ou une boîte de dialogue, et relief de la feuille. */
-  --dg-scrim: color-mix(in srgb, var(--esp-night-bg) 42%, transparent);
-  --dg-shadow-sheet: 0 28px 70px -28px color-mix(in srgb, var(--esp-night-bg) 38%, transparent);
-
-  /* Le filet tricolore — SEUL usage des couleurs du drapeau, décoratif :
-     jamais du texte, jamais un fond de bouton, jamais un état. */
-  --dg-drapeau-vert: #009e60;
-  --dg-drapeau-jaune: #fcd116;
-  --dg-drapeau-bleu: #3a75c4;
-  --dg-stripe: linear-gradient(
-    90deg,
-    var(--dg-drapeau-vert) 0 33.333%,
-    var(--dg-drapeau-jaune) 33.333% 66.666%,
-    var(--dg-drapeau-bleu) 66.666% 100%
-  );
+  /* Voile sous une feuille ou une boîte de dialogue, et relief (un souffle) de
+     la feuille : l'encre, quel que soit le thème. Le voile sépare, pas l'ombre. */
+  --dg-scrim: color-mix(in srgb, var(--esp-neutral-900) 42%, transparent);
+  --dg-shadow-sheet: 0 12px 32px -20px color-mix(in srgb, var(--esp-neutral-900) 18%, transparent);
 
   /* Mouvement. */
   --dg-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -80,10 +66,10 @@
 
 .dark[data-charte="diasporale"],
 .dark [data-charte="diasporale"] {
-  /* En sombre, l'encre se pose sur le rouge éclairci. */
-  --destructive-foreground: var(--esp-night-bg);
-  --dg-scrim: color-mix(in srgb, var(--esp-night-bg) 72%, transparent);
-  --dg-shadow-sheet: 0 18px 50px -20px color-mix(in srgb, var(--esp-night-bg) 85%, transparent);
+  /* En sombre, l'encre se pose sur le rouge éclairci (6,81:1). */
+  --destructive-foreground: var(--esp-neutral-900);
+  --dg-scrim: color-mix(in srgb, var(--esp-neutral-900) 72%, transparent);
+  --dg-shadow-sheet: 0 12px 32px -20px color-mix(in srgb, var(--esp-neutral-900) 60%, transparent);
 }
 
 /* Mouvement réduit : aucune transition ni animation de la charte. */

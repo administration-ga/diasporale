@@ -1,6 +1,6 @@
 "use client"
 
-import { Button, DemoBanner } from "@diasporale/features"
+import { Button, DemoBanner, DemoChip } from "@diasporale/features"
 import { useDataSource } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import NextLink from "next/link"
@@ -8,23 +8,52 @@ import type { ReactNode } from "react"
 
 import { routes } from "@/lib/routes"
 
+import { useDismissal, useFloatingCard } from "./floating-cards"
 import { LanguageSwitch, ThemeSwitch } from "./preferences"
 import { Wordmark } from "./wordmark"
 
-/** Bandeau de démonstration, avec l'accès aux comptes fictifs. */
-export function AppDemoBanner() {
-  const { t } = useDiasporaleT()
+/** Lien d'action d'une carte flottante : le bleu des liens, souligné au survol. */
+export const floatingLinkClass =
+  "inline-flex min-h-8 items-center gap-1 text-primary underline-offset-2 hover:underline focus-visible:shadow-focus"
+
+const DEMO_CARD = { id: "diasporale-demonstration", dismissKey: "diasporale:carte:demonstration" } as const
+
+/**
+ * La carte flottante de la démonstration, avec l'accès aux comptes fictifs.
+ * Montée une fois pour toute l'application (providers) : elle ne se rejoue pas
+ * d'une page à l'autre. Écartée, elle le reste pour la session ; le repère
+ * « Démo » de l'en-tête (`AppDemoChip`), lui, ne part jamais.
+ */
+export function DemoFloatingCard() {
+  const { t, locale } = useDiasporaleT()
   const source = useDataSource()
+  useFloatingCard({
+    ...DEMO_CARD,
+    store: "session",
+    version: locale,
+    content:
+      source.kind === "demo"
+        ? (dismiss) => (
+            <DemoBanner
+              onDismiss={dismiss}
+              action={
+                <NextLink href={routes.demo()} className={floatingLinkClass}>
+                  {t("demo.accountsLink")}
+                </NextLink>
+              }
+            />
+          )
+        : null,
+  })
+  return null
+}
+
+/** Le repère permanent du mode démonstration ; un clic rouvre la carte qui l'explique. */
+export function AppDemoChip() {
+  const source = useDataSource()
+  const { restore } = useDismissal(DEMO_CARD.dismissKey, "session")
   if (source.kind !== "demo") return null
-  return (
-    <DemoBanner
-      action={
-        <NextLink href={routes.demo()} className="font-semibold underline underline-offset-2 focus-visible:shadow-focus">
-          {t("demo.accountsLink")}
-        </NextLink>
-      }
-    />
-  )
+  return <DemoChip onClick={restore} />
 }
 
 /** Chrome des pages publiques (vitrine, entrée, textes) : mot-symbole, langue, entrée. */
@@ -32,11 +61,13 @@ export function PublicShell(props: { children: ReactNode; hideEnter?: boolean })
   const { t } = useDiasporaleT()
   return (
     <div className="flex min-h-dvh flex-col">
-      <AppDemoBanner />
       <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-3 px-4 py-4">
-        <NextLink href={routes.home()} aria-label={t("nav.home")} className="rounded-md focus-visible:shadow-focus">
-          <Wordmark />
-        </NextLink>
+        <div className="flex min-w-0 items-center gap-3">
+          <NextLink href={routes.home()} aria-label={t("nav.home")} className="rounded-md focus-visible:shadow-focus">
+            <Wordmark />
+          </NextLink>
+          <AppDemoChip />
+        </div>
         <div className="flex items-center gap-2">
           <LanguageSwitch className="hidden sm:inline-flex" />
           {props.hideEnter ? null : (

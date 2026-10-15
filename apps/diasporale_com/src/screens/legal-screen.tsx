@@ -1,5 +1,6 @@
 "use client"
 
+import { FloatingNotice } from "@diasporale/features"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { ScaleIcon } from "lucide-react"
 
@@ -19,10 +20,8 @@ export function LegalScreen(props: { kind: "notice" | "privacy" }) {
     <PublicShell>
       <article className="mx-auto flex w-full max-w-[760px] flex-col gap-6 px-4 pb-10 pt-6 md:pt-10">
         <h1 className="font-display text-4xl font-bold">{t(`${base}.title`)}</h1>
-        <p role="note" className="flex items-start gap-3 rounded-xl border-l-[3px] border-pending-edge bg-pending px-4 py-3 text-[15px] font-semibold text-pending-foreground">
-          <ScaleIcon className="mt-0.5 size-5 shrink-0" aria-hidden />
-          {t("legal.todoLawyer")}
-        </p>
+        {/* Marqueur BLOQUANT pour la mise en ligne : il ne se ferme pas (aucune croix). */}
+        <FloatingNotice role="note" tone="pending" icon={<ScaleIcon />} heading={t("legal.todoLawyer")} />
         {[1, 2, 3, 4].map((index) => (
           <section key={index} className="flex flex-col gap-2">
             <h2 className="font-display text-xl font-bold">{t(`${base}.section${index}.title`)}</h2>

@@ -348,7 +348,7 @@ function ConsentRow(props: {
   children?: ReactNode
 }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4 shadow-card">
+    <div className="rounded-xl bg-card p-4 shadow-card">
       <div className="flex items-start gap-3">
         <Controller
           control={props.control}

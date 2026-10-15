@@ -40,10 +40,10 @@ export function SheetContent(props: {
         onOpenAutoFocus={props.onOpenAutoFocus}
         className={cn(
           "fixed z-50 flex max-h-[min(88dvh,780px)] flex-col overflow-hidden bg-card text-card-foreground shadow-sheet focus:outline-none data-[state=open]:animate-rise",
-          // Téléphone : feuille basse, coins hauts arrondis, réserve de la zone sûre.
+          // Téléphone : feuille basse, coins hauts de 12 px, réserve de la zone sûre.
           "inset-x-0 bottom-0 rounded-t-2xl pb-[env(safe-area-inset-bottom)]",
           // Bureau : panneau centré.
-          "md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:w-[min(560px,calc(100vw-2rem))] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl md:pb-0",
+          "md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:w-[min(560px,calc(100vw-2rem))] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-2xl md:pb-0",
           props.className,
         )}
       >

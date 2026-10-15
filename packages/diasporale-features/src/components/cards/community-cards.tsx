@@ -113,7 +113,7 @@ export function TalentCard(props: { talent: TalentView; className?: string }) {
       <p className="text-[13px] text-muted-foreground">
         {t("talent.languages", { languages: talent.languages.map((code) => languageNames.of(code) ?? code).join(", ") })}
       </p>
-      <CountryTag country={talent.country} city={talent.city ?? undefined} />
+      <CountryTag country={talent.country} city={talent.city ?? undefined} className="self-start" />
     </Card>
   )
 }
@@ -182,7 +182,7 @@ export function MentorCard(props: { mentor: MentorView; className?: string }) {
           </li>
         ))}
       </ul>
-      <CountryTag country={mentor.country} city={mentor.city ?? undefined} />
+      <CountryTag country={mentor.country} city={mentor.city ?? undefined} className="self-start" />
     </Card>
   )
 }

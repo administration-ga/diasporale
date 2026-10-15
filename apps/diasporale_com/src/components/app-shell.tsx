@@ -19,7 +19,7 @@ import { createContext, useContext, useState, type ReactNode } from "react"
 
 import { routes } from "@/lib/routes"
 
-import { AppDemoBanner } from "./site-chrome"
+import { AppDemoChip } from "./site-chrome"
 import { Wordmark } from "./wordmark"
 
 interface ComposerControl {
@@ -72,12 +72,14 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
 
   return (
     <div className="min-h-dvh">
-      <AppDemoBanner />
       <div className="mx-auto flex w-full max-w-[1400px]">
         <aside className="sticky top-0 hidden h-dvh w-[240px] shrink-0 flex-col gap-6 border-r border-border px-4 py-5 min-[960px]:flex">
-          <NextLink href={routes.feed()} aria-label={t("nav.feed")} className="rounded-md px-2 focus-visible:shadow-focus">
-            <Wordmark />
-          </NextLink>
+          <div className="flex flex-wrap items-center gap-2 px-2">
+            <NextLink href={routes.feed()} aria-label={t("nav.feed")} className="rounded-md focus-visible:shadow-focus">
+              <Wordmark />
+            </NextLink>
+            <AppDemoChip />
+          </div>
           <nav aria-label={t("nav.label")} className="flex flex-col gap-1">
             {items.map((item) => {
               const active = item.match(pathname)
@@ -113,9 +115,12 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
 
         <div className="min-w-0 flex-1">
           <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-border bg-background/95 px-4 backdrop-blur min-[960px]:hidden">
-            <NextLink href={routes.feed()} aria-label={t("nav.feed")} className="rounded-md focus-visible:shadow-focus">
-              <Wordmark />
-            </NextLink>
+            <div className="flex min-w-0 items-center gap-2">
+              <NextLink href={routes.feed()} aria-label={t("nav.feed")} className="rounded-md focus-visible:shadow-focus">
+                <Wordmark />
+              </NextLink>
+              <AppDemoChip />
+            </div>
             <NextLink
               href={routes.hub(props.membership.facet.countryOfResidence)}
               aria-label={t("nav.hub")}
@@ -138,7 +143,7 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
 
       <nav
         aria-label={t("nav.label")}
-        className="fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-[var(--esp-mobilebar-border)] bg-[var(--esp-mobilebar-bg)] shadow-[var(--esp-mobilebar-shadow)] backdrop-blur min-[960px]:hidden"
+        className="fixed inset-x-3 bottom-3 z-40 rounded-4xl bg-[var(--esp-mobilebar-bg)] shadow-[var(--esp-mobilebar-shadow)] backdrop-blur min-[960px]:hidden"
       >
         <ul className="grid h-16 grid-cols-5 items-center px-1 pb-[env(safe-area-inset-bottom)]">
           {items.slice(0, 2).map((item) => (
@@ -150,7 +155,7 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
               onClick={() => setComposerOpen(true)}
               disabled={!canPublish}
               aria-label={canPublish ? t("composer.open") : t("composer.notAllowed")}
-              className="grid size-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-md transition-transform active:scale-95 focus-visible:shadow-focus disabled:opacity-55"
+              className="grid size-12 place-items-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95 focus-visible:shadow-focus disabled:opacity-55"
             >
               <PlusIcon className="size-6" aria-hidden />
             </button>

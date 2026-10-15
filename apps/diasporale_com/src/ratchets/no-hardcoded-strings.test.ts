@@ -27,6 +27,8 @@ const SPOKEN_ATTRIBUTES = new Set([
   "error",
   "closeLabel",
   "triggerLabel",
+  "dismissLabel",
+  "heading",
 ])
 
 /** Au moins deux lettres d'affilée : « @ », « · » ou « — » ne sont pas du texte. */

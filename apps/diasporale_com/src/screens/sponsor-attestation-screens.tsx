@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { SPONSORSHIPS_PER_WINDOW } from "@diasporale/domain"
-import { Button, Card, Checkbox, EmptyState, Field, Input, Label, Skeleton, formatDate, normalizeHandle } from "@diasporale/features"
+import { Button, Card, Checkbox, EmptyState, Field, FloatingNotice, Input, Label, Skeleton, formatDate, normalizeHandle } from "@diasporale/features"
 import { useActions, useSponsorDashboard, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { BadgeCheckIcon, CircleCheckIcon, CircleDashedIcon, HandshakeIcon, InfoIcon, ShieldCheckIcon, XIcon } from "lucide-react"
@@ -216,13 +216,15 @@ function Attestation(props: { membership: MembershipView }) {
         <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{t("attestation.lead")}</p>
       </div>
       {attestation.outcome === "not_confirmed" ? (
-        <Card className="flex gap-3 border-l-[3px] border-l-[var(--warning)] p-4">
-          <CircleDashedIcon className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
-          <div>
-            <p className="font-semibold">{t("attestation.notConfirmedTitle")}</p>
-            <p className="mt-1 text-[13px] leading-snug text-muted-foreground">{t("attestation.notConfirmedBody")}</p>
-          </div>
-        </Card>
+        <FloatingNotice
+          role="status"
+          tone="pending"
+          icon={<CircleDashedIcon />}
+          heading={t("attestation.notConfirmedTitle")}
+          dismissLabel={t("notice.dismiss")}
+        >
+          {t("attestation.notConfirmedBody")}
+        </FloatingNotice>
       ) : null}
       <Card className="flex flex-col gap-5 p-5">
         <ConsentList icon={<ShieldCheckIcon aria-hidden />} title={t("attestation.askedTitle")} body={t("attestation.asked")} />

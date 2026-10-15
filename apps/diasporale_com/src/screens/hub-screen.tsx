@@ -4,13 +4,13 @@ import { parseResidenceCountry, type CountryCode } from "@diasporale/domain"
 import {
   AssociationCard,
   Button,
-  Card,
   CommunityTabSwitcher,
   CompanyCard,
   CountryMonument,
   CountrySwitch,
   EmptyState,
   EventCard,
+  FloatingNotice,
   FolderTabs,
   FolderTabsContent,
   OfficialPageCard,
@@ -21,7 +21,7 @@ import {
 } from "@diasporale/features"
 import { useActions, useCountryHub, useFeed, useOpenCountries, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { ArrowLeftRightIcon, CalendarDaysIcon, CompassIcon, GlobeIcon, NewspaperIcon, StoreIcon, UsersRoundIcon } from "lucide-react"
+import { ArrowLeftRightIcon, CalendarDaysIcon, CompassIcon, GlobeIcon, HourglassIcon, NewspaperIcon, StoreIcon, UsersRoundIcon } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
@@ -96,7 +96,7 @@ function HubContent(props: { country: CountryCode; membership: MembershipView; l
 
   return (
     <>
-      <header className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+      <header className="overflow-hidden rounded-2xl bg-card shadow-card">
         <div className="flex flex-col gap-5 p-5 md:flex-row md:items-end md:justify-between md:p-6">
           <div className="flex items-end gap-4">
             <CountryMonument country={props.country} />
@@ -126,19 +126,23 @@ function HubContent(props: { country: CountryCode; membership: MembershipView; l
       </header>
 
       {searchParams.get("bienvenue") === "1" && isHome ? (
-        <Card className="flex gap-3 border-l-[3px] border-l-primary p-4">
-          <GlobeIcon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
-          <div>
-            <p className="font-semibold">{t("hub.welcomeTitle", { name: props.membership.displayName })}</p>
-            <p className="mt-1 text-[13px] leading-snug text-muted-foreground">{t("hub.welcomeBody")}</p>
-          </div>
-        </Card>
+        <FloatingNotice
+          role="status"
+          tone="info"
+          icon={<GlobeIcon />}
+          heading={t("hub.welcomeTitle", { name: props.membership.displayName })}
+          dismissLabel={t("notice.dismiss")}
+        >
+          {t("hub.welcomeBody")}
+        </FloatingNotice>
       ) : null}
 
       {isHome ? <StatusBanner membership={props.membership} /> : null}
 
       {hub.status === "ready" && !hub.data.open ? (
-        <p className="rounded-xl bg-pending px-4 py-3 text-[13px] leading-snug text-pending-foreground">{t("hub.notOpenNotice", { country: name })}</p>
+        <FloatingNotice role="note" tone="pending" icon={<HourglassIcon />} heading={t("hub.notOpen")} dismissLabel={t("notice.dismiss")}>
+          {t("hub.notOpenNotice", { country: name })}
+        </FloatingNotice>
       ) : null}
 
       {hub.status !== "ready" ? (

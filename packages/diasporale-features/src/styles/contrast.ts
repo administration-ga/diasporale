@@ -48,6 +48,11 @@ function luminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
+/** Luminance relative d'un jeton résolu (pour comparer deux surfaces, pas seulement un texte). */
+export function tokenLuminance(theme: Declarations, token: string): number {
+  return luminance(resolveToken(theme, token))
+}
+
 export function contrastRatio(theme: Declarations, foreground: string, background: string): number {
   const a = luminance(resolveToken(theme, foreground))
   const b = luminance(resolveToken(theme, background))

@@ -3,12 +3,15 @@ import type { ComponentProps } from "react"
 import { cn } from "../lib/cn"
 import { avatarTone, initials } from "../lib/avatar"
 
-/** Carte de la charte : papier sur sable, filet chaud, ombre de 1 à 2 px. */
+/**
+ * Carte de la charte v2 : papier sur sable en clair, encre sur nuit en sombre ;
+ * aucun filet — l'ombre douce (clair) ou l'écart de clarté (sombre) la détache.
+ */
 export function Card({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-slot="card"
-      className={cn("rounded-xl border border-border bg-card text-card-foreground shadow-card", className)}
+      className={cn("rounded-xl bg-card text-card-foreground shadow-card", className)}
       {...props}
     />
   )

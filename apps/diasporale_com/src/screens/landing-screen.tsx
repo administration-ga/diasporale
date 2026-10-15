@@ -21,7 +21,6 @@ export function LandingScreen() {
   return (
     <PublicShell>
       <section aria-labelledby="vitrine-titre">
-        <div aria-hidden className="h-0.5 w-full bg-[image:var(--dg-stripe)]" />
         <div className="mx-auto grid w-full max-w-[1120px] items-start gap-10 px-4 pb-14 pt-10 md:grid-cols-[1.1fr_0.9fr] md:pt-16">
           <div>
             <h1 id="vitrine-titre" className="font-display text-[44px] font-bold leading-[0.95] tracking-[-0.01em] md:text-[64px]">
@@ -88,7 +87,7 @@ export function LandingScreen() {
         <h3 className="mt-12 font-display text-2xl font-bold">{t("landing.stepsTitle")}</h3>
         <ol className="mt-5 grid gap-4 md:grid-cols-3">
           {(["landing.step1", "landing.step2", "landing.step3"] as const).map((key, index) => (
-            <li key={key} className="flex gap-4 rounded-xl border border-border bg-card p-4 shadow-card">
+            <li key={key} className="flex gap-4 rounded-xl bg-card p-4 shadow-card">
               <span aria-hidden className="font-mono text-3xl font-semibold leading-none text-tag-code">
                 {index + 1}
               </span>
@@ -126,8 +125,15 @@ function Principle(props: { title: string; body: string; children: ReactNode }) 
 
 function Door(props: { icon: ReactNode; title: string; body: string; note: string; emphasis?: boolean }) {
   return (
-    <div className={cn("flex flex-col gap-3 rounded-2xl border bg-card p-5 shadow-card", props.emphasis ? "border-primary" : "border-border")}>
-      <span aria-hidden className="grid size-11 place-items-center rounded-xl bg-tag text-tag-code [&_svg]:size-5">
+    <div className="flex flex-col gap-3 rounded-2xl bg-card p-5 shadow-card">
+      {/* La porte recommandée se distingue par sa pastille bleue, jamais par un contour. */}
+      <span
+        aria-hidden
+        className={cn(
+          "grid size-11 place-items-center rounded-xl [&_svg]:size-5",
+          props.emphasis ? "bg-[var(--primary-50)] text-[var(--primary-700)]" : "bg-tag text-tag-code",
+        )}
+      >
         {props.icon}
       </span>
       <h3 className="font-display text-xl font-bold">{props.title}</h3>
@@ -148,7 +154,7 @@ function OpenCountriesBoard() {
   return (
     <section
       aria-labelledby="tableau-titre"
-      className="overflow-hidden rounded-2xl bg-[var(--ink-900)] text-[var(--ink-0)] shadow-lg"
+      className="overflow-hidden rounded-2xl bg-[var(--ink-900)] text-[var(--ink-0)]"
     >
       <div className="flex items-center justify-between gap-3 border-b border-[color-mix(in_srgb,var(--ink-0)_18%,transparent)] px-5 py-3">
         <h2 id="tableau-titre" className="font-mono text-xs font-semibold uppercase tracking-[0.12em]">

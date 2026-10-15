@@ -8,7 +8,8 @@ import { cn } from "../lib/cn"
  * Bouton de la charte DIASPORALE — API shadcn (variant, size, asChild) pour
  * que le passage aux primitives du moteur (`@antia/ui`, PA6) ne change aucun
  * appel. Cible de 44 px par défaut (cahier EXT-DG-05) ; `sm` (36 px) est
- * réservé aux actions secondaires en ligne, espacées d'au moins 8 px.
+ * réservé aux actions secondaires en ligne, espacées d'au moins 8 px. Rayon de
+ * 6 px (charte v2) ; le contour de `outline` est un filet, jamais un trait.
  */
 export const buttonVariants = cva(
   "inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-[background-color,color,box-shadow] duration-150 ease-charte select-none disabled:pointer-events-none disabled:opacity-55 focus-visible:shadow-focus [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -17,7 +18,7 @@ export const buttonVariants = cva(
       variant: {
         primary: "bg-primary text-primary-foreground hover:bg-[var(--primary-fill-hover)]",
         secondary: "bg-accent text-accent-foreground hover:bg-[var(--ink-200)]",
-        outline: "border border-input bg-card text-foreground hover:bg-muted",
+        outline: "border border-[var(--ink-300)] bg-card text-foreground hover:bg-muted",
         ghost: "text-foreground hover:bg-muted",
         destructive: "bg-destructive text-destructive-foreground hover:bg-[var(--danger-fill-hover)]",
         link: "h-auto px-0 text-primary underline-offset-4 hover:underline",

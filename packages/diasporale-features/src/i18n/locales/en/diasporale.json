@@ -236,6 +236,7 @@
     "rejectedReason": "Reason: {{reason}}"
   },
   "demo": {
+    "chipLabel": "Demo: show the demonstration notice",
     "tag": "Demo",
     "bannerTitle": "Demonstration.",
     "bannerBody": "All data is fictitious and stays in this browser.",
@@ -281,6 +282,9 @@
     "reset": "Reset the demonstration",
     "resetDone": "Demonstration reset.",
     "charteLink": "See the design charter and every component"
+  },
+  "notice": {
+    "dismiss": "Dismiss this notice"
   },
   "feed": {
     "title": "Feed",
@@ -687,43 +691,195 @@
   },
   "charte": {
     "title": "“Diaspora sand” charter",
-    "lead": "DIASPORALE's components mounted with fictitious sample data, for review and acceptance testing in both themes.",
-    "palette": "Palette",
-    "swatch": {
-      "sable": "Sand — background",
-      "papier": "Paper — cards",
-      "encre": "Ink — text, stamp",
-      "bleu": "Gabon blue — action",
-      "gres": "Sandstone — secondary text",
-      "nuit": "Brown night — dark"
+    "eyebrow": "Design charter · version 2 · 15 October 2026",
+    "heading": "Diaspora sand",
+    "lead": "DIASPORALE's components, mounted with fictitious data, to review and accept the interface in both themes.",
+    "tocLabel": "Charter contents",
+    "section": {
+      "color": {
+        "title": "Colour",
+        "lead": "Six named colours. In light and dark alike, content sits on the most contrasted surface: paper on sand, ink on night."
+      },
+      "contrast": {
+        "title": "Contrast",
+        "lead": "Measured live on this page, in the theme shown. Text holds at least 4.5:1; field outlines and the focus ring, 3:1."
+      },
+      "type": {
+        "title": "Typography",
+        "lead": "IBM Plex in three widths: character comes from width, not from a foreign typeface. One Condensed heading per screen; subheadings in Plex Sans."
+      },
+      "shape": {
+        "title": "Geometry",
+        "lead": "Tight radii, with a single exception: the pill, kept for what you toggle or scroll."
+      },
+      "tag": {
+        "title": "Country tag",
+        "lead": "The signature: the tag you hang on a suitcase. The country is the permanent context; at the top of a hub, its code becomes monumental."
+      },
+      "trust": {
+        "title": "Trust",
+        "lead": "Four badges, never confused, always with an icon and a label. “Official” is an ink stamp."
+      },
+      "notices": {
+        "title": "Floating cards",
+        "lead": "Notices pass in front of the page: a card without outline, the tone carried by the dot alone, a cross to dismiss it. The demonstration keeps a permanent marker in the header."
+      },
+      "cards": {
+        "title": "Cards",
+        "lead": "Paper on sand in light, ink on night in dark, no hairline. Every piece of content carries its country."
+      },
+      "controls": {
+        "title": "Controls",
+        "lead": "Pills to toggle, buttons to act. One primary button per area; 44-pixel targets."
+      }
     },
-    "stripeNote": "The tricolour line: the only use of the flag colours, decorative.",
-    "typography": "Typography",
-    "typeDisplay": "Plex Condensed, for headings",
-    "typeBody": "IBM Plex Sans carries body text and the interface, at 15 pixels for people reading on phones.",
-    "typeMono": "Plex Mono — FR · CA · 12/150",
-    "tags": "The country tag",
-    "monumentCaption": "The community — France",
-    "badges": "Trust badges",
-    "banners": "Banners",
-    "counters": "Counters",
-    "cards": "Cards",
-    "controls": "Controls",
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "lightRoles": "Sand background · paper card · ink text",
+      "darkRoles": "Night background · ink card · sand text",
+      "text": "Main text",
+      "secondary": "Secondary text, quieter",
+      "action": "Act"
+    },
+    "swatch": {
+      "sable": {
+        "name": "Sand",
+        "role": "Light background, dark text"
+      },
+      "papier": {
+        "name": "Paper",
+        "role": "Light card"
+      },
+      "encre": {
+        "name": "Ink",
+        "role": "Light text, dark card"
+      },
+      "nuit": {
+        "name": "Night",
+        "role": "Dark background"
+      },
+      "bleu": {
+        "name": "Gabon blue",
+        "role": "Action, link, focus"
+      },
+      "gres": {
+        "name": "Sandstone",
+        "role": "Secondary text"
+      }
+    },
+    "contrast": {
+      "pair": "Pair",
+      "tokens": "Tokens",
+      "ratio": "Ratio",
+      "level": "Level",
+      "shownLight": "Theme shown: light",
+      "shownDark": "Theme shown: dark",
+      "measuring": "Measuring…",
+      "sample": "Aa",
+      "row": {
+        "textBackground": "Text on background",
+        "textCard": "Text on card",
+        "mutedCard": "Secondary on card",
+        "mutedBackground": "Secondary on background",
+        "faintCard": "Quiet on card",
+        "linkCard": "Link on card",
+        "primaryButton": "Primary button",
+        "fieldEdge": "Field outline"
+      },
+      "levelAaa": "AAA",
+      "levelAa": "AA",
+      "levelComponent": "AA component",
+      "levelFail": "Insufficient"
+    },
+    "type": {
+      "display": {
+        "role": "Display",
+        "spec": "Plex Sans Condensed · 700 · 40/44",
+        "sample": "The community of France"
+      },
+      "title": {
+        "role": "Heading",
+        "spec": "Plex Sans · 600 · 20/26",
+        "sample": "Upcoming events"
+      },
+      "subtitle": {
+        "role": "Subheading",
+        "spec": "Plex Sans · 600 · 17/24",
+        "sample": "Community cultural evening"
+      },
+      "body": {
+        "role": "Body",
+        "spec": "Plex Sans · 400 · 15/23",
+        "sample": "IBM Plex Sans carries text and the interface, at 15 pixels for people reading on phones."
+      },
+      "caption": {
+        "role": "Caption",
+        "spec": "Plex Sans · 400 · 13/18",
+        "sample": "5 hours ago · Lyon"
+      },
+      "code": {
+        "role": "Code",
+        "spec": "Plex Mono · 600 · 11 · caps",
+        "sample": "FR · CA · 12/150"
+      }
+    },
+    "shape": {
+      "badge": {
+        "value": "4 px",
+        "use": "Badges, country tag"
+      },
+      "control": {
+        "value": "6 px",
+        "use": "Buttons, fields, options"
+      },
+      "card": {
+        "value": "8 px",
+        "use": "Cards, floating cards"
+      },
+      "panel": {
+        "value": "12 px",
+        "use": "Panels, sheets"
+      },
+      "pill": {
+        "value": "Pill",
+        "use": "Tabs, filters, selectors, switch"
+      },
+      "relief": "Relief: no outline around a card; a barely perceptible shadow, one breath more for what floats."
+    },
+    "monumentCaption": "The community — France",
+    "notices": {
+      "restore": "Show the cards again",
+      "live": "See a card in place",
+      "chip": "Permanent header marker"
+    },
+    "controlGroup": {
+      "filters": "Filters and tabs",
+      "buttons": "Buttons",
+      "fields": "Fields and choices",
+      "contact": "Contact and sponsored slot"
+    },
     "filtersLabel": "Event categories",
     "tabsLabel": "Community tabs",
-    "primitives": "Basic elements",
     "button": {
       "primary": "Primary",
       "secondary": "Secondary",
-      "outline": "Outline",
+      "outline": "Hairline",
       "ghost": "Ghost",
       "destructive": "Destructive",
-      "disabled": "Disabled"
+      "disabled": "Disabled",
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large"
     },
-    "fieldLabel": "Input field",
-    "fieldPlaceholder": "Sample text",
+    "fieldLabel": "City of residence",
+    "fieldHint": "It appears on your country tag.",
+    "fieldPlaceholder": "Lyon, Montréal, Brussels…",
     "checkboxLabel": "Box never ticked in advance",
     "switchLabel": "Switch",
+    "radioLegend": "Post reach",
+    "radioLocal": "My country",
+    "radioDiaspora": "The whole diaspora",
     "sample": {
       "cityLyon": "Lyon",
       "cityParis": "Paris",
@@ -750,7 +906,8 @@
       "emptyTitle": "No event yet.",
       "emptyBody": "Suggest the first one: it will be reviewed, then published.",
       "advertiser": "Sample advertiser",
-      "advertiserMessage": "A labelled slot, never more than one per screen, never in messaging."
+      "advertiserMessage": "A labelled slot, never more than one per screen, never in messaging.",
+      "postMine": "My post, under review: the floating card is shown to its author only."
     }
   },
   "errors": {

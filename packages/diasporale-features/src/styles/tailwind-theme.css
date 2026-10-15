@@ -4,8 +4,8 @@
  * moteur), le thème `@antia/ui/themes/diasporale.css` et `extras.css`.
  *
  * Ici seulement : les utilitaires des rôles propres (étiquette pays, badges,
- * bandeaux, avatars), les reliefs nommés, le mouvement, et deux écarts de base
- * assumés, bornés au nœud DIASPORALE.
+ * tons des cartes flottantes, avatars), les reliefs nommés, le mouvement, et
+ * trois écarts de base assumés, bornés au nœud DIASPORALE.
  */
 
 @theme inline {
@@ -32,16 +32,12 @@
   --color-sponsored-foreground: var(--dg-sponsored-fg);
   --color-pending: var(--dg-moderation-pending-bg);
   --color-pending-foreground: var(--dg-moderation-pending-fg);
-  --color-pending-edge: var(--dg-moderation-pending-edge);
   --color-published: var(--dg-moderation-published-bg);
   --color-published-foreground: var(--dg-moderation-published-fg);
-  --color-published-edge: var(--dg-moderation-published-edge);
   --color-rejected: var(--dg-moderation-rejected-bg);
   --color-rejected-foreground: var(--dg-moderation-rejected-fg);
-  --color-rejected-edge: var(--dg-moderation-rejected-edge);
   --color-demo: var(--dg-demo-bg);
   --color-demo-foreground: var(--dg-demo-fg);
-  --color-demo-edge: var(--dg-demo-edge);
   --color-ink-subtle: var(--ink-500);
   --color-scrim: var(--dg-scrim);
   --color-avatar-foreground: var(--esp-on-avatar);
@@ -81,6 +77,15 @@
 
   [data-charte="diasporale"] :is(h1, h2, h3) {
     text-wrap: balance;
+  }
+
+  /* Un seul titre en Plex Condensed par écran (charte §3) : la base du moteur
+     met tous les titres en display ; ici, les sous-titres reviennent à Plex Sans
+     600. Un titre qui doit rester en display le demande (`font-display`). */
+  [data-charte="diasporale"] :is(h2, h3, h4, h5, h6) {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
 
   /* Focus : l'anneau de la charte (3 px, `--shadow-focus`), jamais le contour du navigateur. */

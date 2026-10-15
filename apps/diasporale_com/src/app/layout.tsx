@@ -35,7 +35,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body className="min-h-dvh">
         <a
           href={anchors.content}
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-card focus:px-4 focus:py-2 focus:shadow-lg"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-card focus:px-4 focus:py-2 focus:shadow-float"
         >
           {t("a11y.skipToContent")}
         </a>

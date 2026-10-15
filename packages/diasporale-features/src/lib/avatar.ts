@@ -13,13 +13,18 @@ export function avatarTone(id: string): number {
   return (Math.abs(hash) % AVATAR_TONES) + 1
 }
 
-/** Initiales d'un nom affiché : deux lettres au plus, capitales, accents conservés. */
+/**
+ * Initiales d'un nom affiché : deux lettres au plus, capitales, accents
+ * conservés. Une mention entre parenthèses (« (démo) ») et les mots sans lettre
+ * ne comptent pas : « Association d'exemple (démo) » donne « AE », pas « A( ».
+ */
 export function initials(displayName: string): string {
-  const parts = displayName
-    .trim()
+  const letters = displayName
+    .replace(/\([^)]*\)/g, " ")
     .split(/[\s\-’']+/)
-    .filter((part) => part.length > 0)
-  const first = parts[0]?.[0] ?? ""
-  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : ""
+    .map((part) => /\p{L}/u.exec(part)?.[0])
+    .filter((letter): letter is string => letter !== undefined)
+  const first = letters[0] ?? ""
+  const last = letters.length > 1 ? (letters[letters.length - 1] ?? "") : ""
   return `${first}${last}`.toLocaleUpperCase()
 }

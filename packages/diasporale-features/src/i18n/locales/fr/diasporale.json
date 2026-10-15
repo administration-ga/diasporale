@@ -236,6 +236,7 @@
     "rejectedReason": "Motif : {{reason}}"
   },
   "demo": {
+    "chipLabel": "Démo : afficher l'avis de démonstration",
     "tag": "Démo",
     "bannerTitle": "Démonstration.",
     "bannerBody": "Toutes les données sont fictives et restent dans ce navigateur.",
@@ -281,6 +282,9 @@
     "reset": "Remettre la démonstration à zéro",
     "resetDone": "Démonstration remise à zéro.",
     "charteLink": "Voir la charte graphique et tous les composants"
+  },
+  "notice": {
+    "dismiss": "Écarter cet avis"
   },
   "feed": {
     "title": "Fil",
@@ -687,43 +691,195 @@
   },
   "charte": {
     "title": "Charte « Sable de la diaspora »",
-    "lead": "Les composants de DIASPORALE montés avec des données d'exemple fictives, pour la relecture et la recette dans les deux thèmes.",
-    "palette": "Palette",
-    "swatch": {
-      "sable": "Sable — fond",
-      "papier": "Papier — cartes",
-      "encre": "Encre — texte, tampon",
-      "bleu": "Bleu Gabon — action",
-      "gres": "Grès — texte secondaire",
-      "nuit": "Nuit brune — sombre"
+    "eyebrow": "Charte graphique · version 2 · 15 octobre 2026",
+    "heading": "Sable de la diaspora",
+    "lead": "Les composants de DIASPORALE, montés avec des données fictives, pour relire et recetter l'interface dans les deux thèmes.",
+    "tocLabel": "Sommaire de la charte",
+    "section": {
+      "color": {
+        "title": "Couleur",
+        "lead": "Six couleurs nommées. En clair comme en sombre, le contenu se pose sur la surface la plus contrastée : le papier sur le sable, l'encre sur la nuit."
+      },
+      "contrast": {
+        "title": "Contraste",
+        "lead": "Mesuré en direct sur cette page, dans le thème affiché. Le texte tient 4,5:1 au moins ; les contours de champ et l'anneau de focus, 3:1."
+      },
+      "type": {
+        "title": "Typographie",
+        "lead": "IBM Plex en trois largeurs : le caractère vient de la largeur, pas d'une police étrangère. Un seul titre en Condensed par écran ; les sous-titres en Plex Sans."
+      },
+      "shape": {
+        "title": "Géométrie",
+        "lead": "Des rayons resserrés, et une seule exception : la pilule, réservée à ce qu'on fait basculer ou défiler."
+      },
+      "tag": {
+        "title": "Étiquette pays",
+        "lead": "La signature : l'étiquette qu'on accroche à une valise. Le pays est le contexte permanent ; en tête de hub, son code devient monumental."
+      },
+      "trust": {
+        "title": "Confiance",
+        "lead": "Quatre badges, jamais confondus, toujours avec une icône et un libellé. « Officiel » est un tampon d'encre."
+      },
+      "notices": {
+        "title": "Cartes flottantes",
+        "lead": "Les avis passent devant la page : une carte sans contour, le ton porté par la seule pastille, une croix pour l'écarter. La démonstration garde un repère permanent dans l'en-tête."
+      },
+      "cards": {
+        "title": "Cartes",
+        "lead": "Papier sur sable en clair, encre sur nuit en sombre, sans filet. Chaque contenu porte son pays."
+      },
+      "controls": {
+        "title": "Commandes",
+        "lead": "Les pilules pour basculer, les boutons pour agir. Un seul bouton principal par zone ; des cibles de 44 pixels."
+      }
     },
-    "stripeNote": "Le filet tricolore : seul usage des couleurs du drapeau, décoratif.",
-    "typography": "Typographie",
-    "typeDisplay": "Plex Condensed, pour les titres",
-    "typeBody": "IBM Plex Sans porte le corps et l'interface, à 15 pixels pour un public qui lit sur téléphone.",
-    "typeMono": "Plex Mono — FR · CA · 12/150",
-    "tags": "L'étiquette pays",
+    "theme": {
+      "light": "Clair",
+      "dark": "Sombre",
+      "lightRoles": "Fond sable · carte papier · texte encre",
+      "darkRoles": "Fond nuit · carte encre · texte sable",
+      "text": "Le texte principal",
+      "secondary": "Le texte secondaire, plus discret",
+      "action": "Agir"
+    },
+    "swatch": {
+      "sable": {
+        "name": "Sable",
+        "role": "Fond clair, texte sombre"
+      },
+      "papier": {
+        "name": "Papier",
+        "role": "Carte claire"
+      },
+      "encre": {
+        "name": "Encre",
+        "role": "Texte clair, carte sombre"
+      },
+      "nuit": {
+        "name": "Nuit",
+        "role": "Fond sombre"
+      },
+      "bleu": {
+        "name": "Bleu Gabon",
+        "role": "Action, lien, focus"
+      },
+      "gres": {
+        "name": "Grès",
+        "role": "Texte secondaire"
+      }
+    },
+    "contrast": {
+      "pair": "Paire",
+      "tokens": "Jetons",
+      "ratio": "Rapport",
+      "level": "Niveau",
+      "shownLight": "Thème affiché : clair",
+      "shownDark": "Thème affiché : sombre",
+      "measuring": "Mesure…",
+      "sample": "Aa",
+      "row": {
+        "textBackground": "Texte sur fond",
+        "textCard": "Texte sur carte",
+        "mutedCard": "Secondaire sur carte",
+        "mutedBackground": "Secondaire sur fond",
+        "faintCard": "Discret sur carte",
+        "linkCard": "Lien sur carte",
+        "primaryButton": "Bouton principal",
+        "fieldEdge": "Contour de champ"
+      },
+      "levelAaa": "AAA",
+      "levelAa": "AA",
+      "levelComponent": "AA composant",
+      "levelFail": "Insuffisant"
+    },
+    "type": {
+      "display": {
+        "role": "Display",
+        "spec": "Plex Sans Condensed · 700 · 40/44",
+        "sample": "La communauté de France"
+      },
+      "title": {
+        "role": "Titre",
+        "spec": "Plex Sans · 600 · 20/26",
+        "sample": "Évènements à venir"
+      },
+      "subtitle": {
+        "role": "Sous-titre",
+        "spec": "Plex Sans · 600 · 17/24",
+        "sample": "Soirée culturelle de la communauté"
+      },
+      "body": {
+        "role": "Corps",
+        "spec": "Plex Sans · 400 · 15/23",
+        "sample": "IBM Plex Sans porte le texte et l'interface, à 15 pixels pour un public qui lit sur téléphone."
+      },
+      "caption": {
+        "role": "Légende",
+        "spec": "Plex Sans · 400 · 13/18",
+        "sample": "Il y a 5 heures · Lyon"
+      },
+      "code": {
+        "role": "Code",
+        "spec": "Plex Mono · 600 · 11 · capitales",
+        "sample": "FR · CA · 12/150"
+      }
+    },
+    "shape": {
+      "badge": {
+        "value": "4 px",
+        "use": "Badges, étiquette pays"
+      },
+      "control": {
+        "value": "6 px",
+        "use": "Boutons, champs, options"
+      },
+      "card": {
+        "value": "8 px",
+        "use": "Cartes, cartes flottantes"
+      },
+      "panel": {
+        "value": "12 px",
+        "use": "Panneaux, feuilles"
+      },
+      "pill": {
+        "value": "Pilule",
+        "use": "Onglets, filtres, sélecteurs, interrupteur"
+      },
+      "relief": "Relief : aucun contour autour d'une carte ; une ombre à peine perceptible, un souffle de plus pour ce qui flotte."
+    },
     "monumentCaption": "La communauté — France",
-    "badges": "Badges de confiance",
-    "banners": "Bandeaux",
-    "counters": "Compteurs",
-    "cards": "Cartes",
-    "controls": "Commandes",
+    "notices": {
+      "restore": "Réafficher les cartes",
+      "live": "Voir une carte en situation",
+      "chip": "Repère permanent de l'en-tête"
+    },
+    "controlGroup": {
+      "filters": "Filtres et onglets",
+      "buttons": "Boutons",
+      "fields": "Champs et choix",
+      "contact": "Contact et emplacement sponsorisé"
+    },
     "filtersLabel": "Catégories d'évènements",
     "tabsLabel": "Onglets de la communauté",
-    "primitives": "Éléments de base",
     "button": {
       "primary": "Principal",
       "secondary": "Secondaire",
-      "outline": "Contour",
+      "outline": "Filet",
       "ghost": "Discret",
       "destructive": "Destructif",
-      "disabled": "Désactivé"
+      "disabled": "Désactivé",
+      "small": "Petit",
+      "medium": "Moyen",
+      "large": "Grand"
     },
-    "fieldLabel": "Champ de saisie",
-    "fieldPlaceholder": "Texte d'exemple",
+    "fieldLabel": "Ville de résidence",
+    "fieldHint": "Elle s'affiche sur votre étiquette pays.",
+    "fieldPlaceholder": "Lyon, Montréal, Bruxelles…",
     "checkboxLabel": "Case jamais cochée d'avance",
     "switchLabel": "Interrupteur",
+    "radioLegend": "Portée de la publication",
+    "radioLocal": "Mon pays",
+    "radioDiaspora": "Toute la diaspora",
     "sample": {
       "cityLyon": "Lyon",
       "cityParis": "Paris",
@@ -750,7 +906,8 @@
       "emptyTitle": "Aucun évènement pour l'instant.",
       "emptyBody": "Proposez le premier : il sera relu, puis publié.",
       "advertiser": "Annonceur d'exemple",
-      "advertiserMessage": "Un encart étiqueté, jamais plus d'un par écran, jamais dans la messagerie."
+      "advertiserMessage": "Un encart étiqueté, jamais plus d'un par écran, jamais dans la messagerie.",
+      "postMine": "Ma publication, en relecture : la carte flottante n'est montrée qu'à son autrice ou son auteur."
     }
   },
   "errors": {

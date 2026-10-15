@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Button, Card, Checkbox, Field, Input, Label, RadioCard, RadioGroup, cn } from "@diasporale/features"
+import { Button, Card, Checkbox, Field, FloatingNotice, Input, Label, RadioCard, RadioGroup, cn } from "@diasporale/features"
 import { useActions, useDataSource, useSession } from "@diasporale/features/data"
 import { DEMO_IDN_IDENTITIES, isValidDestination } from "@diasporale/features/demo"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
@@ -66,11 +66,17 @@ function DoorLink(props: { href: string; icon: ReactNode; title: string; body: s
     <NextLink
       href={props.href}
       className={cn(
-        "group flex items-start gap-4 rounded-2xl border bg-card p-5 shadow-card transition-[box-shadow,border-color] hover:shadow-card-hover focus-visible:shadow-focus",
-        props.emphasis ? "border-primary" : "border-border",
+        "group flex items-start gap-4 rounded-2xl bg-card p-5 shadow-card transition-shadow hover:shadow-card-hover focus-visible:shadow-focus",
       )}
     >
-      <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-xl bg-tag text-tag-code [&_svg]:size-6">
+      {/* La porte recommandée se distingue par sa pastille bleue et son badge, jamais par un contour. */}
+      <span
+        aria-hidden
+        className={cn(
+          "grid size-12 shrink-0 place-items-center rounded-xl [&_svg]:size-6",
+          props.emphasis ? "bg-[var(--primary-50)] text-[var(--primary-700)]" : "bg-tag text-tag-code",
+        )}
+      >
         {props.icon}
       </span>
       <span className="min-w-0 flex-1">
@@ -138,10 +144,9 @@ export function IdnScreen() {
   const consentError = form.formState.errors.consent?.message
   return (
     <EntryFrame title={t("idn.title")} lead={t("idn.lead")}>
-      <div className="flex items-start gap-3 rounded-xl border-l-[3px] border-demo-edge bg-demo px-4 py-3 text-demo-foreground">
-        <FlaskConicalIcon className="mt-0.5 size-5 shrink-0" aria-hidden />
-        <p className="text-[13px] leading-snug">{t("idn.simulation")}</p>
-      </div>
+      <FloatingNotice role="note" tone="demo" icon={<FlaskConicalIcon />} heading={t("demo.bannerTitle")}>
+        {t("idn.simulation")}
+      </FloatingNotice>
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-medium">{t("idn.identityLegend")}</legend>
@@ -353,12 +358,10 @@ export function CodeScreen() {
         <form noValidate onSubmit={verify} className="flex flex-col gap-5">
           <p className="text-[15px]">{t("code.sentTo", { destination })}</p>
           {sent.demoCode ? (
-            <div className="flex items-center gap-3 rounded-xl border-l-[3px] border-demo-edge bg-demo px-4 py-3 text-demo-foreground">
-              <FlaskConicalIcon className="size-5 shrink-0" aria-hidden />
-              <p className="text-[13px]">
-                {t("code.demoCode")} <span className="font-mono text-base font-semibold tracking-[0.2em]">{sent.demoCode}</span>
-              </p>
-            </div>
+            // Le code à recopier ne se ferme pas : la carte n'a pas de croix.
+            <FloatingNotice role="note" tone="demo" icon={<FlaskConicalIcon />} heading={t("code.demoCode")}>
+              <span className="font-mono text-base font-semibold tracking-[0.2em] text-popover-foreground">{sent.demoCode}</span>
+            </FloatingNotice>
           ) : null}
           <Field id={`${ids}-code`} label={t("code.codeLabel")} error={codeError ? t(`errors.${codeError}`) : undefined}>
             {(control) => (

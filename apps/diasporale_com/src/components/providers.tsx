@@ -13,6 +13,8 @@ import { Toaster } from "sonner"
 import { publicEnv } from "@/lib/env"
 import { routes } from "@/lib/routes"
 
+import { DemoFloatingCard } from "./site-chrome"
+
 /** La table de routes, telle que les surfaces de `@diasporale/features` la consomment. */
 const featureRoutes: FeatureRoutes = {
   profile: routes.profile,
@@ -51,16 +53,24 @@ export function Providers(props: { locale: Locale; children: ReactNode }) {
         <DataSourceProvider source={source}>
           <RoutingProvider routes={featureRoutes} Link={AppLink}>
             {props.children}
+            {/* Une seule pile pour tout ce qui flotte (charte v2 §7) : cartes flottantes et
+                notifications, en bas à droite ; au téléphone, pleine largeur au-dessus de la
+                barre basse. Déployée : une carte flottante n'est jamais cachée derrière une autre. */}
             <Toaster
-              position="bottom-center"
-              offset={88}
+              position="bottom-right"
+              offset={{ bottom: 88, right: 24 }}
+              mobileOffset={{ bottom: 88, left: 12, right: 12 }}
+              expand
+              visibleToasts={4}
+              gap={10}
               toastOptions={{
                 classNames: {
-                  toast: "!bg-card !text-card-foreground !border-border !shadow-lg !font-sans",
+                  toast: "!rounded-xl !border-0 !bg-popover !text-popover-foreground !shadow-float !font-sans",
                   description: "!text-muted-foreground",
                 },
               }}
             />
+            <DemoFloatingCard />
           </RoutingProvider>
         </DataSourceProvider>
       </I18nProvider>

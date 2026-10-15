@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 
 import { describe, expect, it } from "vitest"
 
-import { cascade, contrastRatio, cssBlock, declarations } from "./contrast"
+import { cascade, contrastRatio, cssBlock, declarations, tokenLuminance } from "./contrast"
 
 /**
  * Cliquet du thème DIASPORALE tel que le moteur le sert : charte de base
@@ -59,6 +59,7 @@ const TEXT_PAIRS: readonly (readonly [string, string])[] = [
   ["--foreground", "--background"],
   ["--card-foreground", "--card"],
   ["--popover-foreground", "--popover"],
+  ["--muted-foreground", "--popover"],
   ["--muted-foreground", "--background"],
   ["--muted-foreground", "--card"],
   ["--muted-foreground", "--muted"],
@@ -124,11 +125,10 @@ describe("thème DIASPORALE servi par le moteur — cascade base + thème", () =
       })
     }
 
-    it("ne porte aucune couleur littérale hors du filet tricolore", () => {
-      const literal = [...EXTRAS_LIGHT, ...EXTRAS_DARK].filter(
-        ([token, value]) => !token.startsWith("--dg-drapeau-") && /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(|oklch\(/i.test(value),
-      )
+    it("ne porte aucune couleur littérale, et plus aucune couleur du drapeau (charte v2)", () => {
+      const literal = [...EXTRAS_LIGHT, ...EXTRAS_DARK].filter(([, value]) => /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(|oklch\(/i.test(value))
       expect(literal.map(([token]) => token)).toEqual([])
+      expect([...EXTRAS_LIGHT.keys()].filter((token) => /drapeau|stripe/.test(token))).toEqual([])
     })
 
     it("chaque rôle propre utilisé par la couche Tailwind est déclaré", () => {
@@ -136,6 +136,20 @@ describe("thème DIASPORALE servi par le moteur — cascade base + thème", () =
       const used = new Set([...layer.matchAll(/var\((--dg-[a-z0-9-]+)\)/g)].map((match) => match[1]!))
       expect([...used].filter((token) => !EXTRAS_LIGHT.has(token))).toEqual([])
     })
+  })
+
+  it("le sombre retourne la page : la carte est plus profonde que le fond, comme elle est plus claire en clair", () => {
+    expect(tokenLuminance(THEMES.clair, "--card")).toBeGreaterThan(tokenLuminance(THEMES.clair, "--background"))
+    expect(tokenLuminance(THEMES.sombre, "--card")).toBeLessThan(tokenLuminance(THEMES.sombre, "--background"))
+    // Ce qui flotte (carte flottante, menu) remonte vers la clarté, au-dessus du fond comme de la carte.
+    expect(tokenLuminance(THEMES.sombre, "--popover")).toBeGreaterThan(tokenLuminance(THEMES.sombre, "--background"))
+  })
+
+  it("rayons resserrés (contrôles 6 px, cartes 8 px, panneaux 12 px), pilule intacte", () => {
+    expect(THEMES.clair.get("--radius-md")).toBe("6px")
+    expect(THEMES.clair.get("--radius-xl")).toBe("8px")
+    expect(THEMES.clair.get("--radius-2xl")).toBe("12px")
+    expect(THEMES.clair.get("--esp-r-chrome")).toBe("999px")
   })
 
   it("garde le bleu Gabon comme bleu d'action et le sable comme fond", () => {
