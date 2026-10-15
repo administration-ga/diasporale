@@ -6,6 +6,7 @@
   "description": "Racine de DIASPORALE : scripts de commodité seulement. AUCUNE installation ici : les espaces de travail apps/* et packages/* sont déclarés par ANTIA/package.json (installation unique, PD0) ; les versions viennent de son catalogue.",
   "scripts": {
     "dev": "bun run --cwd apps/diasporale_com dev",
+    "dev:engine": "bun run --cwd apps/diasporale_com dev:engine",
     "build": "bun run --cwd apps/diasporale_com build",
     "test:domain": "bun run --cwd packages/diasporale-domain test",
     "test": "bun run test:domain && bun run --cwd packages/diasporale-features test && bun run --cwd apps/diasporale_com test",

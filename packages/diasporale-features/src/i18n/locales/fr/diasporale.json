@@ -910,6 +910,12 @@
       "postMine": "Ma publication, en relecture : la carte flottante n'est montrée qu'à son autrice ou son auteur."
     }
   },
+  "engine": {
+    "backendMissing": "Le service n'est pas configuré sur cet environnement.",
+    "sessionLoading": "Ouverture de votre session…",
+    "sessionFailed": "Votre session n'a pas pu s'ouvrir.",
+    "sessionRetry": "Réessayer"
+  },
   "errors": {
     "unknown": "Une erreur est survenue. Réessayez dans un instant.",
     "not_found": "Cet élément n'existe plus.",
@@ -967,6 +973,12 @@
     "attestation_not_needed": "Votre compte est déjà vérifié.",
     "attestation_too_soon": "Une demande par 24 heures : réessayez demain.",
     "attestation_unavailable": "La vérification demande une identité IDN ou une adresse e-mail vérifiée.",
-    "clipboard_unavailable": "Copie impossible : sélectionnez l'identifiant à la main."
+    "clipboard_unavailable": "Copie impossible : sélectionnez l'identifiant à la main.",
+    "rate_limited": "Trop de demandes d'affilée : réessayez dans quelques minutes.",
+    "suspended": "Votre compte est suspendu : vous ne pouvez plus agir dans le réseau pour le moment.",
+    "too_many_attempts": "Trop d'essais pour ce code : demandez-en un nouveau.",
+    "delivery_unavailable": "Le code n'a pas pu être envoyé pour le moment. Réessayez dans un instant.",
+    "feature_unavailable": "Cette fonction n'est pas encore ouverte.",
+    "network_unavailable": "DIASPORALE est injoignable pour le moment. Réessayez dans un instant."
   }
 }

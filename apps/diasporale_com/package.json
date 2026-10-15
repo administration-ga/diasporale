@@ -6,6 +6,7 @@
   "description": "diasporale.com — le réseau social fermé de la diaspora gabonaise, application du moteur social national ANTIA (Next.js 16, mobile-first, port 3031).",
   "scripts": {
     "dev": "next dev --port 3031",
+    "dev:engine": "NEXT_PUBLIC_DIASPORALE_DATA_SOURCE=engine next dev --port 3031",
     "build": "next build",
     "start": "next start -p 3031",
     "lint": "eslint .",

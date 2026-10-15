@@ -42,6 +42,7 @@ import type {
   SessionView,
   SponsorDashboardView,
 } from "../data/types"
+import { maskDestination } from "../data/mask"
 import type { DemoAccountView } from "../data/port"
 import type { DemoPage, DemoPost, DemoState } from "./state"
 
@@ -295,12 +296,6 @@ export function sessionView(state: DemoState, now: number): SessionView {
 }
 
 /** `awa@example.com` → `a…@example.com` ; `+33 6 12 34 56 78` → `…5678`. Jamais l'adresse entière à l'écran. */
-export function maskDestination(kind: "email" | "phone", value: string): string {
-  if (kind === "phone") return `…${value.replace(/\D/g, "").slice(-4)}`
-  const [local = "", domain = ""] = value.split("@")
-  return `${local.slice(0, 1)}…@${domain}`
-}
-
 export function profileView(state: DemoState, handle: string, viewerId: string | null, now: number): ProfileView | null {
   const person = Object.values(state.persons).find((candidate) => candidate.profile?.handle === handle)
   const membership = person ? state.memberships[person.id] : undefined

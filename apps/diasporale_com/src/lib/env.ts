@@ -7,8 +7,10 @@
 export type DataSourceKind = "demo" | "engine"
 
 export const publicEnv = {
-  /** `demo` tant que le moteur n'est pas câblé ; `engine` après PD2/PD4. */
+  /** `demo` (données fictives, ce navigateur) ou `engine` (le moteur ANTIA, PD2). */
   dataSource: (process.env.NEXT_PUBLIC_DIASPORALE_DATA_SOURCE === "engine" ? "engine" : "demo") as DataSourceKind,
+  /** Déploiement Convex du moteur (inscrit par la configuration Next commune, ou l'ARG du Dockerfile). */
+  convexUrl: process.env.NEXT_PUBLIC_CONVEX_URL ?? null,
   /** Portail IDN (identite.ga) — « Activer mon identité numérique IDN ». */
   idnPortalUrl: process.env.NEXT_PUBLIC_IDN_PORTAL_URL ?? null,
   /** consulat.ga — « M'inscrire au consulat ». */

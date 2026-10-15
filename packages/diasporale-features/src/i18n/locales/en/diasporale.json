@@ -910,6 +910,12 @@
       "postMine": "My post, under review: the floating card is shown to its author only."
     }
   },
+  "engine": {
+    "backendMissing": "The service isn't configured in this environment.",
+    "sessionLoading": "Opening your session…",
+    "sessionFailed": "Your session couldn't be opened.",
+    "sessionRetry": "Try again"
+  },
   "errors": {
     "unknown": "Something went wrong. Try again in a moment.",
     "not_found": "This item no longer exists.",
@@ -967,6 +973,12 @@
     "attestation_not_needed": "Your account is already verified.",
     "attestation_too_soon": "One request per 24 hours: try again tomorrow.",
     "attestation_unavailable": "Verification requires an IDN identity or a verified email address.",
-    "clipboard_unavailable": "Copy failed: select the handle by hand."
+    "clipboard_unavailable": "Copy failed: select the handle by hand.",
+    "rate_limited": "Too many requests in a row: try again in a few minutes.",
+    "suspended": "Your account is suspended: you can't act in the network for now.",
+    "too_many_attempts": "Too many attempts for this code: request a new one.",
+    "delivery_unavailable": "The code couldn't be sent right now. Try again in a moment.",
+    "feature_unavailable": "This feature isn't open yet.",
+    "network_unavailable": "DIASPORALE can't be reached right now. Try again in a moment."
   }
 }
