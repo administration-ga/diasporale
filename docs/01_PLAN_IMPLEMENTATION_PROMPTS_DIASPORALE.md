@@ -29,7 +29,8 @@ dependances:
 | e) Contrats côté gabon-diplomatie (PR brouillon) + fournisseur d'attestation factice | 2026-10-15 | PR brouillon administration-ga/gabon-diplomatie#184 (`7d01f215`) et #185 (`540d3c45`), non fusionnées ; fournisseur factice `b953739`, lecture stricte `bb76017` |
 | PD0 Câblage dans le moteur | en cours (15/10) | ANTIA `5535a63`, `97cec07` (installation), `2454aed` (catalogue) ; DIASPORALE `fa307c0`, `dffbe4b`, `fc8acef`, `1752d22` — reste `docker build` (disque de la machine) |
 | PD1 Domaine diaspora et réseau `diasporale` dans le moteur | 2026-10-15 | domaine `7c5575e`, `c622cb9`, `c067746` ; tranche ANTIA `22b0383` (tables), `7cfafdd` (fonctions) ; côté moteur, par ANTIA : `97cec07` (`managedBy`, aides d'admission, `failAppRule`, seaux), `bf1f46c` (schéma) — reste la ligne de `convex/crons.ts` (demandée à ANTIA) |
-| PD2 → PD10 | — | — |
+| PD2 Entrer dans DIASPORALE (IDN, compte léger, handle, consentements) | partiel (15/10) | DIASPORALE `140a82c`, `a8ea1a9` ; tranche ANTIA `8176491`, `ecae28d` ; ANTIA `187adb6` (`isHandleAvailable`, proxy d'authentification commun) — R3 joué contre le moteur local ; reste R1 (IDN dans le moteur : PA4 d'ANTIA ; client OIDC sandbox `diasporale`) |
+| PD3 → PD10 | — | — (PD3 préparé côté domaine : `77fa3ff`, `3fa4213`) |
 
 Vérifications des étapes closes :
 - **a)** 197 cas `bun test`, couverture lignes et fonctions 100 % imposée par
@@ -68,6 +69,20 @@ Vérifications des étapes closes :
   - index nommés selon la convention du moteur (`by_network_and_country`…) ;
   - compteurs d'associations, d'entreprises et d'évènements à zéro jusqu'à leurs sources (PD5,
     PD7) ; le chiffre des membres sous le seuil de publication ne quitte pas le serveur.
+- **PD2 (partiel)** : source de données « moteur » de l'application (`apps/diasporale_com/src/data`,
+  `dev:engine`), à côté de la démonstration qui reste la valeur par défaut. Vérifié : `bun run verify`
+  vert (232 + 169 + 40 tests, dont 17 pour la source moteur), puis **recette R3 contre le moteur
+  local** sur :3031 :
+  - deux comptes `@exemple.test` entrés par code à usage unique (outils de développement du moteur) ;
+  - accueil en trois étapes, propositions et disponibilité d'identifiant par le moteur, aucune case
+    précochée ;
+  - adhésion « en attente » et adhésion ANTIA dérivée, carte de statut, « Publier » désactivé ;
+  - parrain rendu vérifié par la graine de recette ; identifiant inconnu refusé de façon indistincte ;
+  - parrainage, puis filleul « déclaré » (relevé en base).
+  La recette a révélé une boucle de rendus (requêtes non mémorisées), corrigée en `a8ea1a9`.
+  **Écarts assumés** : ce que le moteur ne sert pas encore se dit `feature_unavailable` ; le fil
+  lit toute publication du moteur comme portée « diaspora » (règle du domaine pour un contenu
+  sans pays) jusqu'au lot « posts » de PA3, et refuse de publier en portée « local » d'ici là.
 - **e)** Côté gabon-diplomatie, sur deux branches en worktree (le `main` partagé n'est pas
   touché) : #184 `DIASPORA-ATTESTATION-V1` (route signée HMAC, exclusions indiscernables,
   idempotence par `consentRef`, journal à empreinte, correspondance e-mail par
