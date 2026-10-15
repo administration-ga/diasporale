@@ -12,6 +12,7 @@ import { formatDate, formatRelative } from "../../lib/format"
 import { Avatar, Card } from "../../primitives/surface"
 import { useRouting } from "../../routing"
 import { PostCommentsSheet } from "../comments"
+import { PostMenu } from "../post-menu"
 import { ContentScopeTag } from "../country-tag"
 import { ModerationBanner } from "../moderation-banner"
 import { TrustBadges } from "../trust-badge"
@@ -77,6 +78,7 @@ export function PostCard(props: {
               <ContentScopeTag scope={post.scope} {...(props.hubCountry ? { hubCountry: props.hubCountry } : {})} />
             </div>
           </div>
+          <PostMenu post={post} />
         </header>
         <p className="whitespace-pre-line px-4 pt-3 text-[15px] leading-relaxed text-foreground">{post.body}</p>
         <footer className="mt-3 flex flex-wrap items-center gap-2 border-t border-border px-2 py-1.5">

@@ -211,6 +211,7 @@ export function CharteScreen() {
     commentCount: 3,
     myReaction: null,
     isMine: false,
+    bookmarked: false,
   }
   const myPost: PostView = {
     ...post,
@@ -224,6 +225,7 @@ export function CharteScreen() {
     reactionCount: 0,
     commentCount: 0,
     isMine: true,
+    bookmarked: false,
   }
   const job: JobView = {
     id: "job",

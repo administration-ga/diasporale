@@ -25,10 +25,13 @@ import {
   type Visibility,
 } from "@diasporale/domain"
 
-import type { AssociationType, CompanySector, EventCategory, NotificationKind, ReactionKind } from "../data/types"
+import type { AssociationType, CompanySector, EventCategory, NotificationKind, ReactionKind, ReportReason } from "../data/types"
 
-/** Version de l'état persisté : v2 = relations (demandes, blocages, abonnements) ; v3 = cloche ; v4 = commentaires. */
-export const DEMO_STATE_VERSION = 4
+/**
+ * Version de l'état persisté : v2 = relations (demandes, blocages, abonnements) ;
+ * v3 = cloche ; v4 = commentaires ; v5 = marques, sourdines et signalements.
+ */
+export const DEMO_STATE_VERSION = 5
 
 export interface DemoPerson {
   readonly id: string
@@ -104,6 +107,23 @@ export interface DemoPost {
   readonly baseReactions: number
 }
 
+/** Une marque PRIVÉE d'une personne sur une publication : signet, ou publication masquée pour elle. */
+export interface DemoMark {
+  readonly personId: string
+  readonly postId: string
+  readonly kind: "bookmark" | "hidden"
+}
+
+/** Un signalement (EXF-DG-12) : la publication est aussitôt masquée pour la personne qui signale. */
+export interface DemoReport {
+  readonly id: string
+  readonly reporterId: string
+  readonly postId: string
+  readonly reason: ReportReason
+  readonly note: string | null
+  readonly createdAt: number
+}
+
 /** Un commentaire (EXF-DG-12) : un seul niveau de réponse, retiré et non supprimé. */
 export interface DemoComment {
   readonly id: string
@@ -177,6 +197,10 @@ export interface DemoState {
   readonly follows: readonly (readonly [string, string])[]
   readonly notifications: readonly DemoNotification[]
   readonly comments: readonly DemoComment[]
+  readonly marks: readonly DemoMark[]
+  /** Sourdines : [qui se tait, qui est tu]. */
+  readonly mutes: readonly (readonly [string, string])[]
+  readonly reports: readonly DemoReport[]
   readonly openCountries: readonly CountryCode[]
   readonly countryModerators: Readonly<Partial<Record<CountryCode, number>>>
   readonly networkModerators: number
@@ -559,6 +583,9 @@ export function createDemoSeed(now: number): DemoState {
       comment("c-6", "post-6", "p-prisca", "Je suis à Bordeaux, mais je suivrai le match de loin !", 3 * DAY - 2 * HOUR),
       comment("c-7", "post-7", "p-mireille", "Je t'envoie une adresse par la messagerie.", 4 * DAY - HOUR),
     ],
+    marks: [],
+    mutes: [],
+    reports: [],
     openCountries: ["FR"],
     countryModerators: { FR: 2 },
     networkModerators: 2,

@@ -161,6 +161,7 @@ export function toPostView(item: FeedItem): PostView {
     commentCount: item.commentCount,
     myReaction: item.reactions.mine,
     isMine: item.isMine,
+    bookmarked: item.viewer.bookmarked,
   }
 }
 

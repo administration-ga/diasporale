@@ -17,6 +17,7 @@ import {
   JOB_CONTRACTS,
   MENTOR_DOMAINS,
   REACTION_KINDS,
+  REPORT_REASONS,
 } from "@diasporale/features/data"
 import { DEMO_IDN_IDENTITIES } from "@diasporale/features/demo"
 import { SUPPORTED_LOCALES } from "@diasporale/features/i18n"
@@ -86,6 +87,7 @@ const FAMILIES: string[] = [
   ...each(BELL_ACTOR_LED_KINDS, (kind) => [`bell.kind.${kind}`]),
   ...each(BELL_SYSTEM_KINDS, (kind) => [`bell.system.${kind}`]),
   ...each(INVITE_OUTCOMES, (outcome) => [`bell.outcome.${outcome}`]),
+  ...each(REPORT_REASONS, (reason) => [`report.reason.${reason}`]),
   ...each(FACET_FIELDS, (field) => [`facet.field.${field}`]),
   ...each(FIELD_VISIBILITY_LEVELS, (level) => [`facet.visibility.${level}`]),
   ...each(DIRECTORY_VISIBILITY_LEVELS, (level) => [`settings.directoryLevel.${level}`]),

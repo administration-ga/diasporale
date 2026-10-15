@@ -53,7 +53,15 @@ export interface PostView {
   readonly commentCount: number
   readonly myReaction: ReactionKind | null
   readonly isMine: boolean
+  /** Enregistrée par le lecteur (signet, visible de lui seul). */
+  readonly bookmarked: boolean
 }
+
+/** Les six motifs de signalement (EXF-DG-12), ceux du moteur (`CONTENT_REPORT_REASONS`). */
+export const REPORT_REASONS = ["harassment", "hate", "violence", "sexual_content", "misinformation", "other"] as const
+export type ReportReason = (typeof REPORT_REASONS)[number]
+/** Longueur de la précision d'un signalement, règle du moteur (`CONTENT_REPORT_NOTE_MAX`). */
+export const REPORT_NOTE_MAX = 1000
 
 /** Un commentaire (EXF-DG-12) : l'auteur par son profil PUBLIÉ (`null` : nom neutre, profil retiré). */
 export interface CommentView {

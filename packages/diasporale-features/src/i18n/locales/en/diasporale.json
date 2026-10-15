@@ -956,6 +956,46 @@
     "edited": "edited",
     "someone": "A member"
   },
+  "postMenu": {
+    "open": "More actions on this post",
+    "bookmark": "Save",
+    "unbookmark": "Remove from saved",
+    "bookmarked": "Post saved.",
+    "unbookmarked": "Removed from your saved posts.",
+    "hide": "Hide this post",
+    "hidden": "Post hidden: you won't see it anymore.",
+    "mute": "Mute {{name}}",
+    "muted": "{{name}} is muted: their posts leave your feeds.",
+    "report": "Report…",
+    "remove": "Remove my post…"
+  },
+  "report": {
+    "title": "Report this post",
+    "description": "Choose a reason. The post is hidden for you right away; the moderation team reviews it.",
+    "close": "Close the report",
+    "reasonLegend": "Reason",
+    "reason": {
+      "harassment": "Harassment",
+      "hate": "Hate or discrimination",
+      "violence": "Violence or threat",
+      "sexual_content": "Sexual content",
+      "misinformation": "False information",
+      "other": "Other reason"
+    },
+    "noteLabel": "Details (optional)",
+    "noteHint": "Anything that helps the team understand — no contact details.",
+    "send": "Send the report",
+    "sent": "Report sent: the post is hidden for you.",
+    "cancel": "Cancel"
+  },
+  "removePost": {
+    "title": "Remove this post?",
+    "description": "It disappears from feeds and from your profile, along with its comments.",
+    "close": "Close",
+    "confirm": "Remove",
+    "cancel": "Cancel",
+    "done": "Post removed."
+  },
   "bell": {
     "open": "Notifications",
     "openUnread_one": "Notifications, {{count}} unread",
@@ -1051,6 +1091,8 @@
     "post_too_long": "A post has 2,000 characters at most.",
     "comment_empty": "Write a comment before sending it.",
     "comment_too_long": "A comment has 1,000 characters at most.",
+    "report_reason_required": "Choose a reason for the report.",
+    "report_note_too_long": "Details have 1,000 characters at most.",
     "scope_reach_invalid": "This scope doesn't exist.",
     "scope_country_required": "A local post carries a country.",
     "scope_country_invalid": "This country is not a diaspora country.",

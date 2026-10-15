@@ -277,7 +277,26 @@ export function postView(state: DemoState, post: DemoPost, viewerId: string, now
     commentCount: liveComments(state, post.id, viewerId).length,
     myReaction: mine,
     isMine: post.author.kind === "person" && post.author.id === viewerId,
+    bookmarked: state.marks.some((mark) => mark.personId === viewerId && mark.postId === post.id && mark.kind === "bookmark"),
   }
+}
+
+/** Un blocage, dans un sens ou dans l'autre, entre deux personnes. */
+function blockedBetween(state: DemoState, a: string, b: string): boolean {
+  return state.blocks.some((block) => (block.byId === a && block.targetId === b) || (block.byId === b && block.targetId === a))
+}
+
+/**
+ * Ce que le lecteur a écarté, comme le moteur l'écarte : une publication
+ * masquée (ou signalée) par lui, un blocage dans la paire, et — dans les fils
+ * seulement — un auteur en sourdine.
+ */
+function setAside(state: DemoState, post: DemoPost, viewerId: string, inFeed: boolean): boolean {
+  if (state.marks.some((mark) => mark.personId === viewerId && mark.postId === post.id && mark.kind === "hidden")) return true
+  if (post.author.kind !== "person" || post.author.id === viewerId) return false
+  const authorId = post.author.id
+  if (inFeed && state.mutes.some(([by, target]) => by === viewerId && target === authorId)) return true
+  return blockedBetween(state, viewerId, authorId)
 }
 
 /**
@@ -351,7 +370,7 @@ export function feedView(
   const viewerCountry = hubCountry ?? membership.facet.countryOfResidence
   const followsPage = new Set<string>()
   return state.posts
-    .filter((post) => canRead(state, post, viewerId, now))
+    .filter((post) => canRead(state, post, viewerId, now) && !setAside(state, post, viewerId, true))
     .filter((post) =>
       hubCountry !== undefined
         ? isShownInHub(post.scope, hubCountry)
@@ -499,6 +518,8 @@ export function profileView(state: DemoState, handle: string, viewerId: string |
   const viewerStatus = statusOf(state, viewerId, now)
   if (viewerStatus === null) return null
   const isSelf = person.id === viewerId
+  // Un blocage dans la paire : le même « introuvable » qu'un identifiant inconnu.
+  if (!isSelf && blockedBetween(state, viewerId, person.id)) return null
   const viewerMembership = state.memberships[viewerId]
   const activeViewer = viewerStatus === "declaree" || viewerStatus === "verifiee"
   const facet = projectFacet(membership.facet, {
@@ -527,7 +548,7 @@ export function profileView(state: DemoState, handle: string, viewerId: string |
     isSelf,
     posts: state.posts
       .filter((post) => post.author.kind === "person" && post.author.id === person.id)
-      .filter((post) => canRead(state, post, viewerId, now))
+      .filter((post) => canRead(state, post, viewerId, now) && !setAside(state, post, viewerId, false))
       .sort((a, b) => b.createdAt - a.createdAt)
       .map((post) => postView(state, post, viewerId, now)),
   }

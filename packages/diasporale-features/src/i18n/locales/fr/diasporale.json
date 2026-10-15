@@ -956,6 +956,46 @@
     "edited": "modifié",
     "someone": "Un membre"
   },
+  "postMenu": {
+    "open": "Plus d'actions sur cette publication",
+    "bookmark": "Enregistrer",
+    "unbookmark": "Retirer des enregistrements",
+    "bookmarked": "Publication enregistrée.",
+    "unbookmarked": "Retirée de vos enregistrements.",
+    "hide": "Masquer cette publication",
+    "hidden": "Publication masquée : elle ne paraît plus pour vous.",
+    "mute": "Mettre {{name}} en sourdine",
+    "muted": "{{name}} est en sourdine : ses publications quittent vos fils.",
+    "report": "Signaler…",
+    "remove": "Retirer ma publication…"
+  },
+  "report": {
+    "title": "Signaler cette publication",
+    "description": "Choisissez un motif. La publication est aussitôt masquée pour vous ; l'équipe de modération l'examine.",
+    "close": "Fermer le signalement",
+    "reasonLegend": "Motif",
+    "reason": {
+      "harassment": "Harcèlement",
+      "hate": "Haine ou discrimination",
+      "violence": "Violence ou menace",
+      "sexual_content": "Contenu sexuel",
+      "misinformation": "Fausse information",
+      "other": "Autre motif"
+    },
+    "noteLabel": "Précision (facultative)",
+    "noteHint": "Ce qui aide l'équipe à comprendre — sans coordonnées.",
+    "send": "Envoyer le signalement",
+    "sent": "Signalement envoyé : la publication est masquée pour vous.",
+    "cancel": "Annuler"
+  },
+  "removePost": {
+    "title": "Retirer cette publication ?",
+    "description": "Elle disparaît des fils et de votre profil, avec ses commentaires.",
+    "close": "Fermer",
+    "confirm": "Retirer",
+    "cancel": "Annuler",
+    "done": "Publication retirée."
+  },
   "bell": {
     "open": "Notifications",
     "openUnread_one": "Notifications, {{count}} non lue",
@@ -1051,6 +1091,8 @@
     "post_too_long": "Une publication compte 2 000 caractères au plus.",
     "comment_empty": "Écrivez un commentaire avant de l'envoyer.",
     "comment_too_long": "Un commentaire compte 1 000 caractères au plus.",
+    "report_reason_required": "Choisissez un motif de signalement.",
+    "report_note_too_long": "Une précision compte 1 000 caractères au plus.",
     "scope_reach_invalid": "Cette portée n'existe pas.",
     "scope_country_required": "Une publication locale porte un pays.",
     "scope_country_invalid": "Ce pays n'est pas un pays de la diaspora.",

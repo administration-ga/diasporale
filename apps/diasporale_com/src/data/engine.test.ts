@@ -120,6 +120,7 @@ describe("projections du moteur vers les vues de DIASPORALE", () => {
         isMine,
         author: { personId: "p2", handle: null, displayName: null, badges: [] },
         reactions: { counts: { like: 0, bravo: 0, soutien: 0, instructif: 0 }, total: 0, mine: null },
+        viewer: { bookmarked: false, notifying: false },
       }) as never
     const items = [item("a", false), item("b", true)]
     expect(toFeed(items, "mon_pays", "FR").map((post) => post.id)).toEqual(["a", "b"])
@@ -471,6 +472,7 @@ describe("publications à portée et pays (PD4, lot 7 d'ANTIA)", () => {
     author: { personId: "p2", handle: "ada", displayName: "Ada", badges: [] },
     reactions: { counts: { like: 0, bravo: 0, soutien: 0, instructif: 0 }, total: 0, mine: null },
     commentCount: 2,
+    viewer: { bookmarked: true, notifying: false },
   }
   const item = (id: string, reach: string | null, country: string | null, reason = "public", isMine = false) =>
     ({ ...base, _id: id, reach, country, reason, isMine }) as never
@@ -593,6 +595,34 @@ describe("commentaires par le moteur (PD4, lot 8 d'ANTIA)", () => {
       { name: "modules/engagement/engagement:comment", args: { networkId: "n-diasporale", postId: "post-1", body: "Bonjour" } },
       { name: "modules/engagement/engagement:comment", args: { networkId: "n-diasporale", postId: "post-1", body: "Merci", parentCommentId: "c1" } },
       { name: "modules/engagement/engagement:removeComment", args: { networkId: "n-diasporale", commentId: "c9" } },
+    ])
+  })
+})
+
+describe("menu d'une publication par le moteur (PD4, lots 7 et 8 d'ANTIA)", () => {
+  it("signet, masquage, sourdine, signalement et retrait partent vers leurs fonctions, bornés par le réseau", async () => {
+    const { convex, calls } = fakeConvex({
+      ...NETWORK,
+      "modules/marks/marks:toggleMark": () => ({ marked: true }),
+      "modules/marks/marks:hidePost": () => ({ hidden: true }),
+      "modules/marks/marks:muteAuthor": () => ({ muted: true }),
+      "modules/moderation/moderation:reportPost": () => ({ reportId: "r1", created: true, hidden: true }),
+      "modules/posts/posts:remove": () => ({ removed: true }),
+    })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.toggleBookmark("post-1")).toEqual({ ok: true, value: { bookmarked: true } })
+    expect(await actions.hidePost("post-1")).toEqual({ ok: true, value: null })
+    expect(await actions.muteAuthor("p2")).toEqual({ ok: true, value: null })
+    expect(await actions.reportPost({ postId: "post-1", reason: "hate", note: "  " })).toEqual({ ok: true, value: null })
+    expect(await actions.reportPost({ postId: "post-1", reason: "other", note: " Détail. " })).toEqual({ ok: true, value: null })
+    expect(await actions.removePost("post-9")).toEqual({ ok: true, value: null })
+    expect(calls.slice(1)).toEqual([
+      { name: "modules/marks/marks:toggleMark", args: { networkId: "n-diasporale", postId: "post-1", kind: "bookmark" } },
+      { name: "modules/marks/marks:hidePost", args: { networkId: "n-diasporale", postId: "post-1" } },
+      { name: "modules/marks/marks:muteAuthor", args: { networkId: "n-diasporale", targetPersonId: "p2" } },
+      { name: "modules/moderation/moderation:reportPost", args: { networkId: "n-diasporale", postId: "post-1", reason: "hate" } },
+      { name: "modules/moderation/moderation:reportPost", args: { networkId: "n-diasporale", postId: "post-1", reason: "other", note: "Détail." } },
+      { name: "modules/posts/posts:remove", args: { networkId: "n-diasporale", postId: "post-9" } },
     ])
   })
 })

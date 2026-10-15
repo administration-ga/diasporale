@@ -40,6 +40,8 @@ export const DATA_ERROR_CODES = [
   "post_empty",
   "comment_empty",
   "comment_too_long",
+  "report_reason_required",
+  "report_note_too_long",
   "post_too_long",
   "attestation_not_needed",
   "attestation_too_soon",

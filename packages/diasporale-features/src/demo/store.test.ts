@@ -3,7 +3,20 @@ import { DAY_MS, HOUR_MS, type OnboardingConsentChoices } from "@diasporale/doma
 import { describe, expect, it } from "vitest"
 
 import type { JoinInput } from "../data/port"
-import { NOTIFICATIONS_PAGE, commentsView, feedView, hubCounters, memberSearchView, membershipView, notificationsView, relationView, repliesView, sessionView, unreadCountView } from "./selectors"
+import {
+  NOTIFICATIONS_PAGE,
+  commentsView,
+  feedView,
+  hubCounters,
+  memberSearchView,
+  membershipView,
+  notificationsView,
+  profileView,
+  relationView,
+  repliesView,
+  sessionView,
+  unreadCountView,
+} from "./selectors"
 import { DEMO_STORAGE_KEY, DemoStore } from "./store"
 
 /**
@@ -607,5 +620,62 @@ describe("commentaires (EXF-DG-12)", () => {
     const left = store.getState().comments
     expect(left.some((item) => item.authorId === "p-mireille" || item.postId === "post-2")).toBe(false)
     expect(left.map((item) => item.id).sort()).toEqual(["c-5", "c-6"])
+  })
+})
+
+describe("signets, masquage, sourdine, signalement et retrait (EXF-DG-12)", () => {
+  const feedIds = (store: DemoStore, viewerId: string) => feedView(store.getState(), viewerId, "recents", T0).map((post) => post.id)
+
+  it("un signet s'ajoute et se retire, pour soi seul", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    expect(await store.toggleBookmark("post-2")).toEqual({ ok: true, value: { bookmarked: true } })
+    expect(feedView(store.getState(), "p-steeve", "recents", T0).find((post) => post.id === "post-2")?.bookmarked).toBe(true)
+    expect(feedView(store.getState(), "p-prisca", "recents", T0).find((post) => post.id === "post-2")?.bookmarked).toBe(false)
+    expect(await store.toggleBookmark("post-2")).toEqual({ ok: true, value: { bookmarked: false } })
+    expect(await store.toggleBookmark("post-inconnue")).toEqual({ ok: false, code: "not_found" })
+  })
+
+  it("masquer retire la publication de mes fils seulement ; la sourdine retire un auteur de mes fils, pas de son profil", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    await store.hidePost("post-2")
+    expect(feedIds(store, "p-steeve")).not.toContain("post-2")
+    expect(feedIds(store, "p-prisca")).toContain("post-2")
+    await store.muteAuthor("p-nadia")
+    expect(feedIds(store, "p-steeve")).not.toContain("post-5")
+    expect(profileView(store.getState(), "nadia.mpassa", "p-steeve", T0)?.posts.map((post) => post.id)).toEqual(["post-5"])
+    // Se taire soi-même : sans effet.
+    expect(await store.muteAuthor("p-steeve")).toEqual({ ok: true, value: null })
+    expect(feedIds(store, "p-steeve")).toContain("post-6")
+  })
+
+  it("signaler : un motif, une précision bornée ; la publication est masquée pour la personne qui signale ; sa propre publication ne se signale pas", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    expect(await store.reportPost({ postId: "post-5", reason: "misinformation", note: "x".repeat(1001) })).toEqual({ ok: false, code: "report_note_too_long" })
+    expect(await store.reportPost({ postId: "post-6", reason: "other" })).toEqual({ ok: false, code: "not_found" })
+    expect(await store.reportPost({ postId: "post-5", reason: "misinformation", note: "  Chiffres sans source.  " })).toEqual({ ok: true, value: null })
+    expect(store.getState().reports).toMatchObject([{ reporterId: "p-steeve", postId: "post-5", reason: "misinformation", note: "Chiffres sans source." }])
+    expect(feedIds(store, "p-steeve")).not.toContain("post-5")
+    expect(feedIds(store, "p-nadia")).toContain("post-5")
+  })
+
+  it("retirer ma publication l'efface avec ses commentaires ; celle d'autrui : introuvable", async () => {
+    const { store } = demo()
+    await store.switchTo("p-mireille")
+    expect(await store.removePost("post-5")).toEqual({ ok: false, code: "not_found" })
+    expect(await store.removePost("post-2")).toEqual({ ok: true, value: null })
+    expect(store.getState().posts.some((post) => post.id === "post-2")).toBe(false)
+    expect(store.getState().comments.some((item) => item.postId === "post-2")).toBe(false)
+  })
+
+  it("un blocage retire les publications de la paire des fils, et le profil devient introuvable", async () => {
+    const { store } = demo()
+    await store.switchTo("p-steeve")
+    await store.block("p-mireille")
+    expect(feedIds(store, "p-steeve")).not.toContain("post-2")
+    expect(feedIds(store, "p-mireille")).not.toContain("post-6")
+    expect(profileView(store.getState(), "mireille.ivindo", "p-steeve", T0)).toBeNull()
   })
 })

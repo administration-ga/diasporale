@@ -38,6 +38,7 @@ import type {
   ProfileView,
   ReactionKind,
   RelationView,
+  ReportReason,
   SessionView,
   SponsorDashboardView,
   UnreadCountView,
@@ -87,6 +88,13 @@ export interface CommentInput {
   readonly parentCommentId?: string
 }
 
+/** Signaler une publication : un motif parmi six, une précision facultative. */
+export interface ReportInput {
+  readonly postId: string
+  readonly reason: ReportReason
+  readonly note?: string
+}
+
 export interface DiasporaleActions {
   signInWithIdn(input: IdnSignInInput): Promise<ActionResult>
   requestCode(destination: CodeDestination): Promise<ActionResult<{ demoCode: string | null }>>
@@ -101,6 +109,16 @@ export interface DiasporaleActions {
   comment(input: CommentInput): Promise<ActionResult>
   /** Retirer un commentaire — le sien, ou n'importe lequel sous sa propre publication. */
   removeComment(commentId: string): Promise<ActionResult>
+  /** Enregistrer une publication, ou la retirer des enregistrements (signet, privé). */
+  toggleBookmark(postId: string): Promise<ActionResult<{ bookmarked: boolean }>>
+  /** Ne plus voir une publication — pour soi seulement. */
+  hidePost(postId: string): Promise<ActionResult>
+  /** Mettre un auteur en sourdine : ses publications quittent mes fils, sans qu'il l'apprenne. */
+  muteAuthor(personId: string): Promise<ActionResult>
+  /** Signaler une publication ; elle est aussitôt masquée pour la personne qui signale. */
+  reportPost(input: ReportInput): Promise<ActionResult>
+  /** Retirer MA publication, partout où elle est lue. */
+  removePost(postId: string): Promise<ActionResult>
   /** Demander une connexion. Un blocage, dans un sens ou dans l'autre, rend la même réponse, sans rien écrire. */
   connect(personId: string): Promise<ActionResult>
   /** Répondre à une demande reçue (le destinataire seul). */

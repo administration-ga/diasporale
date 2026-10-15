@@ -38,8 +38,8 @@ import {
 } from "@diasporale/domain"
 
 import type { ActionErrorCode } from "../data/errors"
-import type { ActionResult, CodeDestination, CommentInput, IdnSignInInput, JoinInput, PublishInput } from "../data/port"
-import { COMMENT_MAX_LENGTH, type ReactionKind } from "../data/types"
+import type { ActionResult, CodeDestination, CommentInput, IdnSignInInput, JoinInput, PublishInput, ReportInput } from "../data/port"
+import { COMMENT_MAX_LENGTH, REPORT_NOTE_MAX, type ReactionKind } from "../data/types"
 import { handleRefusal, handleToken, normalizeHandle } from "../lib/handle"
 import { emailHash, fakeConsularAttestation } from "./attestation-provider"
 import { canRead, isConnected, sponsorFacts, statusOf } from "./selectors"
@@ -400,6 +400,90 @@ export class DemoStore {
     if (target.removedAt !== null) return OK
     const now = this.clock()
     this.commit({ ...this.state, comments: this.state.comments.map((item) => (item.id === commentId ? { ...item, removedAt: now } : item)) })
+    return OK
+  }
+
+  // ── Marques, sourdine, signalement, retrait (EXF-DG-12) ─────────────────
+  /** Une publication que le lecteur peut lire, sinon rien (refus indistinct). */
+  private readablePost(postId: string, viewerId: string) {
+    const post = this.state.posts.find((candidate) => candidate.id === postId)
+    return post && canRead(this.state, post, viewerId, this.clock()) ? post : null
+  }
+
+  async toggleBookmark(postId: string): Promise<ActionResult<{ bookmarked: boolean }>> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    if (!this.readablePost(postId, viewer.person.id)) return fail("not_found")
+    const me = viewer.person.id
+    const existing = this.state.marks.some((mark) => mark.personId === me && mark.postId === postId && mark.kind === "bookmark")
+    this.commit({
+      ...this.state,
+      marks: existing
+        ? this.state.marks.filter((mark) => !(mark.personId === me && mark.postId === postId && mark.kind === "bookmark"))
+        : [...this.state.marks, { personId: me, postId, kind: "bookmark" }],
+    })
+    return { ok: true, value: { bookmarked: !existing } }
+  }
+
+  async hidePost(postId: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    if (!this.readablePost(postId, viewer.person.id)) return fail("not_found")
+    this.commit(this.withHidden(this.state, viewer.person.id, postId))
+    return OK
+  }
+
+  private withHidden(state: DemoState, personId: string, postId: string): DemoState {
+    if (state.marks.some((mark) => mark.personId === personId && mark.postId === postId && mark.kind === "hidden")) return state
+    return { ...state, marks: [...state.marks, { personId, postId, kind: "hidden" }] }
+  }
+
+  async muteAuthor(personId: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    const me = viewer.person.id
+    // Se taire soi-même viderait son propre fil sans qu'aucun écran ne dise pourquoi : sans effet, comme le moteur.
+    if (personId === me || this.state.mutes.some(([by, target]) => by === me && target === personId)) return OK
+    if (!this.state.persons[personId]) return fail("not_found")
+    this.commit({ ...this.state, mutes: [...this.state.mutes, [me, personId] as const] })
+    return OK
+  }
+
+  async reportPost(input: ReportInput): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    const me = viewer.person.id
+    const post = this.readablePost(input.postId, me)
+    // Sa propre publication ne se signale pas ; une publication non publiée n'existe pas pour autrui.
+    if (!post || post.moderation !== "published" || (post.author.kind === "person" && post.author.id === me)) return fail("not_found")
+    const note = input.note?.trim() ?? ""
+    if (note.length > REPORT_NOTE_MAX) return fail("report_note_too_long")
+    const [id, sequence] = this.nextId("report")
+    const next: DemoState = {
+      ...this.state,
+      reports: [...this.state.reports, { id, reporterId: me, postId: post.id, reason: input.reason, note: note.length > 0 ? note : null, createdAt: this.clock() }],
+      sequence,
+    }
+    this.commit(this.withHidden(next, me, post.id))
+    return OK
+  }
+
+  async removePost(postId: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    const post = this.state.posts.find((candidate) => candidate.id === postId)
+    if (!post || !(post.author.kind === "person" && post.author.id === viewer.person.id)) return fail("not_found")
+    this.commit({
+      ...this.state,
+      posts: this.state.posts.filter((candidate) => candidate.id !== postId),
+      comments: this.state.comments.filter((item) => item.postId !== postId),
+      marks: this.state.marks.filter((mark) => mark.postId !== postId),
+    })
     return OK
   }
 
@@ -796,6 +880,9 @@ export class DemoStore {
       blocks: this.state.blocks.filter((block) => block.byId !== personId && block.targetId !== personId),
       follows: this.state.follows.filter(([a, b]) => a !== personId && b !== personId),
       notifications: this.state.notifications.filter((item) => item.recipientId !== personId && item.actorId !== personId),
+      marks: this.state.marks.filter((mark) => mark.personId !== personId),
+      mutes: this.state.mutes.filter(([by, target]) => by !== personId && target !== personId),
+      reports: this.state.reports.filter((report) => report.reporterId !== personId),
       // Ses commentaires, et ceux portés par ses publications effacées.
       comments: this.state.comments.filter(
         (item) => item.authorId !== personId && this.state.posts.some((post) => post.id === item.postId && !(post.author.kind === "person" && post.author.id === personId)),

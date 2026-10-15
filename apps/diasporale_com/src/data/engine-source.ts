@@ -480,6 +480,46 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         return null
       }),
 
+    toggleBookmark: (postId) =>
+      attempt(async () => {
+        const result = await deps.convex.mutation(api.modules.marks.marks.toggleMark, {
+          networkId: await diasporale(),
+          postId: postId as Id<"posts">,
+          kind: "bookmark",
+        })
+        return { bookmarked: result.marked }
+      }),
+
+    hidePost: (postId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.marks.marks.hidePost, { networkId: await diasporale(), postId: postId as Id<"posts"> })
+        return null
+      }),
+
+    muteAuthor: (personId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.marks.marks.muteAuthor, { networkId: await diasporale(), targetPersonId: personId as Id<"persons"> })
+        return null
+      }),
+
+    reportPost: (input) =>
+      attempt(async () => {
+        const note = input.note?.trim()
+        await deps.convex.mutation(api.modules.moderation.moderation.reportPost, {
+          networkId: await diasporale(),
+          postId: input.postId as Id<"posts">,
+          reason: input.reason,
+          ...(note ? { note } : {}),
+        })
+        return null
+      }),
+
+    removePost: (postId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.posts.posts.remove, { networkId: await diasporale(), postId: postId as Id<"posts"> })
+        return null
+      }),
+
     react: (postId, kind) =>
       attempt(async () => {
         // Le moteur bascule une réaction : la rejouer la retire.
