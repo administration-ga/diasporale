@@ -1,8 +1,11 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "@antia/tsconfig/base.json",
   "compilerOptions": {
     "lib": ["ES2023"],
     "types": ["bun"],
+    "noEmit": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
     "exactOptionalPropertyTypes": true
   },
   "include": ["src/**/*.ts"]

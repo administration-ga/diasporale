@@ -1,13 +1,11 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "@antia/tsconfig/nextjs.json",
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "allowJs": true,
-    "incremental": true,
+    "verbatimModuleSyntax": true,
     "types": ["node", "vitest/globals"],
-    "plugins": [{ "name": "next" }],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@convex/*": ["../../../ANTIA/convex/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.mts", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],

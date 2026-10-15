@@ -168,12 +168,12 @@ export function CharteScreen() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-6">
             {(
               [
-                ["charte.swatch.sable", "bg-[var(--dg-sable-100)]"],
-                ["charte.swatch.papier", "bg-[var(--dg-papier)]"],
-                ["charte.swatch.encre", "bg-[var(--dg-encre)]"],
-                ["charte.swatch.bleu", "bg-[var(--dg-bleu-600)]"],
-                ["charte.swatch.gres", "bg-[var(--dg-gres-700)]"],
-                ["charte.swatch.nuit", "bg-[var(--dg-nuit-300)]"],
+                ["charte.swatch.sable", "bg-[var(--esp-neutral-100)]"],
+                ["charte.swatch.papier", "bg-[var(--esp-neutral-0)]"],
+                ["charte.swatch.encre", "bg-[var(--esp-neutral-900)]"],
+                ["charte.swatch.bleu", "bg-[var(--esp-blue-500)]"],
+                ["charte.swatch.gres", "bg-[var(--esp-neutral-600)]"],
+                ["charte.swatch.nuit", "bg-[var(--esp-night-card)]"],
               ] as const
             ).map(([key, swatch]) => (
               <div key={key} className="flex flex-col gap-2">

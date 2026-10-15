@@ -1,35 +1,35 @@
 /**
- * i18n de DIASPORALE — i18next, comme le moteur, le socle et consulat.ga.
+ * i18n de DIASPORALE — l'instance i18next du MOTEUR (`@antia/social-features/i18n`),
+ * à laquelle DIASPORALE fournit son espace de noms `diasporale`. L'application
+ * reçoit en plus les espaces du moteur (`social`, codes serveur `errors` et
+ * `rules`) : rien à recâbler quand les surfaces du moteur arrivent (PD4).
  *
- * Un espace de noms : `diasporale` (ce paquet et l'application). Aucune chaîne
- * d'interface hors des fichiers de locale (cliquet `no-hardcoded-strings`) ; le
- * français et l'anglais portent les mêmes clés et les mêmes `{{variables}}`
- * (cliquet `i18n-locales`).
- *
- * L'API (`createAppI18n`, `SUPPORTED_LOCALES`…) est celle de
- * `@antia/social-features/i18n` : au câblage PD0, l'application passe sur
- * l'instance du moteur sans changer ses appels, et ces ressources deviennent
- * l'espace de noms `diasporale` qu'elle lui fournit.
+ * Aucune chaîne d'interface hors des fichiers de locale (cliquet
+ * `no-hardcoded-strings`) ; le français et l'anglais portent les mêmes clés et
+ * les mêmes `{{variables}}` (cliquet `i18n-locales`).
  */
-import { createInstance, type i18n as I18nInstance, type Resource } from "i18next"
+import {
+  createAppI18n as createEngineI18n,
+  DEFAULT_LOCALE,
+  isSupportedLocale,
+  SUPPORTED_LOCALES,
+  type AppResources,
+  type Locale,
+} from "@antia/social-features/i18n"
+import type { i18n as I18nInstance } from "i18next"
 
 import enDiasporale from "./locales/en/diasporale.json"
 import frDiasporale from "./locales/fr/diasporale.json"
 
-export const SUPPORTED_LOCALES = ["fr", "en"] as const
-export type Locale = (typeof SUPPORTED_LOCALES)[number]
-export const DEFAULT_LOCALE: Locale = "fr"
+export { DEFAULT_LOCALE, isSupportedLocale, SUPPORTED_LOCALES, type AppResources, type Locale }
 
 /** Cookie de langue : lu par le rendu serveur, posé par le sélecteur de langue. */
 export const LOCALE_COOKIE = "diasporale-langue"
 
 export const DIASPORALE_NAMESPACE = "diasporale"
 
-export function isSupportedLocale(value: unknown): value is Locale {
-  return typeof value === "string" && (SUPPORTED_LOCALES as readonly string[]).includes(value)
-}
-
-export type AppResources = Record<Locale, Record<string, Record<string, unknown>>>
+/** La marque, variable `{{brand}}` des textes du moteur. */
+export const DIASPORALE_BRAND = "DIASPORALE"
 
 /** Les ressources de l'espace de noms `diasporale`, par langue. */
 export const diasporaleResources: AppResources = {
@@ -38,32 +38,21 @@ export const diasporaleResources: AppResources = {
 }
 
 /**
- * Instance i18next ISOLÉE : une par requête côté serveur, une par arbre côté
- * client. Ressources en mémoire, initialisation synchrone : aucun clignotement
- * de clés au premier rendu, aucun écart d'hydratation.
+ * Instance i18next ISOLÉE (une par requête côté serveur, une par arbre côté
+ * client), construite par le moteur : ressources en mémoire, initialisation
+ * synchrone, aucun écart d'hydratation.
  */
-export function createAppI18n(options: {
-  locale: Locale
-  appResources?: AppResources
-  defaultNS?: string
-}): I18nInstance {
-  const resources: Resource = {}
+export function createAppI18n(options: { locale: Locale; appResources?: AppResources; defaultNS?: string }): I18nInstance {
+  const appResources = {} as AppResources
   for (const locale of SUPPORTED_LOCALES) {
-    resources[locale] = { ...diasporaleResources[locale], ...options.appResources?.[locale] }
+    appResources[locale] = { ...diasporaleResources[locale], ...options.appResources?.[locale] }
   }
-  const instance = createInstance()
-  void instance.init({
-    lng: options.locale,
-    fallbackLng: DEFAULT_LOCALE,
-    supportedLngs: [...SUPPORTED_LOCALES],
-    resources,
+  return createEngineI18n({
+    locale: options.locale,
+    appResources,
     defaultNS: options.defaultNS ?? DIASPORALE_NAMESPACE,
-    ns: Object.keys(resources[DEFAULT_LOCALE] ?? {}),
-    interpolation: { escapeValue: false },
-    initAsync: false,
-    returnNull: false,
+    defaultVariables: { brand: DIASPORALE_BRAND },
   })
-  return instance
 }
 
 /** Traduction hors React (serveur, métadonnées, tests). */

@@ -3,14 +3,14 @@ import { describe, expect, it } from "vitest"
 import { productSources } from "./sources"
 
 /**
- * Cliquet « aucune couleur en dur » (invariant de la charte) : une couleur
- * littérale ne vit QUE dans `styles/tokens.css`, sous
- * `[data-charte="diasporale"]`. Partout ailleurs, des rôles (`bg-card`,
+ * Cliquet « aucune couleur en dur » (invariant de la charte) : depuis PD0, les
+ * couleurs de DIASPORALE vivent dans le thème du moteur
+ * (`ANTIA/packages/ui/src/themes/diasporale.css`) ; ici, seules les trois couleurs
+ * du drapeau du filet décoratif (`extras.css`). Partout ailleurs, des rôles (`bg-card`,
  * `text-muted-foreground`, `var(--dg-…)`) — jamais `#hex`, `rgb()`, `hsl()`,
  * ni la palette Tailwind (`bg-red-500`, `text-white`).
  */
 
-const TOKENS_FILE = "packages/diasporale-features/src/styles/tokens.css"
 /**
  * Rôles propres posés sur le contrat du moteur : renvois seulement. Seules les
  * trois couleurs du drapeau du filet décoratif y sont littérales, ligne par ligne.
@@ -29,7 +29,7 @@ const RULES: readonly { readonly name: string; readonly pattern: RegExp }[] = [
 ]
 
 describe("cliquet charte — aucune couleur en dur", () => {
-  const files = productSources([".ts", ".tsx", ".css"]).filter((file) => file.path !== TOKENS_FILE)
+  const files = productSources([".ts", ".tsx", ".css"])
 
   it("dans les rôles propres, seul le filet tricolore porte des couleurs littérales", () => {
     expect(FLAG_LINE.test("  --dg-drapeau-vert: #009e60;")).toBe(true)
@@ -40,7 +40,7 @@ describe("cliquet charte — aucune couleur en dur", () => {
     expect(files.length).toBeGreaterThan(40)
   })
 
-  it.each(RULES)("aucune couleur $name hors du fichier de jetons", ({ pattern }) => {
+  it.each(RULES)("aucune couleur $name dans le produit, hors du filet tricolore", ({ pattern }) => {
     const hits = files.flatMap((file) =>
       file.text.split("\n").flatMap((line, index) => {
         if (file.path === EXTRAS_FILE && FLAG_LINE.test(line)) return []

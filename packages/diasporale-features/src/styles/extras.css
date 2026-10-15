@@ -56,8 +56,9 @@
   --destructive-foreground: var(--esp-neutral-0);
   --danger-fill-hover: color-mix(in srgb, var(--destructive) 82%, var(--foreground));
 
-  /* Voile sous une feuille ou une boîte de dialogue. */
+  /* Voile sous une feuille ou une boîte de dialogue, et relief de la feuille. */
   --dg-scrim: color-mix(in srgb, var(--esp-night-bg) 42%, transparent);
+  --dg-shadow-sheet: 0 28px 70px -28px color-mix(in srgb, var(--esp-night-bg) 38%, transparent);
 
   /* Le filet tricolore — SEUL usage des couleurs du drapeau, décoratif :
      jamais du texte, jamais un fond de bouton, jamais un état. */
@@ -82,6 +83,7 @@
   /* En sombre, l'encre se pose sur le rouge éclairci. */
   --destructive-foreground: var(--esp-night-bg);
   --dg-scrim: color-mix(in srgb, var(--esp-night-bg) 72%, transparent);
+  --dg-shadow-sheet: 0 18px 50px -20px color-mix(in srgb, var(--esp-night-bg) 85%, transparent);
 }
 
 /* Mouvement réduit : aucune transition ni animation de la charte. */
