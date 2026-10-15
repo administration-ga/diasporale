@@ -18,6 +18,7 @@ import {
   toNotificationView,
   toOpenCountries,
   toPostMediaView,
+  toSharedPostView,
   toProfileView,
   toRelationView,
   toSuggestionView,
@@ -119,6 +120,8 @@ describe("projections du moteur vers les vues de DIASPORALE", () => {
         _id: id,
         body: "Bonjour",
         media: [],
+        share: null,
+        shareCount: 0,
         audience: "public",
         visibility: "network",
         publishedAt: 1,
@@ -473,6 +476,8 @@ describe("publications à portée et pays (PD4, lot 7 d'ANTIA)", () => {
   const base = {
     body: "Bonjour",
     media: [],
+    share: null,
+    shareCount: 0,
     audience: "public",
     visibility: "network",
     publishedAt: 1,
@@ -751,5 +756,41 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
     } finally {
       vi.unstubAllGlobals()
     }
+  })
+})
+
+describe("partage cité par le moteur (EXF-DG-10)", () => {
+  it("l'original re-gardé : la page parle en son nom, sinon la personne ; indisponible, il ne dit que cela", () => {
+    const media = [{ url: "https://f.test/1", withheld: null, kind: "image", mimeType: "image/jpeg" }]
+    const person = { available: true, postId: "post-7", author: { displayName: "Prisca", handle: "prisca", avatarUrl: null }, page: null, body: "Bonjour", media, publishedAt: 5 }
+    expect(toSharedPostView(person as never)).toEqual({
+      available: true,
+      postId: "post-7",
+      author: { kind: "person", handle: "prisca", displayName: "Prisca" },
+      body: "Bonjour",
+      media: [{ kind: "image", url: "https://f.test/1", withheld: null, altText: null, width: null, height: null }],
+      publishedAt: 5,
+    })
+    const page = { pageId: "pg1", handle: "consulat-lyon", name: "Consulat de Lyon", badge: "official" }
+    expect(toSharedPostView({ ...person, page } as never)).toMatchObject({ author: { kind: "page", handle: "consulat-lyon", displayName: "Consulat de Lyon" } })
+    expect(toSharedPostView({ available: false } as never)).toEqual({ available: false })
+  })
+
+  it("le partage part au moteur avec l'original ; ses refus se disent par leur code", async () => {
+    const { convex, calls } = fakeConvex({
+      ...NETWORK,
+      "modules/diaspora/hubs:listOpenCountries": () => [{ country: "FR" }],
+      "modules/posts/posts:publish": () => ({ postId: "post-9", created: true }),
+    })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.publish({ body: "", reach: "local", country: "FR", audience: "public", alsoOnRoot: false, sharedPostId: "post-7" })).toEqual({
+      ok: true,
+      value: { moderation: "published" },
+    })
+    expect(calls.find((call) => call.name === "modules/posts/posts:publish")?.args).toMatchObject({ body: "", sharedPostId: "post-7" })
+    await actions.publish({ body: "Une seule fois", reach: "local", country: "FR", audience: "public", alsoOnRoot: false, idempotencyKey: "cle-1" })
+    expect(calls.filter((call) => call.name === "modules/posts/posts:publish").at(-1)?.args).toMatchObject({ idempotencyKey: "cle-1" })
+    expect(engineActionErrorCode(engineError({ code: "invalidArgument", rule: "POST_NOT_SHAREABLE" }))).toBe("share_not_allowed")
+    expect(engineActionErrorCode(engineError({ code: "invalidArgument", rule: "POST_SHARE_WITH_MEDIA" }))).toBe("share_with_media")
   })
 })

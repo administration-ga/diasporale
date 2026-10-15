@@ -52,6 +52,8 @@ const ENGINE_RULES: Readonly<Record<string, ActionErrorCode>> = {
   COMMENT_TOO_LONG: "comment_too_long",
   // Médias et dépôt de fichiers : la même table que l'écran (`@diasporale/features/data`).
   ...MEDIA_RULE_CODES,
+  POST_NOT_SHAREABLE: "share_not_allowed",
+  POST_SHARE_WITH_MEDIA: "share_with_media",
 }
 
 /** Le code FERMÉ d'une erreur levée par une fonction du moteur. */

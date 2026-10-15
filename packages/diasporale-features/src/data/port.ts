@@ -105,6 +105,16 @@ export interface PublishInput {
   readonly alsoOnRoot: boolean
   /** Quatre photos au plus, ou une vidéo seule, dans l'ordre choisi. */
   readonly media?: readonly PublishMediaInput[]
+  /**
+   * Partage cité : la publication citée (publique et publiée). Un partage ne
+   * joint aucun média (il montre ceux de l'original) ; son texte est facultatif.
+   */
+  readonly sharedPostId?: string
+  /**
+   * Idempotence (EXF-DG-10) : la même clé rejouée (réseau coupé, double envoi)
+   * rend la publication déjà créée au lieu d'en créer une seconde.
+   */
+  readonly idempotencyKey?: string
 }
 
 /** Commenter une publication ; une réponse à une réponse rejoint sa racine (un seul niveau). */

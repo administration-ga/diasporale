@@ -790,3 +790,64 @@ describe("médias d'une publication (EXF-DG-10)", () => {
     expect(await store.publish({ ...post, body: "", media: [{ ...photo(), altText: "x".repeat(301) }] })).toEqual({ ok: false, code: "media_alt_too_long" })
   })
 })
+
+describe("partage cité (EXF-DG-10)", () => {
+  const share = (sharedPostId: string, body = "") => ({ body, reach: "local" as const, audience: "public" as const, alsoOnRoot: false, sharedPostId })
+
+  it("partager une publication publique : un mot facultatif, l'original cité dans la carte, l'autrice avisée", async () => {
+    const { store, me } = demo()
+    await store.signInWithIdn(AWA)
+    await store.join(joinInput())
+    expect(await store.publish(share("post-7"))).toEqual({ ok: true, value: { moderation: "published" } })
+    const mine = feedView(store.getState(), me(), "recents", T0).find((post) => post.share !== null)
+    expect(mine?.body).toBe("")
+    expect(mine?.share).toMatchObject({ available: true, postId: "post-7", author: { kind: "person", handle: "prisca.abanga", displayName: "Prisca Abanga" } })
+    expect(postDetailView(store.getState(), "post-7", "p-prisca", T0)?.shareCount).toBe(1)
+    expect(notificationsView(store.getState(), "p-prisca")[0]).toMatchObject({ kind: "post_share", postId: "post-7" })
+  })
+
+  it("partager un partage cite l'original ; l'original retiré, la carte le dit indisponible", async () => {
+    const { store, me } = demo()
+    await store.signInWithIdn(AWA)
+    await store.join(joinInput())
+    await store.publish(share("post-7", "À lire"))
+    const first = store.getState().posts[0]
+    if (!first) throw new Error("partage absent")
+    await store.publish(share(first.id))
+    expect(store.getState().posts[0]?.sharedPostId).toBe("post-7")
+    const awa = me()
+    await store.switchTo("p-prisca")
+    expect(await store.removePost("post-7")).toEqual({ ok: true, value: null })
+    // Retiré : chaque partage le dit indisponible, et ne dit que cela.
+    const shares = feedView(store.getState(), awa, "recents", T0).filter((post) => post.share !== null)
+    expect(shares.map((post) => post.share)).toEqual([{ available: false }, { available: false }])
+  })
+
+  it("refus : une publication réservée aux relations ne se partage pas ; un partage ne joint pas de média ; un original introuvable", async () => {
+    const { store } = demo()
+    await store.signInWithIdn(AWA)
+    await store.join(joinInput())
+    await store.publish({ body: "Entre nous", reach: "local", audience: "connections", alsoOnRoot: false })
+    const private_ = store.getState().posts[0]
+    if (!private_) throw new Error("publication absente")
+    expect(await store.publish(share(private_.id))).toEqual({ ok: false, code: "share_not_allowed" })
+    const upload = store.stageMedia({ kind: "image", url: `data:image/jpeg;base64,${"A".repeat(40)}`, width: 10, height: 10 })
+    expect(await store.publish({ ...share("post-7"), media: [{ upload, altText: "" }] })).toEqual({ ok: false, code: "share_with_media" })
+    expect(await store.publish(share("post-inconnue"))).toEqual({ ok: false, code: "not_found" })
+  })
+})
+
+describe("idempotence de la publication (EXF-DG-10)", () => {
+  it("la même clé rejouée rend la réponse d'alors, sans seconde publication ; une clé neuve publie", async () => {
+    const { store } = demo()
+    await store.signInWithIdn(AWA)
+    await store.join(joinInput())
+    const post = { body: "Une seule fois", reach: "local" as const, audience: "public" as const, alsoOnRoot: false, idempotencyKey: "cle-1" }
+    const count = () => store.getState().posts.filter((item) => item.body === "Une seule fois").length
+    expect(await store.publish(post)).toEqual({ ok: true, value: { moderation: "published" } })
+    expect(await store.publish(post)).toEqual({ ok: true, value: { moderation: "published" } })
+    expect(count()).toBe(1)
+    await store.publish({ ...post, idempotencyKey: "cle-2" })
+    expect(count()).toBe(2)
+  })
+})

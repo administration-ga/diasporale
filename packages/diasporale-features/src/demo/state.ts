@@ -114,6 +114,8 @@ export interface DemoPost {
   readonly body: string
   /** Facultatif : un état enregistré avant les médias se relit tel quel (pas de changement de version). */
   readonly media?: readonly DemoMedia[]
+  /** Partage cité : l'original (jamais un partage). Facultatif, comme les médias. */
+  readonly sharedPostId?: string
   readonly scope: ContentScope
   readonly audience: PostAudience
   readonly visibility: Visibility

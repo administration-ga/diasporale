@@ -53,4 +53,5 @@ export {
   type CommunityTab,
 } from "./components/community-controls"
 export { PostComposerSheet, POST_BODY_MAX } from "./components/composer"
+export { isShareable, PostShareProvider, SharedPostEmbed, usePostShare } from "./components/post-share"
 export { RoutingProvider, useRouting, type FeatureRoutes, type LinkComponent } from "./routing"

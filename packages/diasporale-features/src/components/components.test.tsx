@@ -8,6 +8,8 @@ import { CountryTag, ScopeTag } from "./country-tag"
 import { MembershipStatusBanner } from "./membership-status-banner"
 import { ModerationBanner } from "./moderation-banner"
 import { PostMediaGrid } from "./post-media"
+import { SharedPostEmbed } from "./post-share"
+import { RoutingProvider, type FeatureRoutes } from "../routing"
 import { richParts } from "./rich-text"
 import { TrustBadge } from "./trust-badge"
 
@@ -269,5 +271,49 @@ describe("PostMediaGrid — les médias d'une publication", () => {
     expect(screen.getByRole("img", { name: "Analyse du fichier en cours…" })).toBeInTheDocument()
     expect(screen.getByRole("img", { name: "Fichier retenu par la garde des fichiers" })).toBeInTheDocument()
     expect(container.querySelector("img")).toBeNull()
+  })
+})
+
+describe("SharedPostEmbed — l'original d'un partage cité", () => {
+  const routes: FeatureRoutes = {
+    profile: (handle) => `/@${handle}`,
+    post: (postId) => `/publication/${postId}`,
+    page: (handle) => `/pages/${handle}`,
+    hub: (country) => `/pays/${country}`,
+    feed: () => "/fil",
+    sponsor: () => "/parrainer",
+    settings: () => "/parametres",
+    attestation: () => "/verification",
+    enter: () => "/entrer",
+  }
+  const withRouting = (ui: React.ReactElement) =>
+    renderWithI18n(
+      <RoutingProvider routes={routes} Link={({ children, ...rest }) => <a {...rest}>{children}</a>}>
+        {ui}
+      </RoutingProvider>,
+    )
+
+  it("disponible : l'auteur mène à son profil, l'horodatage à l'original, le texte suit", () => {
+    withRouting(
+      <SharedPostEmbed
+        now={10_000}
+        share={{ available: true, postId: "post-7", author: { kind: "person", handle: "prisca.abanga", displayName: "Prisca Abanga" }, body: "Une coiffeuse à Bordeaux ?", media: [], publishedAt: 4_000 }}
+      />,
+    )
+    const region = screen.getByRole("region", { name: "Publication partagée" })
+    expect(within(region).getByRole("link", { name: "Prisca Abanga" })).toHaveAttribute("href", "/@prisca.abanga")
+    expect(region.querySelector('a[href="/publication/post-7"]')).not.toBeNull()
+    expect(within(region).getByText("Une coiffeuse à Bordeaux ?")).toBeInTheDocument()
+  })
+
+  it("une page parle en son nom ; indisponible, l'original ne dit que cela", () => {
+    const { unmount } = withRouting(
+      <SharedPostEmbed now={1} share={{ available: true, postId: "p8", author: { kind: "page", handle: "saveurs", displayName: "Saveurs du Gabon" }, body: "", media: [], publishedAt: 1 }} />,
+    )
+    expect(screen.getByRole("link", { name: "Saveurs du Gabon" })).toHaveAttribute("href", "/pages/saveurs")
+    unmount()
+    withRouting(<SharedPostEmbed now={1} share={{ available: false }} />)
+    expect(screen.getByText(/^Publication indisponible\s: retirée, ou hors de votre portée\.$/)).toBeInTheDocument()
+    expect(screen.queryByRole("region")).toBeNull()
   })
 })

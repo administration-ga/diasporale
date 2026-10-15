@@ -50,6 +50,9 @@ export const DATA_ERROR_CODES = [
   "media_too_large",
   "media_alt_too_long",
   "media_upload_failed",
+  // Partage cité : seule une publication publique et publiée se partage ; un partage ne joint pas de média.
+  "share_not_allowed",
+  "share_with_media",
   "attestation_not_needed",
   "attestation_too_soon",
   "attestation_unavailable",
