@@ -4,7 +4,7 @@ version: "1.0"
 date: "2026-10-14"
 statut: "Charte de travail — arbitrage A7 pris par défaut (famille Consulaire / Sable), à confirmer par le propriétaire"
 projet: "DIASPORALE"
-jetons: "packages/diasporale-features/src/styles/tokens.css — [data-charte=\"diasporale\"]"
+jetons: "ANTIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diasporale-features/src/styles/extras.css (rôles propres) — [data-charte=\"diasporale\"]"
 ---
 
 # DIASPORALE.COM — Charte « Sable de la diaspora »
@@ -226,42 +226,35 @@ Règles non chromatiques :
 Le cliquet `tokens-contrast.test.ts` (paquet `@diasporale/features`) recalcule ces
 paires depuis le fichier de jetons, dans les deux thèmes.
 
-## 11. Mise en œuvre
+## 11. Mise en œuvre (depuis PD0, sur le moteur ANTIA)
 
-- **Fichier unique** : `packages/diasporale-features/src/styles/tokens.css`. C'est le
-  **seul** fichier de DIASPORALE autorisé à porter une couleur littérale (cliquet
-  `no-hardcoded-colors`). Il sera recopié tel quel dans
-  `ANTIA/packages/ui/src/themes/diasporale.css` quand le moteur publiera son contrat de
-  thème (PA0).
-- **Trois blocs** :
-  1. les **primitives** (`--dg-*`), seules valeurs littérales ;
-  2. les **rôles clairs**, uniquement des renvois aux primitives ;
-  3. les **rôles sombres** (`.dark [data-charte="diasporale"]`), qui ne redéclarent
-     aucune primitive.
-- **Contrat de thème** couvert pour les composants dupliqués du socle :
-  - **shadcn** : `--background`, `--foreground`, `--card(-foreground)`,
-    `--popover(-foreground)`, `--primary(-foreground)`, `--secondary(-foreground)`,
-    `--muted(-foreground)`, `--accent(-foreground)`, `--destructive(-foreground)`,
-    `--border`, `--input`, `--ring`, `--chart-1…5`, `--sidebar-*` ;
-  - **ui-v2** : `--primary-50…800`, `--primary-fill(-hover)`, `--on-fill`,
-    `--ink-0…900`, `--info-*`, `--success-*`, `--warning-*`, `--danger-*`, `--status-*`,
-    `--shadow-xs…xl`, `--shadow-focus`, `--radius-xs…4xl`, `--font-sans`,
-    `--font-display`, `--font-mono` ;
-  - **espace personnel** : `--esp-surface-card`, `--esp-shadow-card(-hover)`,
-    `--esp-shadow-float`, `--esp-tone-*`, `--esp-mobilebar-*`, `--esp-segment-on(-fg)`,
-    `--esp-r-chrome`, `--esp-ava-1…6`, `--esp-on-avatar`, `--esp-accent-soft`,
-    `--esp-accent-deep`, `--esp-immersive-ink`, `--esp-immersive-on-ink`,
-    `--esp-neutral-chip`, `--esp-neutral-hover`, `--esp-reseau-tabbar-inset`.
-- **Rôles propres à DIASPORALE** :
-  - `--dg-tag-*` : l'étiquette pays ;
-  - `--dg-official-*`, `--dg-verified-*`, `--dg-agent-*`, `--dg-community-*`,
-    `--dg-sponsored-*` : les badges ;
-  - `--dg-moderation-*` : les bandeaux de modération ;
-  - `--dg-demo-*` : le bandeau de démonstration ;
-  - `--dg-stripe` : le filet tricolore.
-- **Pose** : l'application met `data-charte="diasporale"` sur `<html>`, où `next-themes`
-  pose aussi la classe `dark` (sélecteur `[data-charte="diasporale"].dark`). Les portails
-  (feuilles, menus, toasts) sont rendus dans `<body>` et héritent donc de la charte.
+La charte vit en trois couches, importées dans cet ordre par
+`apps/diasporale_com/src/app/globals.css`, après `@import "tailwindcss"` :
+
+1. **Charte de base du moteur** — `@antia/ui/styles.css` : déclare TOUS les jetons du contrat
+   sur `[data-charte]` (échelles ui-v2, noms sémantiques shadcn, primitives et rôles `--esp-*`),
+   relie les utilitaires Tailwind et pose la base (corps, titres, barres de défilement).
+2. **Thème DIASPORALE** — `ANTIA/packages/ui/src/themes/diasporale.css` (écrit par la session
+   DIASPORALE) : réaccorde les primitives du contrat à la palette Sable (bleu Gabon `#0072B9` au
+   barreau 500, sable, grès, encre, nuit brune, tons, avatars) et redéclare tous les rôles, en
+   clair comme en sombre. Il ne déclare QUE des jetons du contrat (cliquet `theme-contract` du
+   moteur) et c'est le SEUL endroit où vivent les couleurs de DIASPORALE.
+3. **Rôles propres** — `packages/diasporale-features/src/styles/extras.css` : étiquette pays,
+   badges, bandeaux de modération et de démonstration, bouton destructif, voile, mouvement.
+   Chaque rôle RENVOIE à un jeton du contrat ; seules les trois couleurs du drapeau du filet
+   décoratif y sont littérales. Puis `tailwind-theme.css` : les utilitaires de ces rôles
+   (`bg-tag`, `text-official-foreground`…), les reliefs nommés, deux écarts de base bornés au nœud
+   DIASPORALE (un lien d'interface hérite sa couleur ; anneau de focus de la charte).
+
+- **Pose** : `data-charte="diasporale"` sur `<html>`, où `next-themes` pose aussi la classe
+  `dark`. Les portails (feuilles, menus, toasts) héritent donc de la charte.
+- **Cascade sombre** : le bloc sombre de la base (`.dark[data-charte]`, spécificité 0,2,0)
+  l'emporte sur le bloc clair du thème (0,1,0). Le thème redéclare donc en sombre CHAQUE rôle du
+  bloc sombre de la base, sinon le bleu du moteur reparaîtrait.
+- **Cliquets** : `engine-theme-contrast.test.ts` rejoue la cascade base, thème, rôles propres
+  dans les deux thèmes (texte ≥ 4,5:1, contours et focus ≥ 3:1, titre de bannière sur les deux
+  arrêts du dégradé) ; `theme-contract` et `no-hardcoded-colors` côté moteur ; le cliquet de
+  couleurs de l'application n'admet que les trois lignes du drapeau.
 
 ## 12. Interdits
 

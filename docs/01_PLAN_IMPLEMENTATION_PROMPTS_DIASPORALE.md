@@ -27,7 +27,8 @@ dependances:
 | c) `apps/diasporale_com` sur fournisseur factice (R1 à blanc sur :3031) | 2026-10-14 | `f5aff56` |
 | d) `packages/diasporale-features` (C1–C17, CountrySwitch, badges, ModerationBanner, états vides) | 2026-10-14 | `b953739` |
 | e) Contrats côté gabon-diplomatie (PR brouillon) + fournisseur d'attestation factice | 2026-10-15 | PR brouillon administration-ga/gabon-diplomatie#184 (`7d01f215`) et #185 (`540d3c45`), non fusionnées ; fournisseur factice `b953739`, lecture stricte `bb76017` |
-| PD0 → PD10 | — | — (attendent le moteur) |
+| PD0 Câblage dans le moteur | en cours (15/10) | ANTIA `5535a63` ; DIASPORALE `fa307c0`, `dffbe4b`, `fc8acef`, `1752d22` — restent l'entrée `deploy/catalog.json` et le bun.lock côté ANTIA, et `docker build` |
+| PD1 → PD10 | — | — (PD1 préparé : `7c5575e` ; demande de fichiers partagés envoyée à ANTIA) |
 
 Vérifications des étapes closes :
 - **a)** 197 cas `bun test`, couverture lignes et fonctions 100 % imposée par
@@ -41,6 +42,12 @@ Vérifications des étapes closes :
   → France / Lyon → identifiant → consentements → hub), 320, 375 et 1452 px sans défilement
   horizontal, thèmes clair et sombre, console sans erreur. Cliquets : clés i18n (aucune clé
   morte, codes d'erreur fermés), aucune couleur ni chaîne affichée en dur.
+- **PD0 (en cours)** : installation unique dans `ANTIA/` (espaces de travail `../DIASPORALE/*`,
+  catalogue complété, port 3031, verify du moteur couvrant DIASPORALE) ; installation provisoire
+  supprimée ; `createEngineNextConfig`, tsconfig et ESLint du moteur ; i18n par `createAppI18n` du
+  moteur ; charte servie par `@antia/ui` + thème `diasporale.css` + rôles propres `extras.css` ;
+  Dockerfile en contexte ECOSYSTEMES (non construit : disque de la machine). Vérifié : typecheck,
+  212 + 155 + 15 tests, lint ; rendu contrôlé dans le navigateur, clair et sombre.
 - **e)** Côté gabon-diplomatie, sur deux branches en worktree (le `main` partagé n'est pas
   touché) : #184 `DIASPORA-ATTESTATION-V1` (route signée HMAC, exclusions indiscernables,
   idempotence par `consentRef`, journal à empreinte, correspondance e-mail par
