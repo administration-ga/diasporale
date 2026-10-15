@@ -1,9 +1,14 @@
 import { describe, expect, test } from "bun:test"
 import {
   ATTESTATION_CONTRACT,
+  ATTESTATION_HEADERS,
+  ATTESTATION_PATH,
   ATTESTATION_REQUEST_INTERVAL_MS,
   attestationOutcome,
+  attestationRequestBody,
+  canonicalAttestationString,
   canRequestAttestation,
+  CONSENT_REF_PATTERN,
   parseAttestationResponse,
 } from "./attestation"
 
@@ -101,5 +106,32 @@ describe("une demande par 24 h", () => {
     expect(canRequestAttestation(null, NOW)).toBe(true)
     expect(canRequestAttestation(NOW - ATTESTATION_REQUEST_INTERVAL_MS + 1, NOW)).toBe(false)
     expect(canRequestAttestation(NOW - ATTESTATION_REQUEST_INTERVAL_MS, NOW)).toBe(true)
+  })
+})
+
+describe("la requête signée du contrat (§3.1, §3.2)", () => {
+  test("chaîne canonique : v1, horodatage, méthode, chemin, empreinte du corps", () => {
+    expect(ATTESTATION_PATH).toBe("/api/partner/diaspora/attestation")
+    expect(canonicalAttestationString({ timestamp: "1760486400000", bodySha256: "ab12" })).toBe(
+      "v1\n1760486400000\nPOST\n/api/partner/diaspora/attestation\nab12",
+    )
+    expect(ATTESTATION_HEADERS).toEqual({
+      keyId: "x-diaspora-key-id",
+      timestamp: "x-diaspora-timestamp",
+      signature: "x-diaspora-signature",
+    })
+  })
+
+  test("le corps porte les quatre champs du contrat, dans son ordre, et rien d'autre", () => {
+    const request = { subjectKind: "idnSub", subject: "sub-1", consentRef: "consent:abc-123", requestedAt: NOW } as const
+    const body = attestationRequestBody({ ...request, ...({ name: "jamais" } as object) } as typeof request)
+    expect(body).toBe(`{"subjectKind":"idnSub","subject":"sub-1","consentRef":"consent:abc-123","requestedAt":${NOW}}`)
+  })
+
+  test("référence de consentement : 8 à 128 caractères admis par le contrat", () => {
+    expect(CONSENT_REF_PATTERN.test("consent:7f3c2a9e-4d1b")).toBe(true)
+    expect(CONSENT_REF_PATTERN.test("court")).toBe(false)
+    expect(CONSENT_REF_PATTERN.test("consent ref avec espaces")).toBe(false)
+    expect(CONSENT_REF_PATTERN.test("x".repeat(129))).toBe(false)
   })
 })

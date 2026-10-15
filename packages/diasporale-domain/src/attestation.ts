@@ -109,6 +109,41 @@ export function parseAttestationResponse(raw: unknown): Result<AttestationRespon
   })
 }
 
+// ═══════════════════════════════════════════════════════════════
+// La requête signée (contrat §3.1 et §3.2), côté consommateur
+// ═══════════════════════════════════════════════════════════════
+
+/** Le chemin de la route du contrat chez consulat.ga. */
+export const ATTESTATION_PATH = "/api/partner/diaspora/attestation"
+
+/** En-têtes de la signature HMAC du contrat. */
+export const ATTESTATION_HEADERS = Object.freeze({
+  keyId: "x-diaspora-key-id",
+  timestamp: "x-diaspora-timestamp",
+  signature: "x-diaspora-signature",
+})
+
+/** Référence de consentement admise par le contrat : 8 à 128 caractères `[A-Za-z0-9:_-]`. */
+export const CONSENT_REF_PATTERN = /^[A-Za-z0-9:_-]{8,128}$/
+
+/**
+ * La chaîne canonique signée : `v1`, l'horodatage (millisecondes Unix), la
+ * méthode, le chemin, puis l'empreinte SHA-256 hexadécimale minuscule du corps brut.
+ */
+export function canonicalAttestationString(input: { readonly timestamp: string; readonly bodySha256: string }): string {
+  return ["v1", input.timestamp, "POST", ATTESTATION_PATH, input.bodySha256].join("\n")
+}
+
+/** Le corps de la requête : les quatre champs du contrat, dans son ordre — et rien d'autre. */
+export function attestationRequestBody(request: AttestationRequest): string {
+  return JSON.stringify({
+    subjectKind: request.subjectKind,
+    subject: request.subject,
+    consentRef: request.consentRef,
+    requestedAt: request.requestedAt,
+  })
+}
+
 /** Une demande d'attestation par 24 h et par personne (PD3, point 4). */
 export const ATTESTATION_REQUEST_INTERVAL_MS = 24 * 60 * 60 * 1000
 
