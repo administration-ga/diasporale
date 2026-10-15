@@ -202,6 +202,7 @@ export function CharteScreen() {
     id: "post",
     author: { kind: "person", id: "awa", handle: "awa.ogooue", displayName: t("charte.sample.person"), badges: ["verified"] },
     body: t("charte.sample.postBody"),
+    media: [],
     scope: { reach: "diaspora", country: "CA" },
     audience: "public",
     visibility: "root",

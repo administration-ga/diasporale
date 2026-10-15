@@ -74,13 +74,37 @@ export interface JoinInput {
   readonly directoryVisibility: DirectoryVisibility
 }
 
+/**
+ * Un fichier déposé, prêt à rejoindre une publication. `ref` est opaque pour
+ * l'écran (identifiant de stockage du moteur, ou clé de la démonstration) ; un
+ * dépôt ne publie rien tant qu'une publication ne l'embarque pas.
+ */
+export interface UploadedMedia {
+  readonly ref: string
+  readonly kind: "image" | "video"
+  readonly mimeType: string
+  readonly sizeBytes: number
+  readonly width?: number
+  readonly height?: number
+  readonly durationMs?: number
+}
+
+export interface PublishMediaInput {
+  readonly upload: UploadedMedia
+  /** Texte alternatif : ce que la personne qui ne voit pas l'image doit en savoir. */
+  readonly altText: string
+}
+
 export interface PublishInput {
+  /** Facultatif dès qu'un média porte la publication (une photo sans légende est légitime). */
   readonly body: string
   readonly reach: Reach
   readonly country?: CountryCode
   readonly audience: "public" | "connections"
   /** « Publier aussi sur ANTIA » — geste explicite, ignoré hors audience publique. */
   readonly alsoOnRoot: boolean
+  /** Quatre photos au plus, ou une vidéo seule, dans l'ordre choisi. */
+  readonly media?: readonly PublishMediaInput[]
 }
 
 /** Commenter une publication ; une réponse à une réponse rejoint sa racine (un seul niveau). */
@@ -105,6 +129,8 @@ export interface DiasporaleActions {
   signOutEverywhere(): Promise<void>
   checkHandle(handle: string): Promise<ActionResult<{ available: boolean }>>
   join(input: JoinInput): Promise<ActionResult<{ country: CountryCode }>>
+  /** Déposer une photo ou une vidéo avant de publier ; les règles du moteur jugent le fichier d'abord. */
+  uploadMedia(file: File): Promise<ActionResult<UploadedMedia>>
   publish(input: PublishInput): Promise<ActionResult<{ moderation: ContentModerationState }>>
   react(postId: string, kind: ReactionKind | null): Promise<ActionResult>
   /** Commenter ou répondre (EXF-DG-12) ; l'auteur de la publication et la personne à qui l'on répond sont avisés. */

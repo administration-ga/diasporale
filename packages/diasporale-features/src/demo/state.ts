@@ -95,10 +95,25 @@ export interface DemoPage {
   readonly relay?: boolean
 }
 
+/**
+ * Une photo d'une publication de démonstration : réduite (1 280 px au plus) et
+ * gardée en data URL dans ce navigateur. Pas de vidéo en démonstration : le
+ * stockage du navigateur ne la garderait pas d'une visite à l'autre.
+ */
+export interface DemoMedia {
+  readonly kind: "image"
+  readonly url: string
+  readonly altText: string | null
+  readonly width: number
+  readonly height: number
+}
+
 export interface DemoPost {
   readonly id: string
   readonly author: { readonly kind: "person" | "page"; readonly id: string }
   readonly body: string
+  /** Facultatif : un état enregistré avant les médias se relit tel quel (pas de changement de version). */
+  readonly media?: readonly DemoMedia[]
   readonly scope: ContentScope
   readonly audience: PostAudience
   readonly visibility: Visibility

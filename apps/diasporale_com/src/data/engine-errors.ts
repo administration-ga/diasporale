@@ -10,7 +10,7 @@
  * Tout le reste devient `unknown` : jamais une phrase du serveur à l'écran.
  */
 import { engineErrorAppRule, engineErrorCode, engineErrorRule, type EngineErrorCode } from "@antia/social-contracts/errors"
-import { ACTION_ERROR_CODES, type ActionErrorCode } from "@diasporale/features/data"
+import { ACTION_ERROR_CODES, type ActionErrorCode, MEDIA_RULE_CODES } from "@diasporale/features/data"
 
 const ACTION_CODES: ReadonlySet<string> = new Set(ACTION_ERROR_CODES)
 
@@ -50,6 +50,8 @@ const ENGINE_RULES: Readonly<Record<string, ActionErrorCode>> = {
   POST_COUNTRY_REQUIRED: "scope_country_required",
   COMMENT_EMPTY: "comment_empty",
   COMMENT_TOO_LONG: "comment_too_long",
+  // Médias et dépôt de fichiers : la même table que l'écran (`@diasporale/features/data`).
+  ...MEDIA_RULE_CODES,
 }
 
 /** Le code FERMÉ d'une erreur levée par une fonction du moteur. */

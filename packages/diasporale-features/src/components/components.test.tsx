@@ -7,6 +7,7 @@ import { CountrySwitch } from "./country-switch"
 import { CountryTag, ScopeTag } from "./country-tag"
 import { MembershipStatusBanner } from "./membership-status-banner"
 import { ModerationBanner } from "./moderation-banner"
+import { PostMediaGrid } from "./post-media"
 import { richParts } from "./rich-text"
 import { TrustBadge } from "./trust-badge"
 
@@ -233,5 +234,40 @@ describe("RichText — mentions et mots-dièse", () => {
           .join(""),
       ).toBe(text)
     }
+  })
+})
+
+describe("PostMediaGrid — les médias d'une publication", () => {
+  const photo = { kind: "image" as const, url: "https://exemple.test/marche.jpg", withheld: null, altText: "Le marché de Libreville", width: 800, height: 600 }
+
+  it("une photo seule déclare sa taille et dit ce qu'elle montre ; sans texte alternatif, une description générique", () => {
+    renderWithI18n(<PostMediaGrid media={[photo]} />)
+    const image = screen.getByRole("img", { name: "Le marché de Libreville" })
+    expect(image).toHaveAttribute("width", "800")
+    expect(image).toHaveAttribute("height", "600")
+    expect(image).toHaveAttribute("loading", "lazy")
+  })
+
+  it("plusieurs photos : chacune a son nom, même sans texte alternatif", () => {
+    renderWithI18n(<PostMediaGrid media={[photo, { ...photo, altText: null }, { ...photo, altText: "La plage" }]} />)
+    expect(screen.getAllByRole("img").map((image) => image.getAttribute("alt") ?? image.getAttribute("aria-label"))).toEqual([
+      "Le marché de Libreville",
+      "Photo jointe à la publication",
+      "La plage",
+    ])
+  })
+
+  it("un média que la garde retient garde sa place et dit pourquoi, sans aucune image rendue", () => {
+    const { container } = renderWithI18n(
+      <PostMediaGrid
+        media={[
+          { ...photo, url: null, withheld: "scan_pending" },
+          { ...photo, url: null, withheld: "quarantined" },
+        ]}
+      />,
+    )
+    expect(screen.getByRole("img", { name: "Analyse du fichier en cours…" })).toBeInTheDocument()
+    expect(screen.getByRole("img", { name: "Fichier retenu par la garde des fichiers" })).toBeInTheDocument()
+    expect(container.querySelector("img")).toBeNull()
   })
 })

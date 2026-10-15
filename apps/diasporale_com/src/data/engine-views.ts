@@ -31,7 +31,9 @@ import {
   type MemberHitView,
   type MembershipView,
   type OpenCountryView,
+  type PostMediaView,
   type PostView,
+  type PublishMediaInput,
   NOTIFICATION_KINDS,
   type NotificationKind,
   type NotificationView,
@@ -47,6 +49,8 @@ type MyIdentity = NonNullable<FunctionReturnType<typeof api.modules.diaspora.mem
 type MyMembership = NonNullable<FunctionReturnType<typeof api.modules.diaspora.membership.myMembership>>
 type HubView = FunctionReturnType<typeof api.modules.diaspora.hubs.getCountryHub>
 type FeedItem = FunctionReturnType<typeof api.modules.posts.posts.myFeed>["items"][number]
+type EngineMedia = FeedItem["media"][number]
+type DeclaredMedia = NonNullable<FunctionArgs<typeof api.modules.posts.posts.publish>["media"]>[number]
 type SponsorDashboard = FunctionReturnType<typeof api.modules.diaspora.membership.sponsorDashboard>
 type PublicProfile = NonNullable<FunctionReturnType<typeof api.modules.people.profile.getPublicProfile>>
 type MemberFacet = NonNullable<FunctionReturnType<typeof api.modules.diaspora.profile.memberFacet>>
@@ -176,11 +180,39 @@ function authorOf(item: FeedItem): PostView["author"] {
   }
 }
 
+/** Un média tel que la garde des fichiers le délivre : son URL, ou la raison de sa retenue. */
+export function toPostMediaView(media: EngineMedia): PostMediaView {
+  return {
+    kind: media.kind,
+    url: media.url,
+    withheld: media.withheld === "fileScanPending" ? "scan_pending" : media.withheld === "fileQuarantined" ? "quarantined" : null,
+    altText: media.altText ?? null,
+    width: media.width ?? null,
+    height: media.height ?? null,
+  }
+}
+
+/** Un média déposé, déclaré à la publication ; le moteur confronte la déclaration au fichier stocké. */
+export function toDeclaredMedia(item: PublishMediaInput): DeclaredMedia {
+  const altText = item.altText.trim()
+  return {
+    storageId: item.upload.ref as DeclaredMedia["storageId"],
+    kind: item.upload.kind,
+    mimeType: item.upload.mimeType,
+    sizeBytes: item.upload.sizeBytes,
+    ...(item.upload.width !== undefined ? { width: item.upload.width } : {}),
+    ...(item.upload.height !== undefined ? { height: item.upload.height } : {}),
+    ...(item.upload.durationMs !== undefined ? { durationMs: item.upload.durationMs } : {}),
+    ...(altText ? { altText } : {}),
+  }
+}
+
 export function toPostView(item: FeedItem): PostView {
   return {
     id: item._id,
     author: authorOf(item),
     body: item.body,
+    media: item.media.map(toPostMediaView),
     scope: scopeOf(item),
     audience: audienceOf(item.audience),
     visibility: item.visibility,

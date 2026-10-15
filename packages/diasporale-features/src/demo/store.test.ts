@@ -752,3 +752,41 @@ describe("publication seule, modification et signets (EXF-DG-12)", () => {
     expect(notificationsView(store.getState(), "p-prisca").find((item) => item.kind === "post_comment")?.postId).toBe("post-7")
   })
 })
+
+describe("médias d'une publication (EXF-DG-10)", () => {
+  // Une photo réduite telle que la démonstration la garde : 4 000 caractères de charge base64, soit 3 000 octets.
+  const PHOTO = `data:image/jpeg;base64,${"A".repeat(4000)}`
+
+  it("une photo sans légende se publie, avec son texte alternatif ; un dépôt ne s'embarque qu'une fois", async () => {
+    const { store, me } = demo()
+    await store.signInWithIdn(AWA)
+    await store.join(joinInput())
+    const upload = store.stageMedia({ kind: "image", url: PHOTO, width: 1280, height: 960 })
+    expect(upload).toMatchObject({ kind: "image", mimeType: "image/jpeg", sizeBytes: 3000, width: 1280, height: 960 })
+    expect(
+      await store.publish({ body: "  ", reach: "local", audience: "public", alsoOnRoot: false, media: [{ upload, altText: "  Le marché de Lyon  " }] }),
+    ).toEqual({ ok: true, value: { moderation: "published" } })
+    expect(store.getState().posts[0]?.media).toEqual([{ kind: "image", url: PHOTO, width: 1280, height: 960, altText: "Le marché de Lyon" }])
+    expect(feedView(store.getState(), me(), "recents", T0).find((post) => post.media.length > 0)?.media).toEqual([
+      { kind: "image", url: PHOTO, withheld: null, altText: "Le marché de Lyon", width: 1280, height: 960 },
+    ])
+    expect(await store.publish({ body: "Encore", reach: "local", audience: "public", alsoOnRoot: false, media: [{ upload, altText: "" }] })).toEqual({
+      ok: false,
+      code: "media_upload_failed",
+    })
+  })
+
+  it("sans média, un message vide reste refusé ; les règles du moteur jugent les médias ensemble", async () => {
+    const { store } = demo()
+    await store.signInWithIdn(AWA)
+    await store.join(joinInput())
+    const post = { reach: "local" as const, audience: "public" as const, alsoOnRoot: false }
+    expect(await store.publish({ ...post, body: " " })).toEqual({ ok: false, code: "post_empty" })
+    const photo = () => ({ upload: store.stageMedia({ kind: "image", url: PHOTO, width: 10, height: 10 }), altText: "" })
+    expect(await store.publish({ ...post, body: "Cinq photos", media: [photo(), photo(), photo(), photo(), photo()] })).toEqual({
+      ok: false,
+      code: "media_too_many",
+    })
+    expect(await store.publish({ ...post, body: "", media: [{ ...photo(), altText: "x".repeat(301) }] })).toEqual({ ok: false, code: "media_alt_too_long" })
+  })
+})
