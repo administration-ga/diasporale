@@ -43,6 +43,13 @@ export const DATA_ERROR_CODES = [
   "report_reason_required",
   "report_note_too_long",
   "post_too_long",
+  // Médias d'une publication (EXF-DG-10) : les règles du moteur, et l'envoi lui-même.
+  "media_too_many",
+  "media_video_alone",
+  "media_type_invalid",
+  "media_too_large",
+  "media_alt_too_long",
+  "media_upload_failed",
   "attestation_not_needed",
   "attestation_too_soon",
   "attestation_unavailable",

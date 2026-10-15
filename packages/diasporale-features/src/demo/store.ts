@@ -38,12 +38,21 @@ import {
 } from "@diasporale/domain"
 
 import type { ActionErrorCode } from "../data/errors"
-import type { ActionResult, CodeDestination, CommentInput, IdnSignInInput, JoinInput, PublishInput, ReportInput } from "../data/port"
+import { postMediaRefusal } from "../data/media"
+import type { ActionResult, CodeDestination, CommentInput, IdnSignInInput, JoinInput, PublishInput, ReportInput, UploadedMedia } from "../data/port"
 import { COMMENT_MAX_LENGTH, REPORT_NOTE_MAX, type ReactionKind } from "../data/types"
 import { handleRefusal, handleToken, normalizeHandle } from "../lib/handle"
 import { emailHash, fakeConsularAttestation } from "./attestation-provider"
 import { canRead, isConnected, sponsorFacts, statusOf } from "./selectors"
-import { DEMO_STATE_VERSION, createDemoSeed, type DemoMembership, type DemoNotification, type DemoPerson, type DemoState } from "./state"
+import {
+  DEMO_STATE_VERSION,
+  createDemoSeed,
+  type DemoMedia,
+  type DemoMembership,
+  type DemoNotification,
+  type DemoPerson,
+  type DemoState,
+} from "./state"
 
 export const DEMO_STORAGE_KEY = "diasporale:demonstration:v1"
 export const POST_MAX_LENGTH = 2000
@@ -126,6 +135,20 @@ export class DemoStore {
 
   private nextId(prefix: string): [string, number] {
     return [`${prefix}-${this.state.sequence}`, this.state.sequence + 1]
+  }
+
+  /** Les photos déposées, en attente de la publication qui les embarquera (mémoire de la page seulement). */
+  private readonly staged = new Map<string, Omit<DemoMedia, "altText">>()
+  private stagedCount = 0
+
+  /** Garde une photo réduite jusqu'à sa publication ; la référence rendue est celle du port. */
+  stageMedia(media: Omit<DemoMedia, "altText">): UploadedMedia {
+    this.stagedCount += 1
+    const ref = `media-${this.stagedCount}`
+    this.staged.set(ref, media)
+    // Poids de la photo réduite : la charge base64 d'une data URL, aux trois quarts.
+    const sizeBytes = Math.max(1, Math.floor(((media.url.length - media.url.indexOf(",") - 1) * 3) / 4))
+    return { ref, kind: "image", mimeType: "image/jpeg", sizeBytes, width: media.width, height: media.height }
   }
 
   private viewer(): { person: DemoPerson; membership: DemoMembership | undefined } | null {
@@ -297,7 +320,19 @@ export class DemoStore {
     const status = deriveMembershipStatus(viewer.membership.grounds, now)
     if (!capabilitiesOf(status).has("publish")) return fail("publish_not_allowed")
     const body = input.body.trim()
-    if (body.length === 0) return fail("post_empty")
+    // Les médias, jugés ensemble par la règle du moteur ; une référence inconnue n'a jamais été déposée ici.
+    const media: DemoMedia[] = []
+    for (const item of input.media ?? []) {
+      const kept = this.staged.get(item.upload.ref)
+      if (!kept) return fail("media_upload_failed")
+      media.push({ ...kept, altText: item.altText.trim() || null })
+    }
+    const mediaRefusal = postMediaRefusal(
+      (input.media ?? []).map((item) => ({ kind: item.upload.kind, mimeType: item.upload.mimeType, sizeBytes: item.upload.sizeBytes, altText: item.altText.trim() })),
+    )
+    if (mediaRefusal) return fail(mediaRefusal)
+    // Une photo sans légende est une publication légitime ; un message vide sans média ne l'est pas.
+    if (body.length === 0 && media.length === 0) return fail("post_empty")
     if (body.length > POST_MAX_LENGTH) return fail("post_too_long")
     // Un contenu local porte le pays choisi (par défaut celui de l'auteur) ; un
     // contenu diaspora garde ce pays comme ORIGINE (pastille dans les autres hubs).
@@ -321,6 +356,7 @@ export class DemoStore {
           id,
           author: { kind: "person", id: viewer.person.id },
           body,
+          ...(media.length > 0 ? { media } : {}),
           scope: scope.value,
           audience: input.audience,
           visibility: resolveVisibility({ audience: input.audience, alsoOnRoot: input.alsoOnRoot }),
@@ -334,6 +370,7 @@ export class DemoStore {
       ],
       sequence,
     })
+    for (const item of input.media ?? []) this.staged.delete(item.upload.ref)
     return { ok: true, value: { moderation } }
   }
 

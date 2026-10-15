@@ -342,6 +342,16 @@
     "placeholder": "Useful information for the community — {{country}}?",
     "counter": "{{count}} / {{max}} characters",
     "draftKept": "draft kept on this device",
+    "mediaLegend": "Photos or video",
+    "mediaAdd": "Attach photos or a video",
+    "mediaHint": "Up to four photos, or a single video.",
+    "mediaWaiting": "Media still uploading: publishing will wait.",
+    "mediaListLabel": "Attached media",
+    "mediaUploading": "Uploading…",
+    "mediaRemove": "Remove {{name}}",
+    "mediaAltLabel": "Alt text",
+    "mediaAltPlaceholder": "What the photo shows",
+    "mediaAltPlaceholderVideo": "What the video shows",
     "reachLegend": "Where to post",
     "reachLocal": "In the {{country}} hub",
     "reachDiaspora": "For the whole diaspora",
@@ -370,7 +380,14 @@
     "comments_one": "{{count}} comment",
     "comments_other": "{{count}} comments",
     "alsoOnRoot": "Also on ANTIA",
-    "edited": "edited"
+    "edited": "edited",
+    "media": {
+      "photo": "Photo attached to the post",
+      "video": "Video attached to the post",
+      "scanPending": "File scan in progress…",
+      "quarantined": "File held by the file guard",
+      "unavailable": "Media unavailable"
+    }
   },
   "event": {
     "category": {
@@ -1131,6 +1148,12 @@
     "publish_not_allowed": "You can post after a sponsorship or the verification of your consular registration.",
     "post_empty": "Write a message before posting.",
     "post_too_long": "A post has 2,000 characters at most.",
+    "media_too_many": "Four media at most per post.",
+    "media_video_alone": "A video is posted on its own, without photos or another video.",
+    "media_type_invalid": "This file type isn't accepted: JPEG, PNG, WebP or GIF photos; MP4, WebM or MOV videos.",
+    "media_too_large": "File too large: 20 MB at most for a photo, 100 MB for a video.",
+    "media_alt_too_long": "The alt text is longer than 300 characters.",
+    "media_upload_failed": "The upload failed: remove the file, then try again.",
     "comment_empty": "Write a comment before sending it.",
     "comment_too_long": "A comment has 1,000 characters at most.",
     "report_reason_required": "Choose a reason for the report.",

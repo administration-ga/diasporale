@@ -49,7 +49,7 @@ import type {
   SuggestionView,
   UnreadCountView,
 } from "@diasporale/features/data"
-import { COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
+import { COMMENTS_PAGE, describeMediaFile, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
 import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
@@ -62,6 +62,7 @@ import {
   toAccountView,
   toConsentViews,
   toCountryHubView,
+  toDeclaredMedia,
   toFacetArgs,
   toFeed,
   toBookmarkView,
@@ -472,6 +473,26 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         return { country: country.value }
       }),
 
+    // Dépôt en deux temps (garde des fichiers du moteur) : URL de dépôt pour l'usage
+    // `media_social`, puis envoi du fichier ; il n'existe pour personne tant
+    // qu'une publication ne l'a pas vérifié et embarqué.
+    uploadMedia: (file) =>
+      attempt(async () => {
+        const facts = await describeMediaFile(file)
+        if (!facts.ok) throw new Refusal(facts.code)
+        const networkId = await diasporale()
+        const url = await deps.convex.mutation(api.modules.media.media.generateUploadUrl, { networkId, usage: "media_social" })
+        let storageId: string
+        try {
+          const response = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file })
+          if (!response.ok) throw new Refusal("media_upload_failed")
+          storageId = ((await response.json()) as { storageId: string }).storageId
+        } catch (error) {
+          throw error instanceof Refusal ? error : new Refusal("media_upload_failed")
+        }
+        return { ref: storageId, ...facts.value }
+      }),
+
     publish: (input) =>
       attempt(async () => {
         const scope = parseContentScope({ reach: input.reach, country: input.country ?? null })
@@ -492,6 +513,7 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           reach: scope.value.reach,
           ...(scope.value.country !== undefined ? { country: scope.value.country } : {}),
           alsoOnRoot: input.alsoOnRoot && input.audience === "public",
+          ...(input.media && input.media.length > 0 ? { media: input.media.map(toDeclaredMedia) } : {}),
         })
         return { moderation: "published" as const }
       }),

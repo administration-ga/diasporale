@@ -342,6 +342,16 @@
     "placeholder": "Une information utile pour la communauté — {{country}} ?",
     "counter": "{{count}} / {{max}} caractères",
     "draftKept": "brouillon gardé sur cet appareil",
+    "mediaLegend": "Photos ou vidéo",
+    "mediaAdd": "Joindre des photos ou une vidéo",
+    "mediaHint": "Jusqu'à quatre photos, ou une vidéo seule.",
+    "mediaWaiting": "Envoi des médias en cours : la publication attend.",
+    "mediaListLabel": "Médias joints",
+    "mediaUploading": "Envoi…",
+    "mediaRemove": "Retirer {{name}}",
+    "mediaAltLabel": "Texte alternatif",
+    "mediaAltPlaceholder": "Ce que montre la photo",
+    "mediaAltPlaceholderVideo": "Ce que montre la vidéo",
     "reachLegend": "Où publier",
     "reachLocal": "Dans le hub {{country}}",
     "reachDiaspora": "Pour toute la diaspora",
@@ -370,7 +380,14 @@
     "comments_one": "{{count}} commentaire",
     "comments_other": "{{count}} commentaires",
     "alsoOnRoot": "Aussi dans ANTIA",
-    "edited": "modifiée"
+    "edited": "modifiée",
+    "media": {
+      "photo": "Photo jointe à la publication",
+      "video": "Vidéo jointe à la publication",
+      "scanPending": "Analyse du fichier en cours…",
+      "quarantined": "Fichier retenu par la garde des fichiers",
+      "unavailable": "Média indisponible"
+    }
   },
   "event": {
     "category": {
@@ -1131,6 +1148,12 @@
     "publish_not_allowed": "Vous pourrez publier après un parrainage ou la vérification de votre inscription consulaire.",
     "post_empty": "Écrivez un message avant de publier.",
     "post_too_long": "Une publication compte 2 000 caractères au plus.",
+    "media_too_many": "Quatre médias au plus par publication.",
+    "media_video_alone": "Une vidéo se publie seule, sans photo ni autre vidéo.",
+    "media_type_invalid": "Ce type de fichier n'est pas accepté : photos JPEG, PNG, WebP ou GIF ; vidéos MP4, WebM ou MOV.",
+    "media_too_large": "Fichier trop lourd : 20 Mo au plus pour une photo, 100 Mo pour une vidéo.",
+    "media_alt_too_long": "Le texte alternatif dépasse 300 caractères.",
+    "media_upload_failed": "L'envoi du fichier a échoué : retirez-le, puis réessayez.",
     "comment_empty": "Écrivez un commentaire avant de l'envoyer.",
     "comment_too_long": "Un commentaire compte 1 000 caractères au plus.",
     "report_reason_required": "Choisissez un motif de signalement.",

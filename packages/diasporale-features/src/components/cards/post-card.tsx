@@ -12,6 +12,7 @@ import { formatDate, formatRelative } from "../../lib/format"
 import { Avatar, Card } from "../../primitives/surface"
 import { useRouting } from "../../routing"
 import { PostCommentsSheet } from "../comments"
+import { PostMediaGrid } from "../post-media"
 import { PostMenu } from "../post-menu"
 import { RichText } from "../rich-text"
 import { ContentScopeTag } from "../country-tag"
@@ -84,9 +85,12 @@ export function PostCard(props: {
           </div>
           <PostMenu post={post} />
         </header>
-        <p className="whitespace-pre-line break-words px-4 pt-3 text-[15px] leading-relaxed text-foreground">
-          <RichText text={post.body} />
-        </p>
+        {post.body.length > 0 ? (
+          <p className="whitespace-pre-line break-words px-4 pt-3 text-[15px] leading-relaxed text-foreground">
+            <RichText text={post.body} />
+          </p>
+        ) : null}
+        <PostMediaGrid media={post.media} className="px-4 pt-3" />
         <footer className="mt-3 flex flex-wrap items-center gap-2 border-t border-border px-2 py-1.5">
           <DropdownMenu.Root>
             <DropdownMenu.Trigger

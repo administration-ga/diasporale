@@ -10,12 +10,14 @@ import { createEngineActions, feedRequest } from "./engine-source"
 import {
   toBookmarkView,
   toCommentThreadView,
+  toDeclaredMedia,
   toFacetArgs,
   toFeed,
   toMemberHitView,
   toMembershipView,
   toNotificationView,
   toOpenCountries,
+  toPostMediaView,
   toProfileView,
   toRelationView,
   toSuggestionView,
@@ -116,6 +118,7 @@ describe("projections du moteur vers les vues de DIASPORALE", () => {
       ({
         _id: id,
         body: "Bonjour",
+        media: [],
         audience: "public",
         visibility: "network",
         publishedAt: 1,
@@ -469,6 +472,7 @@ describe("annuaire de la tranche (PD4, EXF-DG-19)", () => {
 describe("publications à portée et pays (PD4, lot 7 d'ANTIA)", () => {
   const base = {
     body: "Bonjour",
+    media: [],
     audience: "public",
     visibility: "network",
     publishedAt: 1,
@@ -664,5 +668,88 @@ describe("publication seule, modification et signets par le moteur (PD4)", () =>
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
     expect(await actions.editPost("post-1", "Texte corrigé")).toEqual({ ok: true, value: null })
     expect(calls.slice(1)).toEqual([{ name: "modules/posts/posts:edit", args: { networkId: "n-diasporale", postId: "post-1", body: "Texte corrigé" } }])
+  })
+})
+
+describe("médias des publications par le moteur (EXF-DG-10)", () => {
+  it("la garde des fichiers délivre une URL, ou dit la raison de la retenue", () => {
+    expect(toPostMediaView({ url: "https://f.test/1", withheld: null, kind: "image", mimeType: "image/jpeg", width: 4, height: 3, altText: "Le fleuve" } as never)).toEqual({
+      kind: "image",
+      url: "https://f.test/1",
+      withheld: null,
+      altText: "Le fleuve",
+      width: 4,
+      height: 3,
+    })
+    expect(toPostMediaView({ url: null, withheld: "fileScanPending", kind: "video", mimeType: "video/mp4" } as never)).toEqual({
+      kind: "video",
+      url: null,
+      withheld: "scan_pending",
+      altText: null,
+      width: null,
+      height: null,
+    })
+    expect(toPostMediaView({ url: null, withheld: "fileQuarantined", kind: "image", mimeType: "image/png" } as never).withheld).toBe("quarantined")
+  })
+
+  it("un dépôt déclaré à la publication : texte alternatif nettoyé, absent s'il est vide ; seules les mesures connues partent", () => {
+    const upload = { ref: "kg-photo", kind: "image" as const, mimeType: "image/jpeg", sizeBytes: 2048, width: 1200, height: 800 }
+    expect(toDeclaredMedia({ upload, altText: "  Le fleuve  " })).toEqual({
+      storageId: "kg-photo",
+      kind: "image",
+      mimeType: "image/jpeg",
+      sizeBytes: 2048,
+      width: 1200,
+      height: 800,
+      altText: "Le fleuve",
+    })
+    expect(toDeclaredMedia({ upload: { ref: "kg-video", kind: "video", mimeType: "video/mp4", sizeBytes: 9 }, altText: "   " })).toEqual({
+      storageId: "kg-video",
+      kind: "video",
+      mimeType: "video/mp4",
+      sizeBytes: 9,
+    })
+  })
+
+  it("les refus des médias et du dépôt se disent par leur code fermé", () => {
+    expect(engineActionErrorCode(engineError({ code: "invalidArgument", rule: "POST_VIDEO_MUST_BE_ALONE" }))).toBe("media_video_alone")
+    expect(engineActionErrorCode(engineError({ code: "invalidArgument", rule: "POST_MEDIA_TOO_MANY", params: { max: 4 } }))).toBe("media_too_many")
+    expect(engineActionErrorCode(engineError({ code: "invalidArgument", rule: "UPLOAD_SIZE_OUT_OF_RANGE", params: { maxMegabytes: 20 } }))).toBe("media_too_large")
+    expect(engineActionErrorCode(engineError({ code: "invalidArgument", rule: "UPLOAD_MISMATCH" }))).toBe("media_upload_failed")
+  })
+
+  it("une photo : URL de dépôt pour la publication, envoi du fichier, puis déclarée à la publication", async () => {
+    const { convex, calls } = fakeConvex({
+      ...NETWORK,
+      "modules/diaspora/hubs:listOpenCountries": () => [{ country: "FR" }],
+      "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement",
+      "modules/posts/posts:publish": () => ({ postId: "post-1", created: true }),
+    })
+    const deposit = vi.fn(async () => new Response(JSON.stringify({ storageId: "kg-photo" }), { status: 200 }))
+    vi.stubGlobal("fetch", deposit)
+    try {
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+      const file = new File(["photo"], "fleuve.jpg", { type: "image/jpeg" })
+      const uploaded = await actions.uploadMedia(file)
+      expect(uploaded).toEqual({ ok: true, value: { ref: "kg-photo", kind: "image", mimeType: "image/jpeg", sizeBytes: 5 } })
+      expect(deposit).toHaveBeenCalledWith("https://depot.test/televersement", { method: "POST", headers: { "Content-Type": "image/jpeg" }, body: file })
+      if (!uploaded.ok) throw new Error("dépôt refusé")
+      expect(
+        await actions.publish({ body: "", reach: "local", country: "FR", audience: "public", alsoOnRoot: false, media: [{ upload: uploaded.value, altText: " Le fleuve " }] }),
+      ).toEqual({ ok: true, value: { moderation: "published" } })
+      expect(calls.find((call) => call.name === "modules/media/media:generateUploadUrl")?.args).toEqual({ networkId: "n-diasporale", usage: "media_social" })
+      expect(calls.find((call) => call.name === "modules/posts/posts:publish")?.args).toMatchObject({
+        body: "",
+        media: [{ storageId: "kg-photo", kind: "image", mimeType: "image/jpeg", sizeBytes: 5, altText: "Le fleuve" }],
+      })
+      // Le dépôt refusé se dit sans jamais montrer la réponse du serveur ; un type refusé ne part pas.
+      deposit.mockResolvedValueOnce(new Response("", { status: 500 }))
+      expect(await actions.uploadMedia(file)).toEqual({ ok: false, code: "media_upload_failed" })
+      const before = calls.length
+      expect(await actions.uploadMedia(new File(["%PDF"], "dossier.pdf", { type: "application/pdf" }))).toEqual({ ok: false, code: "media_type_invalid" })
+      expect(calls.length).toBe(before)
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 })

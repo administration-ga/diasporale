@@ -41,10 +41,26 @@ export interface AuthorView {
   readonly badges: readonly TrustBadge[]
 }
 
+/**
+ * Un média d'une publication (EXF-DG-10). Le moteur ne délivre un fichier qu'une
+ * fois analysé : tant que la garde le retient, l'URL manque et la raison se dit
+ * (analyse en cours, bloqué), le média garde sa place dans la publication.
+ */
+export interface PostMediaView {
+  readonly kind: "image" | "video"
+  readonly url: string | null
+  readonly withheld: "scan_pending" | "quarantined" | null
+  readonly altText: string | null
+  readonly width: number | null
+  readonly height: number | null
+}
+
 export interface PostView {
   readonly id: string
   readonly author: AuthorView
   readonly body: string
+  /** Quatre photos au plus, ou une vidéo seule (règle du moteur). */
+  readonly media: readonly PostMediaView[]
   readonly scope: ContentScope
   readonly audience: PostAudience
   readonly visibility: Visibility

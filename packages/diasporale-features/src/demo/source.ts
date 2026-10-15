@@ -3,6 +3,7 @@
 import { hasCapability, type CountryCode, type FeedScope } from "@diasporale/domain"
 import { useMemo, useSyncExternalStore } from "react"
 
+import { describeMediaFile, downscaleImage } from "../data/media"
 import type { DemoAccountView, DiasporaleDataSource } from "../data/port"
 import type {
   BookmarkView,
@@ -41,6 +42,9 @@ import {
 import type { DemoStore } from "./store"
 
 const LOADING = { status: "loading" } as const
+
+/** Côté le plus long d'une photo gardée par la démonstration (stockage du navigateur : quelques Mo). */
+const DEMO_IMAGE_MAX_SIDE = 1280
 
 function ready<T>(data: T): Loadable<T> {
   return { status: "ready", data }
@@ -252,6 +256,15 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       signOutEverywhere: () => store.signOutEverywhere(),
       checkHandle: (handle) => store.checkHandle(handle),
       join: (input) => store.join(input),
+      uploadMedia: async (file) => {
+        const facts = await describeMediaFile(file)
+        if (!facts.ok) return facts
+        // Le stockage du navigateur ne garderait pas une vidéo d'une visite à l'autre : pas de vidéo en démonstration.
+        if (facts.value.kind === "video") return { ok: false, code: "feature_unavailable" }
+        const image = await downscaleImage(file, DEMO_IMAGE_MAX_SIDE)
+        if (!image) return { ok: false, code: "media_upload_failed" }
+        return { ok: true, value: store.stageMedia({ kind: "image", url: image.dataUrl, width: image.width, height: image.height }) }
+      },
       publish: (input) => store.publish(input),
       react: (postId, kind) => store.react(postId, kind),
       comment: (input) => store.comment(input),
