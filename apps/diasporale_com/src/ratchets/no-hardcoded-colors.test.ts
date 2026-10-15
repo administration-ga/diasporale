@@ -11,6 +11,12 @@ import { productSources } from "./sources"
  */
 
 const TOKENS_FILE = "packages/diasporale-features/src/styles/tokens.css"
+/**
+ * Rôles propres posés sur le contrat du moteur : renvois seulement. Seules les
+ * trois couleurs du drapeau du filet décoratif y sont littérales, ligne par ligne.
+ */
+const EXTRAS_FILE = "packages/diasporale-features/src/styles/extras.css"
+const FLAG_LINE = /^\s*--dg-drapeau-(?:vert|jaune|bleu):\s*#[0-9a-f]{6};\s*$/i
 
 const PALETTE = "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose"
 const UTILITY = "bg|text|border|ring|fill|stroke|from|via|to|outline|decoration|shadow|accent|caret|divide|placeholder"
@@ -25,6 +31,11 @@ const RULES: readonly { readonly name: string; readonly pattern: RegExp }[] = [
 describe("cliquet charte — aucune couleur en dur", () => {
   const files = productSources([".ts", ".tsx", ".css"]).filter((file) => file.path !== TOKENS_FILE)
 
+  it("dans les rôles propres, seul le filet tricolore porte des couleurs littérales", () => {
+    expect(FLAG_LINE.test("  --dg-drapeau-vert: #009e60;")).toBe(true)
+    expect(FLAG_LINE.test("  --dg-tag-bg: #efebe0;")).toBe(false)
+  })
+
   it("relit bien les sources du produit", () => {
     expect(files.length).toBeGreaterThan(40)
   })
@@ -32,6 +43,7 @@ describe("cliquet charte — aucune couleur en dur", () => {
   it.each(RULES)("aucune couleur $name hors du fichier de jetons", ({ pattern }) => {
     const hits = files.flatMap((file) =>
       file.text.split("\n").flatMap((line, index) => {
+        if (file.path === EXTRAS_FILE && FLAG_LINE.test(line)) return []
         // Les commentaires peuvent citer une couleur (mesure, justification) ; le code, jamais.
         const code = line.replace(/\/\/.*$|\/\*.*?\*\/|^\s*\*.*$/g, "")
         return [...code.matchAll(pattern)].map((match) => `${file.path}:${index + 1} ${match[0]}`)

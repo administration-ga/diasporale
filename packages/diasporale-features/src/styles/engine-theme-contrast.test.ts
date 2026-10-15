@@ -28,6 +28,33 @@ const THEMES = {
   sombre: cascade(BASE_LIGHT, THEME_LIGHT, BASE_DARK, THEME_DARK),
 } as const
 
+// Les rôles propres à DIASPORALE (`extras.css`), importés après le thème, mêmes sélecteurs.
+const extras = readFileSync(new URL("./extras.css", import.meta.url), "utf8")
+const EXTRAS_LIGHT = declarations(cssBlock(extras, '[data-charte="diasporale"] {'))
+const EXTRAS_DARK = declarations(cssBlock(extras, '.dark[data-charte="diasporale"],'))
+const WITH_EXTRAS = {
+  clair: cascade(BASE_LIGHT, THEME_LIGHT, EXTRAS_LIGHT),
+  sombre: cascade(BASE_LIGHT, THEME_LIGHT, EXTRAS_LIGHT, BASE_DARK, THEME_DARK, EXTRAS_DARK),
+} as const
+
+/** Paires des rôles propres : étiquette pays, badges, bandeaux, bouton destructif. */
+const EXTRA_TEXT_PAIRS: readonly (readonly [string, string])[] = [
+  ["--dg-tag-fg", "--dg-tag-bg"],
+  ["--dg-tag-code", "--dg-tag-bg"],
+  ["--dg-tag-diaspora-fg", "--dg-tag-diaspora-bg"],
+  ["--dg-monument", "--card"],
+  ["--dg-official-fg", "--dg-official-bg"],
+  ["--dg-verified-fg", "--dg-verified-bg"],
+  ["--dg-agent-fg", "--dg-agent-bg"],
+  ["--dg-community-fg", "--dg-community-bg"],
+  ["--dg-sponsored-fg", "--dg-sponsored-bg"],
+  ["--dg-moderation-pending-fg", "--dg-moderation-pending-bg"],
+  ["--dg-moderation-published-fg", "--dg-moderation-published-bg"],
+  ["--dg-moderation-rejected-fg", "--dg-moderation-rejected-bg"],
+  ["--dg-demo-fg", "--dg-demo-bg"],
+  ["--destructive-foreground", "--destructive"],
+]
+
 const TEXT_PAIRS: readonly (readonly [string, string])[] = [
   ["--foreground", "--background"],
   ["--card-foreground", "--card"],
@@ -89,6 +116,27 @@ describe("thème DIASPORALE servi par le moteur — cascade base + thème", () =
       })
     })
   }
+
+  describe("rôles propres à DIASPORALE (extras.css), posés sur le contrat", () => {
+    for (const [name, resolved] of Object.entries(WITH_EXTRAS)) {
+      it.each(EXTRA_TEXT_PAIRS)(`${name} : texte %s sur %s ≥ 4,5:1`, (foreground, background) => {
+        expect(contrastRatio(resolved, foreground, background)).toBeGreaterThanOrEqual(4.5)
+      })
+    }
+
+    it("ne porte aucune couleur littérale hors du filet tricolore", () => {
+      const literal = [...EXTRAS_LIGHT, ...EXTRAS_DARK].filter(
+        ([token, value]) => !token.startsWith("--dg-drapeau-") && /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(|oklch\(/i.test(value),
+      )
+      expect(literal.map(([token]) => token)).toEqual([])
+    })
+
+    it("chaque rôle propre utilisé par la couche Tailwind est déclaré", () => {
+      const layer = readFileSync(new URL("./tailwind-theme.css", import.meta.url), "utf8")
+      const used = new Set([...layer.matchAll(/var\((--dg-[a-z0-9-]+)\)/g)].map((match) => match[1]!))
+      expect([...used].filter((token) => !EXTRAS_LIGHT.has(token))).toEqual([])
+    })
+  })
 
   it("garde le bleu Gabon comme bleu d'action et le sable comme fond", () => {
     expect(THEMES.clair.get("--esp-blue-500")).toBe("#0072b9")

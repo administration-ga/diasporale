@@ -1,0 +1,93 @@
+/* ════════════════════════════════════════════════════════════════════════
+   DIASPORALE — rôles PROPRES à l'application (étiquette pays, badges de
+   confiance, bandeaux, bouton destructif, voile, mouvement).
+
+   Posés APRÈS la charte de base du moteur (`@antia/ui/styles.css`) et le
+   thème `@antia/ui/themes/diasporale.css`, qui portent tout le contrat de
+   couleurs (PD0). Ici, AUCUNE couleur littérale, sauf les trois couleurs du
+   drapeau du filet décoratif : chaque rôle RENVOIE à un jeton du contrat,
+   déjà réaccordé à la palette Sable par le thème. Une teinte se règle donc
+   à un seul endroit : le thème.
+
+   Mêmes sélecteurs que le thème, importés après lui : à spécificité égale,
+   l'ordre d'import tranche. Le cliquet `engine-theme-contrast.test.ts`
+   rejoue la cascade complète (base, thème, rôles) dans les deux thèmes.
+   ════════════════════════════════════════════════════════════════════════ */
+
+[data-charte="diasporale"] {
+  /* L'étiquette pays (charte §5). L'œillet est un trou : il montre le fond. */
+  --dg-tag-bg: var(--esp-neutral-chip);
+  --dg-tag-fg: var(--muted-foreground);
+  --dg-tag-code: var(--foreground);
+  --dg-tag-eyelet: var(--background);
+  --dg-tag-eyelet-ring: var(--ink-300);
+  --dg-tag-diaspora-bg: var(--primary-light);
+  --dg-tag-diaspora-fg: var(--esp-tone-blue);
+  --dg-monument: var(--foreground);
+
+  /* Les badges de confiance (charte §6) : « Officiel » est l'encre inversée. */
+  --dg-official-bg: var(--foreground);
+  --dg-official-fg: var(--background);
+  --dg-verified-bg: var(--esp-tone-green-bg);
+  --dg-verified-fg: var(--esp-tone-green);
+  --dg-agent-bg: var(--esp-tone-blue-bg);
+  --dg-agent-fg: var(--esp-tone-blue);
+  --dg-community-bg: var(--esp-neutral-chip);
+  --dg-community-fg: var(--muted-foreground);
+  --dg-sponsored-bg: var(--esp-neutral-chip);
+  --dg-sponsored-fg: var(--foreground);
+
+  /* Bandeaux de modération (P4) et de démonstration. */
+  --dg-moderation-pending-bg: var(--esp-tone-amber-bg);
+  --dg-moderation-pending-fg: var(--esp-tone-amber);
+  --dg-moderation-pending-edge: var(--warning);
+  --dg-moderation-published-bg: var(--esp-tone-green-bg);
+  --dg-moderation-published-fg: var(--esp-tone-green);
+  --dg-moderation-published-edge: var(--success);
+  --dg-moderation-rejected-bg: var(--esp-tone-rose-bg);
+  --dg-moderation-rejected-fg: var(--esp-tone-rose);
+  --dg-moderation-rejected-edge: var(--destructive);
+  --dg-demo-bg: var(--esp-tone-amber-bg);
+  --dg-demo-fg: var(--esp-tone-amber);
+  --dg-demo-edge: var(--warning);
+
+  /* Bouton destructif : hors du contrat du moteur, dérivé de lui. Le survol
+     se rapproche de l'encre (plus sombre en clair, plus clair en sombre). */
+  --destructive-foreground: var(--esp-neutral-0);
+  --danger-fill-hover: color-mix(in srgb, var(--destructive) 82%, var(--foreground));
+
+  /* Voile sous une feuille ou une boîte de dialogue. */
+  --dg-scrim: color-mix(in srgb, var(--esp-night-bg) 42%, transparent);
+
+  /* Le filet tricolore — SEUL usage des couleurs du drapeau, décoratif :
+     jamais du texte, jamais un fond de bouton, jamais un état. */
+  --dg-drapeau-vert: #009e60;
+  --dg-drapeau-jaune: #fcd116;
+  --dg-drapeau-bleu: #3a75c4;
+  --dg-stripe: linear-gradient(
+    90deg,
+    var(--dg-drapeau-vert) 0 33.333%,
+    var(--dg-drapeau-jaune) 33.333% 66.666%,
+    var(--dg-drapeau-bleu) 66.666% 100%
+  );
+
+  /* Mouvement. */
+  --dg-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dg-duration-fast: 160ms;
+  --dg-duration-base: 220ms;
+}
+
+.dark[data-charte="diasporale"],
+.dark [data-charte="diasporale"] {
+  /* En sombre, l'encre se pose sur le rouge éclairci. */
+  --destructive-foreground: var(--esp-night-bg);
+  --dg-scrim: color-mix(in srgb, var(--esp-night-bg) 72%, transparent);
+}
+
+/* Mouvement réduit : aucune transition ni animation de la charte. */
+@media (prefers-reduced-motion: reduce) {
+  [data-charte="diasporale"] {
+    --dg-duration-fast: 0ms;
+    --dg-duration-base: 0ms;
+  }
+}
