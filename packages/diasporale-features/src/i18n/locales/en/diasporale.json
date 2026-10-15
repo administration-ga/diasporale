@@ -691,18 +691,18 @@
   },
   "charte": {
     "title": "“Diaspora sand” charter",
-    "eyebrow": "Design charter · version 2 · 15 October 2026",
+    "eyebrow": "Design charter · version 3 · 15 October 2026",
     "heading": "Diaspora sand",
     "lead": "DIASPORALE's components, mounted with fictitious data, to review and accept the interface in both themes.",
     "tocLabel": "Charter contents",
     "section": {
       "color": {
         "title": "Colour",
-        "lead": "Six named colours. In light and dark alike, the background is the lowest layer and every surface that rises gets lighter: paper on sand, night on ink."
+        "lead": "Six named colours, a single warm hue per theme, barely saturated: nothing turns beige or brown. The background is the lowest layer; every surface that rises gets lighter."
       },
       "contrast": {
         "title": "Contrast",
-        "lead": "Measured live on this page, in the theme shown. Text holds at least 4.5:1; field outlines and the focus ring, 3:1."
+        "lead": "Measured live on this page, in the theme shown. Text holds at least 4.5:1 and main text stays between 12 and 16:1, strong without glare; field outlines and the focus ring hold 3:1."
       },
       "type": {
         "title": "Typography",
@@ -726,7 +726,7 @@
       },
       "cards": {
         "title": "Cards",
-        "lead": "Paper on sand in light, night on ink in dark: the card rises through lightness, no hairline. Every piece of content carries its country."
+        "lead": "Paper on sand in light, a raised card on night in dark: the card rises through lightness, no hairline. Every piece of content carries its country."
       },
       "controls": {
         "title": "Controls",
@@ -737,7 +737,7 @@
       "light": "Light",
       "dark": "Dark",
       "lightRoles": "Sand background · paper card · ink text",
-      "darkRoles": "Ink background · night card · sand text",
+      "darkRoles": "Night background · raised card · sand text",
       "text": "Main text",
       "secondary": "Secondary text, quieter",
       "action": "Act"
@@ -753,11 +753,11 @@
       },
       "encre": {
         "name": "Ink",
-        "role": "Light text, dark background"
+        "role": "Text, “Official” stamp"
       },
       "nuit": {
         "name": "Night",
-        "role": "Dark card"
+        "role": "Dark background"
       },
       "bleu": {
         "name": "Gabon blue",

@@ -691,18 +691,18 @@
   },
   "charte": {
     "title": "Charte « Sable de la diaspora »",
-    "eyebrow": "Charte graphique · version 2 · 15 octobre 2026",
+    "eyebrow": "Charte graphique · version 3 · 15 octobre 2026",
     "heading": "Sable de la diaspora",
     "lead": "Les composants de DIASPORALE, montés avec des données fictives, pour relire et recetter l'interface dans les deux thèmes.",
     "tocLabel": "Sommaire de la charte",
     "section": {
       "color": {
         "title": "Couleur",
-        "lead": "Six couleurs nommées. En clair comme en sombre, le fond est la couche la plus basse et chaque surface qui monte s'éclaircit : le papier sur le sable, la nuit sur l'encre."
+        "lead": "Six couleurs nommées, une seule teinte chaude par thème, presque sans saturation : rien ne vire au beige ni au brun. Le fond est la couche la plus basse, chaque surface qui monte s'éclaircit."
       },
       "contrast": {
         "title": "Contraste",
-        "lead": "Mesuré en direct sur cette page, dans le thème affiché. Le texte tient 4,5:1 au moins ; les contours de champ et l'anneau de focus, 3:1."
+        "lead": "Mesuré en direct sur cette page, dans le thème affiché. Le texte tient 4,5:1 au moins et le texte principal reste entre 12 et 16:1, fort sans éblouir ; les contours de champ et l'anneau de focus tiennent 3:1."
       },
       "type": {
         "title": "Typographie",
@@ -726,7 +726,7 @@
       },
       "cards": {
         "title": "Cartes",
-        "lead": "Papier sur sable en clair, nuit sur encre en sombre : la carte se lève par la clarté, sans filet. Chaque contenu porte son pays."
+        "lead": "Papier sur sable en clair, carte relevée sur la nuit en sombre : la carte se lève par la clarté, sans filet. Chaque contenu porte son pays."
       },
       "controls": {
         "title": "Commandes",
@@ -737,7 +737,7 @@
       "light": "Clair",
       "dark": "Sombre",
       "lightRoles": "Fond sable · carte papier · texte encre",
-      "darkRoles": "Fond encre · carte nuit · texte sable",
+      "darkRoles": "Fond nuit · carte relevée · texte sable",
       "text": "Le texte principal",
       "secondary": "Le texte secondaire, plus discret",
       "action": "Agir"
@@ -753,11 +753,11 @@
       },
       "encre": {
         "name": "Encre",
-        "role": "Texte clair, fond sombre"
+        "role": "Texte, tampon « Officiel »"
       },
       "nuit": {
         "name": "Nuit",
-        "role": "Carte sombre"
+        "role": "Fond sombre"
       },
       "bleu": {
         "name": "Bleu Gabon",

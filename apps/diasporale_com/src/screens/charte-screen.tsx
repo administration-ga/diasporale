@@ -94,7 +94,7 @@ const SWATCHES = [
   { token: "--esp-neutral-100", name: "charte.swatch.sable.name", role: "charte.swatch.sable.role", tile: "bg-[var(--esp-neutral-100)] text-[var(--esp-neutral-900)]" },
   { token: "--esp-neutral-0", name: "charte.swatch.papier.name", role: "charte.swatch.papier.role", tile: "bg-[var(--esp-neutral-0)] text-[var(--esp-neutral-900)]" },
   { token: "--esp-neutral-900", name: "charte.swatch.encre.name", role: "charte.swatch.encre.role", tile: "bg-[var(--esp-neutral-900)] text-[var(--esp-neutral-100)]" },
-  { token: "--esp-night-card", name: "charte.swatch.nuit.name", role: "charte.swatch.nuit.role", tile: "bg-[var(--esp-night-card)] text-[var(--esp-neutral-100)]" },
+  { token: "--esp-night-bg", name: "charte.swatch.nuit.name", role: "charte.swatch.nuit.role", tile: "bg-[var(--esp-night-bg)] text-[var(--esp-neutral-200)]" },
   { token: "--esp-blue-500", name: "charte.swatch.bleu.name", role: "charte.swatch.bleu.role", tile: "bg-[var(--esp-blue-500)] text-[var(--esp-neutral-0)]" },
   { token: "--esp-neutral-600", name: "charte.swatch.gres.name", role: "charte.swatch.gres.role", tile: "bg-[var(--esp-neutral-600)] text-[var(--esp-neutral-100)]" },
 ] as const
@@ -629,7 +629,7 @@ function Group(props: { label: string; children: ReactNode }) {
 /**
  * Les deux thèmes côte à côte, peints avec les primitives (identiques quel que
  * soit le thème affiché) : dans les deux, le fond est la couche la plus basse et
- * la carte se lève, plus claire (papier sur sable, nuit sur encre).
+ * la carte se lève, plus claire (papier sur sable, carte relevée sur la nuit).
  */
 function ThemeMock(props: { variant: "light" | "dark" }) {
   const { t } = useDiasporaleT()
@@ -640,7 +640,7 @@ function ThemeMock(props: { variant: "light" | "dark" }) {
         <div
           className={cn(
             "flex flex-col gap-2 rounded-xl p-4",
-            light ? "bg-[var(--esp-neutral-0)] text-[var(--esp-neutral-900)] shadow-[var(--esp-shadow)]" : "bg-[var(--esp-night-card)] text-[var(--esp-neutral-100)]",
+            light ? "bg-[var(--esp-neutral-0)] text-[var(--esp-neutral-900)] shadow-[var(--esp-shadow)]" : "bg-[var(--esp-night-card)] text-[var(--esp-neutral-200)]",
           )}
         >
           <p className="text-[15px] font-semibold">{t("charte.theme.text")}</p>

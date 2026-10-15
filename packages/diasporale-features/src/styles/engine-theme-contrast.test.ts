@@ -155,8 +155,21 @@ describe("thème DIASPORALE servi par le moteur — cascade base + thème", () =
     expect(THEMES.clair.get("--esp-r-chrome")).toBe("999px")
   })
 
-  it("garde le bleu Gabon comme bleu d'action et le sable comme fond", () => {
+  it("confort de lecture : le texte principal reste fort sans éblouir (ni noir sur blanc pur, ni halo en sombre)", () => {
+    const comfort = [
+      ["clair", contrastRatio(THEMES.clair, "--card-foreground", "--card")],
+      ["clair", contrastRatio(THEMES.clair, "--foreground", "--background")],
+      ["sombre", contrastRatio(THEMES.sombre, "--foreground", "--background")],
+      ["sombre", contrastRatio(THEMES.sombre, "--card-foreground", "--card")],
+    ] as const
+    for (const [, ratio] of comfort) {
+      expect(ratio).toBeGreaterThanOrEqual(12)
+      expect(ratio).toBeLessThanOrEqual(16)
+    }
+  })
+
+  it("garde le bleu Gabon comme bleu d'action et le sable (v3) comme fond", () => {
     expect(THEMES.clair.get("--esp-blue-500")).toBe("#0072b9")
-    expect(THEMES.clair.get("--esp-neutral-100")).toBe("#f7f6f2")
+    expect(THEMES.clair.get("--esp-neutral-100")).toBe("#f4f2ee")
   })
 })
