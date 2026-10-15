@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { renderWithI18n } from "../test-utils"
 import { CountrySwitch } from "./country-switch"
@@ -92,6 +92,59 @@ describe("ModerationBanner — montré à l'auteur", () => {
   it("refusé : le motif", () => {
     renderWithI18n(<ModerationBanner state="rejected" reason="contenu commercial" />)
     expect(screen.getByRole("status")).toHaveTextContent("contenu commercial")
+  })
+})
+
+describe("CountrySwitch — accès rapide du changement de hub", () => {
+  /** Un stockage en mémoire : le `localStorage` expérimental de Node masque celui de jsdom. */
+  function memoryStorage(initial: Record<string, string> = {}) {
+    const items = new Map(Object.entries(initial))
+    return {
+      getItem: (key: string) => items.get(key) ?? null,
+      setItem: (key: string, value: string) => void items.set(key, value),
+      removeItem: (key: string) => void items.delete(key),
+    }
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("mon pays d'abord, puis les derniers pays choisis, gardés dans ce navigateur ; une recherche les masque", async () => {
+    vi.stubGlobal("localStorage", memoryStorage())
+    const onChange = vi.fn()
+    const user = userEvent.setup()
+    renderWithI18n(
+      <CountrySwitch
+        value="FR"
+        onChange={onChange}
+        openCountries={["FR"]}
+        title="Changer de pays"
+        description="Cherchez par nom ou par code."
+        rememberKey="test:hubs"
+        home="FR"
+      />,
+    )
+    await user.click(screen.getByRole("combobox"))
+    let quick = screen.getByRole("region", { name: "Accès rapide" })
+    expect(within(quick).getAllByRole("button").map((button) => button.textContent)).toEqual([expect.stringContaining("France")])
+    expect(within(quick).getByText("mon pays")).toBeInTheDocument()
+    await user.type(screen.getByRole("searchbox"), "Belgique")
+    expect(screen.queryByRole("region", { name: "Accès rapide" })).toBeNull()
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: /Belgique/ }))
+    expect(onChange).toHaveBeenCalledWith("BE")
+    expect(JSON.parse(window.localStorage.getItem("test:hubs") ?? "[]")).toEqual(["BE"])
+    await user.click(screen.getByRole("combobox"))
+    quick = screen.getByRole("region", { name: "Accès rapide" })
+    expect(within(quick).getAllByRole("button").map((button) => button.textContent?.slice(0, 2))).toEqual(["FR", "BE"])
+  })
+
+  it("un stockage illisible ne casse rien : l'accès rapide se contente de mon pays", async () => {
+    vi.stubGlobal("localStorage", memoryStorage({ "test:hubs": "{pas du json" }))
+    const user = userEvent.setup()
+    renderWithI18n(<CountrySwitch value={null} onChange={vi.fn()} openCountries={[]} title="Changer de pays" description="…" rememberKey="test:hubs" home="CA" />)
+    await user.click(screen.getByRole("combobox"))
+    expect(within(screen.getByRole("region", { name: "Accès rapide" })).getAllByRole("button")).toHaveLength(1)
   })
 })
 

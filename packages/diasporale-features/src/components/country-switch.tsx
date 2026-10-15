@@ -1,6 +1,6 @@
 "use client"
 
-import { isCountryOpen, type CountryCode } from "@diasporale/domain"
+import { isCountryOpen, parseResidenceCountry, type CountryCode } from "@diasporale/domain"
 import { CheckIcon, ChevronDownIcon, SearchIcon } from "lucide-react"
 import { useId, useMemo, useRef, useState, type ReactNode } from "react"
 
@@ -9,6 +9,31 @@ import { cn } from "../lib/cn"
 import { countryName, filterCountryOptions, residenceCountryOptions } from "../lib/countries"
 import { Input } from "../primitives/field"
 import { Sheet, SheetContent, SheetTrigger } from "../primitives/sheet"
+
+/** Pays récents gardés par sélecteur : trois, pas un historique. */
+const RECENT_MAX = 3
+
+/** Les pays choisis récemment, gardés dans CE navigateur — une commodité, jamais une préférence de compte. */
+function readRecent(key: string): CountryCode[] {
+  try {
+    const raw = JSON.parse(window.localStorage.getItem(key) ?? "[]") as unknown
+    if (!Array.isArray(raw)) return []
+    return raw.flatMap((value) => {
+      const parsed = typeof value === "string" ? parseResidenceCountry(value) : null
+      return parsed?.ok ? [parsed.value] : []
+    })
+  } catch {
+    return []
+  }
+}
+
+function writeRecent(key: string, countries: readonly CountryCode[]): void {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(countries.slice(0, RECENT_MAX)))
+  } catch {
+    // Stockage refusé (navigation privée…) : l'accès rapide se contente du pays de la personne.
+  }
+}
 
 /**
  * Sélecteur de pays (C11/P2) : un bouton à étiquette qui ouvre une feuille de
@@ -31,10 +56,17 @@ export function CountrySwitch(props: {
   describedBy?: string
   id?: string
   className?: string
+  /**
+   * Accès rapide (changement de hub) : le pays de la personne d'abord, puis les
+   * derniers pays choisis, gardés dans ce navigateur sous cette clé.
+   */
+  rememberKey?: string
+  home?: CountryCode
 }) {
   const { t, locale } = useDiasporaleT()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
+  const [recent, setRecent] = useState<readonly CountryCode[]>([])
   const searchId = useId()
   const sheetId = useId()
   const searchRef = useRef<HTMLInputElement>(null)
@@ -42,13 +74,54 @@ export function CountrySwitch(props: {
   const shown = useMemo(() => filterCountryOptions(options, query), [options, query])
 
   const choose = (country: CountryCode) => {
+    if (props.rememberKey) writeRecent(props.rememberKey, [country, ...recent.filter((code) => code !== country)])
     props.onChange(country)
     setOpen(false)
     setQuery("")
   }
 
+  const quick = useMemo(() => {
+    if (!props.rememberKey || query.trim() !== "") return []
+    const codes = [...(props.home ? [props.home] : []), ...recent]
+    return codes.filter((code, index) => codes.indexOf(code) === index).slice(0, RECENT_MAX + 1)
+  }, [props.rememberKey, props.home, recent, query])
+
+  const onOpenChange = (next: boolean) => {
+    // Relu à l'ouverture seulement : le stockage du navigateur n'existe pas au rendu serveur.
+    if (next && props.rememberKey) setRecent(readRecent(props.rememberKey))
+    setOpen(next)
+  }
+
+  const renderOption = (option: { code: CountryCode; name: string }, tag?: string) => {
+    const selected = option.code === props.value
+    const isOpen = isCountryOpen(option.code, props.openCountries)
+    return (
+      <button
+        type="button"
+        onClick={() => choose(option.code)}
+        aria-current={selected ? "true" : undefined}
+        className={cn(
+          "flex min-h-11 w-full items-center gap-3 rounded-md px-2 text-left transition-colors hover:bg-muted focus-visible:shadow-focus",
+          selected && "bg-[var(--primary-50)]",
+        )}
+      >
+        <span aria-hidden className="w-7 font-mono text-xs font-semibold tracking-[0.06em] text-tag-code">
+          {option.code}
+        </span>
+        <span className="min-w-0 flex-1 truncate">{option.name}</span>
+        {tag ? <span className="text-[12px] text-muted-foreground">{tag}</span> : null}
+        {isOpen ? (
+          <span className="rounded-[var(--radius-xs)] bg-published px-1.5 py-0.5 text-[11px] font-semibold text-published-foreground">
+            {t("country.openBadge")}
+          </span>
+        ) : null}
+        {selected ? <CheckIcon className="size-4 shrink-0 text-primary" aria-hidden /> : null}
+      </button>
+    )
+  }
+
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
         {props.trigger ?? (
           // Rôle combobox (ARIA 1.2, fenêtre de type dialog) : la valeur affichée est le pays
@@ -114,38 +187,25 @@ export function CountrySwitch(props: {
             {t("country.resultCount", { count: shown.length })}
           </p>
         </div>
+        {quick.length > 0 ? (
+          <section aria-labelledby={`${sheetId}-rapide`} className="-mx-2 mb-3">
+            <h3 id={`${sheetId}-rapide`} className="px-2 pb-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              {t("country.quickAccess")}
+            </h3>
+            <ul className="flex flex-col">
+              {quick.map((code) => (
+                <li key={code}>{renderOption({ code, name: countryName(code, locale) }, code === props.home ? t("country.homeTag") : undefined)}</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
         {shown.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">{t("country.noResult")}</p>
         ) : (
           <ul className="-mx-2 flex flex-col">
-            {shown.map((option) => {
-              const selected = option.code === props.value
-              const isOpen = isCountryOpen(option.code, props.openCountries)
-              return (
-                <li key={option.code}>
-                  <button
-                    type="button"
-                    onClick={() => choose(option.code)}
-                    aria-current={selected ? "true" : undefined}
-                    className={cn(
-                      "flex min-h-11 w-full items-center gap-3 rounded-md px-2 text-left transition-colors hover:bg-muted focus-visible:shadow-focus",
-                      selected && "bg-[var(--primary-50)]",
-                    )}
-                  >
-                    <span aria-hidden className="w-7 font-mono text-xs font-semibold tracking-[0.06em] text-tag-code">
-                      {option.code}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate">{option.name}</span>
-                    {isOpen ? (
-                      <span className="rounded-[var(--radius-xs)] bg-published px-1.5 py-0.5 text-[11px] font-semibold text-published-foreground">
-                        {t("country.openBadge")}
-                      </span>
-                    ) : null}
-                    {selected ? <CheckIcon className="size-4 shrink-0 text-primary" aria-hidden /> : null}
-                  </button>
-                </li>
-              )
-            })}
+            {shown.map((option) => (
+              <li key={option.code}>{renderOption(option)}</li>
+            ))}
           </ul>
         )}
       </SheetContent>

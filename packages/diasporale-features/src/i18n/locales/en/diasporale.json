@@ -227,7 +227,9 @@
     "resultCount_one": "{{count}} country",
     "resultCount_other": "{{count}} countries",
     "noResult": "No country matches your search.",
-    "openBadge": "Open"
+    "openBadge": "Open",
+    "quickAccess": "Quick access",
+    "homeTag": "my country"
   },
   "moderation": {
     "pending": "Under review.",

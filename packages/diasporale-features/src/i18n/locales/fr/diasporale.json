@@ -227,7 +227,9 @@
     "resultCount_one": "{{count}} pays",
     "resultCount_other": "{{count}} pays",
     "noResult": "Aucun pays ne correspond à votre recherche.",
-    "openBadge": "Ouvert"
+    "openBadge": "Ouvert",
+    "quickAccess": "Accès rapide",
+    "homeTag": "mon pays"
   },
   "moderation": {
     "pending": "En relecture.",

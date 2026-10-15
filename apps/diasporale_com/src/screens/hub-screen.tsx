@@ -73,6 +73,8 @@ function CountryJump(props: { membership: MembershipView; label: string; current
       openCountries={open.status === "ready" ? open.data.map((item) => item.country) : []}
       title={t("hub.switchTitle")}
       description={t("hub.switchDescription")}
+      rememberKey="diasporale:hubs:recents"
+      home={props.membership.facet.countryOfResidence}
       trigger={
         <Button variant="outline">
           <ArrowLeftRightIcon aria-hidden />
