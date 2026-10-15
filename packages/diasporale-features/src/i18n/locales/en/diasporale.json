@@ -341,6 +341,7 @@
     "bodyLabel": "Your message",
     "placeholder": "Useful information for the community — {{country}}?",
     "counter": "{{count}} / {{max}} characters",
+    "draftKept": "draft kept on this device",
     "reachLegend": "Where to post",
     "reachLocal": "In the {{country}} hub",
     "reachDiaspora": "For the whole diaspora",
