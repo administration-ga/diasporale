@@ -9,6 +9,8 @@ import type {
   BookmarkView,
   CommentThreadView,
   CommentView,
+  FeedPageQuery,
+  FeedPageRequest,
   Loadable,
   MemberHitView,
   NotificationView,
@@ -42,6 +44,9 @@ import {
 import type { DemoStore } from "./store"
 
 const LOADING = { status: "loading" } as const
+const FEED_PAGE = 30
+/** Les lectures locales sont immédiates ; il n'existe aucune requête distante à relancer. */
+const retryLocalFeed = () => undefined
 
 /** Côté le plus long d'une photo gardée par la démonstration (stockage du navigateur : quelques Mo). */
 const DEMO_IMAGE_MAX_SIDE = 1280
@@ -90,6 +95,43 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
         const viewerId = state.session.personId
         return ready(viewerId ? feedView(state, viewerId, scope, store.now(), hubCountry) : [])
       }, [version, scope, hubCountry])
+    },
+
+    useFeedPage(args: FeedPageRequest): FeedPageQuery {
+      const version = useVersion()
+      const { scope, hubCountry } = args
+      const publishedAt = args.cursor?.publishedAt
+      const postId = args.cursor?.postId
+      return useMemo<FeedPageQuery>(() => {
+        if (version < 0) return { data: undefined, isLoading: true, error: null, retry: retryLocalFeed }
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return { data: undefined, isLoading: false, error: "not_signed_in", retry: retryLocalFeed }
+        const membership = state.memberships[viewerId]
+        if (!membership) return { data: undefined, isLoading: false, error: "not_member", retry: retryLocalFeed }
+        const status = statusOf(state, viewerId, store.now())
+        if (status === null || !hasCapability(status, "read_network", { suspensionReadAccess: membership.grounds.suspension?.readAccess ?? "none" })) {
+          return { data: undefined, isLoading: false, error: status === "suspendue" ? "suspended" : "not_member", retry: retryLocalFeed }
+        }
+        // Le sélecteur applique déjà audiences, réseau, blocages et masquages.
+        // Le jeu local ne possède pas `_creationTime` : son identifiant opaque
+        // départage les publications de même instant de manière déterministe.
+        const items = feedView(state, viewerId, scope, store.now(), hubCountry)
+          .sort((left, right) => right.createdAt - left.createdAt || (left.id === right.id ? 0 : left.id < right.id ? 1 : -1))
+          .filter((post) => publishedAt === undefined || postId === undefined || post.createdAt < publishedAt || (post.createdAt === publishedAt && post.id < postId))
+        const page = items.slice(0, FEED_PAGE)
+        const last = page.at(-1)
+        return {
+          data: {
+            items: page,
+            nextCursor: items.length > FEED_PAGE && last ? { publishedAt: last.createdAt, postId: last.id } : null,
+            lacunar: false,
+          },
+          isLoading: false,
+          error: null,
+          retry: retryLocalFeed,
+        }
+      }, [version, scope, hubCountry, publishedAt, postId])
     },
 
     useProfile(handle: string) {

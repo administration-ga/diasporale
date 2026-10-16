@@ -293,6 +293,17 @@
     "region": "Avis"
   },
   "feed": {
+    "pagination": {
+      "loadMore": "Voir plus de publications",
+      "loading": "Chargement des publications…",
+      "retry": "Réessayer",
+      "errorTitle": "Les publications ne sont pas disponibles.",
+      "errorBody": "Vérifiez votre connexion et réessayez. Les publications déjà affichées restent accessibles.",
+      "lacunar": "Certaines publications peuvent manquer dans ce fil. Vous pouvez continuer à parcourir les suivantes.",
+      "added_one": "{{count}} publication supplémentaire affichée.",
+      "added_other": "{{count}} publications supplémentaires affichées.",
+      "noneAdded": "Aucune publication supplémentaire à afficher sur cette page."
+    },
     "title": "Fil",
     "scopesLabel": "Portées du fil",
     "scope": {
@@ -511,6 +522,9 @@
   },
   "filters": { "advanced": "Plus de filtres" },
   "hub": {
+    "errorTitle": "Les informations de ce pays ne sont pas disponibles.",
+    "errorBody": "Vérifiez votre connexion et rechargez la page pour réessayer.",
+    "reload": "Recharger la page",
     "metaTitle": "Hub pays",
     "title": "La communauté — {{country}}",
     "open": "Pays ouvert",

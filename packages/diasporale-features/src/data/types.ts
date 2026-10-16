@@ -13,6 +13,7 @@ import type {
   DiasporaFacet,
   DirectoryVisibility,
   FacetProjection,
+  FeedScope,
   HubCountersPresentation,
   MembershipStatus,
   PageOwnerKind,
@@ -24,6 +25,8 @@ import type {
   Visibility,
   WriteRateTier,
 } from "@diasporale/domain"
+
+import type { ActionErrorCode } from "./errors"
 
 export type Loadable<T> =
   | { readonly status: "loading" }
@@ -94,6 +97,34 @@ export interface PostView {
   readonly bookmarked: boolean
   /** Modifiée après sa publication : la carte le dit. */
   readonly edited: boolean
+}
+
+/** Curseur opaque du fil : l'instant seul ne départage pas deux publications. */
+export interface FeedCursorView {
+  readonly publishedAt: number
+  readonly postId: string
+}
+
+export interface FeedPageRequest {
+  readonly scope: FeedScope
+  readonly hubCountry?: CountryCode
+  /** Absent ou nul pour la première page ; les suivantes reprennent le curseur reçu. */
+  readonly cursor?: FeedCursorView | null
+}
+
+export interface FeedPageView {
+  readonly items: readonly PostView[]
+  readonly nextCursor: FeedCursorView | null
+  /** Fenêtre bornée par le moteur, distincte de la fin du fil. */
+  readonly lacunar: boolean
+}
+
+/** Une page réactive : une panne après données conserve celles-ci pendant la reprise. */
+export interface FeedPageQuery {
+  readonly data: FeedPageView | undefined
+  readonly isLoading: boolean
+  readonly error: ActionErrorCode | null
+  readonly retry: () => void
 }
 
 /** Un signet (EXF-DG-12) : de quoi reconnaître la publication et l'ouvrir. */

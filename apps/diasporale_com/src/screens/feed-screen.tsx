@@ -1,16 +1,16 @@
 "use client"
 
 import { FEED_SCOPES, parseFeedScope, type FeedScope } from "@diasporale/domain"
-import { Avatar, Card, EmptyState, EventCard, FolderTabsNav, MemberSuggestions, PostCard, Skeleton, StatCounter, countryName } from "@diasporale/features"
-import { useActions, useCountryHub, useFeed, type MembershipView } from "@diasporale/features/data"
+import { Avatar, Card, EmptyState, EventCard, FolderTabsNav, MemberSuggestions, StatCounter, countryName } from "@diasporale/features"
+import { useCountryHub, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { ArrowRightIcon, NewspaperIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useSearchParams } from "next/navigation"
-import { toast } from "sonner"
 
 import { AppShell, useComposer } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
+import { FeedPages } from "@/components/feed-pages"
 import { FeedStories } from "@/components/feed-stories"
 import { StatusBanner } from "@/components/status-banner"
 import { routes } from "@/lib/routes"
@@ -34,8 +34,6 @@ function Feed(props: { membership: MembershipView }) {
   const { t, locale } = useDiasporaleT()
   const searchParams = useSearchParams()
   const scope = parseFeedScope(searchParams.get("scope"))
-  const feed = useFeed({ scope })
-  const actions = useActions()
   const composer = useComposer()
   const country = props.membership.facet.countryOfResidence
   const now = Date.now()
@@ -75,41 +73,25 @@ function Feed(props: { membership: MembershipView }) {
         </Card>
       ) : null}
 
-      {feed.status !== "ready" ? (
-        <div className="flex flex-col gap-4" aria-busy="true">
-          <Skeleton className="h-40 w-full rounded-xl" />
-          <Skeleton className="h-40 w-full rounded-xl" />
-        </div>
-      ) : feed.data.length === 0 ? (
-        <EmptyState
-          icon={<NewspaperIcon />}
-          title={t(`feed.empty.${scope}.title`, { country: countryName(country, locale) })}
-          description={t(`feed.empty.${scope}.body`)}
-          action={
-            composer.canPublish ? (
-              <button type="button" onClick={composer.open} className="font-semibold text-primary underline-offset-4 hover:underline focus-visible:shadow-focus">
-                {t("feed.empty.action")}
-              </button>
-            ) : undefined
-          }
-        />
-      ) : (
-        <ol className="flex flex-col gap-4">
-          {feed.data.map((post) => (
-            <li key={post.id}>
-              <PostCard
-                post={post}
-                now={now}
-                canReact={props.membership.canPublish}
-                onReact={async (kind) => {
-                  const result = await actions.react(post.id, kind)
-                  if (!result.ok) toast.error(t(`errors.${result.code}`))
-                }}
-              />
-            </li>
-          ))}
-        </ol>
-      )}
+      <FeedPages
+        membership={props.membership}
+        scope={scope}
+        now={now}
+        emptyFallback={
+          <EmptyState
+            icon={<NewspaperIcon />}
+            title={t(`feed.empty.${scope}.title`, { country: countryName(country, locale) })}
+            description={t(`feed.empty.${scope}.body`)}
+            action={
+              composer.canPublish ? (
+                <button type="button" onClick={composer.open} className="font-semibold text-primary underline-offset-4 hover:underline focus-visible:shadow-focus">
+                  {t("feed.empty.action")}
+                </button>
+              ) : undefined
+            }
+          />
+        }
+      />
     </>
   )
 }

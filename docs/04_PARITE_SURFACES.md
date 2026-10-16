@@ -16,7 +16,7 @@
 
 | Surface de référence | Surface DIASPORALE | Exigences | État | Source moteur | Écarts |
 |---|---|---|---|---|---|
-| Fil (`FeedPage`) | `/fil` : « Mon pays », « Toute la diaspora », « Récents », « Pour vous » | EXF-DG-13 | ✅ | `posts.myFeed` (portées, voies du hub) | une page de 30, sans curseur ni « voir plus » |
+| Fil (`FeedPage`) | `/fil` : « Mon pays », « Toute la diaspora », « Récents », « Pour vous » | EXF-DG-13 | ✅ | `posts.myFeed` (portées, voies du hub) | pages de 30, curseur composite du moteur ; « Voir plus » explicite, pages réactives et frontière réalignée ; même chaîne dans le hub pays (recette du 16/10 ci-dessous) |
 | Composeur en feuille | `PostComposerSheet` | EXF-DG-10, 11 | ✅ | `posts.publish` (portée, pays, ANTSIA, médias, partage, idempotence), `media.generateUploadUrl` (`media_social`) | médias : quatre photos ou une vidéo seule, texte alternatif par média, règles du moteur jugées avant tout envoi (PR administration-ga/diasporale#5) ; la démonstration garde des photos réduites, pas de vidéo ; partage cité (original en aperçu, mot facultatif, sans média) et idempotence, une clé par série d'essais (PR administration-ga/diasporale#6) ; brouillon durable dans CE navigateur (texte et choix, sans les médias ; une clé par personne, rétabli à l'ouverture, effacé à la publication, jamais envoyé) ; local refusé dans un pays non ouvert (§3) |
 | Carte de publication | `PostCard` | EXF-DG-10, 12 | ✅ | DTO `myFeed` | auteur d'une page : sa carte ; « signé par » attend PD5 ; mentions (lien vers le profil) et mots-dièse découpés par le moteur (`splitBodyRich`), dans les commentaires aussi, casse de l'auteur gardée (ANTSIA l'abaisse) ; un mot-dièse n'ouvre pas encore de recherche ; médias : photo seule à ses proportions, grille carrée de deux à quatre, retenue de la garde dite (analyse en cours, bloqué), sans visionneuse plein écran ; partage : « Partager » sur une publication publique et publiée, avec son compte, et l'original intégré, re-gardé pour chaque lecteur (« indisponible » s'il ne se lit plus) |
 | Réactions (4 genres) | palette de la carte | EXF-DG-12 | ✅ | `engagement.toggleReaction` | — |
@@ -137,11 +137,70 @@ par cette session.
   l'annuaire ni aux notifications lors de son inscription.
 - **Mise en page** : liste non vide à 320 px sombre, 375 px clair et 1 280 px clair ; largeur
   du document égale à celle de l'écran à chaque mesure. Console finale sans erreur ni avertissement.
-  La pagination au-delà de la première page et le refus entre comptes restent à recetter
-  dans le navigateur ; ils sont couverts par les tests automatisés.
+  La pagination au-delà de la première page et le refus ont ensuite été joués dans le navigateur
+  (suite ci-dessous).
 - **Incident local et rétablissement** : backend interrompu pendant le premier essai
   d'acceptation sous forte charge ; redémarrage du backend local puis reprise complète du
   parcours réussie. DIASPORALE 3031 arrêté à la fin ; serveurs 3027 et 3030 rétablis après
   contrôle de leur identité, ressources déjà compilées servies en HTTP 200 sur chacun.
 - Limites : pas de liste des demandes envoyées ni d'annulation sur cette page ; les gestes
   du profil, les abonnements et la cloche existants restent les autres portes de la relation.
+
+
+### Suite du 16/10 — Refus, pagination réelle et fil/hub paginés (PD4)
+
+- **Relations, Chrome et moteur local** : 25 profils de recette reliés au seul compte fictif
+  de recette, plus douze demandeurs distincts. Pour chaque personne fictive, adhésion racine
+  ANTSIA puis DIASPORALE ; aucune session ni coordonnée créée. Préparation par le seed existant
+  `devSocial:demoPerson`, puis demande par la mutation publique sous la seule identité fictive.
+  Aucun helper ni fichier backend nouveau ; aucune donnée consulaire réelle.
+- **Demandes reçues** : dix lignes à la première page, douze après « Voir la suite » ; douze
+  identifiants uniques, fin confirmée. Refus d'une ligne : avis « Demande refusée. », retrait
+  immédiat de la liste ; après rechargement, dix puis onze lignes uniques, demande refusée
+  toujours absente. Elle n'apparaît pas dans les acceptées.
+- **Relations acceptées** : dix-sept lignes au premier affichage (douze par côté canonique
+  au plus), puis vingt-six identifiants uniques : les vingt-cinq fixtures et la relation
+  existante. « Voir la suite » disparaît après épuisement ; pas de curseur fabriqué par l'app.
+- **Fil et hub pays** : contrat `useFeedPage` du port, conservant `useFeed` pour compatibilité.
+  Curseur composite et signal de fenêtre lacunaire du moteur conservés sans les reconstruire
+  depuis les cartes filtrées. Un abonnement par page, chaîne pilotée par les helpers publics
+  `reseau-feed-pages` d'ANTSIA ; toutes les pages restent réactives. Même composant réellement
+  monté sur `/fil` et `/pays/[iso]`, droit de réaction inchangé, erreur et reprise par page,
+  données déjà lues conservées, bouton explicite et annonce accessible traduite.
+- **Recette du fil** : trente cartes puis quarante (trente-six publications fictives et quatre
+  antérieures), sans doublon ; après les deux publications supplémentaires de recette,
+  quarante-deux cartes dont les trente-huit fixtures uniques. La dernière insertion est faite
+  pendant que les deux pages restent montées : frontière déplacée, nouvelle tête visible,
+  aucune des trente-huit fixtures manquante et aucun doublon. Fin du fil confirmée.
+- **Portées et pays** : « Toute la diaspora » affiche seulement les six fixtures de portée
+  diaspora ; le hub Canada affiche les mêmes six, sans les publications locales françaises.
+  Hub France : trente puis quarante-deux cartes, les trente-huit fixtures uniques et fin.
+  Le passage de portée et de pays repart à la première page.
+- **R4, lecture directe locale** : deux publications fictives (une locale FR, une diaspora),
+  lisibles dans DIASPORALE, rendent `notFound` depuis la racine sous l'identité de leur auteur.
+  Fil racine parcouru jusqu'à sa fin : deux publications antérieures, aucun des trente-six
+  identifiants de la préparation initiale. Visibilité `network`, aucun partage vers la racine.
+- **Mise en page** : relations et fil à 320 px sombre, fil à 375 px clair et 1 280 px sombre,
+  hub à 1 280 px sombre ; aucune largeur de document supérieure à celle de l'écran.
+  Console finale du fil et du hub sans erreur ni avertissement. Next a redémarré automatiquement
+  lors de compilations sous sa limite mémoire de développement ; recette reprise après
+  chargement complet, sans modifier ni supprimer de cache.
+- **Données de recette** : trente-sept profils fictifs et trente-huit publications textuelles,
+  laissés sur le seul moteur local ; aucune suppression ni publication distante.
+- **Tests ajoutés** : chaîne de pages (17 cas), adaptateur moteur (11), démonstration (6),
+  plus trois tests montés du hub : 37 nouveaux cas au total. Ils couvrent continuation vide,
+  reprise, données conservées, rebase, changement de contexte, droits de lecture/réaction
+  et curseur à instant égal. Vérification commune ANTSIA complète : 647 tests DIASPORALE
+  (238 domaine + 254 features + 155 app), typage des dix paquets et lint des neuf concernés verts ;
+  1 124 tests backend, 102 cliquets, 24 scripts et 2 891 tests des surfaces du moteur verts.
+  Preuve locale : `/tmp/antsia-pa3-lot17-verify.log`, exécution coordonnée par la session ANTSIA.
+- **Erreur de hub corrigée** : le chargement, l'erreur et le résultat prêt sont distincts ;
+  un échec ne laisse plus de squelette permanent. Message générique traduit et action explicite
+  « Recharger la page » pour recréer le client et ses abonnements, couverts par trois tests montés.
+- **Serveurs** : DIASPORALE 3031 arrêté avant les tests ; ANTSIA 3030 rétabli après les contrôles,
+  ressource compilée HTTP 200 ; backend local 3210 conservé. Aucun fichier ANTSIA modifié ici,
+  aucun push ni déploiement distant.
+- **PD4 reste ouvert** : pagination du mur personnel ; gestion de l'avatar/couverture ;
+  albums au-delà des douze premiers, reprise de brouillons et recette d'audience/retrait ;
+  lecture seule des stories en attente (contrat de création séparé à fournir par ANTSIA).
+  Pages/associations du hub relèvent de PD5, évènements de PD7, modération de PD6.

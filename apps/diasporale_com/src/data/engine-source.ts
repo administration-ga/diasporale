@@ -16,7 +16,7 @@
  *   tant que le déploiement n'a pas sa clé de service.
  */
 import type { EngineAuthClient } from "@antsia/api/auth-client"
-import { useStableConvexAuth } from "@antsia/api/hooks"
+import { useAuthenticatedConvexQuery, useStableConvexAuth } from "@antsia/api/hooks"
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
 import {
@@ -36,6 +36,8 @@ import type {
   CountryHubView,
   DiasporaleActions,
   DiasporaleDataSource,
+  FeedPageQuery,
+  FeedPageRequest,
   Loadable,
   MemberHitView,
   OpenCountryView,
@@ -53,7 +55,7 @@ import { COMMENTS_PAGE, describeMediaFile, MEMBER_SEARCH_MIN_LENGTH } from "@dia
 import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
 
 import { routes } from "@/lib/routes"
 
@@ -80,7 +82,7 @@ import {
   toSponsorDashboardView,
 } from "./engine-views"
 
-/** Une page du fil, la plus grande que le moteur serve. */
+/** Taille d'une fenêtre du fil DIASPORALE (le moteur accepte jusqu'à cinquante lignes). */
 const FEED_PAGE = 30
 
 /**
@@ -235,6 +237,47 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       const posts = toFeed(feed.value.items, args.scope, country)
       for (const post of posts) myReactions.set(post.id, post.myReaction)
       return ready(posts)
+    },
+
+    useFeedPage(args: FeedPageRequest): FeedPageQuery {
+      const { auth, networkId, membership } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const member = membership.state === "ready" ? membership.value : null
+      const residence = member?.facet?.countryOfResidence
+      const country = args.hubCountry ?? (residence !== undefined && parseResidenceCountry(residence).ok ? (residence as CountryCode) : null)
+      const canRead = auth.isAuthenticated && id !== null && country !== null && member?.capabilities.includes("read_network") === true
+      const query = useAuthenticatedConvexQuery(
+        api.modules.posts.posts.myFeed,
+        canRead && id && country ? {
+          networkId: id,
+          limit: FEED_PAGE,
+          ...feedRequest(args.scope, country),
+          ...(args.cursor ? { cursor: { publishedAt: args.cursor.publishedAt, postId: args.cursor.postId as Id<"posts"> } } : {}),
+        } : "skip",
+      )
+      const refetch = query.refetch
+      const retry = useCallback(() => {
+        if (canRead) void refetch().catch(() => undefined)
+      }, [canRead, refetch])
+
+      let error: ActionErrorCode | null = null
+      if (auth.isUnauthenticated) error = "not_signed_in"
+      else if (networkId.state === "error") error = networkId.code
+      else if (membership.state === "error") error = membership.code
+      else if (networkId.state === "ready" && id === null) error = "network_unavailable"
+      else if (membership.state === "ready" && (!member || country === null)) error = "not_member"
+      else if (member && !member.capabilities.includes("read_network")) error = member.status === "suspendue" ? "suspended" : "not_member"
+      if (error !== null) return { data: undefined, isLoading: false, error, retry }
+      if (!canRead) return { data: undefined, isLoading: true, error: null, retry }
+
+      const items = query.data === undefined ? undefined : toFeed(query.data.items, args.scope, country as CountryCode)
+      if (items) for (const post of items) myReactions.set(post.id, post.myReaction)
+      return {
+        data: query.data === undefined || items === undefined ? undefined : { items, nextCursor: query.data.nextCursor, lacunar: query.data.lacunar },
+        isLoading: query.data === undefined && !query.isError,
+        error: query.isError ? engineActionErrorCode(query.error) : null,
+        retry,
+      }
     },
 
     useProfile(handle: string): Loadable<ProfileView | null> {

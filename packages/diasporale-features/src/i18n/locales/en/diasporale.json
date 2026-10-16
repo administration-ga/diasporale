@@ -293,6 +293,17 @@
     "region": "Notices"
   },
   "feed": {
+    "pagination": {
+      "loadMore": "Show more posts",
+      "loading": "Loading posts…",
+      "retry": "Try again",
+      "errorTitle": "Posts are unavailable.",
+      "errorBody": "Check your connection and try again. Posts already displayed remain available.",
+      "lacunar": "Some posts may be missing from this feed. You can continue browsing the next ones.",
+      "added_one": "{{count}} additional post displayed.",
+      "added_other": "{{count}} additional posts displayed.",
+      "noneAdded": "No additional posts to display on this page."
+    },
     "title": "Feed",
     "scopesLabel": "Feed scopes",
     "scope": {
@@ -511,6 +522,9 @@
   },
   "filters": { "advanced": "More filters" },
   "hub": {
+    "errorTitle": "Information about this country is unavailable.",
+    "errorBody": "Check your connection and reload the page to try again.",
+    "reload": "Reload the page",
     "metaTitle": "Country hub",
     "title": "The community — {{country}}",
     "open": "Open country",

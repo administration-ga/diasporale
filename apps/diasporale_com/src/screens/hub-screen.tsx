@@ -4,6 +4,7 @@ import { parseResidenceCountry, type CountryCode } from "@diasporale/domain"
 import {
   AssociationCard,
   Button,
+  Card,
   CommunityTabSwitcher,
   CompanyCard,
   CountryMonument,
@@ -14,18 +15,17 @@ import {
   FolderTabs,
   FolderTabsContent,
   OfficialPageCard,
-  PostCard,
   Skeleton,
   StatCounter,
   countryName,
 } from "@diasporale/features"
-import { useActions, useCountryHub, useFeed, useOpenCountries, type MembershipView } from "@diasporale/features/data"
+import { useCountryHub, useOpenCountries, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { ArrowLeftRightIcon, CalendarDaysIcon, CompassIcon, GlobeIcon, HourglassIcon, NewspaperIcon, StoreIcon, UsersRoundIcon } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { toast } from "sonner"
 
 import { AppShell, useComposer } from "@/components/app-shell"
+import { FeedPages } from "@/components/feed-pages"
 import { Gate } from "@/components/gate"
 import { StatusBanner } from "@/components/status-banner"
 import { routes } from "@/lib/routes"
@@ -89,8 +89,6 @@ function HubContent(props: { country: CountryCode; membership: MembershipView; l
   const { t } = useDiasporaleT()
   const searchParams = useSearchParams()
   const hub = useCountryHub(props.country)
-  const feed = useFeed({ scope: "mon_pays", hubCountry: props.country })
-  const actions = useActions()
   const composer = useComposer()
   const name = countryName(props.country, props.locale)
   const isHome = props.country === props.membership.facet.countryOfResidence
@@ -147,10 +145,16 @@ function HubContent(props: { country: CountryCode; membership: MembershipView; l
         </FloatingNotice>
       ) : null}
 
-      {hub.status !== "ready" ? (
+      {hub.status === "loading" ? (
         <Skeleton className="h-64 w-full rounded-xl" />
-      ) : hub.data.counters.dormant && feed.status === "ready" && feed.data.length === 0 ? (
-        <EmptyState icon={<CompassIcon />} title={t("hub.dormantTitle", { country: name })} description={t("hub.dormantBody")} />
+      ) : hub.status === "error" ? (
+        <Card role="alert" className="flex flex-col items-start gap-3 p-4">
+          <div>
+            <h2 className="font-semibold">{t("hub.errorTitle")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("hub.errorBody")}</p>
+          </div>
+          <Button variant="outline" onClick={() => window.location.reload()}>{t("hub.reload")}</Button>
+        </Card>
       ) : (
         <>
           {hub.data.officialPages.length > 0 ? (
@@ -167,34 +171,22 @@ function HubContent(props: { country: CountryCode; membership: MembershipView; l
           <FolderTabs defaultValue="actus">
             <CommunityTabSwitcher tabs={["actus", "evenements", "associations", "entreprises"]} label={t("hub.tabsLabel", { country: name })} />
             <FolderTabsContent value="actus" className="flex flex-col gap-4">
-              {feed.status !== "ready" ? (
-                <Skeleton className="h-40 w-full rounded-xl" />
-              ) : feed.data.length === 0 ? (
-                <EmptyState
-                  icon={<NewspaperIcon />}
-                  title={t("hub.emptyPosts", { country: name })}
-                  description={t("hub.emptyPostsBody")}
-                  action={
-                    composer.canPublish && isHome ? (
-                      <Button onClick={composer.open}>{t("feed.empty.action")}</Button>
-                    ) : undefined
-                  }
-                />
-              ) : (
-                feed.data.map((post) => (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    now={now}
-                    hubCountry={props.country}
-                    canReact={props.membership.canPublish}
-                    onReact={async (kind) => {
-                      const result = await actions.react(post.id, kind)
-                      if (!result.ok) toast.error(t(`errors.${result.code}`))
-                    }}
+              <FeedPages
+                membership={props.membership}
+                scope="mon_pays"
+                hubCountry={props.country}
+                now={now}
+                emptyFallback={hub.data.counters.dormant ? (
+                  <EmptyState icon={<CompassIcon />} title={t("hub.dormantTitle", { country: name })} description={t("hub.dormantBody")} />
+                ) : (
+                  <EmptyState
+                    icon={<NewspaperIcon />}
+                    title={t("hub.emptyPosts", { country: name })}
+                    description={t("hub.emptyPostsBody")}
+                    action={composer.canPublish && isHome ? <Button onClick={composer.open}>{t("feed.empty.action")}</Button> : undefined}
                   />
-                ))
-              )}
+                )}
+              />
             </FolderTabsContent>
             <FolderTabsContent value="evenements" className="flex flex-col gap-3">
               {hub.data.events.length === 0 ? (

@@ -30,6 +30,8 @@ import type {
   CommentView,
   CountryHubView,
   ConsentView,
+  FeedPageQuery,
+  FeedPageRequest,
   Loadable,
   MemberHitView,
   PageDetailView,
@@ -204,6 +206,8 @@ export interface DiasporaleDataSource {
   useOpenCountries(): Loadable<readonly OpenCountryView[]>
   useCountryHub(country: CountryCode): Loadable<CountryHubView>
   useFeed(args: { scope: FeedScope; hubCountry?: CountryCode }): Loadable<readonly PostView[]>
+  /** Une fenêtre du même fil, avec son curseur serveur et sa reprise indépendante. */
+  useFeedPage(args: FeedPageRequest): FeedPageQuery
   useProfile(handle: string): Loadable<ProfileView | null>
   /** Ma relation avec une personne (connexion, abonnement, mon blocage). */
   useRelation(personId: string): Loadable<RelationView>
