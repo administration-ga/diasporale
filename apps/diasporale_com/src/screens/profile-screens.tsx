@@ -98,6 +98,14 @@ function Profile(props: { handle: string; membership: MembershipView }) {
                       {t("profile.bookmarks")}
                     </NextLink>
                   </Button>
+                  {engineNetwork && !preview ? (
+                    <Button asChild variant="ghost" size="sm">
+                      <NextLink href={routes.relations()}>
+                        <UsersIcon aria-hidden />
+                        {t("nav.relations")}
+                      </NextLink>
+                    </Button>
+                  ) : null}
                 </>
               ) : (
                 <>

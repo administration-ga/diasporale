@@ -14,6 +14,7 @@ import {
   PlusIcon,
   Settings2Icon,
   UserRoundIcon,
+  UserRoundCheckIcon,
   UsersRoundIcon,
   type LucideIcon,
 } from "lucide-react"
@@ -23,7 +24,7 @@ import { createContext, Suspense, useContext, useState, type ReactNode } from "r
 
 import { routes } from "@/lib/routes"
 
-import { IcomIsland, useIcomNetwork } from "./icom"
+import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
 import { AppDemoChip } from "./site-chrome"
 import { Wordmark } from "./wordmark"
 
@@ -47,15 +48,19 @@ interface NavItem {
   readonly match: (path: string) => boolean
 }
 
-function navItems(membership: MembershipView, withMessages: boolean): NavItem[] {
+function navItems(membership: MembershipView, withMessages: boolean, withRelations: boolean): NavItem[] {
   const hub = routes.hub(membership.facet.countryOfResidence)
   const messages: NavItem[] = withMessages
     ? [{ id: "messages", href: routes.messages(), icon: MessageCircleIcon, labelKey: "nav.messages", match: (path) => path.startsWith("/messages") }]
+    : []
+  const relations: NavItem[] = withRelations
+    ? [{ id: "relations", href: routes.relations(), icon: UserRoundCheckIcon, labelKey: "nav.relations", match: (path) => path.startsWith("/relations") }]
     : []
   return [
     { id: "feed", href: routes.feed(), icon: HouseIcon, labelKey: "nav.feed", match: (path) => path.startsWith("/fil") },
     { id: "hub", href: hub, icon: MapPinnedIcon, labelKey: "nav.hub", match: (path) => path.startsWith("/pays") },
     { id: "members", href: routes.members(), icon: UsersRoundIcon, labelKey: "nav.members", match: (path) => path.startsWith("/membres") },
+    ...relations,
     ...messages,
     { id: "profile", href: routes.profile(membership.handle), icon: UserRoundIcon, labelKey: "nav.profile", match: (path) => path.startsWith("/@") || path.startsWith("/profil") },
     { id: "sponsor", href: routes.sponsor(), icon: HandshakeIcon, labelKey: "nav.sponsor", match: (path) => path.startsWith("/parrainer") },
@@ -84,8 +89,9 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   // iCom (PD7) : en mode moteur, pour un membre qui peut écrire ; le dock se monte au bureau seulement
   // (seuil du moteur, 960 px ; inconnu au rendu serveur, donc rien avant le premier passage client).
   const icom = useIcomNetwork()
+  const network = useEngineNetwork()
   const desktop = useIsReseauMobile() === false
-  const items = navItems(props.membership, icom !== null)
+  const items = navItems(props.membership, icom !== null, network !== null)
   const canPublish = props.membership.canPublish
   const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : []
 

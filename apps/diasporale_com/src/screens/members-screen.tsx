@@ -1,6 +1,6 @@
 "use client"
 
-import { Avatar, Card, CountryTag, EmptyState, FilterBar, Input, MemberSuggestions, Skeleton, TrustBadges, countryName } from "@diasporale/features"
+import { Avatar, Button, Card, CountryTag, EmptyState, FilterBar, Input, MemberSuggestions, Skeleton, TrustBadges, countryName } from "@diasporale/features"
 import { MEMBER_SEARCH_MIN_LENGTH, useMemberSearch, type MemberHitView, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { SearchIcon, UsersRoundIcon } from "lucide-react"
@@ -9,6 +9,7 @@ import { useEffect, useId, useState } from "react"
 
 import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
+import { useEngineNetwork } from "@/components/icom"
 import { routes } from "@/lib/routes"
 
 // ═══════════════════════════════════════════════════════════════
@@ -47,6 +48,7 @@ function useSettled<T>(value: T, delay: number): T {
 
 function Members(props: { membership: MembershipView }) {
   const { t, locale } = useDiasporaleT()
+  const network = useEngineNetwork()
   const ids = useId()
   const [query, setQuery] = useState("")
   const [reach, setReach] = useState<SearchReach>("network")
@@ -61,6 +63,7 @@ function Members(props: { membership: MembershipView }) {
       <div>
         <h1 className="font-display text-3xl font-bold">{t("members.title")}</h1>
         <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{t("members.lead")}</p>
+        {network ? <Button asChild variant="outline" className="mt-3"><NextLink href={routes.relations()}>{t("nav.relations")}</NextLink></Button> : null}
       </div>
 
       <Card className="flex flex-col gap-3 p-4">

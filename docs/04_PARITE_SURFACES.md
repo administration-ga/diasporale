@@ -23,7 +23,7 @@
 | Commentaires | feuille « Commentaires » | EXF-DG-12 | ✅ | `engagement.paginateComments`, `paginateReplies`, `comment`, `removeComment` | pas d'édition d'un commentaire |
 | Menu « … » | `PostMenu` | EXF-DG-12, 40 | 🟡 | `marks.toggleMark`, `hidePost`, `muteAuthor`, `moderation.reportPost`, `posts.remove` | sans « Modifier », sans relais ; signets sans liste |
 | Profil personne (`ProfilPersonnePage`) | `/@handle` | EXF-DG-07, 08 | 🟡 | `getPublicProfile`, `diaspora.profile.memberFacet`, `posts.personPosts` | facette projetée, aperçu, mur ; onglets Photos et Albums branchés en mode moteur et vus dans Chrome le 16/10, masqués en aperçu ; sans gestion de photo de profil |
-| Relations (`PeoplePanel`) | barre de relation du profil, cloche | EXF-DG-18, 43 | 🟡 | `graph.connections.*`, `graph.follows.*` | pas de page « mes relations » ni « mes demandes » (on répond depuis la cloche) |
+| Relations (`PeoplePanel`, hooks de pagination) | `/relations`, demandes reçues, barre du profil, cloche | EXF-DG-18, 43 | 🟡 | `graph.connections.*`, `graph.follows.*`, hooks paginés du moteur | listes acceptées et reçues en mode moteur ; lecture en attente, réponses au droit de publier ; recherche/suggestions réservées à l’annuaire opt-in ; demandes envoyées et annulation non ajoutées dans cette tranche |
 | Annuaire et recherche | `/membres` | EXF-DG-19, 46 | ✅ | `diaspora.directory.searchMembers` | opt-in par niveau ; masqué introuvable, même par identifiant exact |
 | Suggestions | « Des membres à rencontrer » (rail du fil, `/membres`) | EXF-DG-18 | ✅ | `diaspora.suggestions.forMe`, `suggestions.dismiss` | pas de liste « masquées » à rouvrir (`restore` existe côté moteur) |
 | Cloche | `NotificationBell` | EXF-DG-38 | ✅ | `notifications.bell.*` | le partage d'une publication se dit (« a partagé votre publication ») ; genres de PD5 à PD8 dits « nouvelle activité » d'ici là |
@@ -112,3 +112,25 @@ social-features d'ANTIA a passé ses 173 fichiers avec le délai fonctionnel de 
 Seul le cache régénérable DIASPORALE `apps/diasporale_com/.next/dev/cache/turbopack` (7 Go) a été
 supprimé, après autorisation explicite ; aucune donnée supprimée, aucun fichier ANTIA modifié
 par cette session.
+
+### Suite du 16/10 — Mes relations (PD4)
+
+- `/relations` et `?onglet=demandes` : liens nommés, onglet sélectionné par l'adresse.
+  Accès par le menu bureau, son profil hors aperçu et l'écran Membres ; cinq entrées de la
+  barre mobile conservées. Les profils restent la porte de la relation en démonstration.
+- Réutilisation des hooks paginés du moteur, sans requête ni graphe dupliqué : deux curseurs
+  natifs de douze pour les relations acceptées, un curseur de dix pour les demandes reçues.
+  `PeoplePanel` n'est pas monté : sa recherche générique ne suit pas l'annuaire opt-in.
+- `IcomIsland` et réseau de lecture DIASPORALE, en attente inclus ; changement de personne,
+  réseau ou onglet réinitialise la liste. Aucun appel moteur en démonstration.
+- Accepter/refuser passe par le port d'actions existant, avec droit de publier et contrôle
+  serveur ; retrait de la demande seulement après succès. Les erreurs préservent les données,
+  proposent de réessayer et passent avant l'état vide ; chargement suivant explicite.
+- **Contrôles automatisés** : 23 nouveaux tests (8 de présentation, 9 de l’adaptateur, 6 de l’écran),
+  610 tests DIASPORALE verts (238 domaine + 248 features + 124 application), typage et lint
+  sans erreur. Réseau/charte, curseurs, réponses, échecs, lecture seule et remise à zéro couverts.
+- **Chrome** : page réelle servie en mode moteur ; « Mes relations », état vide, navigation
+  et lien vers l'annuaire observés ; capture à 320 px en sombre. Le parcours non vide entre deux
+  comptes et la pagination au-delà de la première page restent à recetter.
+- Limites : pas de liste des demandes envoyées ni d'annulation sur cette page ; les gestes
+  du profil, les abonnements et la cloche existants restent les autres portes de la relation.

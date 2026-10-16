@@ -23,6 +23,7 @@
     "profile": "Profile",
     "sponsor": "Sponsor",
     "members": "Members",
+    "relations": "My connections",
     "messages": "Messages",
     "settings": "Settings"
   },
@@ -967,6 +968,30 @@
       "demo": "Messaging and calls run on the live network: the demo doesn't include them.",
       "networkMissing": "Messaging isn't open on this network yet: come back a little later."
     }
+  },
+  "relations": {
+    "title": "My connections",
+    "lead": "Find your connections in DIASPORALE and respond to incoming requests.",
+    "tabsLabel": "Connections and requests",
+    "acceptedTab": "My connections",
+    "receivedTab": "Received requests",
+    "member": "Member",
+    "loading": "Loading your connections…",
+    "errorTitle": "The list could not be refreshed",
+    "errorBody": "Try again shortly. Previously loaded items remain visible.",
+    "retry": "Try again",
+    "emptyAcceptedTitle": "You have no connections yet",
+    "emptyAcceptedBody": "Meet members in the directory and invite them to connect.",
+    "emptyReceivedTitle": "No pending requests",
+    "emptyReceivedBody": "New connection requests will appear here.",
+    "discover": "Meet members",
+    "loadMore": "See more",
+    "loadingMore": "Loading…",
+    "readOnly": "You can respond to requests once your membership allows you to publish.",
+    "accepted": "Request accepted. You are now connected.",
+    "declined": "Request declined.",
+    "unavailableTitle": "Connections are unavailable here",
+    "unavailableBody": "This list is available to active DIASPORALE members. In the demo, explore connection actions from profiles."
   },
   "members": {
     "title": "Members",
