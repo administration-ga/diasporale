@@ -30,7 +30,7 @@
 | Hub pays | `/pays/[iso]` | EXF-DG-15, 16 | 🟡 | `diaspora.hubs.getCountryHub`, voies du fil | compteurs et fil local ; pages, associations, entreprises (PD5) et évènements (PD7) vides ; membres opt-in par la recherche filtrée |
 | Sélecteur de pays (C11) | `CountrySwitch` | EXF-DG-15 | ✅ | — | accès rapide : mon pays, puis les trois derniers choisis (ce navigateur) |
 | Stories 24 h (`StoriesTray`) | bandeau de `/fil`, `/actus` (lecteur plein écran du moteur, mode moteur) | EXF-DG-14 | 🟡 | `stories.*` (lot 12b d'ANTSIA, servi) | `StoriesViewerPage` monté sous l'îlot iCom (PD7), atteint par la brique « Statuts » d'iCom ; `…/nouvelle` ouvre le composeur ; bandeau du fil monté avec `StoriesStyles`, portrait et handle publié du moteur, horloge à la minute et ouverture par `?auteur=` (16/10, tests verts et recette Chrome locale) ; même accès que le lecteur actuel : membres qui peuvent publier seulement ; rien en démonstration |
-| Albums (`AlbumPage`) | onglets Photos/Albums du profil, `/@handle/albums/[id]` | EXF-DG-14 | 🟡 | `albums.*`, `@antsia/social-features/albums` (F2) | surfaces du moteur montées sans copie ; lecture dès `en_attente`, création chez soi seulement avec droit de publier, onglets masqués en aperçu (le moteur ne projette pas encore pour un autre lecteur) ; composeur adressable par `?onglet=albums&nouveau=1`, galerie après publication (16/10, tests verts et recette Chrome locale) ; pas d'albums en démonstration ; liste bornée aux douze premiers albums publiés, sans reprise des brouillons |
+| Albums (`AlbumPage`) | onglets Photos/Albums du profil, `/@handle/albums/[id]` | EXF-DG-14 | 🟡 | `albums.*`, `@antsia/social-features/albums` (F2) | pagination native, brouillons/retraits du propriétaire et vitrine publiée des autres ; reprise du même album par `?modifier=1`, sauvegarde des métadonnées/photos/ordre/couverture, retrait confirmé sans suppression ; aperçu et démonstration fermés ; recette entre comptes encore à terminer (suite ci-dessous) |
 | Coquille mobile et bureau | `AppShell` | EXT-DG-05 | ✅ | — | colonne (Fil, Mon pays, Membres, Messages en mode moteur, Profil, Parrainer, Réglages), barre basse, en-tête (Membres, Messages en mode moteur, cloche, pays) ; rail droit ouvert par la carte iCom |
 | Cartes flottantes | `FloatingNotice`, pile « Avis » | charte v2 §7 | ✅ | — | échelle de couches de la charte : barres 40 < feuilles 50 < pile 55 < menus 60 |
 
@@ -294,3 +294,50 @@ par cette session.
   d'une référence enfermée dans le callback RHF et recommandation Next sur l'image native).
   Preuve locale : `/tmp/antsia-pa4-verify.log`, code final confirmé par la session ANTSIA.
   Les 25 intégrations de tranche PA4 et les 15 cas de graine locale sont inclus.
+
+### Suite du 16/10 — Albums complets et lecture des stories en attente
+
+- **Coordination** : surfaces `reseau-albums/*`, locales `albums.json` et composants
+  `StoriesTray`/`StoriesViewerPage` délégués par ANTSIA. API/identité préservées ; raccord
+  de navigation PA4 adapté à `navigate(result)` sous le verrou commun du moteur.
+  Moteur committé localement : `8d4754d`, après PA4 `ee8ba1e` ; aucun push.
+- **Albums** : `paginateMyAlbums` sur son onglet Albums (tous états),
+  `paginatePersonAlbums` sur Photos et chez autrui. Pages réactives chaînées par les
+  curseurs natifs ; continuation après page filtrée vide, dédoublonnage, invalidation
+  des descendants à chaque frontière modifiée, erreur avec reprise et données conservées.
+  Réinitialisation réseau/personne/profil/variante/source ; cartes en liens accessibles.
+- **Reprise** : `getAlbum` propriétaire, même identifiant ; titre/description/audience
+  RHF/Zod, photos serveur distinctes des nouveaux fichiers, ordre/couverture/légendes
+  conservés. Ajout borné à 60, rattachement relu avant libération des fichiers locaux,
+  idempotence et alt préservé. Sauvegarde explicite possible sans photo. Un album publié
+  est annoncé comme tel : enregistrer modifie sa version visible, sans faux brouillon.
+- **Retrait** : dialogue du kit d'espace avec ses styles, confirmation et verrou immédiat,
+  erreur traduite/reprise ; `withdraw` seulement, aucune suppression définitive. Les DTO
+  retenus restent sans image même s'ils contiennent une URL incohérente.
+- **Stories** : réseau de lecture distinct d'iCom ; `canCreate=false` en attente, bandeau
+  et lecteur conservés, aucun composeur monté même via `/actus/nouvelle`. Le comptage
+  `markSeen` reste celui du serveur, explicitement autorisé en attente. Cache borné par
+  réseau/personne ; changement de droit démonte le composeur et oublie son intention.
+- **Graine locale** : treize brouillons vides, privés, sur le seul compte fictif réservé
+  préexistant et vérifié ; confirmation + backend local obligatoires, aucune identité,
+  adhésion ou image créée par la graine. Rejeu idempotent préservant les modifications,
+  collision de réseau/suppression refusée atomiquement. Création locale 13/0 constatée.
+- **Contrôles ciblés** : 160 tests des surfaces partagées, 66 du raccord DIASPORALE et
+  35 de la graine/mur verts ; typage et lint sans erreur. Journaux locaux
+  `/tmp/diasporale-pd4-{albums,app,seed}-targeted.log` et `/tmp/diasporale-pd4-types.log`.
+  Puis `bun run --cwd ../ANTSIA verify` terminé **code 0** : **6 007 tests**, dont
+  **822 DIASPORALE** (238 domaine +259 features +325 app), 1 322 backend, 111 cliquets,
+  170 API et 2 983 surfaces moteur ; dix typages et neuf lints sans erreur. Log complet
+  `/tmp/diasporale-pd4-albums-verify.log`. Avertissements lint présents (images natives
+  des surfaces partagées et avertissements hérités) ; aucun avertissement de référence
+  ajouté au composeur après correction par effet de mise en page.
+- **Chrome local effectivement joué** : propriétaire 12→13 albums, 13 liens uniques puis
+  fin ; reprise du brouillon, titre/description/audience enregistrés sur le même album ;
+  deux images fictives déposées par le circuit normal, légendes et ordre B/A enregistrés ;
+  rechargement avec métadonnées/photos/ordre et couverture existante conservés, publication
+  du même album, deux images chargées. Redémarrage Next sous son seuil mémoire repris.
+- **Recette encore ouverte** : accès entre comptes, audience restreinte et retrait relu
+  par autrui, lecture réelle en attente, puis 320/375/1280 px et consoles finales. La connexion
+  du second compte s'est bloquée : l'outil a confirmé le Mac verrouillé, déverrouillage
+  automatique impossible ; déverrouillage manuel demandé. Aucun cache ni donnée supprimé.
+  Ces éléments ne sont pas présentés comme vérifiés dans Chrome.

@@ -10,7 +10,7 @@ import { Suspense, type ReactNode } from "react"
 
 import { AppShell } from "@/components/app-shell"
 import { Gate, GateSkeleton } from "@/components/gate"
-import { IcomIsland, useIcomState, type IcomOffReason } from "@/components/icom"
+import { IcomIsland, useEngineNetwork, useIcomState, type IcomOffReason } from "@/components/icom"
 import type { MessagesRouteTarget } from "@/lib/messages-route"
 
 // ═══════════════════════════════════════════════════════════════
@@ -37,13 +37,36 @@ export function MessagesScreen(props: { route: MessagesRouteTarget }) {
 /** `/actus` — le lecteur plein écran des statuts ; sur `…/nouvelle`, le composeur ouvert. */
 export function StoriesScreen(props: { openCreate: boolean }) {
   return (
-    <IcomPage titleKey="stories.title">
+    <Gate require="member">
+      {(session) => session.membership ? (
+        <StoriesPageBody membership={session.membership} openCreate={props.openCreate} />
+      ) : null}
+    </Gate>
+  )
+}
+
+/** Lire les stories ne demande pas le droit de communiquer ni de publier. */
+function StoriesPageBody(props: { membership: MembershipView; openCreate: boolean }) {
+  const network = useEngineNetwork()
+  const icom = useIcomState()
+  if (network !== null && network.personId !== props.membership.personId) return <GateSkeleton />
+  if (network === null || props.membership.status === "suspendue" || props.membership.status === "partie") {
+    if (icom.status === "loading") return <GateSkeleton />
+    return (
+      <AppShell membership={props.membership}>
+        <IcomUnavailable titleKey="stories.title" reason={icom.status === "off" ? icom.reason : "unavailable"} />
+      </AppShell>
+    )
+  }
+  const canCreate = props.membership.canPublish
+  return (
+    <IcomIsland key={`${network.networkId}:${network.personId}:${canCreate}`} network={network}>
       {/* Le lecteur mobile du moteur mesure 100 % de son parent : une hauteur
           définie est requise, sinon la story chargée a une hauteur nulle. */}
       <main id="contenu" className="h-dvh overflow-hidden bg-background">
-        <StoriesViewerPage openCreate={props.openCreate} />
+        <StoriesViewerPage canCreate={canCreate} openCreate={props.openCreate && canCreate} />
       </main>
-    </IcomPage>
+    </IcomIsland>
   )
 }
 

@@ -160,6 +160,7 @@ describe("ProfileAlbums — les albums du moteur dans le profil diaspora", () =>
     expect(screen.queryByRole("group", { name: "Albums du moteur" })).not.toBeInTheDocument()
     expect(mocks.composer).toHaveBeenLastCalledWith(expect.objectContaining({
       handle: profile.handle,
+      canPublish: true,
       network: expect.objectContaining({ networkId: "networks_diasporale", slug: "diasporale" }),
     }))
 

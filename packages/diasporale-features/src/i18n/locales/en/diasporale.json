@@ -617,6 +617,7 @@
   "albums": {
     "metaTitle": "Photo album",
     "unavailableTitle": "Albums unavailable",
+    "previewUnavailableBody": "Albums are not available in this preview.",
     "unavailableBody": "Albums require an active network membership. They are not available in the demonstration."
   },
   "facet": {

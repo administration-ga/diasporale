@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import type { EngineAuthClient } from "@antsia/api/auth-client"
+import { isSigningOutEverywhere } from "@antsia/api/sign-out-everywhere"
 import type { ReactionKind } from "@diasporale/features/data"
 import type { ConvexReactClient } from "convex/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -21,7 +22,7 @@ function setup(options: { revoked?: boolean; revokeThrows?: boolean; signOutErro
   const local = storage({ "diasporale:brouillon:p1": "texte privé", "antsia:diasporale:conversation": "texte privé", theme: "dark", "diasporale:hubs:recents": "FR" })
   const session = storage({ "diasporale:brouillon:p2": "texte privé", "autre-produit:session": "conservé" })
   if (options.storageError) local.removeItem.mockImplementation(() => { throw new Error("stockage refusé") })
-  const assign = vi.fn()
+  const assign = vi.fn(() => { events.push(isSigningOutEverywhere() ? "navigateLocked" : "navigateUnlocked") })
   vi.stubGlobal("window", new Proxy(window, {
     get(target, property) {
       if (property === "location") return { assign }
@@ -46,13 +47,18 @@ function setup(options: { revoked?: boolean; revokeThrows?: boolean; signOutErro
   return { actions, assign, events, local, session, reactions, revokeSessions, signOut, atomSet }
 }
 
-afterEach(() => { vi.unstubAllGlobals() })
+afterEach(() => {
+  vi.unstubAllGlobals()
+  // Le navigateur remplace le document après assign ; jsdom doit simuler
+  // cette frontière pour ne pas conserver le verrou du scénario précédent.
+  Reflect.deleteProperty(globalThis, Symbol.for("antsia.signOutActivity"))
+})
 
 describe("déconnexion DIASPORALE — contrat PA4 commun réel", () => {
   it("révoque avant de quitter, purge les états personnels et recharge complètement l'entrée", async () => {
     const test = setup()
     await test.actions.signOutEverywhere()
-    expect(test.events).toEqual(["revoke", "signOut"])
+    expect(test.events).toEqual(["revoke", "signOut", "navigateLocked"])
     expect(test.revokeSessions).toHaveBeenCalledOnce()
     expect(test.signOut).toHaveBeenCalledOnce()
     expect(test.reactions.size).toBe(0)
@@ -65,7 +71,7 @@ describe("déconnexion DIASPORALE — contrat PA4 commun réel", () => {
   it.each([{ revoked: false }, { revokeThrows: true }])("conserve un avis après rechargement lorsque la révocation n'est pas prouvée : %j", async (options) => {
     const test = setup(options)
     await test.actions.signOutEverywhere()
-    expect(test.events).toEqual(["revoke", "signOut"])
+    expect(test.events).toEqual(["revoke", "signOut", "navigateLocked"])
     expect(test.local.values.has("diasporale:brouillon:p1")).toBe(false)
     expect(test.assign).toHaveBeenCalledExactlyOnceWith("/entrer?deconnexion=incomplete")
   })

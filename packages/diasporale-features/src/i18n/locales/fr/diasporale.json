@@ -617,6 +617,7 @@
   "albums": {
     "metaTitle": "Album photo",
     "unavailableTitle": "Albums indisponibles",
+    "previewUnavailableBody": "Les albums ne sont pas proposés dans cet aperçu.",
     "unavailableBody": "Les albums nécessitent une adhésion active au réseau. Ils ne sont pas proposés en démonstration."
   },
   "facet": {

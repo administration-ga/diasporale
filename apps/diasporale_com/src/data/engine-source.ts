@@ -528,16 +528,19 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     },
 
     async signOutEverywhere() {
-      const result = await signOutEverywhere(deps.authClient, {
+      await signOutEverywhere(deps.authClient, {
         resetLocalState: () => {
           myReactions.clear()
           networkId = null
           pendingEmail = null
           clearDiasporaleDrafts()
         },
+        // La navigation reste sous le verrou du moteur, pour préserver l'avis
+        // même lorsque la garde de session observe la révocation en parallèle.
+        navigate: (result) => {
+          if (typeof window !== "undefined") window.location.assign(routes.enterAfterSignOut(!result.serverRevoked || !result.localCleared))
+        },
       })
-      // Navigation complète : ferme aussi les connexions de l'onglet ; l'avis survit au rechargement.
-      if (typeof window !== "undefined") window.location.assign(routes.enterAfterSignOut(!result.serverRevoked || !result.localCleared))
     },
 
     checkHandle: (handle) => attempt(() => deps.convex.query(api.modules.people.profile.isHandleAvailable, { handle })),

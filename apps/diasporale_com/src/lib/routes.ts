@@ -27,6 +27,7 @@ export const routes = {
   profileTab: (handle: string, tab: "publications" | "photos" | "albums", preview = false) =>
     `/@${handle}?onglet=${tab}${preview ? "&apercu=1" : ""}`,
   album: (handle: string, albumId: string) => `/@${handle}/albums/${encodeURIComponent(albumId)}`,
+  editAlbum: (handle: string, albumId: string) => `/@${handle}/albums/${encodeURIComponent(albumId)}?modifier=1`,
   newAlbum: (handle: string) => `/@${handle}?onglet=albums&nouveau=1`,
   page: (handle: string) => `/pages/${handle}`,
   /** Une publication seule (depuis la cloche, un signet, son horodatage). */

@@ -27,6 +27,7 @@ export function ProfileAlbums(props: {
       {props.create && canCreate ? (
         <AlbumComposer
           handle={props.handle}
+          canPublish={props.canPublish}
           onCancel={() => router.replace(routes.profileTab(props.handle, "albums"), { scroll: false })}
           onPublished={(albumId) => router.push(routes.album(props.handle, albumId))}
         />
