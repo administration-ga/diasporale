@@ -29,8 +29,8 @@
 | Cloche | `NotificationBell` | EXF-DG-38 | ✅ | `notifications.bell.*` | le partage d'une publication se dit (« a partagé votre publication ») ; genres de PD5 à PD8 dits « nouvelle activité » d'ici là |
 | Hub pays | `/pays/[iso]` | EXF-DG-15, 16 | 🟡 | `diaspora.hubs.getCountryHub`, voies du fil | compteurs et fil local ; pages, associations, entreprises (PD5) et évènements (PD7) vides ; membres opt-in par la recherche filtrée |
 | Sélecteur de pays (C11) | `CountrySwitch` | EXF-DG-15 | ✅ | — | accès rapide : mon pays, puis les trois derniers choisis (ce navigateur) |
-| Stories 24 h (`StoriesTray`) | bandeau de `/fil`, `/actus` (lecteur plein écran du moteur, mode moteur) | EXF-DG-14 | 🟡 | `stories.*` (lot 12b d'ANTSIA, servi) | `StoriesViewerPage` monté sous l'îlot iCom (PD7), atteint par la brique « Statuts » d'iCom ; `…/nouvelle` ouvre le composeur ; bandeau du fil monté avec `StoriesStyles`, portrait et handle publié du moteur, horloge à la minute et ouverture par `?auteur=` (16/10, tests verts et recette Chrome locale) ; même accès que le lecteur actuel : membres qui peuvent publier seulement ; rien en démonstration |
-| Albums (`AlbumPage`) | onglets Photos/Albums du profil, `/@handle/albums/[id]` | EXF-DG-14 | 🟡 | `albums.*`, `@antsia/social-features/albums` (F2) | pagination native, brouillons/retraits du propriétaire et vitrine publiée des autres ; reprise du même album par `?modifier=1`, sauvegarde des métadonnées/photos/ordre/couverture, retrait confirmé sans suppression ; aperçu et démonstration fermés ; recette entre comptes encore à terminer (suite ci-dessous) |
+| Stories 24 h (`StoriesTray`) | bandeau de `/fil`, `/actus` (lecteur plein écran du moteur, mode moteur) | EXF-DG-14 | 🟡 | `stories.*` (lot 12b d'ANTSIA, servi) | `StoriesViewerPage` monté sous l'îlot iCom (PD7), atteint par la brique « Statuts » d'iCom ; `…/nouvelle` ouvre le composeur ; bandeau du fil monté avec `StoriesStyles`, portrait et handle publié du moteur, horloge à la minute et ouverture par `?auteur=` (16/10, tests verts et recette Chrome locale) ; lecture en attente via le contexte réseau de lecture, création réservée au droit de publier, y compris à l’adresse directe ; rien en démonstration |
+| Albums (`AlbumPage`) | onglets Photos/Albums du profil, `/@handle/albums/[id]` | EXF-DG-14 | 🟡 | `albums.*`, `@antsia/social-features/albums` (F2) | pagination native, brouillons/retraits du propriétaire et vitrine publiée des autres ; reprise du même album par `?modifier=1`, sauvegarde des métadonnées/photos/ordre/couverture, retrait confirmé sans suppression ; aperçu et démonstration fermés ; recette entre comptes terminée : audiences, retrait puis reprise/republication du même album (suite ci-dessous) |
 | Coquille mobile et bureau | `AppShell` | EXT-DG-05 | ✅ | — | colonne (Fil, Mon pays, Membres, Messages en mode moteur, Profil, Parrainer, Réglages), barre basse, en-tête (Membres, Messages en mode moteur, cloche, pays) ; rail droit ouvert par la carte iCom |
 | Cartes flottantes | `FloatingNotice`, pile « Avis » | charte v2 §7 | ✅ | — | échelle de couches de la charte : barres 40 < feuilles 50 < pile 55 < menus 60 |
 
@@ -336,8 +336,63 @@ par cette session.
   deux images fictives déposées par le circuit normal, légendes et ordre B/A enregistrés ;
   rechargement avec métadonnées/photos/ordre et couverture existante conservés, publication
   du même album, deux images chargées. Redémarrage Next sous son seuil mémoire repris.
-- **Recette encore ouverte** : accès entre comptes, audience restreinte et retrait relu
-  par autrui, lecture réelle en attente, puis 320/375/1280 px et consoles finales. La connexion
-  du second compte s'est bloquée : l'outil a confirmé le Mac verrouillé, déverrouillage
-  automatique impossible ; déverrouillage manuel demandé. Aucun cache ni donnée supprimé.
-  Ces éléments ne sont pas présentés comme vérifiés dans Chrome.
+- **Chrome croisé, après déverrouillage manuel** : album public lu par un autre membre,
+  puis audience « Mes connexions » enregistrée ; la connexion existante garde ses deux
+  images, le membre sans connexion reçoit le refus indistinct et zéro image. Retour à
+  l'audience publique : les deux images redeviennent lisibles dans son onglet ouvert.
+- **Retrait joué** : dialogue modal fixe avec focus interne, annulation sans changement,
+  puis confirmation : l'auteur voit « Retiré » avec les deux photos ; l'autre onglet se
+  ferme réactivement, puis reste inaccessible avec zéro image après rechargement.
+  Reprise et republication du même identifiant : deux photos/légendes dans l'ordre B/A.
+- **Mise en page réellement vue** : galerie à 320 px sombre, 375 px clair, 1 280 px sombre,
+  document égal à la largeur d'écran, deux images chargées ; captures inspectées. Console
+  finale de la galerie rechargée sans erreur ni avertissement. Les erreurs de ressources
+  antérieures venaient des redémarrages automatiques de Next à son seuil mémoire ; les
+  navigations concernées ont été rechargées puis rejouées, sans les compter comme succès.
+- **Ressources** : suppression explicitement autorisée du seul ancien cache ANTSIA
+  `apps/antsia_ga/.next/dev/cache/turbopack`, serveur arrêté et aucun fichier ouvert ;
+  environ 1 Gio libéré (462 Mio → 1,5 Gio à cet instant). Aucun autre cache ni donnée
+  supprimé. Après les contrôles, frontend ANTSIA rétabli sur 3030 et backend local conservé.
+- **Story réellement lue en attente** : `pd4.lecture` confirmé « En attente » dans ses
+  réglages et par l'avis de compte du fil ; nouvelle story synthétique publique publiée par
+  l'auteur via le circuit normal. Le plateau exige une source ; l'API normale refuse le
+  suivi en attente, garde inchangée. `storyReaderForRecette`, interne et strictement locale,
+  prépare le seul abonnement fictif entre deux identités fixes vérifiées (avec agrégat),
+  sans modifier identité, adhésion, consentement ou média ; 54 tests de graines verts,
+  dont 19 nouveaux. Exécution locale : `created: true` après « Functions ready ».
+  Le fil affiche « 1 actu, 1 non vue » ; son bouton ouvre `/actus?auteur=relations.recette`,
+  image 540×960 effectivement chargée, hauteur rendue environ 635 px, légende attendue,
+  aucun input fichier/composeur. Publication du compte en attente toujours désactivée.
+- **Adresse de création en attente** : après le second déverrouillage manuel,
+  `/actus/nouvelle` affiche le lecteur avec la même image chargée (375 px, hauteur rendue
+  812 px), aucun champ fichier, aucune zone de texte ni bouton de publication. Le bandeau
+  du fil est aussi réellement vu à 375 px clair et 320 px sombre sans débordement, avec
+  l'avis « Votre compte est en attente » et sans carte de création ; console finale propre.
+  L'onglet isolé est fermé, l'onglet propriétaire vidé et l'émulation réinitialisée.
+- **Historique du blocage PA5 avant correction** : première tentative arrêtée au codegen
+  par les contrats de contexte des notifications ; après corrections coordonnées, le
+  codegen et les typages Convex/tests passent, puis **1 425 tests backend réussissent et
+  17 échouent** dans cinq fichiers après les changements PA5. Log `/tmp/diasporale-pd4-stories-final-verify-2.log`.
+  Les 54 tests graines/mur/albums/lecteur passent. Les échecs sont transmis au chat ANTSIA,
+  ses fichiers conservés ; aucun commit de cette nouvelle graine avant `verify` commun vert.
+  La vérification à 6 007 tests reste la preuve des commits applicatifs précédents, sans
+  annoncer ce nouveau snapshot PA5 entièrement vert. Frontend DIASPORALE arrêté ;
+  frontend ANTSIA rétabli sur 3030 (`/entrer` HTTP 200), seul frontend actif, backend 3210
+  conservé. Aucune production.
+
+### Reprise du contrôle PA5 — 16/10
+
+- Les cinq fichiers précédemment en échec et les graines diaspora passent ensemble :
+  **144 tests, six fichiers, code 0** (`/tmp/diasporale-pa5-17-recheck.log`). Les 17 cas
+  précédents sont résolus ; les assertions d’audience et les gardes serveur sont conservées.
+- Le contrôle commun est sérialisé avec ANTSIA, sans frontend : **6 223 tests, code 0**,
+  dont backend **1 455**, **122 cliquets**, **24 tests de scripts**, surfaces moteur **2 987**
+  et DIASPORALE **828** (238 domaine, 259 surfaces, 331 application). Codegen, types Convex
+  et tests, dix typages d’espaces et neuf lints sans erreur ; avertissements existants.
+  Preuve finale : `/tmp/antsia-pa5-verify-validated.log`, code confirmé par ANTSIA après
+  fermeture du cas d’export d’un message original retiré. Les échecs intermédiaires des
+  passes `green` et antérieures restent historiques, pas le résultat final.
+- Le complément de graine locale et le rapport de recette peuvent être committés sur ce
+  contrôle partagé, sans embarquer les fichiers PA5 d’ANTSIA. Les six cas supplémentaires
+  du bouton profil sont également couverts ; leur livraison appartient à la tranche suivante
+  « Mes abonnements » (`docs/06`). Aucun nouveau contrôle navigateur revendiqué ici.

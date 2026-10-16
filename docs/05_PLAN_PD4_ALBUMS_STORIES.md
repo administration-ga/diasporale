@@ -33,3 +33,13 @@ installation et backend ANTSIA partagés. Aucun push ni déploiement de producti
 
 Les images sont gardées par le moteur et réencodées avant dépôt ; aucun jeton, code
 temporaire ni contenu consulaire ne doit apparaître dans les traces ou les notes.
+
+Complément de recette du 16/10 : le plateau ne contient que soi, ses connexions et
+les personnes suivies. Le compte fictif `pd4.lecture`, réellement en attente, ne
+peut pas créer un abonnement via l’API normale (statut déclaré requis). Pour
+vérifier un média réel sans modifier les droits, ajouter une graine interne
+strictement locale : deux identités fictives fixes et leurs adresses vérifiées
+relues, statuts existants exigés, création idempotente du seul abonnement de
+recette et de son agrégat. Aucun profil, statut, consentement ou média modifié.
+Exécuter cette préparation hors frontend, puis vérifier avec la vraie session
+en attente ; conserver les refus normaux de création.
