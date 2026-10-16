@@ -20,7 +20,7 @@ import {
 } from "@diasporale/features"
 import { type ActionResult, useActions, usePage, useProfile, useRelation, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { BanIcon, BookmarkIcon, ClockIcon, EyeIcon, FlagIcon, HandHeartIcon, LandmarkIcon, NewspaperIcon, PencilIcon, PhoneIcon, ShieldOffIcon, UserCheckIcon, UserPlusIcon, UserRoundXIcon, UsersIcon } from "lucide-react"
+import { BanIcon, BookmarkIcon, ClockIcon, EyeIcon, FlagIcon, HandHeartIcon, ImageIcon, LandmarkIcon, NewspaperIcon, PencilIcon, PhoneIcon, ShieldOffIcon, UserCheckIcon, UserPlusIcon, UserRoundXIcon, UsersIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useSearchParams } from "next/navigation"
 import { type ReactNode, useId, useState } from "react"
@@ -30,6 +30,8 @@ import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
 import { IcomIsland, useEngineNetwork, useIcomState, useWriteTo } from "@/components/icom"
 import { ProfileAlbums } from "@/components/profile-albums"
+import { ProfileAvatar, ProfileCover } from "@/components/profile-images"
+import { ProfilePostPages } from "@/components/feed-pages"
 import { routes } from "@/lib/routes"
 
 /** `/@handle` (réécrit vers `/profil/handle`) — profil publié, facette selon ses visibilités (EXF-DG-07/08). */
@@ -50,8 +52,7 @@ export function ProfileScreen(props: { handle: string }) {
 function Profile(props: { handle: string; membership: MembershipView }) {
   const { t, locale } = useDiasporaleT()
   const searchParams = useSearchParams()
-  const profile = useProfile(decodeURIComponent(props.handle).replace(/^@/, "").toLowerCase())
-  const actions = useActions()
+  const profile = useProfile(props.handle.replace(/^@/, "").toLowerCase())
   const preview = searchParams.get("apercu") === "1"
   const engineNetwork = useEngineNetwork()
   const requestedTab = searchParams.get("onglet")
@@ -59,9 +60,16 @@ function Profile(props: { handle: string; membership: MembershipView }) {
   const tab = withAlbums && (requestedTab === "photos" || requestedTab === "albums") ? requestedTab : "publications"
   const now = Date.now()
 
+  if (profile.status === "error") return (
+    <Card role="alert" className="flex flex-col items-start gap-3 p-4">
+      <h1 className="font-display text-2xl font-bold">{t("profile.errorTitle")}</h1>
+      <p className="text-sm text-muted-foreground">{t("profile.errorBody")}</p>
+      <Button variant="outline" onClick={() => window.location.reload()}>{t("profile.reload")}</Button>
+    </Card>
+  )
   if (profile.status !== "ready") return <Skeleton className="h-72 w-full rounded-xl" />
   if (profile.data === null) {
-    // Refus indistinct : profil inconnu, privé ou bloqué rendent la même page (EXF-DG-19).
+    // Refus indistinct : profil inconnu, retiré, hors réseau ou bloqué (EXF-DG-19).
     return <EmptyState icon={<UserRoundXIcon />} title={t("profile.unavailableTitle")} description={t("profile.unavailableBody")} />
   }
   const view = profile.data
@@ -73,12 +81,16 @@ function Profile(props: { handle: string; membership: MembershipView }) {
         <p className="rounded-xl bg-[var(--info-50)] px-4 py-3 text-[13px] text-[var(--info-600)]">{t("profile.previewNotice")}</p>
       ) : null}
       <Card className="overflow-hidden">
-        <div aria-hidden className="h-20 bg-[var(--ink-100)] md:h-28" />
+        <ProfileCover image={view.cover} />
         <div className="flex flex-col gap-4 px-5 pb-5">
           <div className="-mt-10 flex items-end justify-between gap-3">
-            <Avatar id={view.personId} name={view.displayName} size="xl" className="ring-4 ring-card" />
+            <ProfileAvatar id={view.personId} name={view.displayName} image={view.avatar} />
             <div className="flex flex-wrap justify-end gap-2">
-              {view.isSelf ? (
+              {view.isSelf ? preview ? (
+                <Button asChild variant="ghost" size="sm">
+                  <NextLink href={routes.profile(view.handle)}><EyeIcon aria-hidden />{t("profile.previewExit")}</NextLink>
+                </Button>
+              ) : (
                 <>
                   <Button asChild variant="outline" size="sm">
                     <NextLink href={routes.settings()}>
@@ -86,8 +98,13 @@ function Profile(props: { handle: string; membership: MembershipView }) {
                       {t("profile.edit")}
                     </NextLink>
                   </Button>
+                  {engineNetwork && props.membership.canPublish ? (
+                    <Button asChild variant="outline" size="sm">
+                      <NextLink href={routes.settingsImages()}><ImageIcon aria-hidden />{t("profile.images.edit")}</NextLink>
+                    </Button>
+                  ) : null}
                   <Button asChild variant="ghost" size="sm">
-                    <NextLink href={preview ? routes.profile(view.handle) : routes.profilePreview(view.handle)}>
+                    <NextLink href={routes.profilePreview(view.handle)}>
                       <EyeIcon aria-hidden />
                       {preview ? t("profile.previewExit") : t("profile.preview")}
                     </NextLink>
@@ -116,10 +133,10 @@ function Profile(props: { handle: string; membership: MembershipView }) {
             </div>
           </div>
           <div>
-            <h1 className="font-display text-3xl font-bold leading-tight">{view.displayName}</h1>
-            <p className="font-mono text-sm text-muted-foreground">@{view.handle}</p>
+            <h1 className="break-words font-display text-3xl font-bold leading-tight">{view.displayName}</h1>
+            <p className="break-words font-mono text-sm text-muted-foreground">@{view.handle}</p>
             <TrustBadges badges={view.badges} size="md" className="mt-2" />
-            {view.headline ? <p className="mt-3 text-[15px]">{view.headline}</p> : null}
+            {view.headline ? <p className="mt-3 break-words text-[15px]">{view.headline}</p> : null}
           </div>
           <FacetDetails facet={facet} postName={facet.postSlug ? view.postName : null} locale={locale} />
         </div>
@@ -146,21 +163,15 @@ function Profile(props: { handle: string; membership: MembershipView }) {
           <h2 id="profil-publications" className="font-display text-xl font-bold">
             {t("profile.posts")}
           </h2>
-          {view.posts.length === 0 ? (
-            <EmptyState icon={<NewspaperIcon />} title={view.isSelf ? t("profile.noPostsSelf") : t("profile.noPosts", { name: view.displayName })} />
+          {preview ? (
+            <p className="text-sm text-muted-foreground">{t("profile.previewPostsUnavailable")}</p>
           ) : (
-            view.posts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                now={now}
-                canReact={props.membership.canPublish}
-                onReact={async (kind) => {
-                  const result = await actions.react(post.id, kind)
-                  if (!result.ok) toast.error(t(`errors.${result.code}`))
-                }}
-              />
-            ))
+            <ProfilePostPages
+              membership={props.membership}
+              handle={view.handle}
+              now={now}
+              emptyFallback={<EmptyState icon={<NewspaperIcon />} title={view.isSelf ? t("profile.noPostsSelf") : t("profile.noPosts", { name: view.displayName })} />}
+            />
           )}
         </section>
       ) : (

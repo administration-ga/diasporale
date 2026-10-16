@@ -28,7 +28,7 @@ import {
 } from "@diasporale/features"
 import { useActions, useMyConsents, useOpenCountries, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { CopyIcon, DownloadIcon, LogOutIcon, Trash2Icon } from "lucide-react"
+import { CopyIcon, DownloadIcon, Trash2Icon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter } from "next/navigation"
 import { useId, useState, type ReactNode } from "react"
@@ -38,6 +38,8 @@ import { z } from "zod"
 
 import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
+import { ProfileImagesSettings } from "@/components/profile-images-settings"
+import { SignOutSettings } from "@/components/sign-out-settings"
 import { LanguageSwitch, ThemeSwitch } from "@/components/preferences"
 import { routes } from "@/lib/routes"
 
@@ -78,6 +80,7 @@ function Settings(props: { membership: MembershipView }) {
     <>
       <h1 className="font-display text-3xl font-bold">{t("settings.title")}</h1>
       <MembershipSection membership={props.membership} />
+      <ProfileImagesSettings membership={props.membership} />
       <FacetSection membership={props.membership} />
       <DirectorySection membership={props.membership} />
       <ConsentsSection />
@@ -89,7 +92,7 @@ function Settings(props: { membership: MembershipView }) {
           <ThemeSwitch className="self-start" />
         </div>
       </Section>
-      <SignOutSection />
+      <SignOutSettings />
     </>
   )
 }
@@ -429,27 +432,6 @@ function DataSection(props: { membership: MembershipView }) {
           router.push(routes.home())
         }}
       />
-    </Section>
-  )
-}
-
-function SignOutSection() {
-  const { t } = useDiasporaleT()
-  const actions = useActions()
-  const router = useRouter()
-  return (
-    <Section id="session" title={t("settings.session")} lead={t("settings.sessionLead")}>
-      <Button
-        variant="outline"
-        className="self-start"
-        onClick={async () => {
-          await actions.signOutEverywhere()
-          router.push(routes.home())
-        }}
-      >
-        <LogOutIcon aria-hidden />
-        {t("settings.signOutEverywhere")}
-      </Button>
     </Section>
   )
 }

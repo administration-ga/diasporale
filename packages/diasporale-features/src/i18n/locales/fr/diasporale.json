@@ -73,6 +73,7 @@
     "closing": "Votre pays de résidence est déjà là. Votre communauté aussi."
   },
   "entry": {
+    "signOutIncomplete": "La déconnexion complète n’a pas pu être confirmée. D’autres appareils peuvent rester connectés et des données de ce navigateur peuvent subsister. Reconnectez-vous pour réessayer la déconnexion dès que la connexion est rétablie.",
     "title": "Entrer dans DIASPORALE",
     "lead": "Choisissez votre porte. Vous ne créerez jamais de mot de passe.",
     "idnTitle": "Identité numérique IDN",
@@ -574,7 +575,7 @@
     "edit": "Modifier",
     "preview": "Me voir comme les autres",
     "previewExit": "Revenir à mon profil",
-    "previewNotice": "Aperçu : ce que voit un membre d'un autre pays, sans relation avec vous.",
+    "previewNotice": "Aperçu de vos informations et de votre facette diaspora pour un membre d’un autre pays, sans relation avec vous.",
     "posts": "Publications",
     "tabsLabel": "Contenus du profil",
     "photos": "Photos",
@@ -583,7 +584,35 @@
     "noPostsSelf": "Vous n'avez encore rien publié.",
     "unavailableTitle": "Ce profil n'est pas disponible.",
     "unavailableBody": "Il n'existe pas, ou vous ne pouvez pas le voir.",
-    "bookmarks": "Mes enregistrements"
+    "bookmarks": "Mes enregistrements",
+    "errorTitle": "Le profil ne s’affiche pas.",
+    "errorBody": "Impossible de charger ce profil. Réessayez dans un instant.",
+    "reload": "Recharger le profil",
+    "previewPostsUnavailable": "Les publications et les albums sont masqués dans cet aperçu. Leur visibilité dépend de chaque lecteur.",
+    "images": {
+      "edit": "Modifier mes images",
+      "title": "Photo et couverture",
+      "shared": "Ces images appartiennent à votre profil ANTSIA et sont partagées entre vos réseaux. Leur affichage respecte les droits de chaque lecteur.",
+      "readOnly": "La modification des images nécessite une adhésion active à DIASPORALE.",
+      "unavailable": "Vos images ne sont pas disponibles pour le moment.",
+      "avatar": "Photo de profil",
+      "cover": "Image de couverture",
+      "chooseAvatar": "Choisir une photo de profil",
+      "chooseCover": "Choisir une couverture",
+      "requirements": "JPEG, PNG ou WebP, jusqu’à 5 Mio par image.",
+      "saveAvatar": "Enregistrer la photo",
+      "saveCover": "Enregistrer la couverture",
+      "saving": "Enregistrement…",
+      "removeAvatar": "Retirer ma photo",
+      "removeCover": "Retirer ma couverture",
+      "confirmRemove": "Retirer cette image de votre profil dans tous vos réseaux ? Le fichier déjà déposé n’est pas supprimé par ce geste.",
+      "cancel": "Annuler",
+      "required": "Choisissez une image non vide.",
+      "updated": "Image enregistrée.",
+      "pending": "Image enregistrée, en attente de vérification avant affichage.",
+      "blocked": "Cette image ne peut pas être affichée. Vous pouvez en choisir une autre.",
+      "removed": "Image retirée de votre profil."
+    }
   },
   "albums": {
     "metaTitle": "Album photo",
@@ -613,6 +642,7 @@
     }
   },
   "settings": {
+    "signingOut": "Déconnexion…",
     "title": "Réglages",
     "memberships": "Mes réseaux",
     "membershipsLead": "Entrer dans DIASPORALE vous a aussi fait membre d'ANTSIA. Vos contextes restent séparés.",

@@ -16,6 +16,7 @@
  *   tant que le déploiement n'a pas sa clé de service.
  */
 import type { EngineAuthClient } from "@antsia/api/auth-client"
+import { signOutEverywhere } from "@antsia/api/sign-out-everywhere"
 import { useAuthenticatedConvexQuery, useStableConvexAuth } from "@antsia/api/hooks"
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
@@ -44,6 +45,7 @@ import type {
   PostView,
   NotificationView,
   ProfileView,
+  ProfilePostsPageRequest,
   ReactionKind,
   RelationView,
   SessionView,
@@ -58,8 +60,10 @@ import { convexToJson, jsonToConvex, type Value } from "convex/values"
 import { useCallback, useMemo } from "react"
 
 import { routes } from "@/lib/routes"
+import { clearDiasporaleDrafts } from "@/lib/sign-out-state"
 
 import { authActionErrorCode, engineActionErrorCode } from "./engine-errors"
+import { createEngineProfileImagesActions } from "./engine-profile-images"
 import {
   toAccountView,
   toConsentViews,
@@ -184,6 +188,7 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
 
   return {
     kind: "engine",
+    profileImages: createEngineProfileImagesActions({ convex: deps.convex }),
 
     useSession(): Loadable<SessionView> {
       const { auth, networkId, membership } = useMember()
@@ -286,14 +291,50 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       const args = id ? { networkId: id, handle } : "skip"
       const profile = useLoaded(api.modules.people.profile.getPublicProfile, args)
       const member = useLoaded(api.modules.diaspora.profile.memberFacet, args)
-      const wall = useLoaded(api.modules.posts.posts.personPosts, id ? { networkId: id, handle, limit: FEED_PAGE } : "skip")
-      for (const loaded of [networkId, profile, member, wall]) if (loaded.state === "error") return failed(loaded.code)
-      if (profile.state !== "ready" || member.state !== "ready" || wall.state !== "ready") return LOADING
+      for (const loaded of [networkId, profile, member]) if (loaded.state === "error") return failed(loaded.code)
+      if (profile.state !== "ready" || member.state !== "ready") return LOADING
       // Inconnu, non publié, hors réseau ou bloqué : le même « introuvable ».
       if (!profile.value || !member.value) return ready(null)
-      const posts = toWall(wall.value)
-      for (const post of posts) myReactions.set(post.id, post.myReaction)
-      return ready(toProfileView(profile.value, member.value, posts))
+      return ready(toProfileView(profile.value, member.value))
+    },
+
+    useProfilePostsPage(args: ProfilePostsPageRequest): FeedPageQuery {
+      const { auth, networkId, membership } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const member = membership.state === "ready" ? membership.value : null
+      const canRead = auth.isAuthenticated && id !== null && member?.capabilities.includes("read_network") === true
+      const query = useAuthenticatedConvexQuery(
+        api.modules.posts.posts.personPosts,
+        canRead && id ? {
+          networkId: id,
+          handle: args.handle.trim().replace(/^@/, "").toLowerCase(),
+          limit: FEED_PAGE,
+          ...(args.cursor ? { cursor: { publishedAt: args.cursor.publishedAt, postId: args.cursor.postId as Id<"posts"> } } : {}),
+        } : "skip",
+      )
+      const refetch = query.refetch
+      const retry = useCallback(() => {
+        if (canRead) void refetch().catch(() => undefined)
+      }, [canRead, refetch])
+
+      let error: ActionErrorCode | null = null
+      if (auth.isUnauthenticated) error = "not_signed_in"
+      else if (networkId.state === "error") error = networkId.code
+      else if (membership.state === "error") error = membership.code
+      else if (networkId.state === "ready" && id === null) error = "network_unavailable"
+      else if (membership.state === "ready" && !member) error = "not_member"
+      else if (member && !member.capabilities.includes("read_network")) error = member.status === "suspendue" ? "suspended" : "not_member"
+      if (error !== null) return { data: undefined, isLoading: false, error, retry }
+      if (!canRead) return { data: undefined, isLoading: true, error: null, retry }
+
+      const items = query.data === undefined ? undefined : toWall({ items: query.data.items, pinned: args.cursor ? null : query.data.pinned })
+      if (items) for (const post of items) myReactions.set(post.id, post.myReaction)
+      return {
+        data: query.data === undefined || items === undefined ? undefined : { items, nextCursor: query.data.nextCursor, lacunar: false },
+        isLoading: query.data === undefined && !query.isError,
+        error: query.isError ? engineActionErrorCode(query.error) : null,
+        retry,
+      }
     },
 
     useRelation(personId: string): Loadable<RelationView> {
@@ -487,9 +528,16 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     },
 
     async signOutEverywhere() {
-      // Révocation de toutes les sessions côté moteur : PA4. Ici, la session de cet appareil.
-      await deps.authClient.signOut().catch(() => undefined)
-      if (typeof window !== "undefined") window.location.assign(routes.enter())
+      const result = await signOutEverywhere(deps.authClient, {
+        resetLocalState: () => {
+          myReactions.clear()
+          networkId = null
+          pendingEmail = null
+          clearDiasporaleDrafts()
+        },
+      })
+      // Navigation complète : ferme aussi les connexions de l'onglet ; l'avis survit au rechargement.
+      if (typeof window !== "undefined") window.location.assign(routes.enterAfterSignOut(!result.serverRevoked || !result.localCleared))
     },
 
     checkHandle: (handle) => attempt(() => deps.convex.query(api.modules.people.profile.isHandleAvailable, { handle })),

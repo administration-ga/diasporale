@@ -12,6 +12,8 @@ export const STORIES_NEW_SEGMENT = "nouvelle"
 export const routes = {
   home: () => "/",
   enter: () => "/entrer",
+  /** Résultat de déconnexion, sans masquer un échec de révocation des autres sessions. */
+  enterAfterSignOut: (incomplete: boolean) => incomplete ? "/entrer?deconnexion=incomplete" : "/entrer",
   enterIdn: () => "/entrer/idn",
   enterCode: () => "/entrer/code",
   welcome: () => "/bienvenue",
@@ -47,6 +49,8 @@ export const routes = {
   /** Conférence en direct (lot `live` du moteur, PD7 point 4) : pas encore servie ici. */
   conference: (sessionId: string) => `/direct/${encodeURIComponent(sessionId)}`,
   settings: () => "/parametres",
+  /** Images du profil commun, sans commandes de retrait global de profil. */
+  settingsImages: () => "/parametres#images",
   /** L'aide « obtenir un parrainage », dans les paramètres. */
   sponsorHelp: () => "/parametres#parrainage",
   sponsor: () => "/parrainer",

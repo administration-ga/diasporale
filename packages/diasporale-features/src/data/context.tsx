@@ -4,7 +4,7 @@ import type { CountryCode, FeedScope } from "@diasporale/domain"
 import { createContext, useContext, type ReactNode } from "react"
 
 import type { DiasporaleDataSource } from "./port"
-import type { FeedPageRequest } from "./types"
+import type { FeedPageRequest, ProfilePostsPageRequest } from "./types"
 
 const DataSourceContext = createContext<DiasporaleDataSource | null>(null)
 
@@ -30,6 +30,7 @@ export const useCountryHub = (country: CountryCode) => useDataSource().useCountr
 export const useFeed = (args: { scope: FeedScope; hubCountry?: CountryCode }) => useDataSource().useFeed(args)
 export const useFeedPage = (args: FeedPageRequest) => useDataSource().useFeedPage(args)
 export const useProfile = (handle: string) => useDataSource().useProfile(handle)
+export const useProfilePostsPage = (args: ProfilePostsPageRequest) => useDataSource().useProfilePostsPage(args)
 export const useRelation = (personId: string) => useDataSource().useRelation(personId)
 export const useMemberSearch = (args: { query: string; country?: CountryCode }) => useDataSource().useMemberSearch(args)
 export const useComments = (postId: string) => useDataSource().useComments(postId)

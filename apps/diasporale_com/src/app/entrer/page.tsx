@@ -8,6 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("entry.title") }
 }
 
-export default function EnterPage() {
-  return <EnterScreen />
+export default async function EnterPage(props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const params = await props.searchParams
+  return <EnterScreen signOutIncomplete={params.deconnexion === "incomplete"} />
 }

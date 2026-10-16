@@ -9,12 +9,15 @@ import type {
   BookmarkView,
   CommentThreadView,
   CommentView,
+  FeedCursorView,
   FeedPageQuery,
   FeedPageRequest,
+  FeedPageView,
   Loadable,
   MemberHitView,
   NotificationView,
   PostView,
+  ProfilePostsPageRequest,
   RelationView,
   SuggestionView,
   UnreadCountView,
@@ -53,6 +56,22 @@ const DEMO_IMAGE_MAX_SIDE = 1280
 
 function ready<T>(data: T): Loadable<T> {
   return { status: "ready", data }
+}
+
+/** Même ordre composite pour les pages locales du fil et du mur. */
+function localPostsPage(posts: readonly PostView[], cursor: FeedCursorView | null): FeedPageView {
+  // Le jeu local ne possède pas `_creationTime` : son identifiant opaque
+  // départage les publications de même instant de manière déterministe.
+  const items = [...posts]
+    .sort((left, right) => right.createdAt - left.createdAt || (left.id === right.id ? 0 : left.id < right.id ? 1 : -1))
+    .filter((post) => cursor === null || post.createdAt < cursor.publishedAt || (post.createdAt === cursor.publishedAt && post.id < cursor.postId))
+  const page = items.slice(0, FEED_PAGE)
+  const last = page.at(-1)
+  return {
+    items: page,
+    nextCursor: items.length > FEED_PAGE && last ? { publishedAt: last.createdAt, postId: last.id } : null,
+    lacunar: false,
+  }
 }
 
 /**
@@ -114,19 +133,9 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
           return { data: undefined, isLoading: false, error: status === "suspendue" ? "suspended" : "not_member", retry: retryLocalFeed }
         }
         // Le sélecteur applique déjà audiences, réseau, blocages et masquages.
-        // Le jeu local ne possède pas `_creationTime` : son identifiant opaque
-        // départage les publications de même instant de manière déterministe.
-        const items = feedView(state, viewerId, scope, store.now(), hubCountry)
-          .sort((left, right) => right.createdAt - left.createdAt || (left.id === right.id ? 0 : left.id < right.id ? 1 : -1))
-          .filter((post) => publishedAt === undefined || postId === undefined || post.createdAt < publishedAt || (post.createdAt === publishedAt && post.id < postId))
-        const page = items.slice(0, FEED_PAGE)
-        const last = page.at(-1)
+        const posts = feedView(state, viewerId, scope, store.now(), hubCountry)
         return {
-          data: {
-            items: page,
-            nextCursor: items.length > FEED_PAGE && last ? { publishedAt: last.createdAt, postId: last.id } : null,
-            lacunar: false,
-          },
+          data: localPostsPage(posts, publishedAt === undefined || postId === undefined ? null : { publishedAt, postId }),
           isLoading: false,
           error: null,
           retry: retryLocalFeed,
@@ -139,8 +148,35 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       return useMemo(() => {
         if (version < 0) return LOADING
         const state = store.getState()
-        return ready(profileView(state, handle, state.session.personId, store.now()))
+        return ready(profileView(state, handle, state.session.personId, store.now(), { includePosts: false }))
       }, [version, handle])
+    },
+
+    useProfilePostsPage(args: ProfilePostsPageRequest): FeedPageQuery {
+      const version = useVersion()
+      const handle = args.handle.trim().replace(/^@/, "").toLowerCase()
+      const publishedAt = args.cursor?.publishedAt
+      const postId = args.cursor?.postId
+      return useMemo<FeedPageQuery>(() => {
+        if (version < 0) return { data: undefined, isLoading: true, error: null, retry: retryLocalFeed }
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return { data: undefined, isLoading: false, error: "not_signed_in", retry: retryLocalFeed }
+        const membership = state.memberships[viewerId]
+        if (!membership) return { data: undefined, isLoading: false, error: "not_member", retry: retryLocalFeed }
+        const status = statusOf(state, viewerId, store.now())
+        if (status === null || !hasCapability(status, "read_network", { suspensionReadAccess: membership.grounds.suspension?.readAccess ?? "none" })) {
+          return { data: undefined, isLoading: false, error: status === "suspendue" ? "suspended" : "not_member", retry: retryLocalFeed }
+        }
+        // Le profil applique déjà le refus indistinct et les audiences du mur.
+        const profile = profileView(state, handle, viewerId, store.now())
+        return {
+          data: localPostsPage(profile?.posts ?? [], publishedAt === undefined || postId === undefined ? null : { publishedAt, postId }),
+          isLoading: false,
+          error: null,
+          retry: retryLocalFeed,
+        }
+      }, [version, handle, publishedAt, postId])
     },
 
     usePage(handle: string) {

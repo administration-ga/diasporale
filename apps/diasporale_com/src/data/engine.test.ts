@@ -147,6 +147,19 @@ describe("projections du moteur vers les vues de DIASPORALE", () => {
     expect(toProfileView(profile, { facet: { countryOfResidence: "ZZ" }, preview: null } as never).facet).toEqual({})
   })
 
+  it("les images du profil ne délivrent aucune URL retenue par le moteur", () => {
+    const profile = { personId: "p2", handle: "ada", displayName: "Ada", headline: null, badges: [], isMe: false }
+    const member = { facet: {}, preview: null } as never
+    const absent = toProfileView(profile as never, member)
+    expect([absent.avatar, absent.cover]).toEqual([null, null])
+    const delivered = toProfileView({ ...profile, avatar: { url: "/image-livree", withheld: null }, cover: { url: null, withheld: null } } as never, member)
+    expect(delivered.avatar).toEqual({ url: "/image-livree", withheld: null })
+    expect(delivered.cover).toBeNull()
+    const held = toProfileView({ ...profile, avatar: { url: "/ne-pas-afficher", withheld: "fileScanPending" }, cover: { url: "/ne-pas-afficher", withheld: "fileQuarantined" } } as never, member)
+    expect(held.avatar).toEqual({ url: null, withheld: "fileScanPending" })
+    expect(held.cover).toEqual({ url: null, withheld: "fileQuarantined" })
+  })
+
   it("la saisie de facette part aux arguments du moteur sans niveau inconnu, listes copiées", () => {
     const ids = ["asso-1"]
     const args = toFacetArgs({ countryOfResidence: "FR", city: null, associationIds: ids, visibility: { city: "country", arrivedAt: "tout le monde" } })

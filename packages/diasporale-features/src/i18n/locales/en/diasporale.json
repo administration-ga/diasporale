@@ -73,6 +73,7 @@
     "closing": "Your country of residence is already here. So is your community."
   },
   "entry": {
+    "signOutIncomplete": "Full sign-out could not be confirmed. Other devices may remain signed in and some data may remain in this browser. Sign in again to retry signing out once your connection is restored.",
     "title": "Join DIASPORALE",
     "lead": "Choose your door. You will never create a password.",
     "idnTitle": "IDN digital identity",
@@ -574,7 +575,7 @@
     "edit": "Edit",
     "preview": "See myself as others do",
     "previewExit": "Back to my profile",
-    "previewNotice": "Preview: what a member from another country, not connected to you, sees.",
+    "previewNotice": "Preview of your details and diaspora facet for a member in another country who is not connected to you.",
     "posts": "Posts",
     "tabsLabel": "Profile content",
     "photos": "Photos",
@@ -583,7 +584,35 @@
     "noPostsSelf": "You haven't posted anything yet.",
     "unavailableTitle": "This profile is not available.",
     "unavailableBody": "It doesn't exist, or you can't see it.",
-    "bookmarks": "My saved posts"
+    "bookmarks": "My saved posts",
+    "errorTitle": "The profile could not be displayed.",
+    "errorBody": "This profile could not be loaded. Please try again shortly.",
+    "reload": "Reload profile",
+    "previewPostsUnavailable": "Posts and albums are hidden in this preview. Their visibility depends on each reader.",
+    "images": {
+      "edit": "Edit my images",
+      "title": "Photo and cover",
+      "shared": "These images belong to your ANTSIA profile and are shared across your networks. Each reader’s permissions control their display.",
+      "readOnly": "Changing images requires an active DIASPORALE membership.",
+      "unavailable": "Your images are currently unavailable.",
+      "avatar": "Profile photo",
+      "cover": "Cover image",
+      "chooseAvatar": "Choose a profile photo",
+      "chooseCover": "Choose a cover image",
+      "requirements": "JPEG, PNG or WebP, up to 5 MiB per image.",
+      "saveAvatar": "Save photo",
+      "saveCover": "Save cover",
+      "saving": "Saving…",
+      "removeAvatar": "Remove my photo",
+      "removeCover": "Remove my cover",
+      "confirmRemove": "Remove this image from your profile across all your networks? This action does not delete the uploaded file.",
+      "cancel": "Cancel",
+      "required": "Choose a non-empty image.",
+      "updated": "Image saved.",
+      "pending": "Image saved, awaiting review before display.",
+      "blocked": "This image cannot be displayed. You can choose another one.",
+      "removed": "Image removed from your profile."
+    }
   },
   "albums": {
     "metaTitle": "Photo album",
@@ -613,6 +642,7 @@
     }
   },
   "settings": {
+    "signingOut": "Signing out…",
     "title": "Settings",
     "memberships": "My networks",
     "membershipsLead": "Joining DIASPORALE also made you a member of ANTSIA. Your contexts stay separate.",

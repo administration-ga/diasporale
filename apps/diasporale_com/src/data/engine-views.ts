@@ -38,6 +38,7 @@ import {
   NOTIFICATION_KINDS,
   type NotificationKind,
   type NotificationView,
+  type ProfileImageView,
   type ProfileView,
   type RelationView,
   type SponsorDashboardView,
@@ -309,6 +310,11 @@ function toFacetProjection(projection: Omit<FacetProjection, "countryOfResidence
  * facette projetée pour le lecteur (`memberFacet`) et mur de l'auteur
  * (`personPosts`). Le nom du poste arrive avec les pages (PD5).
  */
+function toProfileImage(image: PublicProfile["avatar"] | undefined): ProfileImageView | null {
+  if (!image || (image.url === null && image.withheld === null)) return null
+  return { url: image.withheld === null ? image.url : null, withheld: image.withheld }
+}
+
 export function toProfileView(profile: PublicProfile, member: MemberFacet, posts: readonly PostView[] = []): ProfileView {
   const facet = toFacetProjection(member.facet)
   return {
@@ -316,6 +322,8 @@ export function toProfileView(profile: PublicProfile, member: MemberFacet, posts
     handle: profile.handle,
     displayName: profile.displayName,
     headline: profile.headline,
+    avatar: toProfileImage(profile.avatar),
+    cover: toProfileImage(profile.cover),
     badges: profile.badges,
     facet,
     publicFacet: member.preview ? toFacetProjection(member.preview) : facet,

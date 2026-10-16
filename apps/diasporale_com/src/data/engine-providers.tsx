@@ -44,6 +44,7 @@ export function EngineDataProviders(props: { children: ReactNode }) {
       convexUrl={publicEnv.convexUrl}
       authClient={authClient as unknown as RefreshableCrossDomainAuthClient}
       ensurePerson={api.modules.people.persons.ensureMyPerson}
+      isSessionActive={api.modules.platform.authentication.mySession}
       labels={{ loading: t("engine.sessionLoading"), failed: t("engine.sessionFailed"), retry: t("engine.sessionRetry") }}
     >
       <EngineSource>

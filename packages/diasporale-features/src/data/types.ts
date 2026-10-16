@@ -112,6 +112,11 @@ export interface FeedPageRequest {
   readonly cursor?: FeedCursorView | null
 }
 
+export interface ProfilePostsPageRequest {
+  readonly handle: string
+  readonly cursor?: FeedCursorView | null
+}
+
 export interface FeedPageView {
   readonly items: readonly PostView[]
   readonly nextCursor: FeedCursorView | null
@@ -261,11 +266,19 @@ export type SessionView =
   | { readonly status: "anonymous" }
   | { readonly status: "signed_in"; readonly account: AccountView; readonly membership: MembershipView | null }
 
+/** Une image de profil déjà jugée par la garde des fichiers du moteur. */
+export interface ProfileImageView {
+  readonly url: string | null
+  readonly withheld: "fileScanPending" | "fileQuarantined" | null
+}
+
 export interface ProfileView {
   readonly personId: string
   readonly handle: string
   readonly displayName: string
   readonly headline: string | null
+  readonly avatar: ProfileImageView | null
+  readonly cover: ProfileImageView | null
   readonly badges: readonly TrustBadge[]
   readonly facet: FacetProjection
   /** Ce qu'un membre ordinaire d'un autre pays voit de la facette (`?apercu=1`). */
@@ -273,6 +286,7 @@ export interface ProfileView {
   /** Nom de la page du poste de rattachement, quand la facette le montre. */
   readonly postName: string | null
   readonly isSelf: boolean
+  /** Champ historique : la fiche est indépendante des pages de son mur. */
   readonly posts: readonly PostView[]
 }
 

@@ -599,7 +599,7 @@ export function sessionView(state: DemoState, now: number): SessionView {
 }
 
 /** `awa@example.com` → `a…@example.com` ; `+33 6 12 34 56 78` → `…5678`. Jamais l'adresse entière à l'écran. */
-export function profileView(state: DemoState, handle: string, viewerId: string | null, now: number): ProfileView | null {
+export function profileView(state: DemoState, handle: string, viewerId: string | null, now: number, options: { readonly includePosts?: boolean } = {}): ProfileView | null {
   const person = Object.values(state.persons).find((candidate) => candidate.profile?.handle === handle)
   const membership = person ? state.memberships[person.id] : undefined
   if (!person?.profile || !membership || viewerId === null) return null
@@ -629,12 +629,14 @@ export function profileView(state: DemoState, handle: string, viewerId: string |
     handle: person.profile.handle,
     displayName: person.profile.displayName,
     headline: person.profile.headline,
+    avatar: null,
+    cover: null,
     badges: badgesOfPerson(state, person.id, now),
     facet,
     publicFacet,
     postName: postPage?.name ?? null,
     isSelf,
-    posts: state.posts
+    posts: options.includePosts === false ? [] : state.posts
       .filter((post) => post.author.kind === "person" && post.author.id === person.id)
       .filter((post) => canRead(state, post, viewerId, now) && !setAside(state, post, viewerId, false))
       .sort((a, b) => b.createdAt - a.createdAt)

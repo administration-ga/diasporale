@@ -5,7 +5,7 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { useEffect, type ButtonHTMLAttributes, type HTMLAttributes } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { FeedPages, type FeedPagesProps } from "./feed-pages"
+import { FeedPages, ProfilePostPages, type FeedPagesProps, type ProfilePostPagesProps } from "./feed-pages"
 
 interface PageResult {
   data: FeedPageView | undefined
@@ -17,9 +17,13 @@ interface PageResult {
 const mocks = vi.hoisted(() => ({
   kind: "engine" as "engine" | "demo",
   pages: new Map<string, PageResult>(),
+  profilePages: new Map<string, PageResult>(),
   read: vi.fn(),
+  readProfile: vi.fn(),
   mounted: vi.fn(),
   unmounted: vi.fn(),
+  profileMounted: vi.fn(),
+  profileUnmounted: vi.fn(),
   react: vi.fn(),
   error: vi.fn(),
   card: vi.fn(),
@@ -40,6 +44,15 @@ vi.mock("@diasporale/features/data", () => ({
       return () => { mocks.unmounted(key) }
     }, [key])
     return mocks.pages.get(key) ?? { data: undefined, isLoading: true, error: null, retry: vi.fn() }
+  },
+  useProfilePostsPage: (args: { handle: string; cursor?: FeedCursorView | null }) => {
+    const key = `${args.handle}:${cursorKey(args.cursor)}`
+    mocks.readProfile(args)
+    useEffect(() => {
+      mocks.profileMounted(key)
+      return () => { mocks.profileUnmounted(key) }
+    }, [key])
+    return mocks.profilePages.get(key) ?? { data: undefined, isLoading: true, error: null, retry: vi.fn() }
   },
 }))
 
@@ -119,14 +132,130 @@ function tree(overrides: Partial<FeedPagesProps> = {}) {
   return <FeedPages membership={membership} scope="mon_pays" now={1_000} emptyFallback={<p>Fil vide confirmé</p>} {...overrides} />
 }
 
+function setProfilePage(cursor: FeedCursorView | null, items: readonly PostView[], nextCursor: FeedCursorView | null, overrides: Partial<PageResult> = {}, handle = "awa.demo") {
+  const result: PageResult = { data: { items, nextCursor, lacunar: false }, isLoading: false, error: null, retry: vi.fn(), ...overrides }
+  mocks.profilePages.set(`${handle}:${cursorKey(cursor)}`, result)
+  return result
+}
+
+function profileTree(overrides: Partial<ProfilePostPagesProps> = {}) {
+  return <ProfilePostPages membership={membership} handle="awa.demo" now={1_000} emptyFallback={<p>Mur vide confirmé</p>} {...overrides} />
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.kind = "engine"
   mocks.pages.clear()
+  mocks.profilePages.clear()
   mocks.react.mockResolvedValue({ ok: true, value: null })
 })
 
 afterEach(cleanup)
+
+describe("ProfilePostPages — le même chaînage pour le mur personnel", () => {
+  it("lit seulement le mur et garde l'épinglée déjà projetée une seule fois, dans l'ordre reçu", () => {
+    setProfilePage(null, [post("épinglée"), post("publication courante")], second)
+    setProfilePage(second, [post("publication antérieure")], null)
+    render(profileTree({ handle: " @AWA.DEMO " }))
+
+    expect(mocks.readProfile).toHaveBeenLastCalledWith({ handle: "awa.demo", cursor: null })
+    expect(mocks.read).not.toHaveBeenCalled()
+    expect(screen.queryByText("feed.pagination.added:1")).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "feed.pagination.loadMore" }))
+
+    expect(screen.getAllByRole("article").map((article) => article.getAttribute("aria-label"))).toEqual([
+      "épinglée", "publication courante", "publication antérieure",
+    ])
+    expect(screen.getAllByRole("article", { name: "épinglée" })).toHaveLength(1)
+    expect(mocks.readProfile).toHaveBeenLastCalledWith({ handle: "awa.demo", cursor: second })
+    expect(screen.queryByRole("button", { name: "feed.pagination.loadMore" })).not.toBeInTheDocument()
+    expect(screen.getByText("feed.pagination.added:1")).toBeInTheDocument()
+  })
+
+  it("conserve le début du mur et le cache d'une page en erreur, puis reprend son abonnement", () => {
+    setProfilePage(null, [post("début du mur")], second)
+    const failed = setProfilePage(second, [post("suite en cache")], null, { error: "unknown" })
+    const view = render(profileTree())
+    fireEvent.click(screen.getByRole("button", { name: "feed.pagination.loadMore" }))
+
+    expect(screen.getByRole("alert")).toHaveTextContent("feed.pagination.errorBody")
+    expect(screen.getByRole("article", { name: "début du mur" })).toBeInTheDocument()
+    expect(screen.getByRole("article", { name: "suite en cache" })).toBeInTheDocument()
+    expect(screen.queryByText("Mur vide confirmé")).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: "feed.pagination.retry" }))
+    expect(failed.retry).toHaveBeenCalledOnce()
+
+    setProfilePage(second, [post("suite rétablie")], null)
+    view.rerender(profileTree())
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+    expect(screen.getByRole("article", { name: "suite rétablie" })).toBeInTheDocument()
+    expect(mocks.profileMounted).toHaveBeenCalledTimes(2)
+    expect(mocks.read).not.toHaveBeenCalled()
+  })
+
+  it("réaligne le mur quand sa frontière amont change et ignore l'ancien terminal", () => {
+    setProfilePage(null, [post("début du mur")], second)
+    setProfilePage(second, [post("ancienne suite")], third)
+    setProfilePage(third, [post("ancienne fin")], null)
+    setProfilePage(shifted, [post("nouvelle suite")], third)
+    const view = render(profileTree())
+    fireEvent.click(screen.getByRole("button", { name: "feed.pagination.loadMore" }))
+    fireEvent.click(screen.getByRole("button", { name: "feed.pagination.loadMore" }))
+
+    setProfilePage(null, [post("nouveau début du mur")], shifted)
+    setProfilePage(third, [post("résultat terminal tardif")], null)
+    view.rerender(profileTree())
+
+    expect(screen.getByRole("article", { name: "nouvelle suite" })).toBeInTheDocument()
+    expect(screen.queryByRole("article", { name: "ancienne suite" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("article", { name: "résultat terminal tardif" })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "feed.pagination.loadMore" })).toBeInTheDocument()
+    expect(mocks.profileUnmounted).toHaveBeenCalledWith(`awa.demo:${cursorKey(second)}`)
+    expect(mocks.profileUnmounted).toHaveBeenCalledWith(`awa.demo:${cursorKey(third)}`)
+  })
+
+  it.each(["handle", "person", "source"] as const)("réinitialise le mur après changement de %s", (kind) => {
+    setProfilePage(null, [post("début du mur")], second)
+    setProfilePage(second, [post("suite du mur")], null)
+    setProfilePage(null, [post("autre profil")], second, {}, "autre.demo")
+    const view = render(profileTree())
+    fireEvent.click(screen.getByRole("button", { name: "feed.pagination.loadMore" }))
+
+    const overrides: Partial<ProfilePostPagesProps> = kind === "handle" ? { handle: "autre.demo" }
+      : kind === "person" ? { membership: { ...membership, personId: "persons_autre" } } : {}
+    if (kind === "source") mocks.kind = "demo"
+    view.rerender(profileTree(overrides))
+
+    expect(screen.queryByRole("article", { name: "suite du mur" })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "feed.pagination.loadMore" })).toBeInTheDocument()
+    expect(mocks.profileUnmounted).toHaveBeenCalledWith(`awa.demo:${cursorKey(second)}`)
+    expect(mocks.profileMounted.mock.calls.filter(([key]) => key.endsWith(":first"))).toHaveLength(2)
+    expect(mocks.read).not.toHaveBeenCalled()
+  })
+
+  it("conserve la chaîne quand seul l'habillage du même handle normalisé change", () => {
+    setProfilePage(null, [post("début du mur")], second)
+    setProfilePage(second, [post("suite du mur")], null)
+    const view = render(profileTree())
+    fireEvent.click(screen.getByRole("button", { name: "feed.pagination.loadMore" }))
+    view.rerender(profileTree({ handle: " @AWA.DEMO " }))
+
+    expect(screen.getByRole("article", { name: "suite du mur" })).toBeInTheDocument()
+    expect(mocks.profileUnmounted).not.toHaveBeenCalled()
+    expect(mocks.profileMounted).toHaveBeenCalledTimes(2)
+    expect(mocks.readProfile).toHaveBeenLastCalledWith({ handle: "awa.demo", cursor: second })
+  })
+
+  it("ferme aussi les réactions du mur pour le membre en attente", async () => {
+    setProfilePage(null, [post("début du mur")], null)
+    render(profileTree({ membership: { ...membership, status: "en_attente", canPublish: false } }))
+
+    expect(within(screen.getByRole("article")).getByRole("button", { name: "Réagir" })).toBeDisabled()
+    const card = mocks.card.mock.lastCall?.[0] as { onReact: (kind: ReactionKind | null) => Promise<void> }
+    await card.onReact("like")
+    expect(mocks.react).not.toHaveBeenCalled()
+  })
+})
 
 describe("FeedPages — abonnements réactifs du fil DIASPORALE", () => {
   it("attend le geste Voir plus, conserve la première page et clôt la seconde", () => {

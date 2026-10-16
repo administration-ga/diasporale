@@ -17,13 +17,13 @@ import { PublicShell } from "@/components/site-chrome"
 import { routes } from "@/lib/routes"
 
 /** Une personne déjà connectée n'a rien à faire sur l'entrée : elle va à son fil ou à l'onboarding. */
-function useLeaveEntryWhenSignedIn() {
+function useLeaveEntryWhenSignedIn(enabled = true) {
   const session = useSession()
   const router = useRouter()
   useEffect(() => {
-    if (session.status !== "ready" || session.data.status !== "signed_in") return
+    if (!enabled || session.status !== "ready" || session.data.status !== "signed_in") return
     router.replace(session.data.membership && session.data.membership.status !== "partie" ? routes.feed() : routes.welcome())
-  }, [session, router])
+  }, [enabled, session, router])
 }
 
 function EntryFrame(props: { title: string; lead: string; children: ReactNode }) {
@@ -39,11 +39,12 @@ function EntryFrame(props: { title: string; lead: string; children: ReactNode })
 }
 
 /** `/entrer` — deux portes, IDN en premier ; jamais de mot de passe (EXF-DG-01). */
-export function EnterScreen() {
+export function EnterScreen(props: { signOutIncomplete?: boolean } = {}) {
   const { t } = useDiasporaleT()
-  useLeaveEntryWhenSignedIn()
+  useLeaveEntryWhenSignedIn(!props.signOutIncomplete)
   return (
     <EntryFrame title={t("entry.title")} lead={t("entry.lead")}>
+      {props.signOutIncomplete ? <p role="alert" className="rounded-xl bg-muted p-4 text-sm">{t("entry.signOutIncomplete")}</p> : null}
       <DoorLink
         href={routes.enterIdn()}
         icon={<IdCardIcon aria-hidden />}

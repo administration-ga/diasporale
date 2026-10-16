@@ -38,7 +38,9 @@ import type {
   OpenCountryView,
   PostView,
   NotificationView,
+  ProfileImageView,
   ProfileView,
+  ProfilePostsPageRequest,
   ReactionKind,
   RelationView,
   ReportReason,
@@ -53,6 +55,15 @@ import type { ActionErrorCode } from "./errors"
 export type ActionResult<T = null> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly code: ActionErrorCode }
+
+/** Images du profil commun aux réseaux ; la personne authentifiée est seule propriétaire. */
+export type ProfileImageUsage = "avatar" | "cover"
+
+export interface ProfileImagesActions {
+  set(usage: ProfileImageUsage, file: File): Promise<ActionResult<ProfileImageView>>
+  /** Retire la référence de l'image, sans effacer le profil ni le fichier stocké. */
+  clear(usage: ProfileImageUsage): Promise<ActionResult<ProfileImageView>>
+}
 
 /** Ce qu'IDN rend au retour OIDC (simulé en démonstration). */
 export interface IdnSignInInput {
@@ -202,6 +213,8 @@ export interface DemoControls {
 
 export interface DiasporaleDataSource {
   readonly kind: "demo" | "engine"
+  /** Disponible seulement si le fournisseur sait gérer les images du profil commun. */
+  readonly profileImages?: ProfileImagesActions | null
   useSession(): Loadable<SessionView>
   useOpenCountries(): Loadable<readonly OpenCountryView[]>
   useCountryHub(country: CountryCode): Loadable<CountryHubView>
@@ -209,6 +222,8 @@ export interface DiasporaleDataSource {
   /** Une fenêtre du même fil, avec son curseur serveur et sa reprise indépendante. */
   useFeedPage(args: FeedPageRequest): FeedPageQuery
   useProfile(handle: string): Loadable<ProfileView | null>
+  /** Le mur gardé du profil, paginé indépendamment de sa fiche. */
+  useProfilePostsPage(args: ProfilePostsPageRequest): FeedPageQuery
   /** Ma relation avec une personne (connexion, abonnement, mon blocage). */
   useRelation(personId: string): Loadable<RelationView>
   /**

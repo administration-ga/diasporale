@@ -15,21 +15,34 @@ import {
   useActions,
   useDataSource,
   useFeedPage,
+  useProfilePostsPage,
   type ActionErrorCode,
   type FeedCursorView,
+  type FeedPageQuery,
   type MembershipView,
 } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { useCallback, useEffect, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
-export interface FeedPagesProps {
+interface PostPagesProps {
   readonly membership: MembershipView
-  readonly scope: FeedScope
-  readonly hubCountry?: CountryCode
   readonly now: number
   readonly emptyFallback: ReactNode
 }
+
+export interface FeedPagesProps extends PostPagesProps {
+  readonly scope: FeedScope
+  readonly hubCountry?: CountryCode
+}
+
+export interface ProfilePostPagesProps extends PostPagesProps {
+  readonly handle: string
+}
+
+type PostPagesSource =
+  | { readonly kind: "feed"; readonly scope: FeedScope; readonly hubCountry?: CountryCode }
+  | { readonly kind: "profile"; readonly handle: string }
 
 interface PageReport {
   readonly hasData: boolean
@@ -50,11 +63,19 @@ interface ChainState {
 export function FeedPages(props: FeedPagesProps) {
   const source = useDataSource()
   const country = props.hubCountry ?? props.membership.facet.countryOfResidence
-  const key = JSON.stringify([source.kind, props.membership.personId, props.scope, country])
-  return <FeedPagesChain key={key} {...props} />
+  const key = JSON.stringify([source.kind, props.membership.personId, "feed", props.scope, country])
+  return <PostPagesChain key={key} {...props} source={{ kind: "feed", scope: props.scope, ...(props.hubCountry === undefined ? {} : { hubCountry: props.hubCountry }) }} />
 }
 
-function FeedPagesChain(props: FeedPagesProps) {
+/** Le mur reprend la même chaîne ; son identité suit aussi le profil consulté. */
+export function ProfilePostPages(props: ProfilePostPagesProps) {
+  const source = useDataSource()
+  const handle = props.handle.trim().replace(/^@/, "").toLowerCase()
+  const key = JSON.stringify([source.kind, props.membership.personId, "profile", handle])
+  return <PostPagesChain key={key} {...props} source={{ kind: "profile", handle }} />
+}
+
+function PostPagesChain(props: PostPagesProps & { source: PostPagesSource }) {
   const { t } = useDiasporaleT()
   const [chain, setChain] = useState<ChainState>(() => ({
     pages: initialFeedPages<FeedCursorView>(),
@@ -126,16 +147,24 @@ function FeedPagesChain(props: FeedPagesProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      {chain.pages.cursors.map((cursor, index) => (
-        <SubscribedFeedPage
-          key={feedCursorKey(cursor)}
-          {...props}
-          cursor={cursor}
-          pageIndex={index}
-          isTail={index === lastIndex}
-          onReport={reportPage}
-        />
-      ))}
+      {chain.pages.cursors.map((cursor, index) => {
+        const pageProps: SubscribedPageProps = {
+          membership: props.membership,
+          now: props.now,
+          cursor,
+          pageIndex: index,
+          isTail: index === lastIndex,
+          onReport: reportPage,
+        }
+        return props.source.kind === "feed" ? (
+          <SubscribedFeedPage
+            key={feedCursorKey(cursor)}
+            {...pageProps}
+            scope={props.source.scope}
+            {...(props.source.hubCountry === undefined ? {} : { hubCountry: props.source.hubCountry })}
+          />
+        ) : <SubscribedProfilePostPage key={feedCursorKey(cursor)} {...pageProps} handle={props.source.handle} />
+      })}
       {empty ? props.emptyFallback : null}
       {showMore || loadingMore ? (
         <Button variant="outline" onClick={loadMore} disabled={loadingMore} className="self-center focus-visible:shadow-focus">
@@ -149,15 +178,32 @@ function FeedPagesChain(props: FeedPagesProps) {
   )
 }
 
-function SubscribedFeedPage(props: FeedPagesProps & {
-  cursor: FeedCursorView | null
-  pageIndex: number
-  isTail: boolean
-  onReport: (index: number, key: string, wasTail: boolean, report: PageReport) => void
-}) {
+interface SubscribedPageProps {
+  readonly membership: MembershipView
+  readonly now: number
+  readonly hubCountry?: CountryCode
+  readonly cursor: FeedCursorView | null
+  readonly pageIndex: number
+  readonly isTail: boolean
+  readonly onReport: (index: number, key: string, wasTail: boolean, report: PageReport) => void
+}
+
+/** Un composant par lecture : changer de source ne change jamais l'ordre des hooks. */
+function SubscribedFeedPage(props: SubscribedPageProps & { scope: FeedScope }) {
+  const page = useFeedPage({ scope: props.scope, ...(props.hubCountry === undefined ? {} : { hubCountry: props.hubCountry }), cursor: props.cursor })
+  return <SubscribedPostPage {...props} page={page} />
+}
+
+function SubscribedProfilePostPage(props: SubscribedPageProps & { handle: string }) {
+  const page = useProfilePostsPage({ handle: props.handle, cursor: props.cursor })
+  return <SubscribedPostPage {...props} page={page} />
+}
+
+/** Présentation et rapport communs : aucun tri, filtre ni curseur reconstruit. */
+function SubscribedPostPage(props: SubscribedPageProps & { page: FeedPageQuery }) {
   const { t } = useDiasporaleT()
   const actions = useActions()
-  const page = useFeedPage({ scope: props.scope, ...(props.hubCountry === undefined ? {} : { hubCountry: props.hubCountry }), cursor: props.cursor })
+  const { page } = props
   const key = feedCursorKey(props.cursor)
   const { onReport, pageIndex, isTail } = props
 

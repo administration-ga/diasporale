@@ -22,7 +22,7 @@
 | Réactions (4 genres) | palette de la carte | EXF-DG-12 | ✅ | `engagement.toggleReaction` | — |
 | Commentaires | feuille « Commentaires » | EXF-DG-12 | ✅ | `engagement.paginateComments`, `paginateReplies`, `comment`, `removeComment` | pas d'édition d'un commentaire |
 | Menu « … » | `PostMenu` | EXF-DG-12, 40 | 🟡 | `marks.toggleMark`, `hidePost`, `muteAuthor`, `moderation.reportPost`, `posts.remove` | sans « Modifier », sans relais ; signets sans liste |
-| Profil personne (`ProfilPersonnePage`) | `/@handle` | EXF-DG-07, 08 | 🟡 | `getPublicProfile`, `diaspora.profile.memberFacet`, `posts.personPosts` | facette projetée, aperçu, mur ; onglets Photos et Albums branchés en mode moteur et vus dans Chrome le 16/10, masqués en aperçu ; sans gestion de photo de profil |
+| Profil personne (`ProfilPersonnePage`) | `/@handle` | EXF-DG-07, 08 | 🟡 | `getPublicProfile`, `diaspora.profile.memberFacet`, `posts.personPosts` | facette projetée ; mur paginé par le curseur du moteur ; photo et couverture lues et modifiables depuis les réglages en mode moteur ; aperçu limité aux informations et à la facette, publications et albums masqués (suite du 16/10 ci-dessous) |
 | Relations (`PeoplePanel`, hooks de pagination) | `/relations`, demandes reçues, barre du profil, cloche | EXF-DG-18, 43 | 🟡 | `graph.connections.*`, `graph.follows.*`, hooks paginés du moteur | listes acceptées et reçues en mode moteur ; lecture en attente, réponses au droit de publier ; recherche/suggestions réservées à l’annuaire opt-in ; demandes envoyées et annulation non ajoutées dans cette tranche |
 | Annuaire et recherche | `/membres` | EXF-DG-19, 46 | ✅ | `diaspora.directory.searchMembers` | opt-in par niveau ; masqué introuvable, même par identifiant exact |
 | Suggestions | « Des membres à rencontrer » (rail du fil, `/membres`) | EXF-DG-18 | ✅ | `diaspora.suggestions.forMe`, `suggestions.dismiss` | pas de liste « masquées » à rouvrir (`restore` existe côté moteur) |
@@ -200,7 +200,97 @@ par cette session.
 - **Serveurs** : DIASPORALE 3031 arrêté avant les tests ; ANTSIA 3030 rétabli après les contrôles,
   ressource compilée HTTP 200 ; backend local 3210 conservé. Aucun fichier ANTSIA modifié ici,
   aucun push ni déploiement distant.
-- **PD4 reste ouvert** : pagination du mur personnel ; gestion de l'avatar/couverture ;
+- **PD4 restait ouvert après cette tranche** : pagination du mur personnel ; gestion de l'avatar/couverture ;
   albums au-delà des douze premiers, reprise de brouillons et recette d'audience/retrait ;
   lecture seule des stories en attente (contrat de création séparé à fournir par ANTSIA).
   Pages/associations du hub relèvent de PD5, évènements de PD7, modération de PD6.
+
+
+### Suite du 16/10 — Mur personnel et images du profil (PD4)
+
+- **Mur indépendant de la fiche** : `useProfilePostsPage` dans le port moteur et la démonstration.
+  `personPosts` reçoit le réseau DIASPORALE, le handle normalisé, une limite de trente et le
+  curseur brut ; publication épinglée uniquement en tête, réactions conservées. La fiche
+  n'attend plus son mur. Même chaîne réactive que le fil/hub : reprise par page, réalignement,
+  fin distincte d'une page vide, reset lecteur/source/handle. Erreur de fiche avec rechargement.
+- **Aperçu corrigé** : la facette publique est projetée ; le mur et les albums sont masqués
+  faute de projection serveur pour un autre lecteur. Les commandes du propriétaire sont
+  retirées de l'aperçu, sauf le retour. Le texte explique cette limite.
+- **Photo et couverture** : DTO gardés d'ANTSIA ; aucune URL retenue n'entre dans le DOM ou
+  le style. Avatar et couverture reprennent les helpers publics du moteur, avec repli de
+  l'avatar en cas d'erreur et réinitialisation lors du remplacement. Dans les réglages : deux
+  formulaires RHF/Zod, validation du moteur avant dépôt (JPEG/PNG/WebP, limite conservatrice
+  de cinq Mio pour les deux usages), erreurs fermées et fichier conservé en cas d'échec,
+  état d'analyse accessible, retrait de référence confirmé. Mutations publiques du profil
+  commun : pas de retrait global du profil ni de changement de confidentialité ajouté.
+  L'écran explique que ces images sont communes aux réseaux ; éditeur réservé au profil
+  propre et au droit de publier, absent de la démonstration.
+- **Préparation du mur réel** : graine interne de la seule tranche diaspora, autorisée avec
+  ANTSIA. Confirmation et backend strictement local, cible fixe ET adresse fictive vérifiée,
+  profil et adhésions préexistants actifs, trente-cinq textes de recette dans DIASPORALE,
+  visibilité réseau, aucune racine, idempotence. Elle ne crée ni personne ni adhésion et ne
+  supprime rien ; quinze tests de gardes et pagination ajoutés côté moteur. Les identités
+  CLI sans session vivante restent refusées par PA4, aucun contournement ajouté.
+- **Tests de cette tranche** : quatre-vingt-seize nouveaux cas DIASPORALE (cinq démonstration,
+  quatre-vingt-onze application), couvrant port, chaîne, fiche montée, aperçu, éditeur, dépôt
+  et délivrance. Passe ciblée et typage app/features verts ; les compléments PA4 suivent la vérification commune ci-dessous.
+- **Restent PD4** : albums au-delà des douze premiers, brouillons, audiences entre comptes,
+  retrait et étanchéité ; lecture seule des stories en attente. Les portes IDN/OTP de PA4 restent à raccorder ; IDN réel attend les clients de sandbox du propriétaire.
+
+- **Raccord PA4 demandé par ANTSIA** : l'action « Déconnecter tous mes appareils » utilise
+  désormais le helper commun de révocation, puis recharge entièrement l'entrée. Nettoyage
+  de l'état mémoire et des seules clés `diasporale:brouillon:` en complément des états du
+  moteur ; préférences et autres produits préservés. Avertissement après navigation si
+  révocation serveur ou nettoyage local incomplet, même si une session reste valide ; aucune
+  redirection de réglages concurrente. Attente, double clic et reprise d'erreur traités.
+  Trente-trois tests d'intégration et de présentation ajoutés.
+
+- **Chrome, moteur local** : mur d'un autre compte fictif : trente puis trente-cinq textes de
+  recette uniques, dernière publication atteinte et bouton disparu. Passage à son propre
+  profil : aucune fixture du mur précédent. Préparation rejouée : zéro création, trente-cinq
+  existantes. Photo et couverture fictives déposées par les formulaires, images effectivement
+  chargées (256 × 256 et 1 200 × 400). Photo remplacée : nouvelle URL, image chargée ; retrait
+  annulé puis confirmé, référence absente et avis de retrait. Les fichiers stockés ne sont pas
+  supprimés. Le retrait de couverture a été déclenché mais sa relecture a été interrompue par
+  un redémarrage de Next : pas de preuve de relecture annoncée pour ce dernier geste.
+- **Aperçu et mise en page** : `?apercu=1&onglet=albums` sur son profil montre la facette publique,
+  le texte de limite et le seul lien « Revenir à mon profil » ; aucun lien de publication ni
+  onglet/composeur d'album. Profil/aperçu à 320 px sombre et 1 280 px sombre, réglages à 375 px
+  clair : largeur du document égale à l'écran. Captures vérifiées visuellement.
+- **Déconnexion réelle** : deux sessions du même compte fictif, contextes Chrome isolés.
+  Depuis les réglages : rechargement complet de l'entrée, aucun brouillon DIASPORALE ni état
+  personnel `antsia:`/`antia:` dans ce navigateur. Après rechargement de l'autre contexte :
+  entrée, aucune publication ni navigation privée. Avertissement de résultat incomplet aussi
+  vu à l'adresse de retour, sans simuler une réussite de révocation ; cet essai valide son
+  affichage, pas une panne serveur réelle. Consoles finales sans erreur ni avertissement.
+- **Ressources et périmètre** : Next 3031 arrêté avant la vérification commune, aucun autre
+  frontend n'avait été suspendu dans ce créneau. Backend 3210 conservé, onglets de recette
+  créés par cette session refermés. Première limite mémoire à 1 Gio insuffisante ; reprise à
+  1,5 Gio puis redémarrage automatique Next lors des compilations. Aucun cache supprimé.
+  Un compte fictif supplémentaire reste sans profil ni adhésion après le parcours par code ;
+  aucune personne réelle, donnée supprimée ou publication distante. La recette d'image locale
+  ne constitue pas une preuve d'antivirus réel ni d'hébergement de production.
+- **Garde de session réactive** : `EngineConvexProvider` reçoit maintenant `mySession`, pour
+  couper les contenus lors d'une révocation reçue pendant qu'un onglet reste ouvert.
+  Deux tests du raccord ajoutés ; la recette de cette session a prouvé le refus de la seconde
+  session après rechargement, pas encore sa fermeture spontanée sans rechargement.
+
+- **Tranche diaspora et PA4** : après une vérification effective dans l'enfant, le helper
+  d'ANTSIA promeut seulement la racine existante et active ; rôle, origine, départs et
+  sanctions sont conservés. Pour le compte léger, l'attestation utilise l'empreinte du
+  courriel actuellement vérifié par Better Auth ; le sujet IDN reste prioritaire. La demande
+  est re-gardée avant l'envoi ET avant l'enregistrement de la réponse : même sujet et même
+  consentement initial encore en vigueur, personne/réseau/finalité liés. Changement ou retrait
+  pendant l'aller-retour : échec technique fermé, aucun lien, promotion, badge ou notification
+  de vérification. Un nouveau consentement ne réactive pas une ancienne demande. Vingt-cinq
+  cas d'intégration ajoutés ; aucun appel réel à consulat.ga ni client IDN de sandbox testé.
+
+- **Vérification finale commune** : `verify` terminé code 0 dans l'arbre partagé PA4, après
+  correction du raccord des quatre clés d'avis d'image et du lien indisponible en démo.
+  **778 tests DIASPORALE** (238 domaine + 259 features + 281 application), soit 131 nouveaux
+  cas depuis la tranche fil/hub ; **5 836 tests au total** : notamment 1 302 backend, 111
+  cliquets, 130 API et 2 918 surfaces moteur. Typage des dix espaces et lint des neuf concernés
+  sans erreur. Avertissements conservés, dont deux dans l'éditeur d'images (analyse statique
+  d'une référence enfermée dans le callback RHF et recommandation Next sur l'image native).
+  Preuve locale : `/tmp/antsia-pa4-verify.log`, code final confirmé par la session ANTSIA.
+  Les 25 intégrations de tranche PA4 et les 15 cas de graine locale sont inclus.
