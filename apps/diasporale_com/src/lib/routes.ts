@@ -21,6 +21,11 @@ export const routes = {
   profile: (handle: string) => `/@${handle}`,
   /** Se voir comme les autres membres (EXF-DG-07, `?apercu=1`). */
   profilePreview: (handle: string) => `/@${handle}?apercu=1`,
+  /** Onglets du profil, alignés sur le contrat des albums du moteur. */
+  profileTab: (handle: string, tab: "publications" | "photos" | "albums", preview = false) =>
+    `/@${handle}?onglet=${tab}${preview ? "&apercu=1" : ""}`,
+  album: (handle: string, albumId: string) => `/@${handle}/albums/${encodeURIComponent(albumId)}`,
+  newAlbum: (handle: string) => `/@${handle}?onglet=albums&nouveau=1`,
   page: (handle: string) => `/pages/${handle}`,
   /** Une publication seule (depuis la cloche, un signet, son horodatage). */
   post: (postId: string) => `/publication/${postId}`,
@@ -35,6 +40,8 @@ export const routes = {
   messages: () => "/messages",
   /** Statuts (stories) en plein écran, ouverts depuis iCom ; `…/nouvelle` ouvre le composeur. */
   stories: () => "/actus",
+  story: (handle: string | null) => handle === null ? "/actus" : `/actus?${new URLSearchParams({ auteur: handle })}`,
+  newStory: () => `/actus/${STORIES_NEW_SEGMENT}`,
   /** Conférence en direct (lot `live` du moteur, PD7 point 4) : pas encore servie ici. */
   conference: (sessionId: string) => `/direct/${encodeURIComponent(sessionId)}`,
   settings: () => "/parametres",

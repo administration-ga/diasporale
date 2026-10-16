@@ -561,11 +561,19 @@
     "previewExit": "Back to my profile",
     "previewNotice": "Preview: what a member from another country, not connected to you, sees.",
     "posts": "Posts",
+    "tabsLabel": "Profile content",
+    "photos": "Photos",
+    "albums": "Albums",
     "noPosts": "{{name}} hasn't posted anything yet.",
     "noPostsSelf": "You haven't posted anything yet.",
     "unavailableTitle": "This profile is not available.",
     "unavailableBody": "It doesn't exist, or you can't see it.",
     "bookmarks": "My saved posts"
+  },
+  "albums": {
+    "metaTitle": "Photo album",
+    "unavailableTitle": "Albums unavailable",
+    "unavailableBody": "Albums require an active network membership. They are not available in the demonstration."
   },
   "facet": {
     "country": "Country of residence",

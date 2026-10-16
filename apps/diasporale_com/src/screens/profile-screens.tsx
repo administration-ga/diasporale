@@ -11,6 +11,7 @@ import {
   CountryTag,
   EmptyState,
   EventCard,
+  FolderTabsNav,
   PostCard,
   Skeleton,
   TrustBadge,
@@ -27,7 +28,8 @@ import { toast } from "sonner"
 
 import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
-import { IcomIsland, useIcomState, useWriteTo } from "@/components/icom"
+import { IcomIsland, useEngineNetwork, useIcomState, useWriteTo } from "@/components/icom"
+import { ProfileAlbums } from "@/components/profile-albums"
 import { routes } from "@/lib/routes"
 
 /** `/@handle` (réécrit vers `/profil/handle`) — profil publié, facette selon ses visibilités (EXF-DG-07/08). */
@@ -51,6 +53,10 @@ function Profile(props: { handle: string; membership: MembershipView }) {
   const profile = useProfile(decodeURIComponent(props.handle).replace(/^@/, "").toLowerCase())
   const actions = useActions()
   const preview = searchParams.get("apercu") === "1"
+  const engineNetwork = useEngineNetwork()
+  const requestedTab = searchParams.get("onglet")
+  const withAlbums = engineNetwork !== null && !preview
+  const tab = withAlbums && (requestedTab === "photos" || requestedTab === "albums") ? requestedTab : "publications"
   const now = Date.now()
 
   if (profile.status !== "ready") return <Skeleton className="h-72 w-full rounded-xl" />
@@ -111,27 +117,58 @@ function Profile(props: { handle: string; membership: MembershipView }) {
         </div>
       </Card>
 
-      <section aria-labelledby="profil-publications" className="flex flex-col gap-4">
-        <h2 id="profil-publications" className="font-display text-xl font-bold">
-          {t("profile.posts")}
-        </h2>
-        {view.posts.length === 0 ? (
-          <EmptyState icon={<NewspaperIcon />} title={view.isSelf ? t("profile.noPostsSelf") : t("profile.noPosts", { name: view.displayName })} />
-        ) : (
-          view.posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              now={now}
-              canReact={props.membership.canPublish}
-              onReact={async (kind) => {
-                const result = await actions.react(post.id, kind)
-                if (!result.ok) toast.error(t(`errors.${result.code}`))
-              }}
-            />
-          ))
-        )}
-      </section>
+      {withAlbums ? (
+        <FolderTabsNav
+          label={t("profile.tabsLabel")}
+          items={([
+            { id: "publications", label: t("profile.posts") },
+            { id: "photos", label: t("profile.photos") },
+            { id: "albums", label: t("profile.albums") },
+          ] as const).map((item) => ({ ...item, href: routes.profileTab(view.handle, item.id, preview), active: tab === item.id }))}
+          renderLink={(item, className, children) => (
+            <NextLink key={item.id} href={item.href} className={className} aria-current={item.active ? "page" : undefined} scroll={false}>
+              {children}
+            </NextLink>
+          )}
+        />
+      ) : null}
+
+      {tab === "publications" ? (
+        <section aria-labelledby="profil-publications" className="flex flex-col gap-4">
+          <h2 id="profil-publications" className="font-display text-xl font-bold">
+            {t("profile.posts")}
+          </h2>
+          {view.posts.length === 0 ? (
+            <EmptyState icon={<NewspaperIcon />} title={view.isSelf ? t("profile.noPostsSelf") : t("profile.noPosts", { name: view.displayName })} />
+          ) : (
+            view.posts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                now={now}
+                canReact={props.membership.canPublish}
+                onReact={async (kind) => {
+                  const result = await actions.react(post.id, kind)
+                  if (!result.ok) toast.error(t(`errors.${result.code}`))
+                }}
+              />
+            ))
+          )}
+        </section>
+      ) : (
+        <section aria-labelledby="profil-albums" className="flex flex-col gap-4">
+          <h2 id="profil-albums" className="font-display text-xl font-bold">{tab === "photos" ? t("profile.photos") : t("profile.albums")}</h2>
+          <ProfileAlbums
+            key={`${view.handle}:${tab}:${preview}`}
+            handle={view.handle}
+            isSelf={view.isSelf}
+            canPublish={props.membership.canPublish}
+            preview={preview}
+            variant={tab}
+            create={searchParams.get("nouveau") === "1"}
+          />
+        </section>
+      )}
     </>
   )
 }

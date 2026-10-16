@@ -561,11 +561,19 @@
     "previewExit": "Revenir à mon profil",
     "previewNotice": "Aperçu : ce que voit un membre d'un autre pays, sans relation avec vous.",
     "posts": "Publications",
+    "tabsLabel": "Contenus du profil",
+    "photos": "Photos",
+    "albums": "Albums",
     "noPosts": "{{name}} n'a encore rien publié.",
     "noPostsSelf": "Vous n'avez encore rien publié.",
     "unavailableTitle": "Ce profil n'est pas disponible.",
     "unavailableBody": "Il n'existe pas, ou vous ne pouvez pas le voir.",
     "bookmarks": "Mes enregistrements"
+  },
+  "albums": {
+    "metaTitle": "Album photo",
+    "unavailableTitle": "Albums indisponibles",
+    "unavailableBody": "Les albums nécessitent une adhésion active au réseau. Ils ne sont pas proposés en démonstration."
   },
   "facet": {
     "country": "Pays de résidence",

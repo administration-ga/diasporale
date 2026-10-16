@@ -11,6 +11,7 @@ import { toast } from "sonner"
 
 import { AppShell, useComposer } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
+import { FeedStories } from "@/components/feed-stories"
 import { StatusBanner } from "@/components/status-banner"
 import { routes } from "@/lib/routes"
 
@@ -58,6 +59,8 @@ function Feed(props: { membership: MembershipView }) {
         )}
       />
       <p className="-mt-1 text-[13px] text-muted-foreground">{t(`feed.scopeHint.${scope}`, { country: countryName(country, locale) })}</p>
+
+      <FeedStories now={now} />
 
       {composer.canPublish ? (
         <Card className="flex items-center gap-3 p-3">

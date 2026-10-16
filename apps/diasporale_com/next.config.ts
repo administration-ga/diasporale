@@ -18,7 +18,10 @@ const config: NextConfig = {
   async rewrites() {
     // `/@prenom.nom` (cahier §10.1) : un dossier `@…` est un emplacement parallèle
     // pour le routeur de Next ; l'adresse publique se réécrit vers `/profil/…`.
-    return [{ source: "/@:handle", destination: "/profil/:handle" }]
+    return [
+      { source: "/@:handle/albums/:albumId", destination: "/profil/:handle/albums/:albumId" },
+      { source: "/@:handle", destination: "/profil/:handle" },
+    ]
   },
 }
 

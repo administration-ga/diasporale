@@ -38,7 +38,11 @@ export function MessagesScreen(props: { route: MessagesRouteTarget }) {
 export function StoriesScreen(props: { openCreate: boolean }) {
   return (
     <IcomPage titleKey="stories.title">
-      <StoriesViewerPage openCreate={props.openCreate} />
+      {/* Le lecteur mobile du moteur mesure 100 % de son parent : une hauteur
+          définie est requise, sinon la story chargée a une hauteur nulle. */}
+      <main id="contenu" className="h-dvh overflow-hidden bg-background">
+        <StoriesViewerPage openCreate={props.openCreate} />
+      </main>
     </IcomPage>
   )
 }

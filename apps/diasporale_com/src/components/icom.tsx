@@ -40,6 +40,12 @@ const ICOM_CHARTE = "diasporale"
 const RAIL_VISIBLE_QUERY = "(min-width: 80rem)"
 
 const IcomStateContext = createContext<IcomState>(ICOM_DEMO)
+const EngineNetworkContext = createContext<IcomNetwork | null>(null)
+
+/** Réseau de lecture du membre, y compris en attente ; la démonstration n'en fournit pas. */
+export function useEngineNetwork(): IcomNetwork | null {
+  return useContext(EngineNetworkContext)
+}
 
 export function useIcomState(): IcomState {
   return useContext(IcomStateContext)
@@ -77,15 +83,24 @@ export function EngineIcom(props: { children: ReactNode }) {
   const personId = membership?.canPublish ? membership.personId : null
   const networkId = network === undefined ? undefined : (network?._id ?? null)
   const state = useMemo(() => resolveIcomState({ sessionReady, personId, networkId }), [sessionReady, personId, networkId])
+  const readablePersonId = membership && membership.status !== "partie" && membership.status !== "suspendue" ? membership.personId : null
+  const readableNetwork = useMemo<IcomNetwork | null>(
+    () => networkId && readablePersonId
+      ? { networkId, slug: DIASPORALE_NETWORK_SLUG, personId: readablePersonId as IcomNetwork["personId"] }
+      : null,
+    [networkId, readablePersonId],
+  )
   return (
-    <IcomStateContext.Provider value={state}>
-      {props.children}
-      {state.status === "on" ? (
-        <IcomIsland network={state.network}>
-          <CommunicationShell />
-        </IcomIsland>
-      ) : null}
-    </IcomStateContext.Provider>
+    <EngineNetworkContext.Provider value={readableNetwork}>
+      <IcomStateContext.Provider value={state}>
+        {props.children}
+        {state.status === "on" ? (
+          <IcomIsland network={state.network}>
+            <CommunicationShell />
+          </IcomIsland>
+        ) : null}
+      </IcomStateContext.Provider>
+    </EngineNetworkContext.Provider>
   )
 }
 
