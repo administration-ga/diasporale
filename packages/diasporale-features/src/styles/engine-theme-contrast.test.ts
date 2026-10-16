@@ -7,14 +7,14 @@ import { cascade, contrastRatio, cssBlock, declarations, tokenLuminance } from "
 
 /**
  * Cliquet du thème DIASPORALE tel que le moteur le sert : charte de base
- * d'ANTIA (`packages/ui/src/styles/charte.css`), puis le thème
+ * d'ANTSIA (`packages/ui/src/styles/charte.css`), puis le thème
  * `packages/ui/src/themes/diasporale.css` écrit par cette session. La cascade
  * est rejouée avec ses spécificités réelles — en sombre, le bloc sombre de la
  * base (0,2,0) passe AVANT le bloc clair du thème (0,1,0) : tout rôle que le
  * thème oublierait de redéclarer en sombre ferait reparaître le bleu du moteur.
  */
 
-const ENGINE_UI = new URL("../../../../../ANTIA/packages/ui/src/", import.meta.url)
+const ENGINE_UI = new URL("../../../../../ANTSIA/packages/ui/src/", import.meta.url)
 const base = readFileSync(new URL("styles/charte.css", ENGINE_UI), "utf8")
 const theme = readFileSync(new URL("themes/diasporale.css", ENGINE_UI), "utf8")
 

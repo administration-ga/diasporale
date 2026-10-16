@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => ({
   error: vi.fn(),
 }))
 
-vi.mock("@antia/social-features/features/reseau-personnel/use-dual-connection-pagination", () => ({
+vi.mock("@antsia/social-features/features/reseau-personnel/use-dual-connection-pagination", () => ({
   usePersonalConnections: mocks.accepted,
   usePersonalPendingConnections: mocks.received,
 }))

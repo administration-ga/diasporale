@@ -220,7 +220,7 @@ export interface MembershipView {
     readonly requestedAt: number | null
   }
   /** L'adhésion dérivée au réseau racine (invariant 3) — elle existe sans geste. */
-  readonly root: { readonly network: "antia"; readonly status: MembershipStatus; readonly derivedFrom: "diasporale" }
+  readonly root: { readonly network: "antsia"; readonly status: MembershipStatus; readonly derivedFrom: "diasporale" }
   readonly canPublish: boolean
   readonly rateTier: WriteRateTier
   readonly directoryVisibility: DirectoryVisibility

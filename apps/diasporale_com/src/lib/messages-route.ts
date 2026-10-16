@@ -1,5 +1,5 @@
-// Dupliqué de ANTIA/apps/antia_ga/src/lib/messages-route.ts @ f1eed7f — adaptations : aucune (copie textuelle) ; en-tête de provenance.
-import { COMPOSE_GROUPE_LEAF, COMPOSE_LEAF, CONVERSATION_ROUTE_KINDS } from "@antia/social-features/features/messagerie/messagerie-routes"
+// Dupliqué de ANTSIA/apps/antsia_ga/src/lib/messages-route.ts @ f1eed7f — adaptations : aucune (copie textuelle) ; en-tête de provenance.
+import { COMPOSE_GROUPE_LEAF, COMPOSE_LEAF, CONVERSATION_ROUTE_KINDS } from "@antsia/social-features/features/messagerie/messagerie-routes"
 
 /** Ce que l'aiguillage de la messagerie (`MessagesRoute`) reçoit d'une adresse. */
 export type MessagesRouteTarget = { kind?: string; id?: string; compose?: "personne" | "groupe" }

@@ -15,11 +15,11 @@
  *   remonté quand la session se résout.
  * - En démonstration, iCom est fermé (`useIcomState()` : `off`, raison `demo`).
  */
-import { NetworkProvider } from "@antia/api/network"
-import { NextRouterAdapter } from "@antia/api/routing/next"
-import { conversationHref, dockStore, draftKey } from "@antia/social-features/messagerie"
-import { CommunicationShell } from "@antia/social-features/shell"
-import { useIsReseauMobile } from "@antia/ui/overlay"
+import { NetworkProvider } from "@antsia/api/network"
+import { NextRouterAdapter } from "@antsia/api/routing/next"
+import { conversationHref, dockStore, draftKey } from "@antsia/social-features/messagerie"
+import { CommunicationShell } from "@antsia/social-features/shell"
+import { useIsReseauMobile } from "@antsia/ui/overlay"
 import { api } from "@convex/_generated/api"
 import { DIASPORALE_NETWORK_SLUG } from "@diasporale/domain"
 import { useSession } from "@diasporale/features/data"

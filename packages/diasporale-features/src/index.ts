@@ -2,7 +2,7 @@
  * @diasporale/features — surfaces propres à DIASPORALE.
  *
  * Les surfaces du réseau social (fil complet, profil, relations, groupes,
- * messagerie, appels…) viendront de `@antia/social-features` (PA6) ; ce paquet
+ * messagerie, appels…) viendront de `@antsia/social-features` (PA6) ; ce paquet
  * porte ce que la diaspora AJOUTE : l'étiquette pays, le sélecteur de pays,
  * les badges de confiance, les cartes C1–C17, les cartes flottantes (statut,
  * modération, démonstration), le composeur à portée.

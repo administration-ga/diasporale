@@ -1,7 +1,7 @@
 "use client"
 
-import { MessagesRoute } from "@antia/social-features/messagerie"
-import { StoriesViewerPage } from "@antia/social-features/stories"
+import { MessagesRoute } from "@antsia/social-features/messagerie"
+import { StoriesViewerPage } from "@antsia/social-features/stories"
 import { EmptyState } from "@diasporale/features"
 import type { MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"

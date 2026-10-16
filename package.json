@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "packageManager": "bun@1.4.2",
-  "description": "Racine de DIASPORALE : scripts de commodité seulement. AUCUNE installation ici : les espaces de travail apps/* et packages/* sont déclarés par ANTIA/package.json (installation unique, PD0) ; les versions viennent de son catalogue.",
+  "description": "Racine de DIASPORALE : scripts de commodité seulement. AUCUNE installation ici : les espaces de travail apps/* et packages/* sont déclarés par ANTSIA/package.json (installation unique, PD0) ; les versions viennent de son catalogue.",
   "scripts": {
     "dev": "bun run --cwd apps/diasporale_com dev",
     "dev:engine": "bun run --cwd apps/diasporale_com dev:engine",

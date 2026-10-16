@@ -6,7 +6,7 @@
  *     données de démonstration explicitement fictives, règles appliquées par
  *     `@diasporale/domain` ;
  *   · `engine` (au câblage du moteur, PD2/PD4) — les queries et mutations
- *     Convex du moteur ANTIA, bornées par `networkId = diasporale`.
+ *     Convex du moteur ANTSIA, bornées par `networkId = diasporale`.
  *
  * Les lectures sont des HOOKS (comme `useQuery` de Convex : réactives, d'abord
  * « en chargement ») ; les écritures sont des actions qui rendent un résultat
@@ -101,7 +101,7 @@ export interface PublishInput {
   readonly reach: Reach
   readonly country?: CountryCode
   readonly audience: "public" | "connections"
-  /** « Publier aussi sur ANTIA » — geste explicite, ignoré hors audience publique. */
+  /** « Publier aussi sur ANTSIA » — geste explicite, ignoré hors audience publique. */
   readonly alsoOnRoot: boolean
   /** Quatre photos au plus, ou une vidéo seule, dans l'ordre choisi. */
   readonly media?: readonly PublishMediaInput[]

@@ -56,7 +56,7 @@ describe("compteurs d'un hub", () => {
 })
 
 describe("le réseau diasporale (cahier §7)", () => {
-  test("fermé, enfant d'antia, déclaré ou vérifié, network par défaut, France ouverte", () => {
+  test("fermé, enfant d'antsia, déclaré ou vérifié, network par défaut, France ouverte", () => {
     expect(DIASPORALE_NETWORK).toEqual({
       slug: "diasporale",
       kind: "closed",
@@ -66,7 +66,7 @@ describe("le réseau diasporale (cahier §7)", () => {
       reachValues: ["local", "diaspora"],
       openCountries: ["FR"],
     })
-    expect(ROOT_NETWORK_SLUG).toBe("antia")
+    expect(ROOT_NETWORK_SLUG).toBe("antsia")
   })
 })
 

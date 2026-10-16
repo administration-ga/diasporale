@@ -1,8 +1,8 @@
 "use client"
 
-import { api } from "@antia/api/engine"
-import { useAuthenticatedConvexQuery } from "@antia/api/hooks"
-import { StoriesStyles, StoriesTray } from "@antia/social-features/stories"
+import { api } from "@antsia/api/engine"
+import { useAuthenticatedConvexQuery } from "@antsia/api/hooks"
+import { StoriesStyles, StoriesTray } from "@antsia/social-features/stories"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 

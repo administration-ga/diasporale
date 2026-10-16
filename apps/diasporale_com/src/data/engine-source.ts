@@ -2,7 +2,7 @@
 
 /**
  * La source de données « moteur » de DIASPORALE (PD2) : la même interface que la
- * démonstration (`DiasporaleDataSource`), branchée sur le moteur ANTIA.
+ * démonstration (`DiasporaleDataSource`), branchée sur le moteur ANTSIA.
  *
  * - Lectures : abonnements Convex aux fonctions du moteur — tranche `diaspora`
  *   (adhésion, hubs, parrainage, consentements) et chemins génériques (personne,
@@ -15,8 +15,8 @@
  *   donnée inventée. L'attestation consulaire (PD3) rend `attestation_unavailable`
  *   tant que le déploiement n'a pas sa clé de service.
  */
-import type { EngineAuthClient } from "@antia/api/auth-client"
-import { useStableConvexAuth } from "@antia/api/hooks"
+import type { EngineAuthClient } from "@antsia/api/auth-client"
+import { useStableConvexAuth } from "@antsia/api/hooks"
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
 import {

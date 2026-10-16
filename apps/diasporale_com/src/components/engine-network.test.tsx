@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { useNetwork } from "@antia/api/network"
+import { useNetwork } from "@antsia/api/network"
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
 import type { Loadable, MembershipView, SessionView } from "@diasporale/features/data"
 import { cleanup, render, screen } from "@testing-library/react"
@@ -28,15 +28,15 @@ vi.mock("convex/react", () => ({
 
 vi.mock("@diasporale/features/data", () => ({ useSession: () => mocks.session }))
 
-vi.mock("@antia/social-features/messagerie", () => ({
+vi.mock("@antsia/social-features/messagerie", () => ({
   conversationHref: vi.fn(),
   dockStore: { openDraft: vi.fn(), detach: vi.fn() },
   draftKey: vi.fn(),
 }))
 
-vi.mock("@antia/ui/overlay", () => ({ useIsReseauMobile: () => false }))
+vi.mock("@antsia/ui/overlay", () => ({ useIsReseauMobile: () => false }))
 
-vi.mock("@antia/social-features/shell", () => ({
+vi.mock("@antsia/social-features/shell", () => ({
   CommunicationShell: () => {
     const network = useNetwork()
     return <div data-testid="communication-shell" data-network-id={network.networkId} data-charte={network.charte} />
@@ -61,7 +61,7 @@ const membership: MembershipView = {
   verifiedSince: null,
   sponsoredBy: null,
   attestation: { outcome: "none", postSlug: null, requestedAt: null },
-  root: { network: "antia", status: "declaree", derivedFrom: "diasporale" },
+  root: { network: "antsia", status: "declaree", derivedFrom: "diasporale" },
   canPublish: true,
   rateTier: "reinforced",
   directoryVisibility: "hidden",

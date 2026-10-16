@@ -1,4 +1,4 @@
-import type { EngineAuthClient } from "@antia/api/auth-client"
+import type { EngineAuthClient } from "@antsia/api/auth-client"
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
 import type { ConvexReactClient } from "convex/react"
 import { getFunctionName } from "convex/server"
@@ -89,13 +89,13 @@ const MEMBERSHIP = {
 } as const
 
 describe("projections du moteur vers les vues de DIASPORALE", () => {
-  it("l'adhésion de la session, avec l'adhésion ANTIA dérivée", () => {
+  it("l'adhésion de la session, avec l'adhésion ANTSIA dérivée", () => {
     expect(toMembershipView(PERSON, MEMBERSHIP as never)).toMatchObject({
       personId: "p1",
       handle: "ada",
       status: "declaree",
       facet: { countryOfResidence: "FR", city: "Lyon" },
-      root: { network: "antia", status: "declaree", derivedFrom: "diasporale" },
+      root: { network: "antsia", status: "declaree", derivedFrom: "diasporale" },
       canPublish: true,
       sponsoredBy: { handle: "parrain", displayName: "Parrain" },
     })
@@ -472,7 +472,7 @@ describe("annuaire de la tranche (PD4, EXF-DG-19)", () => {
   })
 })
 
-describe("publications à portée et pays (PD4, lot 7 d'ANTIA)", () => {
+describe("publications à portée et pays (PD4, lot 7 d'ANTSIA)", () => {
   const base = {
     body: "Bonjour",
     media: [],
@@ -518,7 +518,7 @@ describe("publications à portée et pays (PD4, lot 7 d'ANTIA)", () => {
 
   const OPEN_FR = { "modules/diaspora/hubs:listOpenCountries": () => [{ country: "FR" }] }
 
-  it("local dans un pays ouvert : portée et pays partent au moteur ; diaspora garde son pays d'origine ; ANTIA seulement en public", async () => {
+  it("local dans un pays ouvert : portée et pays partent au moteur ; diaspora garde son pays d'origine ; ANTSIA seulement en public", async () => {
     const { convex, calls } = fakeConvex({ ...NETWORK, ...OPEN_FR, "modules/posts/posts:publish": () => ({ postId: "post-1", created: true }) })
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
     expect(await actions.publish({ body: "Bonjour Lyon", reach: "local", country: "FR", audience: "public", alsoOnRoot: true })).toEqual({
@@ -564,7 +564,7 @@ describe("publications à portée et pays (PD4, lot 7 d'ANTIA)", () => {
   })
 })
 
-describe("commentaires par le moteur (PD4, lot 8 d'ANTIA)", () => {
+describe("commentaires par le moteur (PD4, lot 8 d'ANTSIA)", () => {
   it("un fil du moteur : l'auteur par son profil publié (nom neutre s'il est retiré), modifié se dit, les réponses suivent", () => {
     const reply = { commentId: "r1", author: { personId: "p3", displayName: null, handle: null, avatarUrl: null }, body: "Merci", createdAt: 2, editedAt: 3, isMine: true }
     const thread = {
@@ -611,7 +611,7 @@ describe("commentaires par le moteur (PD4, lot 8 d'ANTIA)", () => {
   })
 })
 
-describe("menu d'une publication par le moteur (PD4, lots 7 et 8 d'ANTIA)", () => {
+describe("menu d'une publication par le moteur (PD4, lots 7 et 8 d'ANTSIA)", () => {
   it("signet, masquage, sourdine, signalement et retrait partent vers leurs fonctions, bornés par le réseau", async () => {
     const { convex, calls } = fakeConvex({
       ...NETWORK,

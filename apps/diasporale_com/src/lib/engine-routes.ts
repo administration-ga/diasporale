@@ -4,7 +4,7 @@
  * moteur n'écrivent aucune URL ; ils composent leurs sous-adresses depuis ces
  * bases. Toutes viennent de la table de l'application (`routes`).
  */
-import type { EngineRoutes } from "@antia/api/network"
+import type { EngineRoutes } from "@antsia/api/network"
 
 import { routes } from "./routes"
 

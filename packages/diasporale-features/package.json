@@ -21,10 +21,10 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@antia/api": "workspace:*",
-    "@antia/social-domain": "workspace:*",
-    "@antia/social-features": "workspace:*",
-    "@antia/ui": "workspace:*",
+    "@antsia/api": "workspace:*",
+    "@antsia/social-domain": "workspace:*",
+    "@antsia/social-features": "workspace:*",
+    "@antsia/ui": "workspace:*",
     "@diasporale/domain": "workspace:*",
     "@fontsource-variable/ibm-plex-sans": "catalog:",
     "@fontsource/ibm-plex-mono": "catalog:",
@@ -46,8 +46,8 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@antia/eslint-config": "workspace:*",
-    "@antia/tsconfig": "workspace:*",
+    "@antsia/eslint-config": "workspace:*",
+    "@antsia/tsconfig": "workspace:*",
     "@testing-library/dom": "catalog:",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",

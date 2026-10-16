@@ -3,8 +3,8 @@
 import { Avatar, Button, CountryTag, NotificationBell, PostComposerSheet, PostShareProvider, TrustBadges, cn } from "@diasporale/features"
 import { useOpenCountries, type MembershipView, type PostView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { MessagerieDock } from "@antia/social-features/messagerie"
-import { useIsReseauMobile } from "@antia/ui/overlay"
+import { MessagerieDock } from "@antsia/social-features/messagerie"
+import { useIsReseauMobile } from "@antsia/ui/overlay"
 import {
   HandshakeIcon,
   HouseIcon,

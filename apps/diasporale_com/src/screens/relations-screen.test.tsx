@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { useNetwork, useRoutes } from "@antia/api/network"
+import { useNetwork, useRoutes } from "@antsia/api/network"
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
 import type { MembershipView } from "@diasporale/features/data"
 import { I18nProvider } from "@diasporale/features/i18n/client"
@@ -43,8 +43,8 @@ vi.mock("@/components/app-shell", () => ({
 }))
 
 // La communication n'est pas montée par cet écran ; son îlot réseau reste réel.
-vi.mock("@antia/social-features/shell", () => ({ CommunicationShell: () => null }))
-vi.mock("@antia/social-features/messagerie", () => ({
+vi.mock("@antsia/social-features/shell", () => ({ CommunicationShell: () => null }))
+vi.mock("@antsia/social-features/messagerie", () => ({
   conversationHref: vi.fn(),
   dockStore: {},
   draftKey: vi.fn(),
@@ -82,7 +82,7 @@ const membership: MembershipView = {
   verifiedSince: null,
   sponsoredBy: null,
   attestation: { outcome: "none", postSlug: null, requestedAt: null },
-  root: { network: "antia", status: "declaree", derivedFrom: "diasporale" },
+  root: { network: "antsia", status: "declaree", derivedFrom: "diasporale" },
   canPublish: true,
   rateTier: "reinforced",
   directoryVisibility: "hidden",
@@ -151,7 +151,7 @@ describe("/relations — mes liens dans le réseau DIASPORALE", () => {
         personId: network.personId,
         slug: "diasporale",
         charte: "diasporale",
-        storagePrefix: "antia:diasporale:",
+        storagePrefix: "antsia:diasporale:",
       }),
     })
   })

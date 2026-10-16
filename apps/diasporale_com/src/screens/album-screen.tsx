@@ -1,6 +1,6 @@
 "use client"
 
-import { AlbumPage } from "@antia/social-features/albums"
+import { AlbumPage } from "@antsia/social-features/albums"
 import { EmptyState } from "@diasporale/features"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { ImagesIcon } from "lucide-react"

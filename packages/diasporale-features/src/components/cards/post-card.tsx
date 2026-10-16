@@ -32,7 +32,7 @@ const REACTIONS: Record<ReactionKind, { icon: LucideIcon; key: string }> = {
  * `social-features` n'est pas dupliqué) : auteur et badges P1, étiquette pays
  * ou portée, corps, réactions. L'auteur voit l'état de modération de sa
  * publication (carte flottante en tête, qu'il peut écarter) ; une publication
- * `root` dit qu'elle est aussi lue dans ANTIA.
+ * `root` dit qu'elle est aussi lue dans ANTSIA.
  */
 export function PostCard(props: {
   post: PostView

@@ -1,5 +1,5 @@
 /**
- * Les refus du moteur ANTIA, traduits en codes FERMÉS de DIASPORALE
+ * Les refus du moteur ANTSIA, traduits en codes FERMÉS de DIASPORALE
  * (`ActionErrorCode`, que l'écran traduit par `errors.<code>`).
  *
  * Ordre de lecture d'une erreur reçue :
@@ -9,7 +9,7 @@
  *   3. le code du moteur.
  * Tout le reste devient `unknown` : jamais une phrase du serveur à l'écran.
  */
-import { engineErrorAppRule, engineErrorCode, engineErrorRule, type EngineErrorCode } from "@antia/social-contracts/errors"
+import { engineErrorAppRule, engineErrorCode, engineErrorRule, type EngineErrorCode } from "@antsia/social-contracts/errors"
 import { ACTION_ERROR_CODES, type ActionErrorCode, MEDIA_RULE_CODES } from "@diasporale/features/data"
 
 const ACTION_CODES: ReadonlySet<string> = new Set(ACTION_ERROR_CODES)

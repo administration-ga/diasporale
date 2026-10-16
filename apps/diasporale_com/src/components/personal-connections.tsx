@@ -1,6 +1,6 @@
 "use client"
 
-import { usePersonalConnections, usePersonalPendingConnections } from "@antia/social-features/features/reseau-personnel/use-dual-connection-pagination"
+import { usePersonalConnections, usePersonalPendingConnections } from "@antsia/social-features/features/reseau-personnel/use-dual-connection-pagination"
 import { useActions } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { toast } from "sonner"

@@ -7,7 +7,7 @@
 export type DataSourceKind = "demo" | "engine"
 
 export const publicEnv = {
-  /** `demo` (données fictives, ce navigateur) ou `engine` (le moteur ANTIA, PD2). */
+  /** `demo` (données fictives, ce navigateur) ou `engine` (le moteur ANTSIA, PD2). */
   dataSource: (process.env.NEXT_PUBLIC_DIASPORALE_DATA_SOURCE === "engine" ? "engine" : "demo") as DataSourceKind,
   /** Déploiement Convex du moteur (inscrit par la configuration Next commune, ou l'ARG du Dockerfile). */
   convexUrl: process.env.NEXT_PUBLIC_CONVEX_URL ?? null,

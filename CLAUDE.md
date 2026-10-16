@@ -6,18 +6,18 @@
 > de données, fournisseur de démonstration), `apps/diasporale_com` (Next.js 16, port 3031).
 > Avant tout travail, lire dans l'ordre :
 > 1. `docs/00_CAHIER_DES_CHARGES_DIASPORALE.md` (ce que le produit est, ses invariants, ses lots) ;
-> 2. `../ANTIA/docs/00_CAHIER_DES_CHARGES_ANTIA.md` (le moteur dont DIASPORALE est une application) ;
+> 2. `../ANTSIA/docs/00_CAHIER_DES_CHARGES_ANTSIA.md` (le moteur dont DIASPORALE est une application) ;
 > 3. `docs/01_PLAN_IMPLEMENTATION_PROMPTS_DIASPORALE.md` (le prompt à exécuter, un à la fois, avec son préambule commun) ;
-> 4. `../../../Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTIA_2026-10-14.md` et ses annexes.
+> 4. `../../../Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTSIA_2026-10-14.md` et ses annexes.
 
 ## Ce qu'est ce dépôt
 
 - L'**application** `diasporale.com` et ses règles propres (facette diaspora, éligibilité,
   parrainage, hubs pays, emploi, annonces, entraide), **espace de travail bun externe** du
-  moteur `ECOSYSTEMES/ANTIA`. Le backend est celui du moteur (tranche `convex/modules/diaspora/`
-  dans ANTIA). Une seule installation : `bun install` dans `ANTIA/`, jamais ici.
-- Un réseau **fermé**, enfant du réseau public ANTIA, dans le moteur multi-réseaux.
-- **Charte** : le contrat de couleurs vit dans `../ANTIA/packages/ui/src/themes/diasporale.css`
+  moteur `ECOSYSTEMES/ANTSIA`. Le backend est celui du moteur (tranche `convex/modules/diaspora/`
+  dans ANTSIA). Une seule installation : `bun install` dans `ANTSIA/`, jamais ici.
+- Un réseau **fermé**, enfant du réseau public ANTSIA, dans le moteur multi-réseaux.
+- **Charte** : le contrat de couleurs vit dans `../ANTSIA/packages/ui/src/themes/diasporale.css`
   (écrit par la session DIASPORALE) ; les rôles propres dans
   `packages/diasporale-features/src/styles/extras.css` (renvois au contrat seulement) ;
   référence `docs/03_CHARTE_DIASPORALE.md`.
@@ -28,7 +28,7 @@
 
 - `networkId = diasporale` sur toute lecture et toute écriture sociale ; visibilité `network`
   par défaut ; `root` seulement si audience publique et geste de l'auteur.
-- Entrer dans DIASPORALE crée l'adhésion ANTIA (dérivée) ; une suspension ANTIA suspend partout.
+- Entrer dans DIASPORALE crée l'adhésion ANTSIA (dérivée) ; une suspension ANTSIA suspend partout.
 - **Aucune donnée consulaire** (passeport, NIP, état civil, mineur, dossier) n'entre jamais
   dans le moteur ; consulat.ga atteste (booléen, pays, poste, date) avec consentement ; aucune
   lecture de base à base ; aucun import de `_generated` ou de schéma d'un autre dépôt.
@@ -57,11 +57,11 @@
 ## Vérification
 
 ```bash
-bun run --cwd ../ANTIA verify   # obligatoire avant tout commit : codegen, typecheck, tests, lint
+bun run --cwd ../ANTSIA verify   # obligatoire avant tout commit : codegen, typecheck, tests, lint
 ```
 
 Aucun préfixe de PATH : `codegen` passe par le lanceur Convex du moteur, qui met Node 22 en tête
-(le Mac a Node 25, refusé dès qu'une action `"use node"` existe ; ANTIA 24b0625). Ne pas lancer
+(le Mac a Node 25, refusé dès qu'une action `"use node"` existe ; ANTSIA 24b0625). Ne pas lancer
 `verify` pendant qu'un `convex dev` publie (`409 ExistingModuleHashConflict`) : attendre
 « Convex functions ready », puis relancer.
 

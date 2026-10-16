@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "diasporale.com — le réseau social fermé de la diaspora gabonaise, application du moteur social national ANTIA (Next.js 16, mobile-first, port 3031).",
+  "description": "diasporale.com — le réseau social fermé de la diaspora gabonaise, application du moteur social national ANTSIA (Next.js 16, mobile-first, port 3031).",
   "scripts": {
     "dev": "next dev --port 3031",
     "dev:engine": "NEXT_PUBLIC_DIASPORALE_DATA_SOURCE=engine next dev --port 3031",
@@ -14,10 +14,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@antia/api": "workspace:*",
-    "@antia/social-contracts": "workspace:*",
-    "@antia/social-features": "workspace:*",
-    "@antia/ui": "workspace:*",
+    "@antsia/api": "workspace:*",
+    "@antsia/social-contracts": "workspace:*",
+    "@antsia/social-features": "workspace:*",
+    "@antsia/ui": "workspace:*",
     "@diasporale/domain": "workspace:*",
     "@diasporale/features": "workspace:*",
     "@hookform/resolvers": "catalog:",
@@ -35,8 +35,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@antia/eslint-config": "workspace:*",
-    "@antia/tsconfig": "workspace:*",
+    "@antsia/eslint-config": "workspace:*",
+    "@antsia/tsconfig": "workspace:*",
     "@tailwindcss/postcss": "catalog:",
     "@testing-library/dom": "catalog:",
     "@testing-library/jest-dom": "catalog:",

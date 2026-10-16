@@ -1,6 +1,6 @@
 "use client"
 
-import { AlbumComposer, AlbumsSection } from "@antia/social-features/albums"
+import { AlbumComposer, AlbumsSection } from "@antsia/social-features/albums"
 import { useRouter } from "next/navigation"
 
 import { IcomIsland, useEngineNetwork } from "@/components/icom"

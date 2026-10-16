@@ -1,5 +1,5 @@
 /**
- * Projections du moteur ANTIA vers les vues de DIASPORALE (`@diasporale/features/data`)
+ * Projections du moteur ANTSIA vers les vues de DIASPORALE (`@diasporale/features/data`)
  * — fonctions PURES, testées sans moteur. Le serveur a déjà allowlisté ce qu'il
  * rend ; ici, on ne fait que changer de forme, et une valeur hors forme (un pays
  * inconnu, une facette absente) fait retomber la vue au plus prudent.
@@ -97,7 +97,7 @@ export function toMembershipView(person: MyPerson, membership: MyMembership): Me
     verifiedSince: membership.verifiedSince,
     sponsoredBy: membership.sponsoredBy,
     attestation: membership.attestation,
-    root: { network: "antia", status: membership.root.status ?? "partie", derivedFrom: "diasporale" },
+    root: { network: "antsia", status: membership.root.status ?? "partie", derivedFrom: "diasporale" },
     canPublish: membership.capabilities.includes("publish"),
     rateTier: membership.rateTier,
     directoryVisibility: membership.directoryVisibility,

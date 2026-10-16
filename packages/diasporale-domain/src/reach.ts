@@ -7,7 +7,7 @@
  *     `local` (le hub d'un pays) ou `diaspora` (tous les hubs) ;
  *   · la **visibilité** dit si le contenu SORT de DIASPORALE : `network`
  *     (il reste dans le réseau, toujours par défaut) ou `root` (il est aussi
- *     lu dans ANTIA, le réseau racine).
+ *     lu dans ANTSIA, le réseau racine).
  *
  * `root` n'existe que par un GESTE explicite de l'auteur, et seulement pour
  * une audience `public` (invariant 2). Rien ici ne choisit `root` à sa place.
@@ -34,7 +34,7 @@ export function isReach(value: string): value is Reach {
   return (REACH_VALUES as readonly string[]).includes(value)
 }
 
-/** La case « Publier aussi sur ANTIA » n'a de sens que pour une audience publique. */
+/** La case « Publier aussi sur ANTSIA » n'a de sens que pour une audience publique. */
 export function canAlsoPublishOnRoot(audience: PostAudience): boolean {
   return audience === "public"
 }

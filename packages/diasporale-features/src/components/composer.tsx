@@ -111,7 +111,7 @@ function keepEnterInField(event: KeyboardEvent<HTMLInputElement>): void {
 /**
  * Composeur en feuille (charte §8, EXF-DG-10/11). La portée est visible avant
  * l'envoi (le pays de l'auteur, ou toute la diaspora). La visibilité reste
- * `network` par défaut : « Publier aussi sur ANTIA » est un GESTE, désactivé
+ * `network` par défaut : « Publier aussi sur ANTSIA » est un GESTE, désactivé
  * hors audience publique, expliqué en une ligne. La case naît décochée.
  *
  * Médias : quatre photos, ou une vidéo seule (règles du moteur, jugées AVANT
@@ -153,7 +153,7 @@ export function PostComposerSheet(props: {
   const body = useWatch({ control: form.control, name: "body" })
   const rootAllowed = canAlsoPublishOnRoot(audience)
 
-  // Une audience restreinte ferme la case ANTIA : la valeur suit, jamais l'inverse.
+  // Une audience restreinte ferme la case ANTSIA : la valeur suit, jamais l'inverse.
   useEffect(() => {
     if (!rootAllowed) form.setValue("alsoOnRoot", false)
   }, [rootAllowed, form])
@@ -459,21 +459,21 @@ export function PostComposerSheet(props: {
               name="alsoOnRoot"
               render={({ field }) => (
                 <Checkbox
-                  id={`${ids}-antia`}
+                  id={`${ids}-antsia`}
                   checked={field.value}
                   onCheckedChange={(checked) => field.onChange(checked === true)}
                   disabled={!rootAllowed}
-                  aria-describedby={`${ids}-antia-aide`}
+                  aria-describedby={`${ids}-antsia-aide`}
                   className="mt-0.5"
                 />
               )}
             />
             <div className="min-w-0">
-              <Label htmlFor={`${ids}-antia`} className="inline-flex items-center gap-1.5">
+              <Label htmlFor={`${ids}-antsia`} className="inline-flex items-center gap-1.5">
                 <GlobeIcon className="size-4" aria-hidden />
                 {t("composer.alsoOnRoot")}
               </Label>
-              <p id={`${ids}-antia-aide`} className="mt-0.5 text-[13px] text-muted-foreground">
+              <p id={`${ids}-antsia-aide`} className="mt-0.5 text-[13px] text-muted-foreground">
                 {rootAllowed ? t("composer.alsoOnRootHint") : t("composer.alsoOnRootDisabled")}
               </p>
             </div>

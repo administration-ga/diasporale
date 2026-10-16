@@ -1,6 +1,6 @@
 "use client"
 
-import { splitBodyRich } from "@antia/social-domain/richText"
+import { splitBodyRich } from "@antsia/social-domain/richText"
 import { Fragment, type ReactNode } from "react"
 
 import { useRouting } from "../routing"

@@ -2,7 +2,7 @@
  * @diasporale/domain — SSOT métier de DIASPORALE (TS pur, zéro dépendance).
  *
  * Importé par l'application `diasporale_com`, par `@diasporale/features` et
- * par la tranche `convex/modules/diaspora/` du moteur ANTIA. Chaque module est
+ * par la tranche `convex/modules/diaspora/` du moteur ANTSIA. Chaque module est
  * une règle pure, testée à 100 % (`bun test`, seuil de couverture dans
  * `bunfig.toml`).
  */

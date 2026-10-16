@@ -1,5 +1,5 @@
 {
-  "extends": "@antia/tsconfig/base.json",
+  "extends": "@antsia/tsconfig/base.json",
   "compilerOptions": {
     "lib": ["ES2023"],
     "types": ["bun"],

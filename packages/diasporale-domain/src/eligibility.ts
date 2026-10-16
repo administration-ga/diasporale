@@ -103,7 +103,7 @@ export function deriveMembershipStatus(grounds: MembershipGrounds, now: number):
 
 /**
  * Le statut vu par le réseau quand la racine a son mot à dire : une suspension
- * dans ANTIA suspend partout (invariant 3). Un départ reste un départ.
+ * dans ANTSIA suspend partout (invariant 3). Un départ reste un départ.
  */
 export function effectiveMembershipStatus(
   networkStatus: MembershipStatus,

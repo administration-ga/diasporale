@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { useNetwork, useRoutes } from "@antia/api/network"
-import type { AlbumComposerProps, AlbumsSectionProps } from "@antia/social-features/albums"
+import { useNetwork, useRoutes } from "@antsia/api/network"
+import type { AlbumComposerProps, AlbumsSectionProps } from "@antsia/social-features/albums"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import type { ComponentProps } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -27,8 +27,8 @@ vi.mock("next/navigation", () => ({
 
 // Les hôtes de communication ne participent pas à cet îlot de lecture : les
 // isoler évite de charger leurs médias et feuilles LiveKit dans ce test.
-vi.mock("@antia/social-features/shell", () => ({ CommunicationShell: () => null }))
-vi.mock("@antia/social-features/messagerie", () => ({
+vi.mock("@antsia/social-features/shell", () => ({ CommunicationShell: () => null }))
+vi.mock("@antsia/social-features/messagerie", () => ({
   conversationHref: vi.fn(),
   dockStore: {},
   draftKey: vi.fn(),
@@ -41,7 +41,7 @@ vi.mock("@/components/icom", async (importOriginal) => ({
   useEngineNetwork: () => mocks.network,
 }))
 
-vi.mock("@antia/social-features/albums", () => ({
+vi.mock("@antsia/social-features/albums", () => ({
   AlbumsSection: (props: AlbumsSectionProps) => {
     const network = useNetwork()
     const engineRoutes = useRoutes()
@@ -102,7 +102,7 @@ describe("ProfileAlbums — les albums du moteur dans le profil diaspora", () =>
         slug: "diasporale",
         personId: "persons_awa",
         charte: "diasporale",
-        storagePrefix: "antia:diasporale:",
+        storagePrefix: "antsia:diasporale:",
       }),
     })
     expect(screen.queryByRole("button", { name: "Créer un album" })).not.toBeInTheDocument()

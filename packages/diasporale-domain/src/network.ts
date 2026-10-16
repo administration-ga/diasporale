@@ -11,7 +11,7 @@ import { REACH_VALUES } from "./reach"
 export const DIASPORALE_NETWORK_SLUG = "diasporale"
 
 /** Le réseau racine : toute adhésion à DIASPORALE y crée une adhésion dérivée. */
-export const ROOT_NETWORK_SLUG = "antia"
+export const ROOT_NETWORK_SLUG = "antsia"
 
 export const NETWORK_KINDS = ["root", "closed"] as const
 export type NetworkKind = (typeof NETWORK_KINDS)[number]

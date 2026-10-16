@@ -4,7 +4,7 @@ version: "3.2"
 date: "2026-10-15"
 statut: "Charte de travail v3 — arbitrage A7 (famille Consulaire / Sable) ; refonte demandée par le propriétaire le 15/10/2026 : épurée, contraste renforcé, couches du sombre renforcées (le fond reste le plus sombre), rayons resserrés, sans drapeau, avis en cartes flottantes ; v3 : palette confort (une teinte par thème, chroma basse, texte sans éblouissement, focus plein) ; v3.1 : avatars, teintes de statut, aplats ; v3.2 : bleu Gabon légèrement foncé (`#0167A8`, décision du propriétaire), sable posé, sélection sans contour"
 projet: "DIASPORALE"
-jetons: "ANTIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diasporale-features/src/styles/extras.css (rôles propres) — [data-charte=\"diasporale\"]"
+jetons: "ANTSIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diasporale-features/src/styles/extras.css (rôles propres) — [data-charte=\"diasporale\"]"
 ---
 
 # DIASPORALE.COM — Charte « Sable de la diaspora »
@@ -17,7 +17,7 @@ jetons: "ANTIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diaspo
 > l'étiquette pays, le tampon « Officiel » et la superfamille IBM Plex en trois largeurs.
 >
 > Passe `frontend-design` faite le 14/10/2026. La couche de jetons couvre le contrat de
-> thème du moteur ANTIA : échelles ui-v2, noms sémantiques shadcn, rôles `--esp-*` de
+> thème du moteur ANTSIA : échelles ui-v2, noms sémantiques shadcn, rôles `--esp-*` de
 > l'espace personnel. Les composants dupliqués du socle s'y branchent **sans fork**
 > (règle de duplication n° 7).
 >
@@ -246,7 +246,7 @@ Le squelette se duplique avec le code (cahier §15). Seuls les jetons changent.
   levé en sombre (v3.2).
 - **Composeur en feuille** : la création s'ouvre en feuille (bas d'écran au téléphone,
   centrée au bureau). La portée (étiquette pays ou diaspora) et la case « Publier aussi
-  sur ANTIA » y sont visibles avant l'envoi.
+  sur ANTSIA » y sont visibles avant l'envoi.
 - **Téléphone (< 960 px)** :
   - en-tête collant (mot-symbole, sélecteur de pays, cloche, avatar) ;
   - barre basse flottante en pilule, sable translucide en clair, opaque en sombre :
@@ -305,15 +305,15 @@ paires depuis la cascade réelle (base du moteur, thème, rôles propres), dans 
 depuis la v3.2, il tient aussi la sélection sans contour (teinte levée en sombre, curseur plus clair
 que sa piste, pilule choisie à 7:1 au moins sur le fond).
 
-## 11. Mise en œuvre (depuis PD0, sur le moteur ANTIA)
+## 11. Mise en œuvre (depuis PD0, sur le moteur ANTSIA)
 
 La charte vit en trois couches, importées dans cet ordre par
 `apps/diasporale_com/src/app/globals.css`, après `@import "tailwindcss"` :
 
-1. **Charte de base du moteur** — `@antia/ui/styles.css` : déclare TOUS les jetons du contrat
+1. **Charte de base du moteur** — `@antsia/ui/styles.css` : déclare TOUS les jetons du contrat
    sur `[data-charte]` (échelles ui-v2, noms sémantiques shadcn, primitives et rôles `--esp-*`),
    relie les utilitaires Tailwind et pose la base (corps, titres, barres de défilement).
-2. **Thème DIASPORALE** — `ANTIA/packages/ui/src/themes/diasporale.css` (écrit par la session
+2. **Thème DIASPORALE** — `ANTSIA/packages/ui/src/themes/diasporale.css` (écrit par la session
    DIASPORALE) : réaccorde les primitives du contrat à la palette Sable (bleu Gabon `#0167A8` au
    barreau 500, sable, grès, encre, nuit brune, tons, avatars) et redéclare tous les rôles, en
    clair comme en sombre. Il ne déclare QUE des jetons du contrat (cliquet `theme-contract` du

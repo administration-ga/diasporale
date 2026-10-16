@@ -1,6 +1,6 @@
 "use client"
 
-import { useRingRelation } from "@antia/social-features/iappel"
+import { useRingRelation } from "@antsia/social-features/iappel"
 import type { Id } from "@convex/_generated/dataModel"
 import type { FacetProjection } from "@diasporale/domain"
 import {

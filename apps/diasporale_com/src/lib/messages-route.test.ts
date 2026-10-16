@@ -1,4 +1,4 @@
-// Dupliqué de ANTIA/apps/antia_ga/src/lib/messages-route.test.ts @ f1eed7f — adaptations : aucune (copie textuelle) ; en-tête de provenance.
+// Dupliqué de ANTSIA/apps/antsia_ga/src/lib/messages-route.test.ts @ f1eed7f — adaptations : aucune (copie textuelle) ; en-tête de provenance.
 import { describe, expect, it } from "vitest"
 
 import { parseMessagesSegments } from "./messages-route"

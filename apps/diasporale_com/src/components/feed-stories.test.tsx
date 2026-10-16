@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { useNetwork, useRoutes } from "@antia/api/network"
+import { useNetwork, useRoutes } from "@antsia/api/network"
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -25,8 +25,8 @@ vi.mock("next/navigation", () => ({
 
 // Le bandeau ne monte pas la communication : ses paquets lourds (et leur CSS)
 // restent hors de ce test, sans remplacer le véritable îlot réseau.
-vi.mock("@antia/social-features/shell", () => ({ CommunicationShell: () => null }))
-vi.mock("@antia/social-features/messagerie", () => ({
+vi.mock("@antsia/social-features/shell", () => ({ CommunicationShell: () => null }))
+vi.mock("@antsia/social-features/messagerie", () => ({
   conversationHref: vi.fn(),
   dockStore: { openDraft: vi.fn(), detach: vi.fn() },
   draftKey: vi.fn(),
@@ -39,15 +39,15 @@ vi.mock("@/components/icom", async (importOriginal) => ({
   useIcomNetwork: () => mocks.network,
 }))
 
-vi.mock("@antia/api/hooks", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@antia/api/hooks")>()),
+vi.mock("@antsia/api/hooks", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@antsia/api/hooks")>()),
   useAuthenticatedConvexQuery: (...args: unknown[]) => {
     mocks.query(...args)
     return { data: mocks.me, isError: false }
   },
 }))
 
-vi.mock("@antia/social-features/stories", () => ({
+vi.mock("@antsia/social-features/stories", () => ({
   StoriesStyles: () => <style data-testid="stories-styles" />,
   StoriesTray: (props: {
     myHandle: string | null
@@ -110,7 +110,7 @@ describe("FeedStories — le bandeau des actus du moteur dans le fil", () => {
         slug: "diasporale",
         personId: network.personId,
         charte: "diasporale",
-        storagePrefix: "antia:diasporale:",
+        storagePrefix: "antsia:diasporale:",
       }),
       storiesHref: routes.stories(),
       myHandle: "awa.demo",

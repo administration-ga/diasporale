@@ -73,7 +73,7 @@ function joinInput(overrides: Partial<JoinInput> = {}): JoinInput {
 }
 
 describe("R1 — une personne inscrite entre par IDN", () => {
-  it("l'entrée ne crée aucun profil ; l'onboarding crée une adhésion déclarée, badge Vérifié, adhésion ANTIA dérivée", async () => {
+  it("l'entrée ne crée aucun profil ; l'onboarding crée une adhésion déclarée, badge Vérifié, adhésion ANTSIA dérivée", async () => {
     const { store, me } = demo()
     expect(await store.signInWithIdn(AWA)).toEqual({ ok: true, value: null })
     const id = me()
@@ -87,9 +87,9 @@ describe("R1 — une personne inscrite entre par IDN", () => {
       handle: "awa.ogooue",
       status: "declaree",
       canPublish: true,
-      // Même personne, deux politiques : ANTIA (ouvert) reconnaît l'IDN de niveau 2,
+      // Même personne, deux politiques : ANTSIA (ouvert) reconnaît l'IDN de niveau 2,
       // DIASPORALE (fermé) attend un parrainage ou l'attestation consulaire.
-      root: { network: "antia", status: "verifiee", derivedFrom: "diasporale" },
+      root: { network: "antsia", status: "verifiee", derivedFrom: "diasporale" },
       // Annuaire non consenti : masqué, quel que soit le niveau demandé.
       directoryVisibility: "hidden",
     })
@@ -214,7 +214,7 @@ describe("R3 — un compte léger se fait parrainer", () => {
     expect(store.getState().posts[0]).toMatchObject({ visibility: "root", scope: { reach: "local", country: "FR" } })
   })
 
-  it("« publier aussi sur ANTIA » est ignoré hors audience publique : la visibilité reste au réseau", async () => {
+  it("« publier aussi sur ANTSIA » est ignoré hors audience publique : la visibilité reste au réseau", async () => {
     const { store } = demo()
     await store.signInWithIdn(AWA)
     await store.join(joinInput())

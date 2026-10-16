@@ -2,8 +2,8 @@
    DIASPORALE — rôles PROPRES à l'application (étiquette pays, badges de
    confiance, tons des cartes flottantes, bouton destructif, voile, mouvement).
 
-   Posés APRÈS la charte de base du moteur (`@antia/ui/styles.css`) et le
-   thème `@antia/ui/themes/diasporale.css`, qui portent tout le contrat de
+   Posés APRÈS la charte de base du moteur (`@antsia/ui/styles.css`) et le
+   thème `@antsia/ui/themes/diasporale.css`, qui portent tout le contrat de
    couleurs (PD0). Ici, AUCUNE couleur littérale : chaque rôle RENVOIE à un
    jeton du contrat, déjà réaccordé à la palette Sable par le thème. Une
    teinte se règle donc à un seul endroit : le thème. Aucune couleur du

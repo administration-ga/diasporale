@@ -568,10 +568,10 @@ export function membershipView(state: DemoState, personId: string, now: number):
     verifiedSince: membership.verifiedSince,
     sponsoredBy: sponsor?.profile ? { handle: sponsor.profile.handle, displayName: sponsor.profile.displayName } : null,
     attestation: membership.attestation,
-    // Politique `open` du réseau racine (cahier ANTIA §6.2) : déclarée d'emblée,
+    // Politique `open` du réseau racine (cahier ANTSIA §6.2) : déclarée d'emblée,
     // vérifiée avec une preuve forte ; une suspension racine se lit partout.
     root: {
-      network: "antia",
+      network: "antsia",
       status: status === "partie" ? "declaree" : status === "suspendue" ? "suspendue" : rootVerified ? "verifiee" : "declaree",
       derivedFrom: "diasporale",
     },

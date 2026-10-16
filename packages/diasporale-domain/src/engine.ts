@@ -1,12 +1,12 @@
 /**
- * Projection de DIASPORALE dans le vocabulaire du moteur ANTIA (PD1) : la
+ * Projection de DIASPORALE dans le vocabulaire du moteur ANTSIA (PD1) : la
  * graine du réseau `diasporale` et sa facette au format `facetSchema` du
  * moteur, la correspondance des visibilités par champ, et la lecture inverse
  * (lien IDN, facette, source de vérification) dont la tranche
  * `convex/modules/diaspora` a besoin pour appliquer les règles du domaine.
  *
  * Le domaine reste SANS dépendance : les listes du moteur sont recopiées ici
- * (miroir de `@antia/social-domain/facets` et `/network`), et le moteur
+ * (miroir de `@antsia/social-domain/facets` et `/network`), et le moteur
  * vérifie de son côté que cette graine passe ses validateurs (test de la
  * tranche `convex/modules/diaspora`).
  */
@@ -61,7 +61,7 @@ export interface EngineFacetField {
  * réseau » y devient `network` ; « moi seul », « mes relations » et « mon pays »
  * deviennent `hidden` : un lecteur générique du moteur ne voit jamais plus que la
  * règle DIASPORALE, dont la tranche `diaspora` applique elle-même les niveaux
- * fins. Jamais `root` : une facette DIASPORALE ne se lit pas depuis ANTIA.
+ * fins. Jamais `root` : une facette DIASPORALE ne se lit pas depuis ANTSIA.
  */
 export function toEngineFacetVisibility(level: FieldVisibility): EngineFacetVisibility {
   return level === "network" ? "network" : "hidden"

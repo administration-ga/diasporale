@@ -27,7 +27,7 @@ export type FacetField = (typeof FACET_FIELDS)[number]
 /**
  * Visibilité d'un champ, CUMULATIVE : chaque niveau inclut les précédents.
  * `only_me` ⊂ `connections` ⊂ `country` ⊂ `network`. Rien ne sort du réseau :
- * une facette n'est jamais lue depuis ANTIA.
+ * une facette n'est jamais lue depuis ANTSIA.
  */
 export const FIELD_VISIBILITY_LEVELS = ["only_me", "connections", "country", "network"] as const
 export type FieldVisibility = (typeof FIELD_VISIBILITY_LEVELS)[number]

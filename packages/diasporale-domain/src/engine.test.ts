@@ -43,11 +43,11 @@ describe("facette diaspora au format du moteur", () => {
 })
 
 describe("graine du réseau diasporale", () => {
-  it("réseau fermé, enfant d'ANTIA, politique déclaré-ou-vérifié, visibilité réseau, France ouverte", () => {
+  it("réseau fermé, enfant d'ANTSIA, politique déclaré-ou-vérifié, visibilité réseau, France ouverte", () => {
     expect(DIASPORALE_NETWORK_SEED).toMatchObject({
       slug: "diasporale",
       kind: "closed",
-      parentSlug: "antia",
+      parentSlug: "antsia",
       membershipPolicy: "declared_or_verified",
       defaultVisibility: "network",
       reachValues: ["local", "diaspora"],

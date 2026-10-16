@@ -44,7 +44,7 @@ function DemoDataProvider(props: { children: ReactNode }) {
 /**
  * La source de données de l'application — c'est ici, et seulement ici, que le
  * choix se fait (`NEXT_PUBLIC_DIASPORALE_DATA_SOURCE`) : la démonstration, ou le
- * moteur ANTIA (PD2 : session, Convex du moteur, tranche `diaspora`).
+ * moteur ANTSIA (PD2 : session, Convex du moteur, tranche `diaspora`).
  */
 function DataProviders(props: { children: ReactNode }) {
   if (publicEnv.dataSource === "engine") return <EngineDataProviders>{props.children}</EngineDataProviders>

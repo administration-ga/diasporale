@@ -1,11 +1,11 @@
-import { createEngineNextConfig } from "@antia/api/next-config"
+import { createEngineNextConfig } from "@antsia/api/next-config"
 import type { NextConfig } from "next"
 
 /**
- * Configuration Next.js 16 de diasporale.com — celle du moteur ANTIA
- * (`@antia/api/next-config`) : racine ECOSYSTEMES, sortie standalone, paquets du
+ * Configuration Next.js 16 de diasporale.com — celle du moteur ANTSIA
+ * (`@antsia/api/next-config`) : racine ECOSYSTEMES, sortie standalone, paquets du
  * moteur en sources, en-têtes de sécurité et CSP dérivée du déploiement Convex
- * (lu dans `ANTIA/.env.local` en développement, dans les ARG du Dockerfile en
+ * (lu dans `ANTSIA/.env.local` en développement, dans les ARG du Dockerfile en
  * production). Seuls les paquets et les réécritures propres à DIASPORALE sont ici.
  */
 const engine = createEngineNextConfig({

@@ -2,8 +2,8 @@
 /* Charte de base du moteur (polices, famille shadcn, rayons, base), puis le thème
    DIASPORALE (contrat réaccordé à la palette Sable), puis les rôles et la couche
    propres à DIASPORALE. L'ordre compte : même spécificité, le dernier l'emporte. */
-@import "@antia/ui/styles.css";
-@import "@antia/ui/themes/diasporale.css";
+@import "@antsia/ui/styles.css";
+@import "@antsia/ui/themes/diasporale.css";
 @import "@diasporale/features/styles/fonts.css";
 @import "@diasporale/features/styles/extras.css";
 @import "@diasporale/features/styles/tailwind-theme.css";
@@ -12,5 +12,5 @@
    @diasporale/features doivent être lues pour générer leurs classes, et celles
    du moteur montées par iCom (PD7 : messagerie, appels, statuts) aussi. */
 @source "../../../../packages/diasporale-features/src";
-@source "../../../../../ANTIA/packages/ui/src";
-@source "../../../../../ANTIA/packages/social-features/src";
+@source "../../../../../ANTSIA/packages/ui/src";
+@source "../../../../../ANTSIA/packages/social-features/src";

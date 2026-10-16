@@ -1,5 +1,5 @@
 /**
- * i18n de DIASPORALE — l'instance i18next du MOTEUR (`@antia/social-features/i18n`),
+ * i18n de DIASPORALE — l'instance i18next du MOTEUR (`@antsia/social-features/i18n`),
  * à laquelle DIASPORALE fournit son espace de noms `diasporale`. L'application
  * reçoit en plus les espaces du moteur (`social`, codes serveur `errors` et
  * `rules`) : rien à recâbler quand les surfaces du moteur arrivent (PD4).
@@ -15,7 +15,7 @@ import {
   SUPPORTED_LOCALES,
   type AppResources,
   type Locale,
-} from "@antia/social-features/i18n"
+} from "@antsia/social-features/i18n"
 import type { i18n as I18nInstance } from "i18next"
 
 import enDiasporale from "./locales/en/diasporale.json"

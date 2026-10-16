@@ -7,8 +7,8 @@ projet: "DIASPORALE"
 reference: "NTSAGUI/DIASPORALE/CDC/2026/001"
 maitre_d_ouvrage: "NTSAGUI Digital (propriété intellectuelle) ; données au Gabon (cible du programme)"
 dependances:
-  - "Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTIA_2026-10-14.md (plan de pilotage)"
-  - "ECOSYSTEMES/ANTIA/docs/00_CAHIER_DES_CHARGES_ANTIA.md (le moteur social national, préalable)"
+  - "Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTSIA_2026-10-14.md (plan de pilotage)"
+  - "ECOSYSTEMES/ANTSIA/docs/00_CAHIER_DES_CHARGES_ANTSIA.md (le moteur social national, préalable)"
   - "ECOSYSTEMES/DIASPORALE/docs/01_PLAN_IMPLEMENTATION_PROMPTS_DIASPORALE.md (prompts d'exécution)"
   - "ECOSYSTEMES/GABON_DIPLOMATIE/docs/OPPORTUNITES_COMMUNAUTE_DIASPORA.md (dossier produit F01–F17, 13/07/2026)"
   - "ECOSYSTEMES/GABON_DIPLOMATIE/docs/DESIGN_SPECS_COMMUNAUTE.md (33 écrans, 17 composants)"
@@ -18,10 +18,10 @@ dependances:
 # DIASPORALE.COM — Cahier des charges fonctionnel et technique
 
 > **Place dans le programme.** DIASPORALE.COM est le **réseau social fermé de la diaspora
-> gabonaise**. C'est le premier réseau servi par le **moteur social national** (dépôt ANTIA),
-> et un réseau **enfant** du réseau public ANTIA : être membre de DIASPORALE, c'est être membre
-> d'ANTIA avec un contexte en plus — le contexte de la diaspora, qui reste séparé. Le cahier
-> des charges du moteur (`ANTIA/docs/00`) est un **préalable** : ce document ne redéfinit pas
+> gabonaise**. C'est le premier réseau servi par le **moteur social national** (dépôt ANTSIA),
+> et un réseau **enfant** du réseau public ANTSIA : être membre de DIASPORALE, c'est être membre
+> d'ANTSIA avec un contexte en plus — le contexte de la diaspora, qui reste séparé. Le cahier
+> des charges du moteur (`ANTSIA/docs/00`) est un **préalable** : ce document ne redéfinit pas
 > le moteur, il dit ce que DIASPORALE en attend et ce qu'il y ajoute.
 
 ## 0. Décision de conception
@@ -32,12 +32,12 @@ groupes, messagerie et appels, puis emploi, annonces et entraide. Il est **ferm�
 aux Gabonais de l'étranger), **officiel mais ouvert** (on y entre avec son identité numérique
 IDN, une attestation consulaire ou un compte léger parrainé), **par pays et global** (chaque
 pays a son hub, une couche fédère toute la diaspora), et **séparé** : ce qui se publie dans
-DIASPORALE reste dans DIASPORALE, sauf geste explicite de l'auteur vers ANTIA.
+DIASPORALE reste dans DIASPORALE, sauf geste explicite de l'auteur vers ANTSIA.
 
 Il est construit **par duplication** du réseau social de l'espace agent d'administration.ga
 (iRéseau, iCom, stories, albums, direct, notifications — environ 22 000 lignes de backend et
 près de 92 000 lignes de front avec iAppel, environ 3 300 cas de test, en production) selon les dix règles de duplication déjà
-appliquées par PRO.GA, et **sur le moteur multi-réseaux** décrit dans le cahier ANTIA. Son
+appliquées par PRO.GA, et **sur le moteur multi-réseaux** décrit dans le cahier ANTSIA. Son
 code propre est petit : les règles d'adhésion de la diaspora, les facettes (pays, poste,
 association), l'attestation consulaire, les hubs pays, l'import des objets publics de
 consulat.ga et sa charte.
@@ -92,11 +92,11 @@ pays, la confiance est visible, la modération est par pays).
 2. Faire de la communauté le canal d'acquisition de l'identité numérique IDN et des
    inscriptions consulaires (parcours d'élévation).
 3. Constituer, **sans copier aucune donnée consulaire**, un graphe social qui alimente ensuite
-   le réseau public ANTIA.
+   le réseau public ANTSIA.
 4. Réutiliser le code éprouvé du programme (socle, PRO.GA) et ses doctrines plutôt que de
    reconstruire.
 5. Servir de premier terrain au moteur social national : tout ce qui est appris ici profite à
-   ANTIA.
+   ANTSIA.
 
 ### 2.3 Indicateurs de pilotage (cibles indicatives an 1, à confirmer avec le propriétaire)
 
@@ -128,7 +128,7 @@ Mesuré le 14/10/2026 sur `origin/main` (annexes A et B du plan) :
 
 Ce qui manque au socle et que le **moteur** apporte : clé de réseau, membre hors
 administration, identité externe, limitation de débit, modération à l'échelle, effacement
-RGPD des contenus sociaux, push social, fil matérialisé, compteurs fragmentés (cahier ANTIA).
+RGPD des contenus sociaux, push social, fil matérialisé, compteurs fragmentés (cahier ANTSIA).
 
 ### 3.2 Le dossier produit de la communauté diaspora (spécifications à reprendre)
 
@@ -176,15 +176,15 @@ pour les points d'accroche ; le socle reste la version la plus complète.
 
 | Terme | Définition |
 |---|---|
-| **Moteur** | le backend Convex et les paquets partagés du dépôt ANTIA, qui servent tous les réseaux |
-| **Réseau** | un espace social avec ses membres, son fil, ses pages, ses modérateurs ; `diasporale` est un réseau fermé, enfant du réseau racine `antia` |
+| **Moteur** | le backend Convex et les paquets partagés du dépôt ANTSIA, qui servent tous les réseaux |
+| **Réseau** | un espace social avec ses membres, son fil, ses pages, ses modérateurs ; `diasporale` est un réseau fermé, enfant du réseau racine `antsia` |
 | **Personne** | l'identité sociale unique d'un être humain dans le moteur (handle, nom affiché, avatar) |
 | **Adhésion** | l'appartenance d'une personne à un réseau, avec un statut (`en_attente`, `declaree`, `verifiee`, `suspendue`, `partie`) et un rôle |
 | **Facette** | les attributs d'une personne propres à un réseau : pour DIASPORALE, pays de résidence, ville, poste de rattachement, associations |
 | **Attestation consulaire** | la réponse minimale et consentie de consulat.ga : inscription active ou non, pays, poste, date |
 | **Parrainage** | l'acte par lequel un membre vérifié admet un compte léger dans le réseau |
 | **Hub pays** | la page d'un pays : fil local, évènements, associations, entreprises, membres opt-in |
-| **Portée** (`reach`) | `local` (le pays) ou `diaspora` (tout le réseau) ; distincte de la **visibilité** (`network` : reste dans DIASPORALE ; `root` : aussi dans ANTIA) |
+| **Portée** (`reach`) | `local` (le pays) ou `diaspora` (tout le réseau) ; distincte de la **visibilité** (`network` : reste dans DIASPORALE ; `root` : aussi dans ANTSIA) |
 | **Page** | la présence d'une organisation : institution (poste consulaire, ministère), association, entreprise, média ; une page a des signataires |
 | **Badge** | Officiel · Vérifié · Agent public · Communauté — calculé côté serveur |
 
@@ -194,11 +194,11 @@ Hérités du plan (R1 à R8) et précisés pour DIASPORALE :
 
 1. **Clé de réseau partout** : aucune lecture ni écriture sociale sans `networkId = diasporale`
    ; la recherche, les suggestions et le fil ne sortent jamais du réseau (sauf les contenus
-   `root`, lus par ANTIA).
+   `root`, lus par ANTSIA).
 2. **Contexte séparé** : visibilité `network` par défaut ; `root` seulement si audience
    `public` et geste explicite de l'auteur ; un contenu `root` reste aussi dans DIASPORALE.
-3. **Adhésion dérivée** : entrer dans DIASPORALE crée l'adhésion à ANTIA ; quitter DIASPORALE
-   ne retire pas ANTIA ; une suspension dans ANTIA suspend partout.
+3. **Adhésion dérivée** : entrer dans DIASPORALE crée l'adhésion à ANTSIA ; quitter DIASPORALE
+   ne retire pas ANTSIA ; une suspension dans ANTSIA suspend partout.
 4. **Aucune donnée consulaire dans le moteur** : pas de passeport, pas de NIP, pas d'état
    civil, pas de mineur, pas de dossier ; l'attestation est un booléen, un pays, un poste, une
    date.
@@ -273,7 +273,7 @@ arbitrage (§20, A3). Valeur par défaut recommandée : **un parrain vérifié d
 | modérateur pays | réseau × pays | file de signalements, masquer, sanctions graduées, pages à vérifier, évènements en relecture |
 | modérateur réseau | réseau | tous pays, recours, équipes |
 | administrateur du réseau | réseau | règles d'adhésion, pays ouverts, import, contrats, badges manuels tracés |
-| plateforme (console ANTIA) | moteur | création des réseaux, équipes, incidents, journal |
+| plateforme (console ANTSIA) | moteur | création des réseaux, équipes, incidents, journal |
 
 ### 6.5 Mesure de la population éligible (préalable au lancement)
 
@@ -289,7 +289,7 @@ d'information et ne se publie pas sans preuve (doctrine de communication publiqu
 |---|---|
 | `slug` | `diasporale` |
 | `kind` | `closed` |
-| `parentId` | `antia` |
+| `parentId` | `antsia` |
 | `membershipPolicy` | `declared_or_verified` (déclaration + IDN, attestation ou parrainage) |
 | `defaultVisibility` | `network` |
 | `facetSchema` | `countryOfResidence` (ISO 3166-1, obligatoire, ≠ GA), `city?`, `postSlug?` (poste consulaire de rattachement, posé par l'attestation), `associationIds[]`, `arrivedAt?` (année d'arrivée, pour l'entraide) |
@@ -322,7 +322,7 @@ le plan de prompts (`docs/01`) couvre 100 % des exigences. **V1** = lots D1 ; **
   DIASPORALE sans perte de session (jeton à usage unique ou retour OIDC).
 - **EXF-DG-06** Depuis consulat.ga : boutons « Rejoindre DIASPORALE » et « Activer IDN » (chantier
   côté gabon-diplomatie), sans aucun transfert de données hors consentement.
-- **EXT-DG-01** Better Auth du moteur : origines de confiance `diasporale.com`, `antia.ga`,
+- **EXT-DG-01** Better Auth du moteur : origines de confiance `diasporale.com`, `antsia.ga`,
   consoles ; sessions par origine ; `signOutEverywhere` (révocation serveur puis purge locale).
 
 ### 8.2 M2 — Profil et facettes (V1)
@@ -340,7 +340,7 @@ le plan de prompts (`docs/01`) couvre 100 % des exigences. **V1** = lots D1 ; **
 - **EXF-DG-10** Publication : texte (2 000 caractères), 4 images ou 1 vidéo avec texte
   alternatif, partage cité, hashtags et mentions, audience (`public` dans le réseau,
   `connections`, groupe, page), **pays ou portée `diaspora`**, idempotence, brouillon durable.
-- **EXF-DG-11** Visibilité : `network` par défaut ; case « Publier aussi sur ANTIA » (seulement
+- **EXF-DG-11** Visibilité : `network` par défaut ; case « Publier aussi sur ANTSIA » (seulement
   si audience `public`) ; explication en une ligne de ce que cela change.
 - **EXF-DG-12** Réactions (4 genres), commentaires à un niveau de réponse, relais, signets,
   masquage, sourdine d'un auteur, signalement (6 motifs), édition et retrait.
@@ -479,7 +479,7 @@ Rédigés « Étant donné …, quand …, alors … » ; chacun devient un test
 - **R1 — Un inscrit de consulat.ga entre.** Étant donné une personne inscrite au Consulat
   Général en France, rattachée à IDN ; quand elle clique « Rejoindre DIASPORALE » dans
   consulat.ga, se connecte par IDN sur diasporale.com, saisit « France, Lyon », choisit son
-  handle et consent ; alors elle est `declaree`, voit le hub France, et son adhésion ANTIA
+  handle et consent ; alors elle est `declaree`, voit le hub France, et son adhésion ANTSIA
   existe (dérivée).
 - **R2 — Vérification consulaire.** Étant donné R1 ; quand elle demande « Vérifier mon
   inscription consulaire » et consent ; alors le moteur reçoit `{verified: true, FR,
@@ -490,8 +490,8 @@ Rédigés « Étant donné …, quand …, alors … » ; chacun devient un test
   sans publier ; quand un membre vérifié depuis plus de 30 jours le parraine ; alors il est
   `declaree` et publie.
 - **R4 — Contexte séparé.** Étant donné une publication `public` dans DIASPORALE sans « aussi
-  sur ANTIA » ; alors aucune requête d'ANTIA ne la rend ; quand l'auteur coche « aussi sur
-  ANTIA » ; alors elle est lue dans le fil racine avec la pastille « Diaspora » et reste dans
+  sur ANTSIA » ; alors aucune requête d'ANTSIA ne la rend ; quand l'auteur coche « aussi sur
+  ANTSIA » ; alors elle est lue dans le fil racine avec la pastille « Diaspora » et reste dans
   DIASPORALE.
 - **R5 — Page officielle.** Étant donné l'import du Consulat Général en France ; alors sa page
   porte « Officiel », ses publications aussi ; un membre ordinaire ne peut pas y publier ;
@@ -510,7 +510,7 @@ Rédigés « Étant donné …, quand …, alors … » ; chacun devient un test
   aucune table sociale ni aucun blob ne porte plus sa trace ; les contenus des autres qui le
   citaient affichent « compte supprimé ».
 - **R10 — Fuite interdite.** Étant donné un client qui appelle une query sociale sans
-  `networkId` ou avec `antia` sur un contenu `network` de DIASPORALE ; alors le serveur refuse
+  `networkId` ou avec `antsia` sur un contenu `network` de DIASPORALE ; alors le serveur refuse
   de façon indistincte ; le cliquet de test le prouve.
 
 ## 10. Surfaces attendues
@@ -531,10 +531,10 @@ Rédigés « Étant donné …, quand …, alors … » ; chacun devient un test
 | `/actus`, `/direct/[id]` | stories, directs | `stories`, `direct` |
 | `/emploi`, `/talents`, `/annonces`, `/entraide` | V2 | nouveaux, sur C4 C5 C6 C9 des specs design |
 | `/parametres` | profil, facette, confidentialité, consentements, données | `ParametresPersonnelsPage` (allégée) |
-| `/moderation` | file pays, sanctions, pages à vérifier (rôle) | nouveau (patrons de la console ANTIA) |
+| `/moderation` | file pays, sanctions, pages à vérifier (rôle) | nouveau (patrons de la console ANTSIA) |
 | `/mentions-legales`, `/confidentialite` | textes (loi 001/2011 mod. 025/2023, RGPD), autorité APDPVP | — |
 
-Coque légère (cahier ANTIA) : fournisseurs Convex, TanStack et authentification, adaptateur
+Coque légère (cahier ANTSIA) : fournisseurs Convex, TanStack et authentification, adaptateur
 de routage, cloche, dock iCom, hôte d'appel, charte ; **jamais** AppShell, personal-nav,
 org-provider ni les hôtes du Poste.
 
@@ -545,13 +545,13 @@ parcours R1 à R8 avec le web.
 
 ## 11. Modèle de données
 
-Le moteur porte les tables (cahier ANTIA §11). DIASPORALE s'y lit ainsi :
+Le moteur porte les tables (cahier ANTSIA §11). DIASPORALE s'y lit ainsi :
 
 | Table (moteur) | Ce que DIASPORALE y met |
 |---|---|
 | `networks` | la ligne `diasporale` (§7) |
 | `persons`, `identityLinks` | la personne ; liens `idn`, `local`, `consular_attestation` (subject = empreinte, `verifiedAt`, `postSlug`, `country`) |
-| `networkMemberships` | `networkId: diasporale`, `status`, `role`, `verifiedBy ∈ {idn, consulat, sponsor}`, `sponsorPersonId?`, `derivedRoot: true` sur l'adhésion `antia` créée |
+| `networkMemberships` | `networkId: diasporale`, `status`, `role`, `verifiedBy ∈ {idn, consulat, sponsor}`, `sponsorPersonId?`, `derivedRoot: true` sur l'adhésion `antsia` créée |
 | `personFacets` | `networkId: diasporale`, `countryOfResidence`, `city`, `postSlug`, `associationIds`, `arrivedAt`, `helpAvailable`, visibilités par champ |
 | `posts` (+ `postReactions`, `postComments`, `postMarks`, `contentReports`) | `networkId`, `audience`, `visibility ∈ {network, root}`, `country?`, `reach ∈ {local, diaspora}` |
 | `pages`, `pageFollows`, `pageSignatories`, `pageClaims` | `ownerKind ∈ {institution, association, company, media}`, `trust ∈ {official, verified, community}`, `country`, `importRef?` |
@@ -593,7 +593,7 @@ sociale, compteurs fragmentés pour les contenus chauds, aucune donnée consulai
 | **`DIASPORA-ATTESTATION-V1`** | moteur → consulat.ga (requête), réponse signée | `{ subjectKind: idnSub \| emailHash, subject }` → `{ verified, countryOfResidence, postSlug, registrationStatus, since }` | route HTTP idempotente côté gabon-diplomatie, clé de service, journal des deux côtés, consentement enregistré dans le moteur avant l'appel ; aucune autre donnée ; chantier côté gabon-diplomatie (ADR 0006 proposé) |
 | **`DIASPORA-COMMUNAUTE-V1`** | consulat.ga → moteur, une fois (puis à la demande) | objets **publics** : postes consulaires (pages Officiel), associations (pages non revendiquées), entreprises, évènements publics à venir, communiqués officiels | export signé, import idempotent par `importRef`, journal `communityImports` ; jamais de personne |
 | Cycle de vie | consulat.ga → moteur (V2) | révocation d'une inscription, suppression de compte | webhook signé ; le statut `verifiee` retombe à `declaree` |
-| **ANTIA** | interne au moteur | adhésion dérivée, contenus `root` | aucune interface : mêmes tables |
+| **ANTSIA** | interne au moteur | adhésion dérivée, contenus `root` | aucune interface : mêmes tables |
 
 Règles héritées de la doctrine : contrats déclarés et versionnés, types copiés chez le
 consommateur, routes idempotentes, clés de service par environnement, aucune lecture de base
@@ -625,7 +625,7 @@ consommateur, routes idempotentes, clés de service par environnement, aucune le
 - **EXT-DG-09 Qualité** : tests portés avec le code, cliquets d'architecture (réseau borné,
   charte, aucun import inter-produit, aucun `.collect()` non borné), typecheck à zéro, suite
   verte avant toute publication ; parité prouvée module par module.
-- **EXT-DG-10 Coût** : un projet Convex partagé avec ANTIA ; budget mensuel et seuil de
+- **EXT-DG-10 Coût** : un projet Convex partagé avec ANTSIA ; budget mensuel et seuil de
   coupure décidés par le propriétaire ; Cloud Build ou Vercel selon décision.
 
 ## 15. Design et charte
@@ -657,7 +657,7 @@ consommateur, routes idempotentes, clés de service par environnement, aucune le
 
 ## 16. Lots
 
-### Lot D0 — Préalables (propriétaire, juriste, ANTIA A0–A2)
+### Lot D0 — Préalables (propriétaire, juriste, ANTSIA A0–A2)
 
 Décisions du §20 rendues ; dépôt `administration-ga/diasporale` créé ; client OIDC `diasporale`
 en sandbox ; dossier APDPVP et analyse d'impact lancés ; mesure de la population éligible ;
@@ -695,8 +695,8 @@ messagerie) ; premiers revenus mesurés.
 
 ## 17. Critères de recette transverses et Definition of Done
 
-- Deux réseaux de test (`diasporale`, `antia`) : aucun contenu `network` de l'un n'est lu par
-  l'autre ; un membre de `diasporale` est membre d'`antia` ; `root` exige `public`.
+- Deux réseaux de test (`diasporale`, `antsia`) : aucun contenu `network` de l'un n'est lu par
+  l'autre ; un membre de `diasporale` est membre d'`antsia` ; `root` exige `public`.
 - Aucune table du moteur ne porte de donnée consulaire ; aucun import de `_generated` ni de
   schéma du socle ou de gabon-diplomatie (cliquet).
 - Chaque module dupliqué a son en-tête de provenance, ses tests portés, sa liste de parité
@@ -737,7 +737,7 @@ consulaires ; l'application de bureau ; le mode hors ligne.
 
 | # | Question | Recommandation |
 |---|---|---|
-| A1 | Nom et domaine du réseau racine (ANTIA / ANTSA, `antia.ga`) ; DIASPORALE.COM confirmé | ANTIA (`antia.ga` figure déjà au registre des dépôts du propriétaire) |
+| A1 | Nom et domaine du réseau racine (ANTSIA / ANTSA, `antsia.ga`) ; DIASPORALE.COM confirmé | ANTSIA (`antsia.ga` figure déjà au registre des dépôts du propriétaire) |
 | A2 | Architecture « un moteur, trois réseaux, deux dépôts » | oui (plan §4) |
 | A3 | Seuils du parrainage et accès des comptes `en_attente` | un parrain vérifié depuis > 30 j ; dix parrainages/mois ; `en_attente` = lecture seule |
 | A4 | Attestation consulaire : contrat minimal consenti depuis consulat.ga, après validation juridique | oui ; sinon lancement sans badge consulaire |
@@ -751,9 +751,9 @@ consulaires ; l'application de bureau ; le mode hors ligne.
 
 ## 21. Références
 
-- Plan de pilotage : `Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTIA_2026-10-14.md`
+- Plan de pilotage : `Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTSIA_2026-10-14.md`
   et ses annexes A (backend socle), B (front socle), C (comptes consulat.ga), D (conventions).
-- Cahier du moteur : `ECOSYSTEMES/ANTIA/docs/00_CAHIER_DES_CHARGES_ANTIA.md`.
+- Cahier du moteur : `ECOSYSTEMES/ANTSIA/docs/00_CAHIER_DES_CHARGES_ANTSIA.md`.
 - Dossier produit diaspora : `ECOSYSTEMES/GABON_DIPLOMATIE/docs/OPPORTUNITES_COMMUNAUTE_DIASPORA.md`,
   `DESIGN_SPECS_COMMUNAUTE.md`, `PLAN_IMPLEMENTATION_ESPACE_COMMUNAUTE.md`, `AUDIT_AUTHZ_SWEEP_2026-07-10.md`.
 - Socle : `ADMINISTRATION_GA/socle/convex/modules/{reseauPersonnel,reseau,reseauPages,reseauAlbums,direct,fileGuard}`,
