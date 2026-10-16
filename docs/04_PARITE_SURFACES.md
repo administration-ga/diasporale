@@ -129,8 +129,19 @@ par cette session.
 - **Contrôles automatisés** : 23 nouveaux tests (8 de présentation, 9 de l’adaptateur, 6 de l’écran),
   610 tests DIASPORALE verts (238 domaine + 248 features + 124 application), typage et lint
   sans erreur. Réseau/charte, curseurs, réponses, échecs, lecture seule et remise à zéro couverts.
-- **Chrome** : page réelle servie en mode moteur ; « Mes relations », état vide, navigation
-  et lien vers l'annuaire observés ; capture à 320 px en sombre. Le parcours non vide entre deux
-  comptes et la pagination au-delà de la première page restent à recetter.
+- **Chrome, moteur local** : deux comptes fictifs, sessions isolées ; demande envoyée depuis
+  le profil, reçue sur `/relations?onglet=demandes`. Pour le membre `en_attente`, demande lisible,
+  boutons Accepter/Refuser désactivés et explication de lecture seule. Après vérification par
+  la graine locale de recette : boutons actifs, acceptation réussie, demande retirée, relation
+  affichée dans `/relations` chez les deux comptes. Le second compte n'a consenti ni à
+  l'annuaire ni aux notifications lors de son inscription.
+- **Mise en page** : liste non vide à 320 px sombre, 375 px clair et 1 280 px clair ; largeur
+  du document égale à celle de l'écran à chaque mesure. Console finale sans erreur ni avertissement.
+  La pagination au-delà de la première page et le refus entre comptes restent à recetter
+  dans le navigateur ; ils sont couverts par les tests automatisés.
+- **Incident local et rétablissement** : backend interrompu pendant le premier essai
+  d'acceptation sous forte charge ; redémarrage du backend local puis reprise complète du
+  parcours réussie. DIASPORALE 3031 arrêté à la fin ; serveurs 3027 et 3030 rétablis après
+  contrôle de leur identité, ressources déjà compilées servies en HTTP 200 sur chacun.
 - Limites : pas de liste des demandes envoyées ni d'annulation sur cette page ; les gestes
   du profil, les abonnements et la cloche existants restent les autres portes de la relation.
