@@ -36,8 +36,10 @@ export const routes = {
   bookmarks: () => "/enregistrements",
   /** L'annuaire opt-in des membres (EXF-DG-19). */
   members: () => "/membres",
-  /** Mes relations et les demandes reçues, sans recherche d'annuaire générique. */
-  relations: (kind?: "accepted" | "received") => kind === "received" ? "/relations?onglet=demandes" : "/relations",
+  /** Mes liens dans le réseau, sans recherche d'annuaire générique. */
+  relations: (kind?: "accepted" | "received" | "following") => kind === "received"
+    ? "/relations?onglet=demandes"
+    : kind === "following" ? "/relations?onglet=abonnements" : "/relations",
   /**
    * iCom en pages (PD7) : la messagerie et ses sous-adresses. Au téléphone, la page
    * iCom ; au bureau, l'adresse ouvre la carte iCom détachée sur le fil.

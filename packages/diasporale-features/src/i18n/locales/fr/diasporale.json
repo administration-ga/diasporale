@@ -1016,10 +1016,11 @@
   },
   "relations": {
     "title": "Mes relations",
-    "lead": "Retrouvez vos relations dans DIASPORALE et répondez aux demandes reçues.",
-    "tabsLabel": "Relations et demandes",
+    "lead": "Retrouvez vos relations et vos abonnements dans DIASPORALE, et répondez aux demandes reçues.",
+    "tabsLabel": "Relations, demandes et abonnements",
     "acceptedTab": "Mes relations",
     "receivedTab": "Demandes reçues",
+    "followingTab": "Mes abonnements",
     "member": "Membre",
     "loading": "Chargement de vos relations…",
     "errorTitle": "La liste n’a pas pu être actualisée",

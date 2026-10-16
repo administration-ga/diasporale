@@ -1016,10 +1016,11 @@
   },
   "relations": {
     "title": "My connections",
-    "lead": "Find your connections in DIASPORALE and respond to incoming requests.",
-    "tabsLabel": "Connections and requests",
+    "lead": "Find your DIASPORALE connections and people you follow, and respond to received requests.",
+    "tabsLabel": "Connections, requests and following",
     "acceptedTab": "My connections",
     "receivedTab": "Received requests",
+    "followingTab": "Following",
     "member": "Member",
     "loading": "Loading your connections…",
     "errorTitle": "The list could not be refreshed",

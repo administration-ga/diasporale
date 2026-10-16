@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
-import type { Loadable, MembershipView, ProfileImageView, ProfileView } from "@diasporale/features/data"
+import type { ActionResult, Loadable, MembershipView, ProfileImageView, ProfileView, RelationView } from "@diasporale/features/data"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
-import { cleanup, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import type { ComponentProps, ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -17,6 +17,7 @@ import { ProfileScreen } from "./profile-screens"
 const mocks = vi.hoisted(() => ({
   membership: null as MembershipView | null,
   profile: { status: "loading" } as Loadable<ProfileView | null>,
+  relation: { status: "loading" } as Loadable<RelationView>,
   network: null as IcomNetwork | null,
   search: "",
   read: vi.fn(),
@@ -28,6 +29,12 @@ const mocks = vi.hoisted(() => ({
   cover: vi.fn(),
   ring: vi.fn(),
   write: vi.fn(),
+  follow: vi.fn<(handle: string) => Promise<ActionResult>>(),
+  unfollow: vi.fn<(personId: string) => Promise<ActionResult>>(),
+  connect: vi.fn<(personId: string) => Promise<ActionResult>>(),
+  respond: vi.fn<(connectionId: string, accept: boolean) => Promise<ActionResult>>(),
+  block: vi.fn<(personId: string) => Promise<ActionResult>>(),
+  unblock: vi.fn<(personId: string) => Promise<ActionResult>>(),
 }))
 
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(mocks.search) }))
@@ -38,8 +45,15 @@ vi.mock("@diasporale/features/data", async (importOriginal) => ({
     mocks.read(handle)
     return mocks.profile
   },
-  useActions: () => ({}),
-  useRelation: () => ({ status: "loading" }),
+  useActions: () => ({
+    follow: mocks.follow,
+    unfollow: mocks.unfollow,
+    connect: mocks.connect,
+    respondToConnection: mocks.respond,
+    block: mocks.block,
+    unblock: mocks.unblock,
+  }),
+  useRelation: () => mocks.relation,
   usePage: () => ({ status: "loading" }),
 }))
 
@@ -132,8 +146,12 @@ beforeEach(() => {
   vi.clearAllMocks()
   mocks.membership = membership
   mocks.profile = { status: "ready", data: profile }
+  mocks.relation = { status: "loading" }
   mocks.network = { networkId: "networks_diasporale", slug: "diasporale", personId: membership.personId } as IcomNetwork
   mocks.search = ""
+  for (const action of [mocks.follow, mocks.unfollow, mocks.connect, mocks.respond, mocks.block, mocks.unblock]) {
+    action.mockReset().mockResolvedValue({ ok: true, value: null })
+  }
 })
 
 afterEach(cleanup)
@@ -235,5 +253,98 @@ describe("ProfileScreen — mur et confidentialité du profil DIASPORALE", () =>
     expect(screen.getByRole("region", { name: "Albums DIASPORALE" })).toBeInTheDocument()
     expect(mocks.posts).not.toHaveBeenCalled()
     expect(mocks.albums).toHaveBeenLastCalledWith(expect.objectContaining({ handle: profile.handle, isSelf: true, canPublish: true, preview: false, variant: "albums" }))
+  })
+})
+
+describe("ProfileScreen — suivre et ne plus suivre selon l'adhésion", () => {
+  const otherProfile: ProfileView = { ...profile, personId: "persons_boris", handle: "boris.demo", displayName: "Boris", isSelf: false }
+
+  beforeEach(() => {
+    mocks.profile = { status: "ready", data: otherProfile }
+    mocks.relation = { status: "ready", data: { connection: "none", connectionId: null, following: true } }
+  })
+
+  it("un membre en attente peut retirer son abonnement existant par l'identifiant de la personne", async () => {
+    mocks.membership = { ...membership, status: "en_attente", canPublish: false }
+    render(tree(otherProfile.handle))
+    const unfollow = screen.getByRole("button", { name: t("relation.unfollow") })
+
+    expect(unfollow).toBeEnabled()
+    expect(unfollow).toHaveAttribute("aria-pressed", "true")
+    expect(screen.getByRole("button", { name: t("relation.connect") })).toBeDisabled()
+    await act(async () => { fireEvent.click(unfollow) })
+
+    expect(mocks.unfollow).toHaveBeenCalledExactlyOnceWith(otherProfile.personId)
+    expect(mocks.follow).not.toHaveBeenCalled()
+    expect(mocks.connect).not.toHaveBeenCalled()
+  })
+
+  it("un membre en attente ne peut ni suivre une nouvelle personne ni demander une connexion", () => {
+    mocks.membership = { ...membership, status: "en_attente", canPublish: false }
+    mocks.relation = { status: "ready", data: { connection: "none", connectionId: null, following: false } }
+    render(tree(otherProfile.handle))
+    const follow = screen.getByRole("button", { name: t("relation.follow") })
+    const connect = screen.getByRole("button", { name: t("relation.connect") })
+
+    expect(follow).toBeDisabled()
+    expect(follow).toHaveAttribute("aria-pressed", "false")
+    expect(connect).toBeDisabled()
+    fireEvent.click(follow)
+    fireEvent.click(connect)
+    expect(mocks.follow).not.toHaveBeenCalled()
+    expect(mocks.connect).not.toHaveBeenCalled()
+  })
+
+  it("le droit de se désabonner n'ouvre pas la réponse à une demande reçue en attente", () => {
+    mocks.membership = { ...membership, status: "en_attente", canPublish: false }
+    mocks.relation = { status: "ready", data: { connection: "requested_by_them", connectionId: "connections_boris", following: true } }
+    render(tree(otherProfile.handle))
+
+    expect(screen.getByRole("button", { name: t("relation.unfollow") })).toBeEnabled()
+    const accept = screen.getByRole("button", { name: t("relation.accept") })
+    const decline = screen.getByRole("button", { name: t("relation.decline") })
+    expect(accept).toBeDisabled()
+    expect(decline).toBeDisabled()
+    fireEvent.click(accept)
+    fireEvent.click(decline)
+    expect(mocks.respond).not.toHaveBeenCalled()
+  })
+
+  it.each([false, true])("conserve le droit normal de suivre ou de se désabonner (%s)", async (following) => {
+    mocks.relation = { status: "ready", data: { connection: "none", connectionId: null, following } }
+    render(tree(otherProfile.handle))
+    const button = screen.getByRole("button", { name: t(following ? "relation.unfollow" : "relation.follow") })
+
+    expect(button).toBeEnabled()
+    expect(screen.getByRole("button", { name: t("relation.connect") })).toBeEnabled()
+    await act(async () => { fireEvent.click(button) })
+    if (following) {
+      expect(mocks.unfollow).toHaveBeenCalledExactlyOnceWith(otherProfile.personId)
+      expect(mocks.follow).not.toHaveBeenCalled()
+    } else {
+      expect(mocks.follow).toHaveBeenCalledExactlyOnceWith(otherProfile.handle)
+      expect(mocks.unfollow).not.toHaveBeenCalled()
+    }
+  })
+
+  it("verrouille immédiatement le désabonnement en vol et permet une reprise après refus", async () => {
+    mocks.membership = { ...membership, status: "en_attente", canPublish: false }
+    let finish!: (result: ActionResult) => void
+    mocks.unfollow.mockImplementationOnce(() => new Promise<ActionResult>((resolve) => { finish = resolve }))
+    render(tree(otherProfile.handle))
+    const button = screen.getByRole("button", { name: t("relation.unfollow") })
+
+    act(() => {
+      fireEvent.click(button)
+      fireEvent.click(button)
+    })
+    expect(mocks.unfollow).toHaveBeenCalledExactlyOnceWith(otherProfile.personId)
+    expect(button).toBeDisabled()
+    await act(async () => { finish({ ok: false, code: "unknown" }) })
+    expect(button).toBeEnabled()
+
+    await act(async () => { fireEvent.click(button) })
+    expect(mocks.unfollow).toHaveBeenCalledTimes(2)
+    expect(mocks.follow).not.toHaveBeenCalled()
   })
 })

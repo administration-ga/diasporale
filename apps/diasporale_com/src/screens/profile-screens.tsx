@@ -23,7 +23,7 @@ import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { BanIcon, BookmarkIcon, ClockIcon, EyeIcon, FlagIcon, HandHeartIcon, ImageIcon, LandmarkIcon, NewspaperIcon, PencilIcon, PhoneIcon, ShieldOffIcon, UserCheckIcon, UserPlusIcon, UserRoundXIcon, UsersIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useSearchParams } from "next/navigation"
-import { type ReactNode, useId, useState } from "react"
+import { type ReactNode, useId, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { AppShell } from "@/components/app-shell"
@@ -202,6 +202,7 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
   const relation = useRelation(props.personId)
   const actions = useActions()
   const [busy, setBusy] = useState(false)
+  const running = useRef(false)
   const [confirmingBlock, setConfirmingBlock] = useState(false)
   const hintId = useId()
   const name = props.displayName
@@ -210,11 +211,17 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
   const { connection, connectionId, following } = relation.data
 
   const run = async (action: () => Promise<ActionResult>, done?: string) => {
+    if (running.current) return
+    running.current = true
     setBusy(true)
-    const result = await action()
-    setBusy(false)
-    if (!result.ok) toast.error(t(`errors.${result.code}`))
-    else if (done) toast.success(done)
+    try {
+      const result = await action()
+      if (!result.ok) toast.error(t(`errors.${result.code}`))
+      else if (done) toast.success(done)
+    } finally {
+      running.current = false
+      setBusy(false)
+    }
   }
 
   if (connection === "blocked_by_me") {
@@ -282,7 +289,7 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
         size="sm"
         variant="outline"
         aria-pressed={following}
-        disabled={locked}
+        disabled={busy || (!following && !props.canCommunicate)}
         onClick={() => run(() => (following ? actions.unfollow(props.personId) : actions.follow(props.handle)))}
       >
         {following ? t("relation.unfollow") : t("relation.follow")}

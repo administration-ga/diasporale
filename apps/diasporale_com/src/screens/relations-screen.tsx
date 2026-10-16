@@ -1,11 +1,13 @@
 "use client"
 
+import { FollowsSection } from "@antsia/social-features/reseau-personnel"
 import { EmptyState, FolderTabsNav } from "@diasporale/features"
 import type { MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { UsersRoundIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useSearchParams } from "next/navigation"
+import { useLayoutEffect, useRef } from "react"
 
 import { AppShell } from "@/components/app-shell"
 import { Gate, GateSkeleton } from "@/components/gate"
@@ -31,7 +33,22 @@ function Relations(props: { membership: MembershipView }) {
   const params = useSearchParams()
   const network = useEngineNetwork()
   const icom = useIcomState()
-  const kind = params.get("onglet") === "demandes" ? "received" : "accepted"
+  const tab = params.get("onglet")
+  const kind = tab === "abonnements" ? "following" : tab === "demandes" ? "received" : "accepted"
+  // Le contexte de lecture et l'adhésion peuvent se résoudre sur deux rendus.
+  const resolvingReader = network !== null && network.personId !== props.membership.personId
+  const tabsLabel = t("relations.tabsLabel")
+  const selectedTab = useRef<HTMLAnchorElement>(null)
+  useLayoutEffect(() => {
+    const link = selectedTab.current
+    const track = link?.parentElement
+    if (!link || !track) return
+    const item = link.getBoundingClientRect()
+    const visible = track.getBoundingClientRect()
+    // Déplacer seulement la piste : ni focus volé, ni défilement de la page.
+    if (item.left < visible.left) track.scrollLeft -= visible.left - item.left
+    else if (item.right > visible.right) track.scrollLeft += item.right - visible.right
+  }, [kind, network?.networkId, network?.personId, resolvingReader, tabsLabel])
 
   return (
     <>
@@ -39,22 +56,25 @@ function Relations(props: { membership: MembershipView }) {
         <h1 className="font-display text-3xl font-bold">{t("relations.title")}</h1>
         <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{t("relations.lead")}</p>
       </div>
-      {network ? (
+      {resolvingReader ? <GateSkeleton /> : network ? (
         <>
           <FolderTabsNav
-            label={t("relations.tabsLabel")}
+            label={tabsLabel}
             items={[
               { id: "accepted", label: t("relations.acceptedTab"), href: routes.relations(), active: kind === "accepted" },
               { id: "received", label: t("relations.receivedTab"), href: routes.relations("received"), active: kind === "received" },
+              { id: "following", label: t("relations.followingTab"), href: routes.relations("following"), active: kind === "following" },
             ]}
             renderLink={(item, className, children) => (
-              <NextLink key={item.id} href={item.href} className={className} aria-current={item.active ? "page" : undefined} scroll={false}>
+              <NextLink key={item.id} ref={item.active ? selectedTab : undefined} href={item.href} className={className} aria-current={item.active ? "page" : undefined} scroll={false}>
                 {children}
               </NextLink>
             )}
           />
           <IcomIsland key={`${network.networkId}:${network.personId}:${kind}`} network={network}>
-            <EnginePersonalConnections kind={kind} canRespond={props.membership.canPublish} />
+            {kind === "following"
+              ? <FollowsSection discover={{ href: routes.members(), label: t("relations.discover") }} />
+              : <EnginePersonalConnections kind={kind} canRespond={props.membership.canPublish} />}
           </IcomIsland>
         </>
       ) : icom.status === "loading" ? <GateSkeleton /> : (

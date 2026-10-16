@@ -2,9 +2,9 @@
 
 > Tenu par la session de construction (PD4, point 6 du plan `docs/01`). État au 16/10/2026.
 >
-> **Référence** : les surfaces du réseau personnel de l'espace agent (socle), que
-> `@antsia/social-features` dupliquera (PA6 d'ANTSIA). Tant que ce paquet n'existe pas, DIASPORALE
-> porte ses propres surfaces dans `@diasporale/features`. Chacune lit le **port de données**
+> **Référence** : les surfaces du réseau personnel de l'espace agent (socle), portées
+> dans `@antsia/social-features` et réutilisées par DIASPORALE. Les surfaces propres de
+> `@diasporale/features` lisent le **port de données**
 > (`@diasporale/features/data`), qui a deux implémentations :
 > - la **démonstration** : données fictives, ce navigateur seulement, mêmes règles du domaine ;
 > - le **moteur** : ANTSIA local, tranche `convex/modules/diaspora/` et fonctions génériques.
@@ -23,7 +23,7 @@
 | Commentaires | feuille « Commentaires » | EXF-DG-12 | ✅ | `engagement.paginateComments`, `paginateReplies`, `comment`, `removeComment` | pas d'édition d'un commentaire |
 | Menu « … » | `PostMenu` | EXF-DG-12, 40 | 🟡 | `marks.toggleMark`, `hidePost`, `muteAuthor`, `moderation.reportPost`, `posts.remove` | sans « Modifier », sans relais ; signets sans liste |
 | Profil personne (`ProfilPersonnePage`) | `/@handle` | EXF-DG-07, 08 | 🟡 | `getPublicProfile`, `diaspora.profile.memberFacet`, `posts.personPosts` | facette projetée ; mur paginé par le curseur du moteur ; photo et couverture lues et modifiables depuis les réglages en mode moteur ; aperçu limité aux informations et à la facette, publications et albums masqués (suite du 16/10 ci-dessous) |
-| Relations (`PeoplePanel`, hooks de pagination) | `/relations`, demandes reçues, barre du profil, cloche | EXF-DG-18, 43 | 🟡 | `graph.connections.*`, `graph.follows.*`, hooks paginés du moteur | listes acceptées et reçues en mode moteur ; lecture en attente, réponses au droit de publier ; recherche/suggestions réservées à l’annuaire opt-in ; demandes envoyées et annulation non ajoutées dans cette tranche |
+| Relations (`PeoplePanel`, hooks de pagination) | `/relations`, demandes reçues, abonnements, barre du profil, cloche | EXF-DG-18, 43 | 🟡 | `graph.connections.*`, `graph.follows.*`, hooks paginés du moteur | listes acceptées, reçues et abonnements en mode moteur ; pages natives réactives et reprise ; lecture/désabonnement en attente, réponses et nouveau suivi au droit de publier ; découverte réservée à l’annuaire opt-in ; demandes envoyées/annulation et gestion des déblocages restent à raccorder |
 | Annuaire et recherche | `/membres` | EXF-DG-19, 46 | ✅ | `diaspora.directory.searchMembers` | opt-in par niveau ; masqué introuvable, même par identifiant exact |
 | Suggestions | « Des membres à rencontrer » (rail du fil, `/membres`) | EXF-DG-18 | ✅ | `diaspora.suggestions.forMe`, `suggestions.dismiss` | pas de liste « masquées » à rouvrir (`restore` existe côté moteur) |
 | Cloche | `NotificationBell` | EXF-DG-38 | ✅ | `notifications.bell.*` | le partage d'une publication se dit (« a partagé votre publication ») ; genres de PD5 à PD8 dits « nouvelle activité » d'ici là |
@@ -396,3 +396,48 @@ par cette session.
   contrôle partagé, sans embarquer les fichiers PA5 d’ANTSIA. Les six cas supplémentaires
   du bouton profil sont également couverts ; leur livraison appartient à la tranche suivante
   « Mes abonnements » (`docs/06`). Aucun nouveau contrôle navigateur revendiqué ici.
+
+
+### Mes abonnements et désabonnement en attente — 16/10
+
+- **Raccord réel** : troisième onglet adressable `/relations?onglet=abonnements`, navigation
+  française/anglaise. `FollowsSection` est la carte existante du moteur exposée seule avec
+  ses styles et un lien de découverte injecté vers `/membres`. Aucun montage de recherche
+  générique ni lecture d’une liste d’abonnés ; leur décompte propre reste agrégé.
+- **Pages** : taille native de 12, chaque page reste abonnée ; dédoublonnage par personne,
+  amont prioritaire, page vide non terminale franchissable, frontière réalignée et anciens
+  rapports ignorés même si un curseur revient. Erreur/reprise conserve les lignes valides.
+  Verrou immédiat par ligne, retrait seulement après succès, refus traduit et nouvelle
+  tentative possible. Changer de lecteur/réseau remonte la chaîne ; un contexte de lecture
+  encore lié à l’ancienne adhésion ne monte aucune liste privée.
+- **Droits** : le profil permet aussi de ne plus suivre en attente ; suivre, demander une
+  connexion et répondre restent fermés. Le moteur juge toujours l’opération ; aucune garde
+  ni API backend nouvelle. Une mutation de liste terminant après démontage ne notifie pas
+  le nouveau lecteur. La sentinelle est nettoyée au commit du changement de contexte.
+- **Tests** : 34 nouveaux cas moteur (22 section montée, 11 paginateur pur, un PeoplePanel),
+  17 application (onze raccord, six profil). Ciblés : **60 moteur et 37 application verts**.
+  La passe complète finale est **code 0 : 6 268 tests**, dont 1 455 backend, 122 cliquets,
+  24 scripts, 3 021 surfaces moteur et 839 DIASPORALE (238 domaine, 259 surfaces, 342 app).
+  Codegen, types Convex/tests, dix typages d’espaces et neuf lints sans erreur ; avertissements
+  existants. Preuve : `/tmp/diasporale-pd4-following-verify-release.log`.
+- **Chrome réel** : lecteur fictif `pd4.lecture`, statut « En attente » relu dans les réglages,
+  ANTSIA dérivée « Déclarée ». Liste initiale : un abonnement à `relations.recette` ; profil
+  suivi : désabonnement actif, connexion/messagerie fermées. Retrait depuis la liste via la
+  mutation publique, avis « Suivi retiré », état vide vers `/membres`. Après rechargement :
+  aucun bouton de retrait ; sur le profil, « Suivre » et « Se connecter » désactivés.
+  L’abonnement fictif est laissé retiré ; la graine locale peut le préparer pour une autre recette.
+- **Visuel** : 320 sombre, 375 clair, 1 280 sombre sans débordement du document. L’onglet actif
+  initialement coupé est maintenant mis en vue par défilement de sa piste seulement, sans
+  déplacer la page ni le focus. Avertissement Next du défilement doux corrigé par l’attribut
+  racine prévu ; aller-retour demandes/abonnements : état actif correct, console finale sans
+  nouveau warning ni erreur. Captures locales : `/tmp/diasporale-pd4-abonnements-320-sombre.jpg`
+  et `/tmp/diasporale-pd4-abonnements-375-clair.jpg`. Thème clair initial rétabli, viewport
+  réinitialisé, seul onglet créé fermé ; aucune session révoquée.
+- **Limite de preuve** : pagination multiple, pages vides, refus et courses validés par les
+  composants montés ; Chrome utilise un seul abonnement réel. La démonstration garde la
+  surface fermée. Déblocages : query publique des seuls blocages émis à définir avec ANTSIA ;
+  ne pas exposer le helper interne bidirectionnel. Aucun push ni publication de production.
+
+- **Clôture coordonnée** : surface moteur `d2a782b` (six fichiers seulement) ; DIASPORALE 3031
+  arrêté, ANTSIA 3030 rétabli (`/entrer` HTTP 200), backend 3210 conservé. Aucune suppression
+  de cache ou de session, aucun push.
