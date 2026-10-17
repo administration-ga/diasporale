@@ -189,3 +189,24 @@ describe("Quitter DIASPORALE — geste distinct du profil et des consentements",
     ])
   })
 })
+
+describe("Identité commune — raccord sans publication incidente", () => {
+  it("appelle seulement updateMyProfile avec les textes explicites même pour un profil retiré", async () => {
+    const { publication, calls } = setup()
+    expect(await publication.updateIdentity!(PERSON._id, { displayName: "Libre choix", headline: "" })).toEqual({ ok: true, value: null })
+    expect(calls).toEqual([
+      { name: "modules/people/persons:getMyPerson", args: {} },
+      { name: "modules/people/profile:updateMyProfile", args: { expectedPersonId: PERSON._id, displayName: "Libre choix", headline: "" } },
+    ])
+  })
+  it("refuse une ancienne personne avant toute mutation", async () => {
+    const { publication, mutation } = setup()
+    expect(await publication.updateIdentity!("autre-personne", { displayName: "Libre choix", headline: "" })).toEqual({ ok: false, code: "not_found" })
+    expect(mutation).not.toHaveBeenCalled()
+  })
+  it("traduit la limite d'accroche sans exposer le détail moteur", async () => {
+    const { publication, mutation } = setup()
+    mutation.mockRejectedValue(new ConvexError({ code: "invalidArgument", rule: "HEADLINE_TOO_LONG", detail: "PRIVATE_DETAIL" }))
+    expect(await publication.updateIdentity!(PERSON._id, { displayName: "Libre choix", headline: "x".repeat(161) })).toEqual({ ok: false, code: "headline_too_long" })
+  })
+})

@@ -159,6 +159,8 @@ export interface DemoComment {
   /** La racine à laquelle la réponse se rattache ; `null` pour une racine. */
   readonly parentId: string | null
   readonly removedAt: number | null
+  /** Absent sur les instantanés v7 existants ; renseigné seulement après une édition. */
+  readonly editedAt?: number
 }
 
 export interface DemoEvent {

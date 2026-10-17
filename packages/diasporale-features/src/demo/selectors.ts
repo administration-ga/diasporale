@@ -429,7 +429,7 @@ function commentView(state: DemoState, item: DemoComment, viewerId: string): Com
     author: { personId: item.authorId, handle: profile?.handle ?? null, displayName: profile?.displayName ?? null },
     body: item.body,
     createdAt: item.createdAt,
-    edited: false,
+    edited: item.editedAt !== undefined,
     isMine: item.authorId === viewerId,
   }
 }

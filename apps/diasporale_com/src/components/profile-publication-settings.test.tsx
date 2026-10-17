@@ -352,3 +352,24 @@ describe("ProfilePublicationSettings — profil commun et commandes personnelles
     expect(mocks.republish).not.toHaveBeenCalled()
   })
 })
+
+it("verrouille la republication dès la validation d'une édition et jusqu'à sa réponse", async () => {
+  const pending = pendingResult()
+  const updateIdentity = vi.fn().mockReturnValue(pending.promise)
+  mocks.source = { kind: "engine", profilePublication: { ...publication, updateIdentity } }
+  mocks.profile = { status: "ready", data: { ...own, published: false } }
+  render(tree())
+  fireEvent.click(screen.getByRole("button", { name: t("settings.profileIdentity.edit") }))
+  fireEvent.change(screen.getByLabelText(t("settings.profileIdentity.name")), { target: { value: "Correction conservée" } })
+  const save = screen.getByRole("button", { name: t("settings.profileIdentity.save") })
+  fireEvent.submit(save.closest("form")!)
+  const republish = screen.getByRole("button", { name: t("settings.profilePublication.republish") })
+  expect(republish).toBeDisabled()
+  fireEvent.click(republish)
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  await waitFor(() => expect(updateIdentity).toHaveBeenCalledExactlyOnceWith(own.personId, { displayName: "Correction conservée", headline: own.headline }))
+  expect(mocks.republish).not.toHaveBeenCalled()
+  await act(async () => { pending.finish({ ok: false, code: "rate_limited" }) })
+  expect(screen.getByLabelText(t("settings.profileIdentity.name"))).toHaveValue("Correction conservée")
+  expect(republish).toBeEnabled()
+})

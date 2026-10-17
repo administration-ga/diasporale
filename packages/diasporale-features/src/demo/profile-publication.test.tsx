@@ -174,3 +174,43 @@ describe("Départ DIASPORALE de démonstration — aucune dépublication ou rév
     expect(store.statusOf(OTHER)).not.toBe("partie")
   })
 })
+
+describe("Identité de démonstration — sauvegarder ne republie pas", () => {
+  it.each([false, true])("conserve publication/retrait (retiré=%s), privé et tous les autres choix", async (withdrawn) => {
+    const { store, publication, storage } = setup()
+    await publication.setPrivacy(PERSON, true)
+    if (withdrawn) await publication.withdraw(PERSON)
+    const before = store.getState()
+    expect(await publication.updateIdentity!(PERSON, { displayName: "  Nom libre  ", headline: "  Nouvelle accroche  " })).toEqual({ ok: true, value: null })
+    expect(ownProfileView(store.getState(), PERSON)).toMatchObject({ displayName: "Nom libre", headline: "Nouvelle accroche", published: !withdrawn, private: true, handle: "prisca.abanga" })
+    expect(store.getState().persons[PERSON]!.withdrawnAt).toBe(before.persons[PERSON]!.withdrawnAt)
+    for (const key of ["posts", "comments", "memberships", "consents", "connections", "follows", "sponsorships", "marks"] as const) expect(store.getState()[key]).toEqual(before[key])
+    const reloaded = new DemoStore(storage, () => NOW, 0)
+    expect(ownProfileView(reloaded.getState(), PERSON)).toMatchObject({ displayName: "Nom libre", published: !withdrawn, private: true })
+    expect(storage.removeItem).not.toHaveBeenCalled()
+  })
+  it("efface l'accroche explicitement sans republier le profil retiré", async () => {
+    const { store, publication } = setup()
+    await publication.withdraw(PERSON)
+    await publication.updateIdentity!(PERSON, { displayName: "Nom libre", headline: "  " })
+    expect(ownProfileView(store.getState(), PERSON)).toMatchObject({ headline: null, published: false })
+  })
+  it.each([{ displayName: " ", headline: "", code: "display_name_invalid" }, { displayName: "x".repeat(121), headline: "", code: "display_name_invalid" }, { displayName: "Valide", headline: "x".repeat(161), code: "headline_too_long" }])("refuse les textes invalides ($code)", async ({ code, ...input }) => {
+    const { store, publication } = setup()
+    const before = store.getState()
+    expect(await publication.updateIdentity!(PERSON, input)).toEqual({ ok: false, code })
+    expect(store.getState()).toBe(before)
+  })
+  it("refuse l'ancienne personne après un changement pendant l'attente", async () => {
+    vi.useFakeTimers()
+    const { store, publication } = setup({}, 100)
+    const pending = publication.updateIdentity!(PERSON, { displayName: "Ancien brouillon", headline: "" })
+    const switching = store.switchTo(OTHER)
+    await vi.runAllTimersAsync()
+    await switching
+    // Le changement de session doit être appliqué avant la résolution de la commande.
+    // switchTo est immédiat ; aucun texte d'A ne peut atteindre B.
+    expect(await pending).toEqual({ ok: false, code: "not_found" })
+    expect(store.getState().persons[OTHER]!.profile?.displayName).not.toBe("Ancien brouillon")
+  })
+})

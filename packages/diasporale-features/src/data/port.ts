@@ -71,6 +71,8 @@ export interface ProfileImagesActions {
 /** Gestes personnels sur le profil commun ; aucune portée de réseau implicite. */
 export interface ProfilePublication {
   useMyProfile(): Loadable<OwnProfileView | null>
+  /** Modifie les seuls textes ; ne publie ni ne rétablit jamais le profil. */
+  updateIdentity?(personId: string, input: { displayName: string; headline: string }): Promise<ActionResult>
   setPrivacy(personId: string, isPrivate: boolean): Promise<ActionResult>
   withdraw(personId: string): Promise<ActionResult>
   republish(personId: string): Promise<ActionResult>
@@ -169,6 +171,8 @@ export interface DiasporaleActions {
   react(postId: string, kind: ReactionKind | null): Promise<ActionResult>
   /** Commenter ou répondre (EXF-DG-12) ; l'auteur de la publication et la personne à qui l'on répond sont avisés. */
   comment(input: CommentInput): Promise<ActionResult>
+  /** Modifier son commentaire publié, si la publication reste lisible. Capacité facultative du fournisseur. */
+  editComment?(commentId: string, body: string): Promise<ActionResult>
   /** Retirer un commentaire — le sien, ou n'importe lequel sous sa propre publication. */
   removeComment(commentId: string): Promise<ActionResult>
   /** Enregistrer une publication, ou la retirer des enregistrements (signet, privé). */

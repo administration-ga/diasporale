@@ -265,6 +265,15 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
     kind: "engine",
     profileImages: createEngineProfileImagesActions({ convex: deps.convex }),
     profilePublication: {
+      updateIdentity: (personId, input) => profileCommand(async () => {
+        const person = await ownPerson(personId)
+        if (!person.handle || !person.displayName) throw new Refusal("not_member")
+        await deps.convex.mutation(api.modules.people.profile.updateMyProfile, {
+          expectedPersonId: personId as Id<"persons">,
+          displayName: input.displayName,
+          headline: input.headline,
+        })
+      }),
       useMyProfile() {
         const auth = useStableConvexAuth()
         const person = useLoaded(api.modules.people.persons.getMyPerson, auth.isAuthenticated ? {} : "skip")
@@ -769,6 +778,16 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           postId: input.postId as Id<"posts">,
           body: input.body,
           ...(input.parentCommentId !== undefined ? { parentCommentId: input.parentCommentId as Id<"postComments"> } : {}),
+        })
+        return null
+      }),
+
+    editComment: (commentId, body) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.engagement.engagement.editComment, {
+          networkId: await diasporale(),
+          commentId: commentId as Id<"postComments">,
+          body,
         })
         return null
       }),

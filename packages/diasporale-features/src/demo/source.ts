@@ -103,6 +103,7 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       setPrivacy: (personId, isPrivate) => store.setProfilePrivacy(personId, isPrivate),
       withdraw: (personId) => store.withdrawProfile(personId),
       republish: (personId) => store.republishProfile(personId),
+      updateIdentity: (personId, input) => store.updateProfileIdentity(personId, input),
     },
 
     useSession() {
@@ -411,6 +412,7 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       publish: (input) => store.publish(input),
       react: (postId, kind) => store.react(postId, kind),
       comment: (input) => store.comment(input),
+      editComment: (commentId, body) => store.editComment(commentId, body),
       removeComment: (commentId) => store.removeComment(commentId),
       dismissSuggestion: (handle) => store.dismissSuggestion(handle),
       toggleBookmark: (postId) => store.toggleBookmark(postId),

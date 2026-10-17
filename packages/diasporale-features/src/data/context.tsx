@@ -24,6 +24,11 @@ export function useDataSource(): DiasporaleDataSource {
   return source
 }
 
+/** Les briques de lecture seules peuvent aussi être rendues hors application. */
+export function useOptionalDataSource(): DiasporaleDataSource | null {
+  return useContext(DataSourceContext)
+}
+
 export const useSession = () => useDataSource().useSession()
 export const useOpenCountries = () => useDataSource().useOpenCountries()
 export const useCountryHub = (country: CountryCode) => useDataSource().useCountryHub(country)

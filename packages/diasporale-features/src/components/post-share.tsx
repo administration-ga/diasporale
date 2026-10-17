@@ -50,7 +50,7 @@ export function sharedPreviewOf(post: PostView): SharedPostView {
  * texte, ses médias. Retiré ou hors de portée du lecteur, il le dit et ne dit
  * que cela.
  */
-export function SharedPostEmbed(props: { share: SharedPostView; now: number; className?: string }) {
+export function SharedPostEmbed(props: { share: SharedPostView; now: number; className?: string; interactiveMedia?: boolean }) {
   const { t, locale } = useDiasporaleT()
   const { routes, Link } = useRouting()
   const { share } = props
@@ -85,7 +85,7 @@ export function SharedPostEmbed(props: { share: SharedPostView; now: number; cla
           <RichText text={share.body} />
         </p>
       ) : null}
-      <PostMediaGrid media={share.media} className="mt-2" />
+      <PostMediaGrid media={share.media} className="mt-2" interactive={props.interactiveMedia} />
     </figure>
   )
 }

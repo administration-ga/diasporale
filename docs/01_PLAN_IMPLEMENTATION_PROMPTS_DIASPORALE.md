@@ -45,6 +45,11 @@ filtré et paginé, avec portée/pays conservés. La recette Chrome locale est t
 les preuves et limites de cette tranche sont tenues dans `docs/09` et `docs/04`.
 PD4 reste ouvert pour les autres écarts de parité.
 
+Tranche suivante du **17/10/2026**, sources vérifiées et recette Chrome partielle : visionneuse des médias,
+édition des commentaires/réponses et textes du profil sans republication incidente.
+Plan et limites dans [`docs/10`](10_VISIONNEUSE_COMMENTAIRES_IDENTITE_PD4.md).
+Sources raccordées dans l’application réelle ; verify commun code0,7173tests,10typages/9lints sans erreur. Commentaire/réponse édités et persistants, profil retiré édité sans republication implicite confirmés dans Chrome. Fin de la republication explicite et recette médias réels attendent le déverrouillage du Mac et un accès légitime au sélecteur de fichiers. PD4 reste ouvert.
+
 Vérifications des étapes closes :
 - **a)** 197 cas `bun test`, couverture lignes et fonctions 100 % imposée par
   `packages/diasporale-domain/bunfig.toml`, `tsc --noEmit` 0 ; 206 cas depuis le module

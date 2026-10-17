@@ -5,6 +5,8 @@ import { useDataSource, type ActionErrorCode, type DiasporaleDataSource, type Me
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 
+import { ProfileIdentitySettings } from "./profile-identity-settings"
+
 type ProfilePublication = NonNullable<DiasporaleDataSource["profilePublication"]>
 type Command = "privacy" | "withdraw" | "republish"
 type ReaderScope = { readonly publication: ProfilePublication; readonly personId: string; readonly snapshot: string }
@@ -118,6 +120,18 @@ function OwnProfilePublication(props: { personId: string; publication: ProfilePu
     }
   }
 
+  const acquireIdentity = () => {
+    if (active.current !== scope || running.current || dialog.current !== null) return null
+    const operation = Symbol()
+    running.current = operation
+    setBusy(true)
+    return () => {
+      if (running.current !== operation) return
+      running.current = null
+      if (active.current !== null) setBusy(false)
+    }
+  }
+
   if (profile.status === "loading") return (
     <div role="status"><span className="sr-only">{t("common.pleaseWait")}</span><Skeleton className="h-28 w-full rounded-xl" /></div>
   )
@@ -136,6 +150,7 @@ function OwnProfilePublication(props: { personId: string; publication: ProfilePu
   return (
     <div className="flex flex-col gap-5" aria-busy={busy}>
       <p role="status" className="text-sm font-medium">{t(`settings.profilePublication.state.${state}`)}</p>
+      <ProfileIdentitySettings profile={own} publication={props.publication} disabled={busy} acquire={acquireIdentity} />
       {canSetPrivacy ? (
         <div className="flex flex-col items-start gap-3">
           <p className="text-sm text-muted-foreground">{t("settings.profilePublication.privateLead")}</p>

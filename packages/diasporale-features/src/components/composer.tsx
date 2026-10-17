@@ -301,7 +301,7 @@ export function PostComposerSheet(props: {
           {share ? (
             <div className="flex flex-col gap-1.5">
               <p className="text-sm font-medium">{t("composer.shareOriginal")}</p>
-              <SharedPostEmbed share={sharedPreviewOf(share)} now={Date.now()} />
+              <SharedPostEmbed share={sharedPreviewOf(share)} now={Date.now()} interactiveMedia={false} />
             </div>
           ) : null}
           <Field

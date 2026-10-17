@@ -4,6 +4,8 @@
  * en attendant. Aucun enregistrement source, aucun identifiant interne exposé
  * au-delà de l'identifiant opaque de la ligne ; aucune coordonnée, jamais.
  */
+export { DISPLAY_NAME_MAX_LENGTH, HEADLINE_MAX_LENGTH } from "@antsia/social-domain/content"
+
 import type {
   AttestationOutcome,
   ConsentPurpose,

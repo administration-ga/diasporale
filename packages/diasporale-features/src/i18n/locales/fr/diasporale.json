@@ -1,11 +1,15 @@
 {
-  "brand": { "name": "DIASPORALE" },
+  "brand": {
+    "name": "DIASPORALE"
+  },
   "meta": {
     "title": "DIASPORALE — le réseau des Gabonais de l'étranger",
     "titleTemplate": "%s · DIASPORALE",
     "description": "Le réseau social fermé de la diaspora gabonaise : votre pays, votre communauté, des contenus dont on sait toujours qui les publie."
   },
-  "a11y": { "skipToContent": "Aller au contenu" },
+  "a11y": {
+    "skipToContent": "Aller au contenu"
+  },
   "common": {
     "back": "Retour",
     "cancel": "Annuler",
@@ -36,9 +40,16 @@
   },
   "preferences": {
     "language": "Langue",
-    "locale": { "fr": "Français", "en": "English" },
+    "locale": {
+      "fr": "Français",
+      "en": "English"
+    },
     "theme": "Thème",
-    "themeOption": { "light": "Clair", "dark": "Sombre", "system": "Système" }
+    "themeOption": {
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
+    }
   },
   "landing": {
     "title": "La diaspora gabonaise, pays par pays.",
@@ -112,7 +123,10 @@
     "title": "Recevoir un code",
     "lead": "Un code à usage unique, valable 10 minutes. Il ne sert qu'une fois.",
     "kindLabel": "Recevoir le code par",
-    "kind": { "email": "E-mail", "phone": "SMS" },
+    "kind": {
+      "email": "E-mail",
+      "phone": "SMS"
+    },
     "emailLabel": "Votre adresse e-mail",
     "phoneLabel": "Votre numéro de téléphone",
     "destinationHint": "Elle reste privée : aucun membre ne la voit.",
@@ -174,13 +188,22 @@
       "title": "Profil social",
       "body": "Enregistré lors de l’inscription au profil commun. Retirer le profil et quitter DIASPORALE sont des gestes distincts, proposés séparément."
     },
-    "directory": { "title": "Annuaire des membres", "body": "Apparaître dans l'annuaire, au niveau que vous choisissez." },
-    "notifications": { "title": "Notifications", "body": "Réponses, mentions, vie de votre pays." },
+    "directory": {
+      "title": "Annuaire des membres",
+      "body": "Apparaître dans l'annuaire, au niveau que vous choisissez."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "body": "Réponses, mentions, vie de votre pays."
+    },
     "consular_attestation": {
       "title": "Attestation consulaire",
       "body": "Donné au moment de la vérification. Le retirer empêche toute nouvelle demande."
     },
-    "talents": { "title": "Profil professionnel visible", "body": "Bientôt : l'annuaire des talents arrive avec l'emploi." }
+    "talents": {
+      "title": "Profil professionnel visible",
+      "body": "Bientôt : l'annuaire des talents arrive avec l'emploi."
+    }
   },
   "status": {
     "regionLabel": "Statut de votre compte",
@@ -415,7 +438,15 @@
       "video": "Vidéo jointe à la publication",
       "scanPending": "Analyse du fichier en cours…",
       "quarantined": "Fichier retenu par la garde des fichiers",
-      "unavailable": "Média indisponible"
+      "unavailable": "Média indisponible",
+      "openImage": "Agrandir la photo {{position}} sur {{total}}",
+      "expandVideo": "Agrandir la vidéo",
+      "viewer": {
+        "title": "Médias de la publication",
+        "position": "Média {{position}} sur {{total}}",
+        "previous": "Média précédent",
+        "next": "Média suivant"
+      }
     }
   },
   "event": {
@@ -525,7 +556,9 @@
     "call": "Appeler",
     "callTo": "Appeler {{name}}"
   },
-  "filters": { "advanced": "Plus de filtres" },
+  "filters": {
+    "advanced": "Plus de filtres"
+  },
   "hub": {
     "errorTitle": "Les informations de ce pays ne sont pas disponibles.",
     "errorBody": "Vérifiez votre connexion et rechargez la page pour réessayer.",
@@ -740,7 +773,17 @@
     "appearance": "Langue et apparence",
     "session": "Session",
     "sessionLead": "Déconnecte cet appareil et tous les autres.",
-    "signOutEverywhere": "Se déconnecter partout"
+    "signOutEverywhere": "Se déconnecter partout",
+    "profileIdentity": {
+      "title": "Nom et accroche",
+      "lead": "Ces textes sont communs à ANTSIA et DIASPORALE. Les enregistrer conserve votre choix privé et l’état publié ou retiré du profil.",
+      "edit": "Modifier le nom et l’accroche",
+      "name": "Nom affiché",
+      "nameHint": "Un nom choisi librement pour votre profil social. Votre identifiant reste inchangé.",
+      "headline": "Accroche",
+      "headlineHint": "Facultative, {{max}} caractères maximum. Vider le champ retire l’accroche.",
+      "save": "Enregistrer les textes"
+    }
   },
   "sponsor": {
     "title": "Parrainer",
@@ -1050,8 +1093,12 @@
       "postMine": "Ma publication, en relecture : la carte flottante n'est montrée qu'à son autrice ou son auteur."
     }
   },
-  "messages": { "title": "Messages" },
-  "stories": { "title": "Statuts" },
+  "messages": {
+    "title": "Messages"
+  },
+  "stories": {
+    "title": "Statuts"
+  },
   "icom": {
     "unavailableTitle": "Messagerie indisponible",
     "unavailable": {
@@ -1144,7 +1191,10 @@
     "showReplies_one": "Voir {{count}} réponse",
     "showReplies_other": "Voir les {{count}} réponses",
     "edited": "modifié",
-    "someone": "Un membre"
+    "someone": "Un membre",
+    "edit": "Modifier",
+    "editLabel": "Modifier votre commentaire",
+    "updated": "Commentaire modifié."
   },
   "postMenu": {
     "open": "Plus d'actions sur cette publication",
@@ -1363,6 +1413,7 @@
     "delivery_unavailable": "Le code n'a pas pu être envoyé pour le moment. Réessayez dans un instant.",
     "feature_unavailable": "Cette fonction n'est pas encore ouverte.",
     "network_unavailable": "DIASPORALE est injoignable pour le moment. Réessayez dans un instant.",
-    "status_insufficient": "Votre statut ne permet pas encore ce geste : demandez un parrainage ou vérifiez votre inscription consulaire."
+    "status_insufficient": "Votre statut ne permet pas encore ce geste : demandez un parrainage ou vérifiez votre inscription consulaire.",
+    "headline_too_long": "L’accroche est trop longue (160 caractères maximum)."
   }
 }

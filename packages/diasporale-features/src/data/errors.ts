@@ -33,6 +33,7 @@ export const DATA_ERROR_CODES = [
   "code_invalid",
   "code_expired",
   "display_name_invalid",
+  "headline_too_long",
   "handle_taken",
   "consent_social_profile_required",
   "consent_directory_required",

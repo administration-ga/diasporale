@@ -1,11 +1,15 @@
 {
-  "brand": { "name": "DIASPORALE" },
+  "brand": {
+    "name": "DIASPORALE"
+  },
   "meta": {
     "title": "DIASPORALE — the network of Gabonese people abroad",
     "titleTemplate": "%s · DIASPORALE",
     "description": "The closed social network of the Gabonese diaspora: your country, your community, and you always know who is posting."
   },
-  "a11y": { "skipToContent": "Skip to content" },
+  "a11y": {
+    "skipToContent": "Skip to content"
+  },
   "common": {
     "back": "Back",
     "cancel": "Cancel",
@@ -36,9 +40,16 @@
   },
   "preferences": {
     "language": "Language",
-    "locale": { "fr": "Français", "en": "English" },
+    "locale": {
+      "fr": "Français",
+      "en": "English"
+    },
     "theme": "Theme",
-    "themeOption": { "light": "Light", "dark": "Dark", "system": "System" }
+    "themeOption": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
   },
   "landing": {
     "title": "The Gabonese diaspora, country by country.",
@@ -112,7 +123,10 @@
     "title": "Get a code",
     "lead": "A one-time code, valid for 10 minutes. It works only once.",
     "kindLabel": "Receive the code by",
-    "kind": { "email": "Email", "phone": "Text" },
+    "kind": {
+      "email": "Email",
+      "phone": "Text"
+    },
     "emailLabel": "Your email address",
     "phoneLabel": "Your phone number",
     "destinationHint": "It stays private: no member can see it.",
@@ -174,13 +188,22 @@
       "title": "Social profile",
       "body": "Recorded when joining the shared profile. Withdrawing your profile and leaving DIASPORALE are separate actions, offered separately."
     },
-    "directory": { "title": "Member directory", "body": "Appear in the directory, at the level you choose." },
-    "notifications": { "title": "Notifications", "body": "Replies, mentions, life in your country." },
+    "directory": {
+      "title": "Member directory",
+      "body": "Appear in the directory, at the level you choose."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "body": "Replies, mentions, life in your country."
+    },
     "consular_attestation": {
       "title": "Consular attestation",
       "body": "Given at the time of verification. Withdrawing it prevents any new request."
     },
-    "talents": { "title": "Visible professional profile", "body": "Coming soon: the talent directory arrives with jobs." }
+    "talents": {
+      "title": "Visible professional profile",
+      "body": "Coming soon: the talent directory arrives with jobs."
+    }
   },
   "status": {
     "regionLabel": "Your account status",
@@ -415,7 +438,15 @@
       "video": "Video attached to the post",
       "scanPending": "File scan in progress…",
       "quarantined": "File held by the file guard",
-      "unavailable": "Media unavailable"
+      "unavailable": "Media unavailable",
+      "openImage": "Enlarge photo {{position}} of {{total}}",
+      "expandVideo": "Enlarge video",
+      "viewer": {
+        "title": "Post media",
+        "position": "Media {{position}} of {{total}}",
+        "previous": "Previous media",
+        "next": "Next media"
+      }
     }
   },
   "event": {
@@ -525,7 +556,9 @@
     "call": "Call",
     "callTo": "Call {{name}}"
   },
-  "filters": { "advanced": "More filters" },
+  "filters": {
+    "advanced": "More filters"
+  },
   "hub": {
     "errorTitle": "Information about this country is unavailable.",
     "errorBody": "Check your connection and reload the page to try again.",
@@ -740,7 +773,17 @@
     "appearance": "Language and appearance",
     "session": "Session",
     "sessionLead": "Signs out this device and all others.",
-    "signOutEverywhere": "Sign out everywhere"
+    "signOutEverywhere": "Sign out everywhere",
+    "profileIdentity": {
+      "title": "Name and headline",
+      "lead": "These texts are shared by ANTSIA and DIASPORALE. Saving them preserves your privacy choice and whether the profile is published or withdrawn.",
+      "edit": "Edit name and headline",
+      "name": "Display name",
+      "nameHint": "A freely chosen name for your social profile. Your handle stays the same.",
+      "headline": "Headline",
+      "headlineHint": "Optional, up to {{max}} characters. Clear the field to remove the headline.",
+      "save": "Save texts"
+    }
   },
   "sponsor": {
     "title": "Sponsor",
@@ -1050,8 +1093,12 @@
       "postMine": "My post, under review: the floating card is shown to its author only."
     }
   },
-  "messages": { "title": "Messages" },
-  "stories": { "title": "Stories" },
+  "messages": {
+    "title": "Messages"
+  },
+  "stories": {
+    "title": "Stories"
+  },
   "icom": {
     "unavailableTitle": "Messaging unavailable",
     "unavailable": {
@@ -1144,7 +1191,10 @@
     "showReplies_one": "See {{count}} reply",
     "showReplies_other": "See the {{count}} replies",
     "edited": "edited",
-    "someone": "A member"
+    "someone": "A member",
+    "edit": "Edit",
+    "editLabel": "Edit your comment",
+    "updated": "Comment updated."
   },
   "postMenu": {
     "open": "More actions on this post",
@@ -1363,6 +1413,7 @@
     "delivery_unavailable": "The code couldn't be sent right now. Try again in a moment.",
     "feature_unavailable": "This feature isn't open yet.",
     "network_unavailable": "DIASPORALE can't be reached right now. Try again in a moment.",
-    "status_insufficient": "Your status doesn't allow this yet: ask for a sponsorship or verify your consular registration."
+    "status_insufficient": "Your status doesn't allow this yet: ask for a sponsorship or verify your consular registration.",
+    "headline_too_long": "The headline is too long (160 characters maximum)."
   }
 }

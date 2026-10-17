@@ -9,7 +9,7 @@
  * l'interface (`DiasporaleDataSource`) reste.
  */
 import { normalizeCivilName } from "@antsia/social-domain/civilName"
-import { isProfileDiscoverable, isProfilePublished } from "@antsia/social-domain/content"
+import { DISPLAY_NAME_MAX_LENGTH, HEADLINE_MAX_LENGTH, isProfileDiscoverable, isProfilePublished } from "@antsia/social-domain/content"
 import {
   applyAttestationToFacet,
   applyMembershipEvent,
@@ -479,6 +479,41 @@ export class DemoStore {
     return OK
   }
 
+  /** Seul l'auteur modifie un commentaire vivant ; la publication reste gardée à l'acte. */
+  async editComment(commentId: string, rawBody: string): Promise<ActionResult> {
+    const expectedPersonId = this.state.session.personId
+    await this.pause()
+    const viewer = this.viewer()
+    if (!expectedPersonId || !viewer) return fail("not_signed_in")
+    if (viewer.person.id !== expectedPersonId) return fail("not_found")
+    if (!viewer.membership) return fail("not_found")
+    const now = this.clock()
+    const status = deriveMembershipStatus(viewer.membership.grounds, now)
+    if (status === "partie") return fail("not_found")
+    if (status === "suspendue") return fail("suspended")
+    if (!capabilitiesOf(status).has("publish")) return fail("status_insufficient")
+    const target = this.state.comments.find((item) => item.id === commentId)
+    if (!target || target.authorId !== viewer.person.id || target.removedAt !== null) return fail("not_found")
+    if (target.parentId !== null && !this.state.comments.some((item) => item.id === target.parentId && item.postId === target.postId && item.removedAt === null)) return fail("not_found")
+    const post = this.state.posts.find((item) => item.id === target.postId)
+    if (!post || !canRead(this.state, post, viewer.person.id, now)) return fail("not_found")
+    if (post.author.kind === "person") {
+      const authorId = post.author.id
+      const authorStatus = statusOf(this.state, authorId, now)
+      if (authorStatus === null || authorStatus === "partie" || authorStatus === "suspendue") return fail("not_found")
+      if (authorId !== viewer.person.id && this.state.blocks.some((block) =>
+        (block.byId === viewer.person.id && block.targetId === authorId) || (block.byId === authorId && block.targetId === viewer.person.id))) return fail("not_found")
+    }
+    const body = rawBody.trim()
+    if (body.length === 0) return fail("comment_empty")
+    if (body.length > COMMENT_MAX_LENGTH) return fail("comment_too_long")
+    this.commit({
+      ...this.state,
+      comments: this.state.comments.map((item) => item.id === commentId ? { ...item, body, editedAt: now } : item),
+    })
+    return OK
+  }
+
   /** Retiré, pas supprimé ; par son auteur, ou par l'auteur de la publication (chez soi). Idempotent. */
   async removeComment(commentId: string): Promise<ActionResult> {
     await this.pause()
@@ -902,6 +937,22 @@ export class DemoStore {
   }
 
   // ── Paramètres, consentements, données ─────────────────────────────────
+  async updateProfileIdentity(personId: string, input: { displayName: string; headline: string }): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    if (viewer.person.id !== personId) return fail("not_found")
+    if (!viewer.person.profile) return fail("not_member")
+    const displayName = input.displayName.trim()
+    const headline = input.headline.trim()
+    if (!displayName || displayName.length > DISPLAY_NAME_MAX_LENGTH) return fail("display_name_invalid")
+    if (headline.length > HEADLINE_MAX_LENGTH) return fail("headline_too_long")
+    this.commit({ ...this.state, persons: { ...this.state.persons, [personId]: {
+      ...viewer.person, profile: { ...viewer.person.profile, displayName, headline: headline || null },
+    } } })
+    return OK
+  }
+
   async setProfilePrivacy(personId: string, isPrivate: boolean): Promise<ActionResult> {
     await this.pause()
     const viewer = this.viewer()
