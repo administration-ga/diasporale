@@ -38,7 +38,7 @@ Cette tranche ne vaut pas clôture automatique de PD4. Les surfaces propres à P
 
 ## Commit local et résultat de la vérification commune
 
-DIASPORALE : `8a44990`,30chemins propres, locales committées partiellement. Le commit local conserve explicitement la recette Chrome encore ouverte ; il ne vaut pas clôture de PD4. Le complément moteur ANTSIA reste à coupler au commit ciblé de son propriétaire après coordination.
+DIASPORALE : `8a44990`,30chemins propres, locales committées partiellement. Le commit local conserve explicitement la recette Chrome encore ouverte ; il ne vaut pas clôture de PD4. Complément moteur ANTSIA couplé : `0693832`, cinq chemins propres (mutation du profil,17tests, hook de focus,2tests et documentation), vérifié par le même passage vert.
 
 - `verify` officiel ANTSIA, code0 : **7 173 tests**, dix typages et neuf contrôles de qualité sans erreur. Journal : `/tmp/antsia-diasporale-pd4-verify-corrected-final.log` (session21823).
 - Ventilation :1610backend,124cliquets,29scripts,475domaine moteur,57contrats,190API,88UI,3166surfaces moteur,238domaine DIASPORALE,391surfaces DIASPORALE,78console,109app ANTSIA,618app DIASPORALE. Soit1247cas DIASPORALE, dont ceux de l’accueil parallèle.94avertissements conservés ; le résultat n’est pas annoncé sans avertissements.
