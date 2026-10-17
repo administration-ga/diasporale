@@ -98,3 +98,24 @@ Référence moteur : `docs/08_CONTRAT_DEMANDES_ET_DEBLOCAGES.md`.
   finale. Captures aux moments utiles, viewport/thème rétablis, seuls onglets de recette fermés.
 - Contrôles finaux avant commits, rapports de preuves et limites dans `docs/04`, mémoire mise
   à jour. DIASPORALE 3031 arrêté et serveur ANTSIA 3030 rétabli après le créneau de recette.
+
+## Résultat — 17/10/2026
+
+- Commits locaux : backend ANTSIA `1637c12`, surfaces `a2350ca`, application `a1de52e`.
+- Vérification commune de la tranche terminée code 0 : **6 365 tests**, dont 97 nouveaux cas
+  et 862 DIASPORALE, codegen, typages et neuf lints sans erreur. Journal final :
+  `/tmp/diasporale-pd4-requests-blocks-verify-release.log` ; précède les nouveaux travaux PA6.
+- Chrome : blocage et déblocage d'un lecteur fictif en attente, confirmation annulée sans
+  effet puis retrait persistant ; demande réellement envoyée par le propriétaire fictif,
+  affichée puis annulée, avis de succès, vide après rechargement complet et profil redevenu
+  « Se connecter ». Aucune tentative du destinataire après annulation rejouée dans Chrome :
+  refus, course et notification sont couverts par les tests.
+- Rendu 320 sombre, 375 clair et 1 280 sombre, onglet actif visible lors du redimensionnement.
+  Console finale de la liste envoyée sans avertissement ni erreur ; 404 transitoire antérieur
+  non reproduit. Le retour du thème clair de la session Chrome initiale n'a pas pu être
+  recontrôlé après perte de l'extension ; viewport réinitialisé et onglets dédiés fermés.
+- Deux caches Webpack exactement autorisés supprimés une fois (~716 Mio mesurés) ; aucun
+  autre cache, environnement, donnée ou session supprimé. Backend restauré après ENOSPC,
+  DIASPORALE 3031 arrêté, ANTSIA 3030 rétabli (`/entrer` HTTP 200), backend 3210 conservé.
+  Créneau rendu au chat ANTSIA. Preuves détaillées et limites : `docs/04`.
+- Aucun push ni publication de production. PD4 reste ouvert pour ses autres écarts de parité.

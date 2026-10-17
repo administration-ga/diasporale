@@ -2,6 +2,7 @@
 title: "DIASPORALE.COM — Plan d'implémentation en prompts"
 version: "1.0"
 date: "2026-10-14"
+maj: "2026-10-17"
 statut: "Plan d'exécution — prompts Claude Code (Opus), à exécuter après ANTSIA PA0–PA7"
 projet: "DIASPORALE"
 reference: "NTSAGUI/DIASPORALE/PI/2026/001"
@@ -14,6 +15,8 @@ dependances:
 # DIASPORALE.COM — Plan d'implémentation en prompts
 
 ## État d'avancement (tenu par la session de construction)
+
+État mis à jour le **17/10/2026** ; PD4 reste en cours.
 
 > Session de construction ouverte le 14/10/2026 (Opus 5.5, effort maximal). Le moteur ANTSIA
 > se construit en parallèle : tant qu'il n'existe pas, DIASPORALE avance sur ce qui n'en
@@ -31,7 +34,7 @@ dependances:
 | PD1 Domaine diaspora et réseau `diasporale` dans le moteur | 2026-10-15 | domaine `7c5575e`, `c622cb9`, `c067746` ; tranche ANTSIA `22b0383` (tables), `7cfafdd` (fonctions) ; côté moteur, par ANTSIA : `97cec07` (`managedBy`, aides d'admission, `failAppRule`, seaux), `bf1f46c` (schéma) — reste la ligne de `convex/crons.ts` (demandée à ANTSIA) |
 | PD2 Entrer dans DIASPORALE (IDN, compte léger, handle, consentements) | partiel (15/10) | DIASPORALE `140a82c`, `a8ea1a9` ; tranche ANTSIA `8176491`, `ecae28d` ; ANTSIA `187adb6` (`isHandleAvailable`, proxy d'authentification commun) — R3 joué contre le moteur local ; reste R1 (IDN dans le moteur : PA4 d'ANTSIA ; client OIDC sandbox `diasporale`) |
 | PD3 Attestation consulaire `DIASPORA-ATTESTATION-V1` | partiel (15/10) | gabon-diplomatie : PR brouillon #184 (étape e) ; domaine `77fa3ff`, `3fa4213` ; tranche ANTSIA `ac2eca3`, `be59fcf` ; application `34fa44a` — reste la recette R2 réelle (clé de service et URL de consulat.ga sur un déploiement, après validation juridique ; empreinte d'adresse d'un compte léger : PA4) |
-| PD4 Fil, hub pays, profils et relations | en cours (16/10) | DIASPORALE `000b89d` (profils), `758f46d` (relations), `5c96109` (cloche), `1559188` (« Membres », annuaire opt-in), `492f4d0` (portée et pays, fil par voies, mur), `d5eb7a2` (commentaires), `aaaab80` (menu d'une publication), `03b8875` (suggestions ; publications de page), `53f8a48` (changement de hub mémorisé), `00002bf` (parité des surfaces, `docs/04`), `458d768` (publication seule, modification, signets), `892c7e5` (brouillon durable, mentions et mots-dièse — PR administration-ga/diasporale#1), médias du composeur (quatre photos ou une vidéo seule, texte alternatif, garde des fichiers — PR administration-ga/diasporale#5), partage cité et idempotence (PR administration-ga/diasporale#6) ; tranche ANTSIA `010a5d8` (`memberFacet`, cloche), `759643b` (journal de la modération), `bce7185` (annuaire de la tranche), `21380c1` (suggestions) ; ANTSIA `817a433` (annuaire générique refusé sur un réseau gouverné), `3069a61` (fil par voies), `9f4308b` (texte riche du moteur — PR administration-ga/antia#1) — stories du fil et albums du profil committés localement le 16/10 (`31a16d9`, surfaces du moteur, recette Chrome locale) ; suite `/relations` (`30f9f1e`) : listes paginées du moteur, demandes reçues et réponses, 23 tests ajoutés, lecture seule puis acceptation jouées entre deux comptes fictifs ; refus et pagination réelle recettés ensuite, fil et hub paginés par le curseur du moteur, reprise d'erreur du hub (37 tests supplémentaires, verify commun vert) ; mur personnel ensuite paginé et images du profil raccordées aux mutations publiques du moteur ; aperçu limité aux informations publiques ; recette Chrome locale du mur et des images, déconnexion globale raccordée à PA4 ; albums complétés côté surfaces (pagination, reprise, audiences enregistrées et retrait confirmé), stories lisibles en attente sans composeur ; pagination/reprise/publication, audiences et retrait recettés entre comptes ; story média réellement lue en attente, accès direct à la création sans composeur recetté après déverrouillage ; complément de graine et recette validé par le contrôle commun PA5 (6 223 tests, code 0 ; les 17 anciens échecs sont résolus) ; complément committé (`9413ac6`, moteur `ee5fb44`) ; onglet Mes abonnements et désabonnement en attente raccordés ensuite, recette Chrome locale jouée, détails et limites dans `docs/04` |
+| PD4 Fil, hub pays, profils et relations | en cours (17/10) | DIASPORALE `000b89d` (profils), `758f46d` (relations), `5c96109` (cloche), `1559188` (« Membres », annuaire opt-in), `492f4d0` (portée et pays, fil par voies, mur), `d5eb7a2` (commentaires), `aaaab80` (menu d'une publication), `03b8875` (suggestions ; publications de page), `53f8a48` (changement de hub mémorisé), `00002bf` (parité des surfaces, `docs/04`), `458d768` (publication seule, modification, signets), `892c7e5` (brouillon durable, mentions et mots-dièse — PR administration-ga/diasporale#1), médias du composeur (quatre photos ou une vidéo seule, texte alternatif, garde des fichiers — PR administration-ga/diasporale#5), partage cité et idempotence (PR administration-ga/diasporale#6) ; tranche ANTSIA `010a5d8` (`memberFacet`, cloche), `759643b` (journal de la modération), `bce7185` (annuaire de la tranche), `21380c1` (suggestions) ; ANTSIA `817a433` (annuaire générique refusé sur un réseau gouverné), `3069a61` (fil par voies), `9f4308b` (texte riche du moteur — PR administration-ga/antia#1) — stories du fil et albums du profil committés localement le 16/10 (`31a16d9`, surfaces du moteur, recette Chrome locale) ; suite `/relations` (`30f9f1e`) : listes paginées du moteur, demandes reçues et réponses, 23 tests ajoutés, lecture seule puis acceptation jouées entre deux comptes fictifs ; refus et pagination réelle recettés ensuite, fil et hub paginés par le curseur du moteur, reprise d'erreur du hub (37 tests supplémentaires, verify commun vert) ; mur personnel ensuite paginé et images du profil raccordées aux mutations publiques du moteur ; aperçu limité aux informations publiques ; recette Chrome locale du mur et des images, déconnexion globale raccordée à PA4 ; albums complétés côté surfaces (pagination, reprise, audiences enregistrées et retrait confirmé), stories lisibles en attente sans composeur ; pagination/reprise/publication, audiences et retrait recettés entre comptes ; story média réellement lue en attente, accès direct à la création sans composeur recetté après déverrouillage ; complément de graine et recette validé par le contrôle commun PA5 (6 223 tests, code 0 ; les 17 anciens échecs sont résolus) ; complément committé (`9413ac6`, moteur `ee5fb44`) ; onglet Mes abonnements et désabonnement en attente raccordés ensuite, recette Chrome locale jouée, détails et limites dans `docs/04` ; demandes envoyées, annulation versionnée et déblocages raccordés le 17/10 (DIASPORALE `a1de52e`, backend `1637c12`, surfaces moteur `a2350ca`) : 6 365 tests, verify code 0 ; blocage/déblocage en attente et annulation envoyée entre comptes fictifs validés dans Chrome ; PD4 reste ouvert |
 | PD7 Évènements, groupes de conversation, iCom et direct | en cours (15/10) | iCom (point 3) monté depuis le moteur : carte, pages `/messages` et `/actus`, « Écrire » et « Appeler » du profil — branche locale `pd7/icom`, PR après le push d'ANTSIA (`517bf13` iCom, `f1eed7f` réseau personnel) |
 | PD5, PD6, PD8 → PD10 | — | — |
 
@@ -121,6 +124,27 @@ Vérifications des étapes closes :
     garde d'écran seulement, **bloquant pour la mise en ligne** ;
   - les publications de développement d'avant le lot 7 n'ont pas de portée : aucune voie ne les sert
     (données locales seulement).
+- **PD4 — complément du 17/10** : cinq onglets de relations raccordés, dont demandes
+  envoyées et annulation versionnée, blocages propres et confirmation du déblocage.
+  Commits locaux : DIASPORALE `a1de52e`, backend ANTSIA `1637c12`, surfaces moteur `a2350ca`.
+  `verify` commun **code 0, 6 365 tests**, 97 cas de plus que la tranche précédente ;
+  codegen, types Convex/tests, dix typages et neuf lints sans erreur, avertissements
+  préexistants. Preuve : `/tmp/diasporale-pd4-requests-blocks-verify-release.log`.
+  **Chrome réel** : lecteur `pd4.lecture` en attente, ANTSIA dérivée déclarée ; blocage sans
+  relation/suivi préalable, ligne neutre dédoublonnée, annulation de la confirmation sans
+  changement, déblocage confirmé et état vide persistant après rechargement ; suivre et
+  demander une connexion restent fermés. Rendu 320 sombre, 375 clair et 1 280 sombre sans
+  débordement ; onglet actif conservé visible lors du redimensionnement.
+  **Chrome, annulation validée ensuite** : compte vérifié `relations.recette` connecté par
+  le parcours réel, demande envoyée à `pd4.lecture`, une ligne en attente puis annulation
+  effective ; avis « Demande annulée. », liste vide persistante après rechargement complet,
+  « Se connecter » de nouveau proposé sur le profil. Refus/version/notification `cancelled`
+  couverts par les tests ; aucune tentative réelle du destinataire après annulation.
+  Console de la dernière navigation propre, sans nier un 404 transitoire non reproduit
+  pendant le parcours. DIASPORALE 3031 arrêté, backend 3210 rétabli après une nouvelle
+  saturation sans suppression supplémentaire ; frontend ANTSIA 3030 rétabli, `/entrer`
+  HTTP 200. Seuls 3210 et 3030 écoutent ; créneau PA6 rendu à ANTSIA.
+  Détails, gardes, limites de preuve et clôture coordonnée dans `docs/04` ; aucun push ni production.
 - **e)** Côté gabon-diplomatie, sur deux branches en worktree (le `main` partagé n'est pas
   touché) : #184 `DIASPORA-ATTESTATION-V1` (route signée HMAC, exclusions indiscernables,
   idempotence par `consentRef`, journal à empreinte, correspondance e-mail par

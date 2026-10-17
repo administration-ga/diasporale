@@ -1,6 +1,6 @@
 # Parité des surfaces — DIASPORALE.COM
 
-> Tenu par la session de construction (PD4, point 6 du plan `docs/01`). État au 16/10/2026.
+> Tenu par la session de construction (PD4, point 6 du plan `docs/01`). État au 17/10/2026.
 >
 > **Référence** : les surfaces du réseau personnel de l'espace agent (socle), portées
 > dans `@antsia/social-features` et réutilisées par DIASPORALE. Les surfaces propres de
@@ -23,7 +23,7 @@
 | Commentaires | feuille « Commentaires » | EXF-DG-12 | ✅ | `engagement.paginateComments`, `paginateReplies`, `comment`, `removeComment` | pas d'édition d'un commentaire |
 | Menu « … » | `PostMenu` | EXF-DG-12, 40 | 🟡 | `marks.toggleMark`, `hidePost`, `muteAuthor`, `moderation.reportPost`, `posts.remove` | sans « Modifier », sans relais ; signets sans liste |
 | Profil personne (`ProfilPersonnePage`) | `/@handle` | EXF-DG-07, 08 | 🟡 | `getPublicProfile`, `diaspora.profile.memberFacet`, `posts.personPosts` | facette projetée ; mur paginé par le curseur du moteur ; photo et couverture lues et modifiables depuis les réglages en mode moteur ; aperçu limité aux informations et à la facette, publications et albums masqués (suite du 16/10 ci-dessous) |
-| Relations (`PeoplePanel`, hooks de pagination) | `/relations`, demandes reçues, abonnements, barre du profil, cloche | EXF-DG-18, 43 | 🟡 | `graph.connections.*`, `graph.follows.*`, hooks paginés du moteur | listes acceptées, reçues et abonnements en mode moteur ; pages natives réactives et reprise ; lecture/désabonnement en attente, réponses et nouveau suivi au droit de publier ; découverte réservée à l’annuaire opt-in ; demandes envoyées/annulation et gestion des déblocages restent à raccorder |
+| Relations (`PeoplePanel`, hooks de pagination) | `/relations` : cinq onglets — relations, demandes reçues, envoyées, abonnements, blocages ; barre du profil et cloche | EXF-DG-18, 43 | 🟡 | `graph.connections.*`, `graph.follows.*`, `suggestions.paginateSentInvitations`, `graph.blocks.paginateMine`, surfaces paginées du moteur | cinq listes raccordées en mode moteur, pages natives réactives et reprise ; lecture, désabonnement, annulation versionnée et déblocage en attente ; réponses et nouveau suivi au droit de publier ; blocages propres rendus sans identité de la cible ; découverte réservée à l’annuaire opt-in ; annulation envoyée et déblocage recettés dans Chrome entre comptes fictifs ; refus, versions et notification d’annulation couverts par les tests ; démonstration fermée |
 | Annuaire et recherche | `/membres` | EXF-DG-19, 46 | ✅ | `diaspora.directory.searchMembers` | opt-in par niveau ; masqué introuvable, même par identifiant exact |
 | Suggestions | « Des membres à rencontrer » (rail du fil, `/membres`) | EXF-DG-18 | ✅ | `diaspora.suggestions.forMe`, `suggestions.dismiss` | pas de liste « masquées » à rouvrir (`restore` existe côté moteur) |
 | Cloche | `NotificationBell` | EXF-DG-38 | ✅ | `notifications.bell.*` | le partage d'une publication se dit (« a partagé votre publication ») ; genres de PD5 à PD8 dits « nouvelle activité » d'ici là |
@@ -441,3 +441,91 @@ par cette session.
 - **Clôture coordonnée** : surface moteur `d2a782b` (six fichiers seulement) ; DIASPORALE 3031
   arrêté, ANTSIA 3030 rétabli (`/entrer` HTTP 200), backend 3210 conservé. Aucune suppression
   de cache ou de session, aucun push.
+
+### Demandes envoyées, annulation versionnée et déblocages — 17/10
+
+- **Sources committées localement** : backend ANTSIA `1637c12`, surfaces moteur `a2350ca`
+  (dix fichiers), application DIASPORALE `a1de52e` (six fichiers, dont le plan `docs/07`).
+  Contrat backend : `ANTSIA/docs/08_CONTRAT_DEMANDES_ET_DEBLOCAGES.md`.
+- **Cinq onglets réels** : relations acceptées, demandes reçues, envoyées
+  (`/relations?onglet=envoyees`), abonnements et blocages (`?onglet=blocages`).
+  `SentInvitationsSection` et `BlockedPeopleSection` réutilisent les surfaces du moteur.
+  La découverte reste un lien vers `/membres`, sans recherche générique montée ; les
+  nouvelles listes restent fermées dans la démonstration.
+- **Annulation implémentée et testée** : la liste publique existante conserve
+  `at=requestedAt`. `cancelSentRequest` exige le réseau, la ligne et cette version exacte ;
+  seul son demandeur peut l’annuler, y compris en attente. Rejeu idempotent limité à la
+  version effectivement annulée ; acceptation, autre réseau, tiers et ancienne version
+  refusés de façon indistincte. La réémission avance strictement la version. L’annulation
+  résout la notification reçue en `cancelled`, sans nouvelle notification ni retrait d’une
+  relation acceptée. Mutex immédiat par ligne ; retrait de l’écran après succès seulement,
+  limité à l’identifiant **et** à sa version, erreurs traduites et nouvelle tentative possible.
+- **Blocages propres** : intentions globales `personBlocks` et marqueurs historiques lus
+  par deux curseurs natifs indépendants ; fusion réactive et dédoublonnage par cible. Le DTO
+  ne livre que l’identifiant technique et la date : aucun nom, profil, avatar, handle,
+  réseau d’origine ou blocage entrant exposé. La confirmation retire seulement les intentions
+  de l’appelant ; un blocage inverse reste effectif. Aucun suivi ni relation recréé ; les
+  suivis historiques sont conservés. Lecture de 101 lignes historiques pour refuser au-delà
+  de 100 **avant toute mutation**, garde de cible effacée, état `blocked_by_me` compatible
+  avec un `connectionId` nullable.
+- **Pages et contexte** : réducteur partagé `cursor-pages` pour abonnements, demandes
+  envoyées et blocages ; chaque page montée reste abonnée, amont prioritaire sur les doublons,
+  pages vides non terminales continuables, rebase des descendants et générations contre les
+  réponses périmées. Panne/reprise conserve les lignes valides. Changement de réseau ou de
+  lecteur : réinitialisation immédiate ; aucune résolution de mutation de l’ancien lecteur
+  ne retire une ligne ni n’affiche un avis au nouveau.
+- **Vérification finale** : `verify` commun terminé **code 0**, **6 365 tests**, soit
+  **97 cas supplémentaires** depuis les 6 268 précédents : 26 backend, 48 surfaces moteur,
+  23 application. La passe comprend notamment 1 481 tests backend, 122 cliquets, 24 scripts,
+  3 069 surfaces moteur et 862 DIASPORALE (365 application, 238 domaine, 259 features).
+  Codegen, types Convex/tests, dix typages d’espaces et neuf lints sans erreur ;
+  avertissements préexistants. Preuve : `/tmp/diasporale-pd4-requests-blocks-verify-release.log`.
+  Les ciblés précédents avaient validé 59 cas backend, 108 UI moteur et 39 application ;
+  la passe finale inclut le quarantième cas de `relations-screen`, consacré au listener de
+  redimensionnement et à son nettoyage.
+- **Chrome réel, déblocage validé** : `pd4.lecture` confirmé « En attente » dans ses réglages,
+  adhésion ANTSIA dérivée « Déclarée ». Blocage du propriétaire public `relations.recette`
+  par la mutation normale, sans relation ni suivi préalable. La liste rend une seule ligne
+  neutre malgré intention et marqueur historique, sans profil. « Annuler » dans la
+  **confirmation de déblocage** conserve le blocage après rechargement ; confirmation du
+  retrait : avis « Blocage retiré », puis état vide persistant après rechargement. Sur le
+  profil, « Suivre » et « Se connecter » restent désactivés pour ce lecteur en attente.
+- **Visuel réellement vu** : 320 px sombre, 375 px clair et 1 280 px sombre sans débordement
+  horizontal, onglet actif visible. Transition 1 280 → 320 px observée sans nouveau rendu :
+  seul le défilement de la piste des onglets est ajusté par le listener `resize`. Captures
+  locales : `/tmp/diasporale-pd4-blocages-375-clair.jpg` et
+  `/tmp/diasporale-pd4-blocages-320-sombre.jpg`.
+- **Chrome réel, annulation validée ensuite** : après correction par ANTSIA de son erreur
+  PA6 hors périmètre dans `MessagerieListView.tsx`, le parcours de connexion réel du compte
+  vérifié Relations Recette aboutit. Demande publique à `@pd4.lecture`, compte fictif en
+  attente ; le profil affiche « Demande envoyée ». `/relations?onglet=envoyees` rend une
+  ligne « Lecture Recette PD4 », « En attente de réponse » et le bouton d’annulation.
+  Clic réel : avis « Demande annulée. », puis liste vide. Rechargement complet sans cache :
+  vide persistant ; revisite du profil : « Se connecter » de nouveau proposé. La recette
+  reste dans Chrome ; aucun navigateur intégré employé.
+- **Portée exacte de cette preuve** : pas de tentative réelle du destinataire après
+  annulation ; refus, version et notification `cancelled` couverts par les tests. Dernière
+  navigation vers les demandes envoyées : aucun avertissement ni erreur console, aucune
+  réponse de ressource avec statut ≥ 400. Un 404 transitoire non identifié a été observé
+  après le premier rechargement et n’a pas été reproduit ensuite : ce constat ne vaut pas
+  absence d’erreur sur tout le parcours. La capture d’annulation a été affichée par l’outil,
+  mais son export en fichier a été refusé ; aucun fichier de capture d’annulation revendiqué.
+  Les deux captures de blocages déjà citées restent les fichiers disponibles.
+- **Ressources et clôture de la recette** : deux caches Webpack précisément autorisés
+  avaient été supprimés après arrêt de 3031 et vérification de l’absence de fichiers ouverts :
+  gain mesuré **733 460 Kio** (environ 716 Mio), espace libre **302 468 → 1 035 928 Kio**
+  à cet instant. Une nouvelle saturation `ENOSPC` a ensuite fait tomber le backend ; reprise
+  **sans suppression supplémentaire**, backend « Functions ready » à 08 h 17 dans
+  `/tmp/diasporale-pd4-convex-recipe-final.log`, frontend relancé avec plafond mémoire de
+  2 048 Mio. Chrome a conservé l’authentification du propriétaire. Viewport réinitialisé avant
+  la perte d’accès à l’extension Chrome normale ; retour au thème clair de cette session
+  non recontrôlé. Dernier onglet dédié à la recette fermé ; seul l’onglet vide de l’outil reste.
+  DIASPORALE 3031 arrêté ; backend 3210 rétabli. Aucun autre cache, environnement, donnée
+  ou session supprimé ; aucun push ni production.
+- **Restitution confirmée** : DIASPORALE 3031 arrêté, frontend ANTSIA 3030 rétabli,
+  `/entrer` **HTTP 200**, backend 3210 prêt et conservé. Seuls 3210 et 3030 écoutent.
+  Journal frontend : `/tmp/diasporale-pd4-antsia-3030-restored.log`. ANTSIA informé,
+  créneau PA6 rendu ; dernier onglet de recette fermé, onglet vide de l’outil seul restant.
+- **Écart hors périmètre signalé à ANTSIA** : pendant une redirection du lecteur en attente,
+  `/fil` appelle `diaspora.suggestions.forMe` et reçoit `statusInsufficient` ; non corrigé
+  dans cette tranche.
