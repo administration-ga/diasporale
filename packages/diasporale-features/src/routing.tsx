@@ -1,6 +1,6 @@
 "use client"
 
-import type { CountryCode } from "@diasporale/domain"
+import type { CountryCode, FeedScope } from "@diasporale/domain"
 import { createContext, useContext, type ComponentProps, type ComponentType, type ReactNode } from "react"
 
 /**
@@ -15,7 +15,8 @@ export interface FeatureRoutes {
   post(postId: string): string
   page(handle: string): string
   hub(country: CountryCode): string
-  feed(): string
+  /** Le filtre restreint le fil ; une carte peut conserver sa portée et le pays de son hub. */
+  feed(tag?: string, context?: { readonly scope: FeedScope; readonly country?: CountryCode }): string
   sponsor(): string
   settings(): string
   attestation(): string

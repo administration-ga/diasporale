@@ -82,6 +82,7 @@ import {
   toWall,
   toNotificationView,
   toOpenCountries,
+  toOwnProfileView,
   toPostView,
   toProfileView,
   toRelationView,
@@ -91,7 +92,55 @@ import {
 
 /** Taille d'une fenêtre du fil DIASPORALE (le moteur accepte jusqu'à cinquante lignes). */
 const FEED_PAGE = 30
-const BOOKMARKS_ACCESS_ERRORS: ReadonlySet<ActionErrorCode> = new Set(["not_signed_in", "not_member", "not_found", "status_insufficient", "suspended", "network_unavailable"])
+const PAGE_ACCESS_ERRORS: ReadonlySet<ActionErrorCode> = new Set(["not_signed_in", "not_member", "not_found", "status_insufficient", "suspended", "network_unavailable"])
+
+interface ReadablePostsQuery<Data> {
+  readonly data: Data | undefined
+  readonly isError: boolean
+  readonly isSuccess: boolean
+  readonly isFetching: boolean
+  readonly dataUpdatedAt: number
+  readonly refetch: () => Promise<Pick<ReadablePostsQuery<Data>, "data" | "isError" | "isSuccess" | "isFetching" | "dataUpdatedAt">>
+}
+
+/** Un refus retire le cache ; seule une réponse fraîche peut rouvrir cette même lecture. */
+function useReadablePostsQuery<Data>(query: ReadablePostsQuery<Data>, requestKey: string, canRead: boolean, error: ActionErrorCode | null) {
+  const generation = useMemo(() => ({ requestKey, canRead }), [requestKey, canRead])
+  const activeGeneration = useRef<typeof generation | null>(null)
+  useLayoutEffect(() => {
+    activeGeneration.current = generation
+    return () => { if (activeGeneration.current === generation) activeGeneration.current = null }
+  }, [generation])
+  const [denial, setDenial] = useState<{ key: string; code: ActionErrorCode; dataUpdatedAt: number } | null>(null)
+  const [readback, setReadback] = useState<{ generation: typeof generation; data: Data; dataUpdatedAt: number } | null>(null)
+  const denied = error !== null && PAGE_ACCESS_ERRORS.has(error)
+  const blocked = denial?.key === requestKey ? denial : null
+  const settled = canRead && query.isSuccess && !query.isError && !query.isFetching && query.data !== undefined
+  const fresh = settled && blocked !== null && (query.dataUpdatedAt > blocked.dataUpdatedAt
+    || (readback?.generation === generation && readback.data === query.data && readback.dataUpdatedAt === query.dataUpdatedAt))
+
+  useLayoutEffect(() => {
+    if (denied && error !== null) {
+      const code = error
+      setDenial((previous) => previous?.key === requestKey && previous.code === code && previous.dataUpdatedAt === query.dataUpdatedAt
+        ? previous : { key: requestKey, code, dataUpdatedAt: query.dataUpdatedAt })
+      setReadback(null)
+    } else if (fresh || (denial !== null && denial.key !== requestKey)) setDenial(null)
+  }, [denied, error, requestKey, query.dataUpdatedAt, fresh, denial])
+
+  const refetch = query.refetch
+  const retry = useCallback(() => {
+    if (!canRead || activeGeneration.current !== generation) return
+    void refetch().then((result) => {
+      if (activeGeneration.current !== generation || !result.isSuccess || result.isError || result.isFetching || result.data === undefined) return
+      setReadback({ generation, data: result.data, dataUpdatedAt: result.dataUpdatedAt })
+    }).catch(() => undefined)
+  }, [canRead, generation, refetch])
+
+  if (denied || (blocked !== null && !fresh)) return { data: undefined, isLoading: query.isFetching === true, error: denied ? error : blocked!.code, retry }
+  if (!canRead) return { data: undefined, isLoading: error === null, error, retry }
+  return { data: query.data, isLoading: query.data === undefined && !query.isError, error, retry }
+}
 
 /**
  * La requête du fil pour une portée. « Pour vous » et « Récents » sont celles du
@@ -178,9 +227,31 @@ export const ATTESTATION_POLLS = 20
 
 const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
+class Refusal extends Error {
+  constructor(readonly code: ActionErrorCode) {
+    super(code)
+  }
+}
+
 export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSource {
   /** Réactions connues du lecteur, relevées par le fil : « retirer ma réaction » rejoue la même. */
   const myReactions = new Map<string, ReactionKind | null>()
+
+  async function ownPerson(personId: string) {
+    const person = await deps.convex.query(api.modules.people.persons.getMyPerson, {})
+    if (!person) throw new Refusal("not_signed_in")
+    if (person._id !== personId) throw new Refusal("not_found")
+    return person
+  }
+
+  async function profileCommand(work: () => Promise<void>): Promise<ActionResult> {
+    try {
+      await work()
+      return { ok: true, value: null }
+    } catch (error) {
+      return { ok: false, code: error instanceof Refusal ? error.code : engineActionErrorCode(error) }
+    }
+  }
 
   function useMember() {
     const auth = useStableConvexAuth()
@@ -193,6 +264,35 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
   return {
     kind: "engine",
     profileImages: createEngineProfileImagesActions({ convex: deps.convex }),
+    profilePublication: {
+      useMyProfile() {
+        const auth = useStableConvexAuth()
+        const person = useLoaded(api.modules.people.persons.getMyPerson, auth.isAuthenticated ? {} : "skip")
+        if (auth.isPending) return LOADING
+        if (!auth.isAuthenticated) return failed("not_signed_in")
+        if (person.state === "error") return failed(person.code)
+        return person.state === "ready" ? ready(person.value ? toOwnProfileView(person.value) : null) : LOADING
+      },
+      setPrivacy: (personId, isPrivate) => profileCommand(async () => {
+        const person = await ownPerson(personId)
+        if (!person.handle || !person.displayName) throw new Refusal("not_member")
+        if (person.private !== isPrivate) await deps.convex.mutation(api.modules.people.profile.setMyProfilePrivacy, { private: isPrivate })
+      }),
+      withdraw: (personId) => profileCommand(async () => {
+        const person = await ownPerson(personId)
+        if (person.published) await deps.convex.mutation(api.modules.people.profile.withdrawMyProfile, {})
+      }),
+      republish: (personId) => profileCommand(async () => {
+        const person = await ownPerson(personId)
+        if (person.published) return
+        if (!person.handle || !person.displayName) throw new Refusal("not_member")
+        await deps.convex.mutation(api.modules.people.profile.publishMyProfile, {
+          handle: person.handle,
+          displayName: person.displayName,
+          ...(person.headline === undefined ? {} : { headline: person.headline }),
+        })
+      }),
+    },
 
     useSession(): Loadable<SessionView> {
       const { auth, networkId, membership } = useMember()
@@ -254,6 +354,7 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       const member = membership.state === "ready" ? membership.value : null
       const residence = member?.facet?.countryOfResidence
       const country = args.hubCountry ?? (residence !== undefined && parseResidenceCountry(residence).ok ? (residence as CountryCode) : null)
+      const tag = args.tag?.trim().toLowerCase() || undefined
       const canRead = auth.isAuthenticated && id !== null && country !== null && member?.capabilities.includes("read_network") === true
       const query = useAuthenticatedConvexQuery(
         api.modules.posts.posts.myFeed,
@@ -261,31 +362,23 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
           networkId: id,
           limit: FEED_PAGE,
           ...feedRequest(args.scope, country),
+          ...(tag === undefined ? {} : { tag }),
           ...(args.cursor ? { cursor: { publishedAt: args.cursor.publishedAt, postId: args.cursor.postId as Id<"posts"> } } : {}),
         } : "skip",
       )
-      const refetch = query.refetch
-      const retry = useCallback(() => {
-        if (canRead) void refetch().catch(() => undefined)
-      }, [canRead, refetch])
-
-      let error: ActionErrorCode | null = null
+      let error: ActionErrorCode | null = query.isError ? engineActionErrorCode(query.error) : null
       if (auth.isUnauthenticated) error = "not_signed_in"
       else if (networkId.state === "error") error = networkId.code
       else if (membership.state === "error") error = membership.code
       else if (networkId.state === "ready" && id === null) error = "network_unavailable"
       else if (membership.state === "ready" && (!member || country === null)) error = "not_member"
       else if (member && !member.capabilities.includes("read_network")) error = member.status === "suspendue" ? "suspended" : "not_member"
-      if (error !== null) return { data: undefined, isLoading: false, error, retry }
-      if (!canRead) return { data: undefined, isLoading: true, error: null, retry }
-
-      const items = query.data === undefined ? undefined : toFeed(query.data.items, args.scope, country as CountryCode)
+      const page = useReadablePostsQuery(query, JSON.stringify(["feed", id, args.scope, country, tag ?? null, args.cursor ?? null]), canRead, error)
+      const items = page.data === undefined ? undefined : toFeed(page.data.items, args.scope, country as CountryCode)
       if (items) for (const post of items) myReactions.set(post.id, post.myReaction)
       return {
-        data: query.data === undefined || items === undefined ? undefined : { items, nextCursor: query.data.nextCursor, lacunar: query.data.lacunar },
-        isLoading: query.data === undefined && !query.isError,
-        error: query.isError ? engineActionErrorCode(query.error) : null,
-        retry,
+        ...page,
+        data: page.data === undefined || items === undefined ? undefined : { items, nextCursor: page.data.nextCursor, lacunar: page.data.lacunar },
       }
     },
 
@@ -307,37 +400,29 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       const id = networkId.state === "ready" ? networkId.value : null
       const member = membership.state === "ready" ? membership.value : null
       const canRead = auth.isAuthenticated && id !== null && member?.capabilities.includes("read_network") === true
+      const handle = args.handle.trim().replace(/^@/, "").toLowerCase()
       const query = useAuthenticatedConvexQuery(
         api.modules.posts.posts.personPosts,
         canRead && id ? {
           networkId: id,
-          handle: args.handle.trim().replace(/^@/, "").toLowerCase(),
+          handle,
           limit: FEED_PAGE,
           ...(args.cursor ? { cursor: { publishedAt: args.cursor.publishedAt, postId: args.cursor.postId as Id<"posts"> } } : {}),
         } : "skip",
       )
-      const refetch = query.refetch
-      const retry = useCallback(() => {
-        if (canRead) void refetch().catch(() => undefined)
-      }, [canRead, refetch])
-
-      let error: ActionErrorCode | null = null
+      let error: ActionErrorCode | null = query.isError ? engineActionErrorCode(query.error) : null
       if (auth.isUnauthenticated) error = "not_signed_in"
       else if (networkId.state === "error") error = networkId.code
       else if (membership.state === "error") error = membership.code
       else if (networkId.state === "ready" && id === null) error = "network_unavailable"
       else if (membership.state === "ready" && !member) error = "not_member"
       else if (member && !member.capabilities.includes("read_network")) error = member.status === "suspendue" ? "suspended" : "not_member"
-      if (error !== null) return { data: undefined, isLoading: false, error, retry }
-      if (!canRead) return { data: undefined, isLoading: true, error: null, retry }
-
-      const items = query.data === undefined ? undefined : toWall({ items: query.data.items, pinned: args.cursor ? null : query.data.pinned })
+      const page = useReadablePostsQuery(query, JSON.stringify(["profile", id, handle, args.cursor ?? null]), canRead, error)
+      const items = page.data === undefined ? undefined : toWall({ items: page.data.items, pinned: args.cursor ? null : page.data.pinned })
       if (items) for (const post of items) myReactions.set(post.id, post.myReaction)
       return {
-        data: query.data === undefined || items === undefined ? undefined : { items, nextCursor: query.data.nextCursor, lacunar: false },
-        isLoading: query.data === undefined && !query.isError,
-        error: query.isError ? engineActionErrorCode(query.error) : null,
-        retry,
+        ...page,
+        data: page.data === undefined || items === undefined ? undefined : { items, nextCursor: page.data.nextCursor, lacunar: false },
       }
     },
 
@@ -411,7 +496,7 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       else if (networkId.state === "ready" && id === null) error = "network_unavailable"
       else if (membership.state === "ready" && !member) error = "not_member"
       else if (member && !member.capabilities.includes("read_network")) error = member.status === "suspendue" ? "suspended" : "not_member"
-      const denied = error !== null && BOOKMARKS_ACCESS_ERRORS.has(error)
+      const denied = error !== null && PAGE_ACCESS_ERRORS.has(error)
       const blocked = denial?.key === requestKey ? denial : null
       const fresh = query.isSuccess && !query.isFetching && query.data !== undefined
         && blocked !== null && query.dataUpdatedAt > blocked.dataUpdatedAt
@@ -544,12 +629,6 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
   let networkId: Id<"networks"> | null = null
   /** L'adresse à laquelle le dernier code a été envoyé (la vérification la reprend). */
   let pendingEmail: string | null = null
-
-  class Refusal extends Error {
-    constructor(readonly code: ActionErrorCode) {
-      super(code)
-    }
-  }
 
   async function diasporale(): Promise<Id<"networks">> {
     if (networkId) return networkId
@@ -875,6 +954,16 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         }
         return null
       }),
+
+    leaveDiasporale: () => attempt(async () => {
+      const expected = await deps.convex.query(api.modules.people.persons.getMyPerson, {})
+      if (!expected) throw new Refusal("not_signed_in")
+      const id = await diasporale()
+      const current = await deps.convex.query(api.modules.people.persons.getMyPerson, {})
+      if (!current || current._id !== expected._id) throw new Refusal("not_found")
+      await deps.convex.mutation(api.modules.diaspora.membership.leaveDiasporale, { networkId: id })
+      return null
+    }),
 
     updateFacet: (input) =>
       attempt(async () => {

@@ -1,5 +1,6 @@
 "use client"
 
+import { extractHashtags } from "@antsia/social-domain/richText"
 import { hasCapability, type CountryCode, type FeedScope } from "@diasporale/domain"
 import { useMemo, useSyncExternalStore } from "react"
 
@@ -35,6 +36,7 @@ import {
   feedView,
   memberSearchView,
   openCountriesView,
+  ownProfileView,
   pageDetailView,
   postDetailView,
   notificationsView,
@@ -89,6 +91,19 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
 
   return {
     kind: "demo",
+    profilePublication: {
+      useMyProfile() {
+        const version = useVersion()
+        return useMemo(() => {
+          if (version < 0) return LOADING
+          const state = store.getState()
+          return state.session.personId ? ready(ownProfileView(state, state.session.personId)) : { status: "error" as const, code: "not_signed_in" as const }
+        }, [version])
+      },
+      setPrivacy: (personId, isPrivate) => store.setProfilePrivacy(personId, isPrivate),
+      withdraw: (personId) => store.withdrawProfile(personId),
+      republish: (personId) => store.republishProfile(personId),
+    },
 
     useSession() {
       const version = useVersion()
@@ -122,6 +137,7 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
     useFeedPage(args: FeedPageRequest): FeedPageQuery {
       const version = useVersion()
       const { scope, hubCountry } = args
+      const tag = args.tag?.trim().toLowerCase() || undefined
       const publishedAt = args.cursor?.publishedAt
       const postId = args.cursor?.postId
       return useMemo<FeedPageQuery>(() => {
@@ -136,14 +152,15 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
           return { data: undefined, isLoading: false, error: status === "suspendue" ? "suspended" : "not_member", retry: retryLocalFeed }
         }
         // Le sélecteur applique déjà audiences, réseau, blocages et masquages.
-        const posts = feedView(state, viewerId, scope, store.now(), hubCountry)
+        const admitted = feedView(state, viewerId, scope, store.now(), scope === "mon_pays" ? hubCountry : undefined)
+        const posts = tag === undefined ? admitted : admitted.filter((post) => extractHashtags(post.body).includes(tag))
         return {
           data: localPostsPage(posts, publishedAt === undefined || postId === undefined ? null : { publishedAt, postId }),
           isLoading: false,
           error: null,
           retry: retryLocalFeed,
         }
-      }, [version, scope, hubCountry, publishedAt, postId])
+      }, [version, scope, hubCountry, tag, publishedAt, postId])
     },
 
     useProfile(handle: string) {
@@ -414,6 +431,7 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       revokeSponsorship: (id) => store.revokeSponsorship(id),
       requestAttestation: () => store.requestAttestation(),
       setConsent: (purpose, granted) => store.setConsent(purpose, granted),
+      leaveDiasporale: () => store.leaveDiasporale(),
       updateFacet: (input) => store.updateFacet(input),
       setDirectoryVisibility: (level) => store.setDirectoryVisibility(level),
       exportMyData: () => store.exportMyData(),

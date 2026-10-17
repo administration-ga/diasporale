@@ -4,7 +4,23 @@
  * surfaces de `@diasporale/features` ne connaissent aucune URL : elles reçoivent
  * cette table par `RoutingProvider`.
  */
-import type { CountryCode, FeedScope } from "@diasporale/domain"
+import { parseResidenceCountry, type CountryCode, type FeedScope } from "@diasporale/domain"
+
+/** Le jeton peut contenir une expansion Unicode de minuscule (İ → i̇) : ne pas le redécouper. */
+export function normalizeFeedTag(raw: string | null | undefined): string | undefined {
+  return raw?.trim().toLowerCase() || undefined
+}
+
+function feedHref(scope?: FeedScope, tag?: string, country?: CountryCode): string {
+  const query = new URLSearchParams()
+  if (scope !== undefined) query.set("scope", scope)
+  const canonicalTag = normalizeFeedTag(tag)
+  if (canonicalTag !== undefined) query.set("tag", canonicalTag)
+  const residence = parseResidenceCountry(country)
+  if (residence.ok) query.set("country", residence.value)
+  const search = query.toString()
+  return search ? `/fil?${search}` : "/fil"
+}
 
 /** Le segment « nouveau statut » de la route des statuts (lu aussi par la page des statuts). */
 export const STORIES_NEW_SEGMENT = "nouvelle"
@@ -17,7 +33,7 @@ export const routes = {
   enterIdn: () => "/entrer/idn",
   enterCode: () => "/entrer/code",
   welcome: () => "/bienvenue",
-  feed: (scope?: FeedScope) => (scope ? `/fil?scope=${scope}` : "/fil"),
+  feed: feedHref,
   hub: (country: CountryCode) => `/pays/${country.toLowerCase()}`,
   /** Adresse publique `/@handle` (réécrite vers `/profil/handle` par next.config). */
   profile: (handle: string) => `/@${handle}`,

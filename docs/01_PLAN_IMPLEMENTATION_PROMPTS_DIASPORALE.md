@@ -38,6 +38,13 @@ dependances:
 | PD7 Évènements, groupes de conversation, iCom et direct | en cours (15/10) | iCom (point 3) monté depuis le moteur : carte, pages `/messages` et `/actus`, « Écrire » et « Appeler » du profil — branche locale `pd7/icom`, PR après le push d'ANTSIA (`517bf13` iCom, `f1eed7f` réseau personnel) |
 | PD5, PD6, PD8 → PD10 | — | — |
 
+Complément PD4 du **17/10/2026** : après les suggestions masquées et signets paginés
+(`4a48fc6`, `bce25cd`), les réglages du profil commun couvrent le privé, le retrait et la
+republication explicite ; le départ DIASPORALE est distinct. Les mots-dièse ouvrent le fil
+filtré et paginé, avec portée/pays conservés. La recette Chrome locale est terminée ;
+les preuves et limites de cette tranche sont tenues dans `docs/09` et `docs/04`.
+PD4 reste ouvert pour les autres écarts de parité.
+
 Vérifications des étapes closes :
 - **a)** 197 cas `bun test`, couverture lignes et fonctions 100 % imposée par
   `packages/diasporale-domain/bunfig.toml`, `tsc --noEmit` 0 ; 206 cas depuis le module

@@ -5,6 +5,7 @@
  * `network`, portées du fil, refus indistinct (un profil introuvable et un
  * profil inaccessible rendent la même chose : `null`).
  */
+import { isProfileDiscoverable, isProfilePublished } from "@antsia/social-domain/content"
 import {
   admitsInFeedScope,
   capabilitiesOf,
@@ -43,6 +44,7 @@ import type {
   MemberHitView,
   MembershipView,
   OpenCountryView,
+  OwnProfileView,
   PageDetailView,
   PageView,
   PostMediaView,
@@ -60,6 +62,25 @@ import { COMMENT_REPLIES_PREVIEW, COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH } from
 import { maskDestination } from "../data/mask"
 import type { DemoAccountView } from "../data/port"
 import type { DemoComment, DemoPage, DemoPost, DemoState } from "./state"
+
+/** Les champs gardés pour soi ne sont jamais une projection d'acteur public. */
+function publishedProfile(state: DemoState, personId: string) {
+  const person = state.persons[personId]
+  return person?.profile && isProfilePublished(person) ? person.profile : null
+}
+
+export function ownProfileView(state: DemoState, personId: string): OwnProfileView | null {
+  const person = state.persons[personId]
+  if (!person) return null
+  return {
+    personId,
+    handle: person.profile?.handle ?? null,
+    displayName: person.profile?.displayName ?? null,
+    headline: person.profile?.headline ?? null,
+    published: Boolean(person.profile) && isProfilePublished(person),
+    private: person.privateAt !== undefined,
+  }
+}
 
 export function statusOf(state: DemoState, personId: string, now: number): MembershipStatus | null {
   const membership = state.memberships[personId]
@@ -108,13 +129,13 @@ function authorOf(state: DemoState, author: DemoPost["author"], now: number): Au
       badges: view ? [view.badge] : ["community"],
     }
   }
-  const person = state.persons[author.id]
+  const profile = publishedProfile(state, author.id)
   return {
     kind: "person",
     id: author.id,
-    handle: person?.profile?.handle ?? "",
-    displayName: person?.profile?.displayName ?? "",
-    badges: badgesOfPerson(state, author.id, now),
+    handle: profile?.handle ?? "",
+    displayName: profile?.displayName ?? "",
+    badges: profile ? badgesOfPerson(state, author.id, now) : [],
   }
 }
 
@@ -149,7 +170,7 @@ export function notificationsView(state: DemoState, viewerId: string): Notificat
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, NOTIFICATIONS_PAGE)
     .map((item) => {
-      const actor = item.actorId ? state.persons[item.actorId]?.profile : undefined
+      const actor = item.actorId ? publishedProfile(state, item.actorId) : null
       const request = item.connectionRequestId ? state.connectionRequests.find((candidate) => candidate.id === item.connectionRequestId) : undefined
       const isRequest = item.kind === "connection_request"
       return {
@@ -204,7 +225,7 @@ function listedMemberView(state: DemoState, viewerId: string, personId: string, 
   const membership = state.memberships[personId]
   const viewerMembership = state.memberships[viewerId]
   const viewerStatus = statusOf(state, viewerId, now)
-  if (!person?.profile || !membership || !viewerMembership || !viewerStatus) return null
+  if (!person?.profile || !isProfileDiscoverable(person) || !membership || !viewerMembership || !viewerStatus) return null
   const facet = membership.facet
   const viewerCountry = viewerMembership.facet.countryOfResidence
   const isSelf = personId === viewerId
@@ -402,7 +423,7 @@ function liveComments(state: DemoState, postId: string, viewerId: string): DemoC
 }
 
 function commentView(state: DemoState, item: DemoComment, viewerId: string): CommentView {
-  const profile = state.persons[item.authorId]?.profile
+  const profile = publishedProfile(state, item.authorId)
   return {
     id: item.id,
     author: { personId: item.authorId, handle: profile?.handle ?? null, displayName: profile?.displayName ?? null },
@@ -499,16 +520,17 @@ function eventView(state: DemoState, event: DemoState["events"][number], now: nu
 /** Compteurs « matérialisés » du hub — recalculés depuis l'état, comme le ferait le cron quotidien. */
 export function hubCounters(state: DemoState, country: CountryCode, now: number) {
   const members = Object.entries(state.memberships).filter(
-    ([personId, membership]) =>
-      membership.facet.countryOfResidence === country &&
-      countsAsHubMember({
+    ([personId, membership]) => {
+      const person = state.persons[personId]
+      return !!person?.profile && isProfileDiscoverable(person) && membership.facet.countryOfResidence === country && countsAsHubMember({
         status: deriveMembershipStatus(membership.grounds, now),
         directoryVisibility: membership.directoryVisibility,
         directoryConsent: isConsentActive(
           state.consents.filter((record) => record.personId === personId),
           "directory",
         ),
-      }),
+      })
+    },
   ).length
   const pages = Object.values(state.pages).filter((page) => page.country === country)
   return presentHubCounters({
@@ -555,7 +577,7 @@ export function membershipView(state: DemoState, personId: string, now: number):
   const status = deriveMembershipStatus(membership.grounds, now)
   const badges = badgesOfPerson(state, personId, now)
   const sponsorship = state.sponsorships.find((item) => item.sponsoredId === personId && item.revokedAt === null)
-  const sponsor = sponsorship ? state.persons[sponsorship.sponsorId] : undefined
+  const sponsor = sponsorship ? publishedProfile(state, sponsorship.sponsorId) : null
   const rootVerified = badges.includes("verified")
   return {
     personId,
@@ -566,7 +588,7 @@ export function membershipView(state: DemoState, personId: string, now: number):
     facet: membership.facet,
     joinedAt: membership.joinedAt,
     verifiedSince: membership.verifiedSince,
-    sponsoredBy: sponsor?.profile ? { handle: sponsor.profile.handle, displayName: sponsor.profile.displayName } : null,
+    sponsoredBy: sponsor ? { handle: sponsor.handle, displayName: sponsor.displayName } : null,
     attestation: membership.attestation,
     // Politique `open` du réseau racine (cahier ANTSIA §6.2) : déclarée d'emblée,
     // vérifiée avec une preuve forte ; une suspension racine se lit partout.
@@ -602,9 +624,11 @@ export function sessionView(state: DemoState, now: number): SessionView {
 export function profileView(state: DemoState, handle: string, viewerId: string | null, now: number, options: { readonly includePosts?: boolean } = {}): ProfileView | null {
   const person = Object.values(state.persons).find((candidate) => candidate.profile?.handle === handle)
   const membership = person ? state.memberships[person.id] : undefined
-  if (!person?.profile || !membership || viewerId === null) return null
+  if (!person?.profile || !isProfilePublished(person) || !membership || viewerId === null) return null
+  if (deriveMembershipStatus(membership.grounds, now) === "partie") return null
   const viewerStatus = statusOf(state, viewerId, now)
-  if (viewerStatus === null) return null
+  const readAccess = state.memberships[viewerId]?.grounds.suspension?.readAccess ?? "none"
+  if (viewerStatus === null || !capabilitiesOf(viewerStatus, { suspensionReadAccess: readAccess }).has("read_network")) return null
   const isSelf = person.id === viewerId
   // Un blocage dans la paire : le même « introuvable » qu'un identifiant inconnu.
   if (!isSelf && blockedBetween(state, viewerId, person.id)) return null
@@ -663,7 +687,7 @@ export function sponsorDashboardView(state: DemoState, viewerId: string, now: nu
       .filter((item) => item.sponsorId === viewerId)
       .sort((a, b) => b.createdAt - a.createdAt)
       .map((item) => {
-        const sponsored = state.persons[item.sponsoredId]?.profile
+        const sponsored = publishedProfile(state, item.sponsoredId)
         return {
           id: item.id,
           sponsored: { handle: sponsored?.handle ?? "", displayName: sponsored?.displayName ?? "" },

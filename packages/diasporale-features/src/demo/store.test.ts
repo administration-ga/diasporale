@@ -262,12 +262,14 @@ describe("consentements, annuaire, départ et effacement", () => {
     expect(membershipView(store.getState(), me(), T0)?.directoryVisibility).toBe("hidden")
   })
 
-  it("retirer le consentement au profil social, c'est quitter DIASPORALE", async () => {
+  it("révoquer le consentement social ne simule ni départ ni retrait du profil", async () => {
     const { store, me } = demo()
     await store.signInWithIdn(AWA)
     await store.join(joinInput())
     await store.setConsent("social_profile", false)
-    expect(store.statusOf(me())).toBe("partie")
+    expect(store.statusOf(me())).toBe("declaree")
+    expect(store.getState().persons[me()]?.profile).not.toBeNull()
+    expect(store.getState().consents.at(-1)).toMatchObject({ purpose: "social_profile", granted: false })
   })
 
   it("l'effacement purge la personne, ses traces et ses parrainages donnés", async () => {

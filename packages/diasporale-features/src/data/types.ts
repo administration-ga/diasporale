@@ -108,6 +108,8 @@ export interface FeedCursorView {
 export interface FeedPageRequest {
   readonly scope: FeedScope
   readonly hubCountry?: CountryCode
+  /** Jeton canonique du moteur ; restreint les publications déjà lisibles. */
+  readonly tag?: string
   /** Absent ou nul pour la première page ; les suivantes reprennent le curseur reçu. */
   readonly cursor?: FeedCursorView | null
 }
@@ -286,6 +288,16 @@ export interface MembershipView {
 export type SessionView =
   | { readonly status: "anonymous" }
   | { readonly status: "signed_in"; readonly account: AccountView; readonly membership: MembershipView | null }
+
+/** État du profil commun, réservé à la personne authentifiée, même après retrait. */
+export interface OwnProfileView {
+  readonly personId: string
+  readonly handle: string | null
+  readonly displayName: string | null
+  readonly headline: string | null
+  readonly published: boolean
+  readonly private: boolean
+}
 
 /** Une image de profil déjà jugée par la garde des fichiers du moteur. */
 export interface ProfileImageView {

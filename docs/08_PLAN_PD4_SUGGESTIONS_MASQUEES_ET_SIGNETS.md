@@ -106,8 +106,9 @@ suppression de cache ou de session prévu.
 
 ## Vérification finale locale — 17/10
 
-- Passe complète `verify` terminée code 0 : **6 786 tests**, dont 953 DIASPORALE
-  (domaine 190, features 285, application 478), dix espaces typés et neuf lints sans erreur.
+- Passe complète `verify` terminée code 0 : **6 786 tests**, dont 1 001 DIASPORALE
+  (domaine 238, features 285, application 478), dix espaces typés et neuf lints sans erreur.
+  Ventilation rectifiée le 17/10 après relecture du journal : les 190 cas appartiennent à l’API du moteur ; le total commun reste inchangé.
   Journal `/tmp/diasporale-pd4-hidden-bookmarks-verify-analysis15.log` ; les trente fichiers
   de code contrôlés sont identiques au gel. Backend 1 551 tests en 52,06 s, cliquets 124 ;
   les 18 cas des suggestions masquées et les 31 cas de casse civile sont inclus.

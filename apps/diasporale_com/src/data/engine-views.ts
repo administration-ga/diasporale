@@ -31,6 +31,7 @@ import {
   type MemberHitView,
   type MembershipView,
   type OpenCountryView,
+  type OwnProfileView,
   type PostMediaView,
   type PostView,
   type PublishMediaInput,
@@ -58,6 +59,18 @@ type PublicProfile = NonNullable<FunctionReturnType<typeof api.modules.people.pr
 type MemberFacet = NonNullable<FunctionReturnType<typeof api.modules.diaspora.profile.memberFacet>>
 type MyConsents = FunctionReturnType<typeof api.modules.diaspora.membership.myConsents>
 export type FacetArgs = FunctionArgs<typeof api.modules.diaspora.facet.updateMyFacet>["facet"]
+
+/** La fiche personnelle reste lisible après retrait ; elle n'est jamais un DTO public. */
+export function toOwnProfileView(person: MyPerson): OwnProfileView {
+  return {
+    personId: person._id,
+    handle: person.handle ?? null,
+    displayName: person.displayName ?? null,
+    headline: person.headline ?? null,
+    published: person.published,
+    private: person.private,
+  }
+}
 
 /** Le compte de la session : la porte d'entrée (IDN et sa garantie, ou compte léger à adresse masquée). */
 export function toAccountView(person: MyPerson, identity: MyIdentity, email: string | null): AccountView {

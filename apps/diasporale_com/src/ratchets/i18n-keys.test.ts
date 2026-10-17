@@ -91,6 +91,13 @@ const FAMILIES: string[] = [
   ...each(FACET_FIELDS, (field) => [`facet.field.${field}`]),
   ...each(FIELD_VISIBILITY_LEVELS, (level) => [`facet.visibility.${level}`]),
   ...each(DIRECTORY_VISIBILITY_LEVELS, (level) => [`settings.directoryLevel.${level}`]),
+  ...each(["published", "private", "withdrawn", "unpublished"] as const, (state) => [`settings.profilePublication.state.${state}`]),
+  ...each(["privacy", "withdraw", "republish"] as const, (command) => [`settings.profilePublication.saved.${command}`]),
+  ...each(["withdraw", "republish"] as const, (command) => [
+    `settings.profilePublication.confirm.${command}.title`,
+    `settings.profilePublication.confirm.${command}.body`,
+    `settings.profilePublication.confirm.${command}.confirm`,
+  ]),
   ...each(["notice", "privacy"] as const, (kind) => [
     `legal.${kind}.title`,
     ...range(4).flatMap((section) => [`legal.${kind}.section${section}.title`, `legal.${kind}.section${section}.body`]),

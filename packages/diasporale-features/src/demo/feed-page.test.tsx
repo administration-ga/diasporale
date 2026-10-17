@@ -64,6 +64,71 @@ describe("démonstration — pagination du même fil gardé", () => {
     expect(result.current.data?.items.map((item) => item.id)).toEqual(["local-ca", "diaspora"])
   })
 
+  it("filtre les mots-dièse avant la pagination et conserve trente puis cinq résultats sans doublon", () => {
+    const matches = Array.from({ length: 35 }, (_, index) => post(`tag-${String(index + 1).padStart(3, "0")}`, { body: index % 2 === 0 ? "Recette #ÉTÉ" : "Recette #été" }))
+    const unrelated = Array.from({ length: 8 }, (_, index) => post(`sans-${index}`, { body: "Une autre publication #gabon" }))
+    const data = source({ posts: [...matches, ...unrelated] })
+    const { result, rerender } = renderHook((args: FeedPageRequest) => data.useFeedPage(args), { initialProps: { scope: "recents", tag: " ÉTÉ " } as FeedPageRequest })
+    const first = result.current.data
+    expect(first?.items).toHaveLength(30)
+    expect(first?.nextCursor).toEqual({ publishedAt: NOW, postId: "tag-006" })
+    rerender({ scope: "recents", tag: "été", cursor: first?.nextCursor })
+    const second = result.current.data
+    expect(second?.items.map((item) => item.id)).toEqual(["tag-005", "tag-004", "tag-003", "tag-002", "tag-001"])
+    expect(second?.nextCursor).toBeNull()
+    expect(new Set([...(first?.items ?? []), ...(second?.items ?? [])].map((item) => item.id)).size).toBe(35)
+  })
+
+  it("conserve le jeton Unicode canonique sans confondre İSTANBUL et istanbul", () => {
+    const data = source({ posts: [post("unicode", { body: "Recette #İSTANBUL" }), post("simple", { body: "Recette #istanbul" })] })
+    const { result } = renderHook(() => data.useFeedPage({ scope: "recents", tag: "i̇stanbul" }))
+    expect(result.current.data?.items.map((item) => item.id)).toEqual(["unicode"])
+  })
+
+  it("aucun mot-dièse ne réintroduit une audience interdite, un contenu masqué ou un auteur bloqué", () => {
+    const tagged = (id: string, overrides: Partial<DemoPost> = {}) => post(id, { body: "Recette #gabon", ...overrides })
+    const data = source({
+      posts: [
+        tagged("visible"),
+        tagged("hidden"),
+        tagged("muted", { author: { kind: "person", id: "p-nadia" } }),
+        tagged("blocked", { author: { kind: "person", id: "p-rodrigue" } }),
+        tagged("private", { author: { kind: "person", id: "p-clarisse" }, audience: "connections" }),
+        tagged("pending", { moderation: "pending_review" }),
+        post("unrelated", { body: "Recette #été" }),
+      ],
+      marks: [{ personId: VIEWER, postId: "hidden", kind: "hidden", createdAt: NOW }],
+      mutes: [[VIEWER, "p-nadia"]],
+      blocks: [{ id: "block-recette", byId: "p-rodrigue", targetId: VIEWER, createdAt: NOW }],
+    })
+    const { result } = renderHook(() => data.useFeedPage({ scope: "recents", tag: "gabon" }))
+    expect(result.current.data?.items.map((item) => item.id)).toEqual(["visible"])
+  })
+
+  it.each([
+    { scope: "recents" as const, expected: ["local-fr", "local-ca", "diaspora"] },
+    { scope: "diaspora" as const, expected: ["diaspora"] },
+    { scope: "pour_vous" as const, expected: ["local-fr"] },
+  ])("garde la portée $scope quand l'adresse conserve le pays d'un hub", ({ scope, expected }) => {
+    const data = source({ posts: [
+      post("local-fr", { author: { kind: "person", id: VIEWER }, body: "Recette #gabon", scope: { reach: "local", country: "FR" } }),
+      post("local-ca", { body: "Recette #gabon", scope: { reach: "local", country: "CA" } }),
+      post("diaspora", { body: "Recette #gabon" }),
+    ] })
+    const { result } = renderHook(() => data.useFeedPage({ scope, hubCountry: "CA", tag: "gabon" }))
+    expect(result.current.data?.items.map((item) => item.id).sort()).toEqual([...expected].sort())
+  })
+
+  it("remplacer puis retirer le filtre relit le même fil autorisé", () => {
+    const data = source({ posts: [post("gabon", { body: "Recette #gabon" }), post("ete", { body: "Recette #été" }), post("sans") ] })
+    const { result, rerender } = renderHook((args: FeedPageRequest) => data.useFeedPage(args), { initialProps: { scope: "recents", tag: "gabon" } as FeedPageRequest })
+    expect(result.current.data?.items.map((item) => item.id)).toEqual(["gabon"])
+    rerender({ scope: "recents", tag: "été" })
+    expect(result.current.data?.items.map((item) => item.id)).toEqual(["ete"])
+    rerender({ scope: "recents", tag: " \t " })
+    expect(result.current.data?.items.map((item) => item.id).sort()).toEqual(["ete", "gabon", "sans"])
+  })
+
   it("ne remet pas dans une page les publications masquées ou l'auteur en sourdine", () => {
     const data = source({
       posts: [post("hidden"), post("muted", { author: { kind: "person", id: "p-nadia" } }), post("visible")],

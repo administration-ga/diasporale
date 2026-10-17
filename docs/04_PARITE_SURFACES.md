@@ -18,12 +18,12 @@
 |---|---|---|---|---|---|
 | Fil (`FeedPage`) | `/fil` : « Mon pays », « Toute la diaspora », « Récents », « Pour vous » | EXF-DG-13 | ✅ | `posts.myFeed` (portées, voies du hub) | pages de 30, curseur composite du moteur ; « Voir plus » explicite, pages réactives et frontière réalignée ; même chaîne dans le hub pays (recette du 16/10 ci-dessous) |
 | Composeur en feuille | `PostComposerSheet` | EXF-DG-10, 11 | ✅ | `posts.publish` (portée, pays, ANTSIA, médias, partage, idempotence), `media.generateUploadUrl` (`media_social`) | médias : quatre photos ou une vidéo seule, texte alternatif par média, règles du moteur jugées avant tout envoi (PR administration-ga/diasporale#5) ; la démonstration garde des photos réduites, pas de vidéo ; partage cité (original en aperçu, mot facultatif, sans média) et idempotence, une clé par série d'essais (PR administration-ga/diasporale#6) ; brouillon durable dans CE navigateur (texte et choix, sans les médias ; une clé par personne, rétabli à l'ouverture, effacé à la publication, jamais envoyé) ; local refusé dans un pays non ouvert (§3) |
-| Carte de publication | `PostCard` | EXF-DG-10, 12 | ✅ | DTO `myFeed` | auteur d'une page : sa carte ; « signé par » attend PD5 ; mentions (lien vers le profil) et mots-dièse découpés par le moteur (`splitBodyRich`), dans les commentaires aussi, casse de l'auteur gardée (ANTSIA l'abaisse) ; un mot-dièse n'ouvre pas encore de recherche ; médias : photo seule à ses proportions, grille carrée de deux à quatre, retenue de la garde dite (analyse en cours, bloqué), sans visionneuse plein écran ; partage : « Partager » sur une publication publique et publiée, avec son compte, et l'original intégré, re-gardé pour chaque lecteur (« indisponible » s'il ne se lit plus) |
+| Carte de publication | `PostCard` | EXF-DG-10, 12 | ✅ | DTO `myFeed` | auteur d'une page : sa carte ; « signé par » attend PD5 ; mentions (lien vers le profil) et mots-dièse découpés par le moteur (`splitBodyRich`), dans les commentaires aussi, casse de l'auteur gardée (ANTSIA l'abaisse) ; mots-dièse cliquables vers le même fil autorisé, avec filtre, pays/portée conservés et chaîne paginée remise à zéro ; médias : photo seule à ses proportions, grille carrée de deux à quatre, retenue de la garde dite (analyse en cours, bloqué), sans visionneuse plein écran ; partage : « Partager » sur une publication publique et publiée, avec son compte, et l'original intégré, re-gardé pour chaque lecteur (« indisponible » s'il ne se lit plus) |
 | Réactions (4 genres) | palette de la carte | EXF-DG-12 | ✅ | `engagement.toggleReaction` | — |
 | Commentaires | feuille « Commentaires » | EXF-DG-12 | ✅ | `engagement.paginateComments`, `paginateReplies`, `comment`, `removeComment` | pas d'édition d'un commentaire |
 | Menu « … » | `PostMenu` | EXF-DG-12, 40 | ✅ | `marks.toggleMark`, `hidePost`, `muteAuthor`, `moderation.reportPost`, `posts.edit`, `posts.remove` | modification de sa publication déjà livrée ; partage cité depuis la carte et son composeur ; liste privée des signets déjà présente à `/enregistrements`, pagination complétée dans la tranche du 17/10 ci-dessous |
 | Signets | `/enregistrements` | EXF-DG-12 | ✅ moteur | `marks.paginateBookmarks`, `marks.toggleMark` | port `useBookmarksPage`, pages natives réactives de 50 et démonstration paginée ; vide filtré non terminal, reprise et retrait protégés implémentés ; Chrome : 50→51 uniques, retrait puis 50 persistants après rechargement ; démonstration couverte automatiquement |
-| Profil personne (`ProfilPersonnePage`) | `/@handle` | EXF-DG-07, 08 | 🟡 | `getPublicProfile`, `diaspora.profile.memberFacet`, `posts.personPosts` | facette projetée ; mur paginé par le curseur du moteur ; photo et couverture lues et modifiables depuis les réglages en mode moteur ; aperçu limité aux informations et à la facette, publications et albums masqués (suite du 16/10 ci-dessous) |
+| Profil personne (`ProfilPersonnePage`) | `/@handle` | EXF-DG-07, 08 | 🟡 | `getPublicProfile`, `diaspora.profile.memberFacet`, `posts.personPosts` | facette projetée ; mur paginé par le curseur du moteur ; photo et couverture lues et modifiables depuis les réglages en mode moteur ; aperçu limité à la facette, publications et albums masqués ; réglages privés, retrait et republication explicite du profil commun raccordés au port propriétaire et à la démonstration (tranche du 17/10 ci-dessous) ; édition de l’identité sociale encore à compléter |
 | Relations (`PeoplePanel`, hooks de pagination) | `/relations` : six onglets — relations, demandes reçues, envoyées, abonnements, blocages, masquées ; barre du profil et cloche | EXF-DG-18, 43 | 🟡 | `graph.connections.*`, `graph.follows.*`, `suggestions.paginateSentInvitations`, `graph.blocks.paginateMine`, `diaspora.suggestions.paginateDismissed` / `restoreDismissed`, surfaces paginées du moteur et composant local `EngineDismissedSuggestions` | six listes raccordées en mode moteur, pages natives réactives et reprise ; lecture des choix personnels, désabonnement, annulation versionnée, déblocage et restauration des masquages accessibles en attente ; réponses et nouveau suivi au droit de publier ; blocages propres sans identité ; masquées avec profils actuellement autorisés par l’annuaire ou ligne neutre ; découverte réservée à l’annuaire opt-in ; preuves Chrome antérieures pour annulation/déblocage conservées ci-dessous ; démonstration fermée ; sixième onglet recetté dans Chrome, restauration et vide persistants, focus et responsive vérifiés |
 | Annuaire et recherche | `/membres` | EXF-DG-19, 46 | ✅ | `diaspora.directory.searchMembers` | opt-in par niveau ; masqué introuvable, même par identifiant exact |
 | Suggestions | « Des membres à rencontrer » (rail du fil, `/membres`), `/relations?onglet=masquees` | EXF-DG-18 | 🟡 | `diaspora.suggestions.forMe`, `suggestions.dismiss`, façade `diaspora.suggestions.paginateDismissed` / `restoreDismissed` | propositions fermées tant que le lecteur ne peut pas publier ; choix masqués privés paginés et restaurables par identifiant de version, avec relecture actuelle de l’annuaire et des blocages ; scan des 500 masquages remplacé par des recherches exactes indexées ; API générique de liste non montée ; vérification automatisée et recette Chrome vertes : restauration persistante, retour du candidat encore éligible, aucune relation ni aucun suivi créé |
@@ -55,8 +55,9 @@
 - **Publications de développement sans portée** : celles d'avant le lot 7 du moteur n'entrent
   dans aucune voie du hub. Données locales seulement.
 - **Annuaire racine d'ANTSIA** : un membre de DIASPORALE reste trouvable dans l'annuaire public
-  d'ANTSIA si son profil y est découvrable. Décision du propriétaire attendue (avis à l'accueil,
-  option « profil privé »).
+  d'ANTSIA si son profil y est découvrable. Le réglage privé global est désormais accessible
+  dans les réglages DIASPORALE et sa portée entre les deux applications est explicitée ; le niveau
+  d'annuaire DIASPORALE reste un choix distinct.
 - **Effacement** : aucune table de la tranche n'est purgée tant que l'effacement du moteur
   n'existe pas (PA5). La recette R9 (PD6) l'exigera.
 
@@ -603,14 +604,15 @@ par cette session.
   ni preuve signée n’est ajoutée ou réécrite. Limite du sujet fictif dérivé du nom : une ancienne
   forme `ß` peut différer d’une nouvelle saisie déjà normalisée `SS` ; aucun rapprochement
   par nom ni changement du sujet historique. Ce parcours n’est pas le raccord IDN réel.
-- **Passe finale complète code 0** : 6 786 tests, dont 953 DIASPORALE (domaine 190,
+- **Passe finale complète code 0** : 6 786 tests, dont 1 001 DIASPORALE (domaine 238,
   features 285, application 478), dix espaces typés et neuf lints sans erreur. Journal
   `/tmp/diasporale-pd4-hidden-bookmarks-verify-analysis15.log`. Répartition totale : backend
   1 551 en 52,06 s, cliquets 124, scripts 29, social-domain 473, contrats 57, diaspora-domain
-  190, UI 86, social-features 3 154, API 238, diasporale-features 285, admin 78, ANTSIA 43,
+  238, UI 86, social-features 3 154, API 190, diasporale-features 285, admin 78, ANTSIA 43,
   DIASPORALE 478. Les 18 cas backend des masquées et 31 cas civils sont inclus ; les deux
   correctifs Hooks, dimensions des avatars, `content-visibility` et focus ANTSIA sont vérifiés.
   Les trente fichiers de code contrôlés sont identiques au gel avant/après la passe.
+  Ventilation rectifiée le 17/10 à partir du journal : domaine diaspora et API avaient été intervertis ; total commun inchangé.
 - **Configuration de preuve** : Node 22.22.3 pour toute la chaîne, heap 1 536 Mio,
   `GOMAXPROCS=2`, tâches sérialisées et créneau réservé avec les trois chats voisins.
   Backend local : concurrence d’analyse un et budget d’analyse temporaire **15 s**,
@@ -662,3 +664,17 @@ par cette session.
   pas de fichier d’environnement modifié ; disque final mesuré 912 Mio, aucun gain de nettoyage revendiqué.
 - **Suite PD4** : commandes de confidentialité et de retrait du profil ; cette tranche
   ne clôt ni PD4 ni les portes IDN/consulaires réelles.
+
+
+### Reprise du 17/10 — confidentialité, retrait et mots-dièse
+
+- Port propriétaire `profilePublication` et mêmes gestes dans le moteur/démonstration : privé global, retrait global et republication explicitement confirmée avec identité conservée. Le choix privé reste réglable pendant le retrait. Le nom affiché libre ne devient pas un état civil. Aucun DTO public ne reçoit les flags privés.
+- Ces gestes expliquent leur portée ANTSIA/DIASPORALE ; annuaire et facette gardent leurs choix propres. Le départ est désormais raccordé à `leaveDiasporale`, sans révocation de consentement global. Les confirmations, retours tardifs et commandes répétées sont bornés au lecteur et au contexte.
+- Fil et mur ferment les cartes en cache après un refus d'accès, jusqu'à une réponse fraîche autorisée. Auteur retiré : nom neutre, sans lien vide ni badge ; contenu conservé. Démonstration v7 conservée sans purge.
+- Mots-dièse canoniques du moteur cliquables, pays/portée préservés, filtre nommé et retirable, pagination réinitialisée au changement de tag. Démonstration filtrée après les gardes. Aucun nouveau backend ou import privé.
+- **Vérification finale après Chrome : 6 909 tests, code0**, dont **1 124 DIASPORALE** (238 domaine +309 features +577 application), dix espaces typés et neuf lints sans erreur ; 123 cas nouveaux. Journal `/tmp/diasporale-pd4-privacy-tags-verify-chrome-final.log`,36 sources identiques au gel. Moteur24d2824 avant PA8. Bun1.4.2/Node25.9.0, lanceur codegen Node22.22.3 sans préfixe de PATH ; GOMAXPROCS2/heap1536Mio, délais de tests inchangés. Analyse locale1/15s et UDF1s hérités et conservés : pas preuve du défaut4s ou de production.
+- **Chrome réel** : privé puis retrait confirmé ; fiche indisponible avec accès aux réglages,30 contenus conservés avec auteur neutre. Privé modifié pendant le retrait, republication confirmée conservant privé/adhésion/consentement/annuaire, état persistant après rechargement ; choix privé initial finalement rétabli. Identifiant et nom affiché inchangés. Focus Annuler, Échap et restitution du focus validés.
+- Une publication fictive locale `#ConfidentialitéPD4`, sans partage racine, prouve lien accentué et activation par Entrée. Fil récent30→60 cartes uniques puis filtre→1, anciennes pages absentes ; Canada/portée conservés, retrait du filtre sans autre changement et résultat négatif vide. Les plusieurs pages filtrées et les fenêtres vides continuables sont prouvées automatiquement, pas comme recette Chrome multi-page filtrée.
+- 320sombre/375clair/1280sombre sans débordement après retour à la ligne du sélecteur d'apparence (ancien dépassement5px). Feuilles et carte inspectées visuellement ; console finale sans erreur. Pas de départ réel ni d'annuaire croisé revendiqué dans cette recette. Aucune session ni donnée supprimée ; la publication fictive reste locale.
+- Next3031 arrêté code0, backend3210 conservé ; émulation retirée et onglet vide, baseline1280×690/sombre confirmée après reconnexion. CPU et Chrome rendus aux quatre chats autorisés avant commits et Cortex ; confirmation3032 suivie avec ANTSIA. Aucun envoi distant du code ou opération de production.
+- **Suite PD4** : visionneuse complète des médias, édition de commentaire et de l'identité sociale sans republication incidente ; autres écarts des lignes de parité. Cette tranche ne clôt pas PD4. Plan, choix et preuves détaillés dans `docs/09_CONFIDENTIALITE_PROFIL_ET_MOTS_DIESE_PD4.md`.

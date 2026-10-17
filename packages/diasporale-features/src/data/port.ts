@@ -38,6 +38,7 @@ import type {
   MemberHitView,
   PageDetailView,
   OpenCountryView,
+  OwnProfileView,
   PostView,
   NotificationView,
   ProfileImageView,
@@ -65,6 +66,14 @@ export interface ProfileImagesActions {
   set(usage: ProfileImageUsage, file: File): Promise<ActionResult<ProfileImageView>>
   /** Retire la référence de l'image, sans effacer le profil ni le fichier stocké. */
   clear(usage: ProfileImageUsage): Promise<ActionResult<ProfileImageView>>
+}
+
+/** Gestes personnels sur le profil commun ; aucune portée de réseau implicite. */
+export interface ProfilePublication {
+  useMyProfile(): Loadable<OwnProfileView | null>
+  setPrivacy(personId: string, isPrivate: boolean): Promise<ActionResult>
+  withdraw(personId: string): Promise<ActionResult>
+  republish(personId: string): Promise<ActionResult>
 }
 
 /** Ce qu'IDN rend au retour OIDC (simulé en démonstration). */
@@ -192,6 +201,8 @@ export interface DiasporaleActions {
   revokeSponsorship(sponsorshipId: string): Promise<ActionResult>
   requestAttestation(): Promise<ActionResult<{ outcome: AttestationOutcome }>>
   setConsent(purpose: ConsentPurpose, granted: boolean): Promise<ActionResult>
+  /** Quitte cette seule adhésion, sans retirer le profil ni les consentements communs. */
+  leaveDiasporale(): Promise<ActionResult>
   updateFacet(input: FacetInput): Promise<ActionResult>
   setDirectoryVisibility(level: DirectoryVisibility): Promise<ActionResult>
   exportMyData(): Promise<ActionResult<string>>
@@ -217,6 +228,7 @@ export interface DiasporaleDataSource {
   readonly kind: "demo" | "engine"
   /** Disponible seulement si le fournisseur sait gérer les images du profil commun. */
   readonly profileImages?: ProfileImagesActions | null
+  readonly profilePublication?: ProfilePublication
   useSession(): Loadable<SessionView>
   useOpenCountries(): Loadable<readonly OpenCountryView[]>
   useCountryHub(country: CountryCode): Loadable<CountryHubView>

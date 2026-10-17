@@ -172,7 +172,7 @@
   "consentPurpose": {
     "social_profile": {
       "title": "Profil social",
-      "body": "Requis pour être membre. Le retirer, c'est quitter DIASPORALE."
+      "body": "Enregistré lors de l’inscription au profil commun. Retirer le profil et quitter DIASPORALE sont des gestes distincts, proposés séparément."
     },
     "directory": { "title": "Annuaire des membres", "body": "Apparaître dans l'annuaire, au niveau que vous choisissez." },
     "notifications": { "title": "Notifications", "body": "Réponses, mentions, vie de votre pays." },
@@ -294,6 +294,10 @@
     "region": "Avis"
   },
   "feed": {
+    "tagFilter": "Publications avec #{{tag}}",
+    "clearTag": "Retirer le filtre",
+    "tagEmptyTitle": "Aucune publication avec #{{tag}}",
+    "tagEmptyBody": "Essayez une autre portée ou retirez le filtre. Seules les publications que vous pouvez lire apparaissent.",
     "pagination": {
       "loadMore": "Voir plus de publications",
       "loading": "Chargement des publications…",
@@ -575,7 +579,8 @@
     "edit": "Modifier",
     "preview": "Me voir comme les autres",
     "previewExit": "Revenir à mon profil",
-    "previewNotice": "Aperçu de vos informations et de votre facette diaspora pour un membre d’un autre pays, sans relation avec vous.",
+    "previewNotice": "Aperçu limité de votre facette diaspora pour un membre actif d’un autre pays, sans relation avec vous. La visibilité réelle du profil dépend aussi du lecteur et des règles de publication.",
+    "managePublication": "Gérer la publication de mon profil",
     "posts": "Publications",
     "tabsLabel": "Contenus du profil",
     "photos": "Photos",
@@ -643,6 +648,46 @@
     }
   },
   "settings": {
+    "profilePublication": {
+      "title": "Publication du profil",
+      "globalScope": "Ce profil est commun à ANTSIA et DIASPORALE. Ces réglages s’appliquent dans les deux applications ; l’annuaire DIASPORALE se règle séparément.",
+      "loadError": "Le profil personnel n’a pas pu être chargé.",
+      "reload": "Recharger le profil",
+      "unavailable": "Les réglages du profil sont indisponibles pour cette session.",
+      "state": {
+        "published": "Publication du profil enregistrée.",
+        "private": "Publication enregistrée, mode privé activé.",
+        "withdrawn": "Votre profil est retiré.",
+        "unpublished": "Votre profil n’est pas publié."
+      },
+      "privateLead": "Le mode privé vous retire des recherches et suggestions et ferme les nouveaux abonnements et demandes entrants. Votre lien connu, vos publications et vos relations existantes conservent leurs règles habituelles de visibilité.",
+      "withdrawLead": "Retirer le profil rend votre fiche publique indisponible et votre nom neutre. Le compte, les adhésions, médias, contenus, relations et consentements sont conservés. Vous restez membre de DIASPORALE.",
+      "republishLead": "La republication reprend votre identité et votre accroche conservées, ainsi que vos choix de confidentialité et d’annuaire. La modération peut retarder la visibilité du profil.",
+      "makePrivate": "Passer en mode privé",
+      "privacyOn": "Mode privé activé.",
+      "privacyOff": "Mode privé désactivé.",
+      "makeDiscoverable": "Désactiver le mode privé",
+      "withdraw": "Retirer mon profil",
+      "republish": "Republier mon profil",
+      "working": "Enregistrement…",
+      "saved": {
+        "privacy": "Réglage de confidentialité enregistré.",
+        "withdraw": "Retrait du profil enregistré.",
+        "republish": "Republication demandée. La modération peut retarder la visibilité du profil."
+      },
+      "confirm": {
+        "withdraw": {
+          "title": "Retirer le profil commun ?",
+          "body": "Le retrait s’applique à ANTSIA et DIASPORALE. Votre fiche publique devient indisponible et votre nom neutre ; vos données, contenus, liens, adhésions et consentements sont conservés. Vous pourrez republier depuis ces réglages.",
+          "confirm": "Confirmer le retrait"
+        },
+        "republish": {
+          "title": "Republier le profil commun ?",
+          "body": "La republication est demandée dans ANTSIA et DIASPORALE avec l’identité et l’accroche conservées. Le mode privé et vos choix d’annuaire sont conservés. La modération peut retarder la visibilité.",
+          "confirm": "Confirmer la republication"
+        }
+      }
+    },
     "signingOut": "Déconnexion…",
     "title": "Réglages",
     "memberships": "Mes réseaux",
@@ -660,7 +705,7 @@
     "visibilityLegend": "Qui voit quoi",
     "saved": "Enregistré.",
     "directory": "Annuaire des membres",
-    "directoryLead": "Masqué par défaut. On vous contacte seulement par la messagerie, jamais par une adresse.",
+    "directoryLead": "Masqué par défaut. Un profil privé ou retiré reste absent de l’annuaire, même si le niveau choisi est visible. On vous contacte seulement par la messagerie, jamais par une adresse.",
     "directoryNeedsConsent": "Activez d'abord le consentement « Annuaire des membres » ci-dessous.",
     "directoryLevel": {
       "hidden": "Masqué",
@@ -668,14 +713,14 @@
       "network": "Visible de tous les membres"
     },
     "consents": "Consentements",
-    "consentsLead": "Chaque choix est horodaté et révocable d'un geste.",
+    "consentsLead": "Vos consentements enregistrés et les choix disponibles ici. Chaque modification est horodatée.",
     "consentRecorded": "Enregistré le {{date}} — texte du {{version}}",
     "consentGranted": "Consentement donné.",
     "consentRevoked": "Consentement retiré.",
-    "leaveExplain": "Quitter DIASPORALE retire votre consentement au profil social. Votre adhésion à ANTSIA reste.",
+    "leaveExplain": "Quitter DIASPORALE termine cette adhésion. Votre compte, votre profil commun et votre adhésion à ANTSIA restent.",
     "leave": "Quitter DIASPORALE",
     "leaveConfirmTitle": "Quitter DIASPORALE ?",
-    "leaveConfirmBody": "Votre profil ne sera plus visible dans DIASPORALE. Vous pourrez revenir ; un nouveau parrainage pourra être nécessaire.",
+    "leaveConfirmBody": "Votre adhésion à DIASPORALE prend fin, ainsi que votre parrainage reçu. Votre profil commun et vos consentements sont conservés. Vous pourrez revenir ; un nouveau parrainage pourra être nécessaire.",
     "left": "Vous avez quitté DIASPORALE.",
     "sponsorHelp": "Parrainage",
     "sponsorHelpLead": "Un membre vérifié depuis plus de 30 jours peut parrainer un compte en attente avec son identifiant.",

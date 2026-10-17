@@ -14,10 +14,13 @@ const mocks = vi.hoisted(() => ({
   network: { _id: "network-diasporale" } as unknown,
   membership: null as unknown,
   query: vi.fn(),
-  page: { data: undefined, isLoading: true, isError: false, error: null, refetch: vi.fn() } as {
+  page: { data: undefined, isLoading: true, isError: false, isSuccess: false, isFetching: true, dataUpdatedAt: 0, error: null, refetch: vi.fn() } as {
     data: unknown
     isLoading: boolean
     isError: boolean
+    isSuccess: boolean
+    isFetching: boolean
+    dataUpdatedAt: number
     error: unknown
     refetch: ReturnType<typeof vi.fn>
   },
@@ -80,7 +83,7 @@ beforeEach(() => {
   mocks.auth = { isAuthenticated: true, isPending: false, isUnauthenticated: false }
   mocks.network = { _id: "network-diasporale" }
   mocks.membership = { ...MEMBERSHIP }
-  mocks.page = { data: { items: [], nextCursor: null, lacunar: false }, isLoading: false, isError: false, error: null, refetch: vi.fn().mockResolvedValue({}) }
+  mocks.page = { data: { items: [], nextCursor: null, lacunar: false }, isLoading: false, isError: false, isSuccess: true, isFetching: false, dataUpdatedAt: 1, error: null, refetch: vi.fn().mockResolvedValue({}) }
 })
 
 afterEach(cleanup)
@@ -116,6 +119,43 @@ describe("source moteur — une page réactive du fil", () => {
     })
   })
 
+  it.each([
+    { raw: " ÉTÉ ", canonical: "été" },
+    { raw: "İSTANBUL", canonical: "i̇stanbul" },
+  ])("restreint le même fil au jeton $raw sans redécouper Unicode", ({ raw, canonical }) => {
+    const { data } = source()
+    renderHook(() => data.useFeedPage({ scope: "mon_pays", hubCountry: "CA", tag: raw, cursor: CURSOR }))
+    expect(mocks.query).toHaveBeenLastCalledWith("modules/posts/posts:myFeed", {
+      networkId: "network-diasporale", limit: 30, lanes: [{ reach: "local", country: "CA" }, { reach: "diaspora" }], tag: canonical, cursor: CURSOR,
+    })
+    expect(mocks.query.mock.calls.every(([name]) => name === "modules/posts/posts:myFeed")).toBe(true)
+  })
+
+  it.each([
+    { scope: "pour_vous" as const, request: { scope: "pour_vous" } },
+    { scope: "recents" as const, request: { scope: "recents" } },
+    { scope: "diaspora" as const, request: { lanes: [{ reach: "diaspora" }] } },
+  ])("conserve la portée $scope malgré un pays de hub gardé dans l'adresse", ({ scope, request }) => {
+    const { data } = source()
+    renderHook(() => data.useFeedPage({ scope, hubCountry: "CA", tag: "gabon", cursor: CURSOR }))
+    expect(mocks.query).toHaveBeenLastCalledWith("modules/posts/posts:myFeed", {
+      networkId: "network-diasporale", limit: 30, ...request, tag: "gabon", cursor: CURSOR,
+    })
+  })
+
+  it("remplace ou retire le filtre dans la query sans convertir son curseur", () => {
+    const { data } = source()
+    const { rerender } = renderHook((args: FeedPageRequest) => data.useFeedPage(args), { initialProps: { scope: "recents", tag: "gabon", cursor: CURSOR } as FeedPageRequest })
+    rerender({ scope: "recents", tag: "été", cursor: CURSOR })
+    expect(mocks.query).toHaveBeenLastCalledWith("modules/posts/posts:myFeed", {
+      networkId: "network-diasporale", limit: 30, scope: "recents", tag: "été", cursor: CURSOR,
+    })
+    rerender({ scope: "recents", tag: " \t ", cursor: CURSOR })
+    expect(mocks.query).toHaveBeenLastCalledWith("modules/posts/posts:myFeed", {
+      networkId: "network-diasporale", limit: 30, scope: "recents", cursor: CURSOR,
+    })
+  })
+
   it("une fenêtre vide peut continuer ; lacunar ne remplace pas le curseur", () => {
     mocks.page.data = { items: [], nextCursor: CURSOR, lacunar: true }
     const { data } = source()
@@ -136,14 +176,14 @@ describe("source moteur — une page réactive du fil", () => {
   })
 
   it("une panne sans données se reprend par le hook public, sans rejet non traité", async () => {
-    mocks.page = { data: undefined, isLoading: false, isError: true, error: new ConvexError({ code: "rateLimited" }), refetch: vi.fn().mockRejectedValue(new Error("connexion locale interrompue")) }
+    mocks.page = { ...mocks.page, data: undefined, isLoading: false, isError: true, isSuccess: false, error: new ConvexError({ code: "rateLimited" }), refetch: vi.fn().mockRejectedValue(new Error("connexion locale interrompue")) }
     const { data } = source()
-    const { result, rerender } = renderHook(() => data.useFeedPage({ scope: "recents" }))
+    const { result, rerender } = renderHook(() => data.useFeedPage({ scope: "recents", tag: "gabon" }))
     expect(result.current).toMatchObject({ data: undefined, error: "rate_limited", isLoading: false })
 
     await act(async () => result.current.retry())
     expect(mocks.page.refetch).toHaveBeenCalledOnce()
-    mocks.page = { ...mocks.page, data: { items: [], nextCursor: null, lacunar: false }, isError: false, error: null }
+    mocks.page = { ...mocks.page, data: { items: [], nextCursor: null, lacunar: false }, isError: false, isSuccess: true, error: null }
     rerender()
     expect(result.current).toMatchObject({ error: null, data: { items: [] } })
   })
@@ -160,6 +200,94 @@ describe("source moteur — une page réactive du fil", () => {
     expect(result.current).toMatchObject({ data: undefined, isLoading: false, error: "suspended" })
     result.current.retry()
     expect(mocks.page.refetch).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    { code: "unauthenticated", error: "not_signed_in" },
+    { code: "profileRequired", error: "not_member" },
+    { code: "notFound", error: "not_found" },
+    { code: "statusInsufficient", error: "status_insufficient" },
+    { code: "membershipSuspended", error: "suspended" },
+    { code: "policyRefused", appRule: "network_unavailable", error: "network_unavailable" },
+  ])("ferme le cache après $error jusqu'à une lecture fraîche, même après panne ou reprise", ({ code, appRule, error }) => {
+    mocks.page.data = { items: [post("cached")], nextCursor: CURSOR, lacunar: false }
+    const { data } = source()
+    const { result, rerender } = renderHook(() => data.useFeedPage({ scope: "recents", tag: "gabon" }))
+    expect(result.current.data?.items).toHaveLength(1)
+    mocks.page = { ...mocks.page, isError: true, isSuccess: false, error: new ConvexError({ code, ...(appRule ? { appRule } : {}) }) }
+    rerender()
+    expect(result.current).toMatchObject({ data: undefined, error, isLoading: false })
+
+    mocks.page.refetch.mockResolvedValue(mocks.page)
+    act(() => result.current.retry())
+    mocks.page = { ...mocks.page, isError: false, isSuccess: true, isFetching: true, error: null }
+    rerender()
+    expect(result.current).toMatchObject({ data: undefined, error, isLoading: true })
+    mocks.page = { ...mocks.page, isError: true, isSuccess: false, isFetching: false, error: new Error("offline") }
+    rerender()
+    expect(result.current).toMatchObject({ data: undefined, error })
+    mocks.page = { ...mocks.page, isError: false, isSuccess: true, error: null }
+    rerender()
+    expect(result.current.data).toBeUndefined()
+    mocks.page = { ...mocks.page, data: { items: [post("fresh")], nextCursor: null, lacunar: false }, dataUpdatedAt: 2 }
+    rerender()
+    expect(result.current).toMatchObject({ error: null, data: { items: [{ id: "fresh" }] } })
+  })
+
+  it("un refetch réellement réussi autorise le même DTO au même instant ; un cache refusé ne suffit pas", async () => {
+    mocks.page.data = { items: [post("cached")], nextCursor: null, lacunar: false }
+    const { data } = source()
+    const { result, rerender } = renderHook(() => data.useFeedPage({ scope: "recents" }))
+    mocks.page = { ...mocks.page, isError: true, isSuccess: false, error: new ConvexError({ code: "notFound" }) }
+    rerender()
+    mocks.page.refetch.mockResolvedValue(mocks.page)
+    await act(async () => result.current.retry())
+    expect(result.current.data).toBeUndefined()
+    mocks.page = { ...mocks.page, isError: false, isSuccess: true, error: null }
+    rerender()
+    expect(result.current.data).toBeUndefined()
+    mocks.page.refetch.mockResolvedValue(mocks.page)
+    await act(async () => result.current.retry())
+    expect(result.current.data?.items.map((item) => item.id)).toEqual(["cached"])
+    expect(result.current.error).toBeNull()
+  })
+
+  it("rétablir l'adhésion ne réautorise pas la page antérieure avant sa revalidation", () => {
+    mocks.page.data = { items: [post("cached")], nextCursor: null, lacunar: false }
+    const { data } = source()
+    const { result, rerender } = renderHook(() => data.useFeedPage({ scope: "recents" }))
+    mocks.membership = { ...MEMBERSHIP, status: "suspendue", capabilities: [] }
+    rerender()
+    result.current.retry()
+    expect(mocks.page.refetch).not.toHaveBeenCalled()
+    mocks.membership = { ...MEMBERSHIP }
+    rerender()
+    expect(result.current).toMatchObject({ data: undefined, error: "suspended" })
+    mocks.page = { ...mocks.page, dataUpdatedAt: 2 }
+    rerender()
+    expect(result.current.data?.items).toHaveLength(1)
+  })
+
+  it.each([
+    { scope: "recents", tag: "été" },
+    { scope: "diaspora", tag: "gabon" },
+    { scope: "mon_pays", tag: "gabon", hubCountry: "CA" },
+    { scope: "recents", tag: "gabon", cursor: CURSOR },
+  ] satisfies FeedPageRequest[])("ignore une reprise de l'ancien contexte $scope/$tag/$hubCountry/$cursor", async (next) => {
+    mocks.page.data = { items: [post("cached")], nextCursor: null, lacunar: false }
+    let resolve!: (value: typeof mocks.page) => void
+    const refetch = vi.fn().mockReturnValue(new Promise<typeof mocks.page>((yes) => { resolve = yes }))
+    mocks.page.refetch = refetch
+    const { data } = source()
+    const { result, rerender } = renderHook((args: FeedPageRequest) => data.useFeedPage(args), { initialProps: { scope: "recents", tag: "gabon" } as FeedPageRequest })
+    result.current.retry()
+    rerender(next)
+    mocks.page = { ...mocks.page, isError: true, isSuccess: false, error: new ConvexError({ code: "notFound" }) }
+    rerender(next)
+    mocks.page = { ...mocks.page, isError: false, isSuccess: true, error: null }
+    rerender(next)
+    await act(async () => { resolve(mocks.page) })
+    expect(result.current).toMatchObject({ data: undefined, error: "not_found" })
   })
 
   it("reste en chargement sans données durant la résolution de l'adhésion", () => {

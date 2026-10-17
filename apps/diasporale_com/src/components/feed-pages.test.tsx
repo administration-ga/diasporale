@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY, type FeedScope } from "@diasporale/domain"
+import { RoutingProvider, useRouting, type FeatureRoutes } from "@diasporale/features"
 import type { FeedCursorView, FeedPageView, MembershipView, PostView, ReactionKind } from "@diasporale/features/data"
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { useEffect, type ButtonHTMLAttributes, type HTMLAttributes } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { FeedPages, ProfilePostPages, type FeedPagesProps, type ProfilePostPagesProps } from "./feed-pages"
+import { routes } from "@/lib/routes"
 
 interface PageResult {
   data: FeedPageView | undefined
@@ -36,7 +38,7 @@ function cursorKey(cursor: FeedCursorView | null | undefined) {
 vi.mock("@diasporale/features/data", () => ({
   useDataSource: () => ({ kind: mocks.kind }),
   useActions: () => ({ react: mocks.react }),
-  useFeedPage: (args: { scope: FeedScope; hubCountry?: string; cursor?: FeedCursorView | null }) => {
+  useFeedPage: (args: { scope: FeedScope; hubCountry?: string; tag?: string; cursor?: FeedCursorView | null }) => {
     const key = cursorKey(args.cursor)
     mocks.read(args)
     useEffect(() => {
@@ -64,20 +66,27 @@ vi.mock("sonner", () => ({ toast: { error: mocks.error } }))
 
 // Les vraies règles de chaîne du moteur restent actives ; seules les cartes,
 // leurs propres dialogues et les lectures réseau sont remplacés.
-vi.mock("@diasporale/features", () => ({
-  Button: ({ children, variant: _variant, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string }) => <button type="button" {...props}>{children}</button>,
-  Card: (props: HTMLAttributes<HTMLDivElement>) => <div {...props} />,
-  Skeleton: () => <span data-testid="skeleton" />,
-  PostCard: (props: { post: PostView; canReact: boolean; onReact: (kind: ReactionKind | null) => Promise<void> }) => {
-    mocks.card(props)
-    return (
-      <article aria-label={props.post.id}>
-        <p>{props.post.body}</p>
-        <button type="button" disabled={!props.canReact} onClick={() => void props.onReact("like")}>Réagir</button>
-      </article>
-    )
-  },
-}))
+vi.mock("@diasporale/features", async (original) => {
+  const real = await original<typeof import("@diasporale/features")>()
+  return {
+    RoutingProvider: real.RoutingProvider,
+    useRouting: real.useRouting,
+    Button: ({ children, variant: _variant, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string }) => <button type="button" {...props}>{children}</button>,
+    Card: (props: HTMLAttributes<HTMLDivElement>) => <div {...props} />,
+    Skeleton: () => <span data-testid="skeleton" />,
+    PostCard: (props: { post: PostView; canReact: boolean; onReact: (kind: ReactionKind | null) => Promise<void> }) => {
+      const { routes } = useRouting()
+      mocks.card(props)
+      return (
+        <article aria-label={props.post.id}>
+          <p>{props.post.body}</p>
+          <a href={routes.feed("été")}>#ÉTÉ</a>
+          <button type="button" disabled={!props.canReact} onClick={() => void props.onReact("like")}>Réagir</button>
+        </article>
+      )
+    },
+  }
+})
 
 const membership: MembershipView = {
   personId: "persons_awa",
@@ -129,7 +138,16 @@ function setPage(cursor: FeedCursorView | null, items: readonly PostView[], next
 }
 
 function tree(overrides: Partial<FeedPagesProps> = {}) {
-  return <FeedPages membership={membership} scope="mon_pays" now={1_000} emptyFallback={<p>Fil vide confirmé</p>} {...overrides} />
+  const featureRoutes: FeatureRoutes = {
+    profile: routes.profile, post: routes.post, page: routes.page, hub: routes.hub,
+    feed: (tag, context) => routes.feed(context?.scope, tag, context?.country),
+    sponsor: routes.sponsor, settings: routes.settings, attestation: routes.attestation, enter: routes.enter,
+  }
+  return (
+    <RoutingProvider routes={featureRoutes} Link={({ children, ...rest }) => <a {...rest}>{children}</a>}>
+      <FeedPages membership={membership} scope="mon_pays" now={1_000} emptyFallback={<p>Fil vide confirmé</p>} {...overrides} />
+    </RoutingProvider>
+  )
 }
 
 function setProfilePage(cursor: FeedCursorView | null, items: readonly PostView[], nextCursor: FeedCursorView | null, overrides: Partial<PageResult> = {}, handle = "awa.demo") {
@@ -139,7 +157,16 @@ function setProfilePage(cursor: FeedCursorView | null, items: readonly PostView[
 }
 
 function profileTree(overrides: Partial<ProfilePostPagesProps> = {}) {
-  return <ProfilePostPages membership={membership} handle="awa.demo" now={1_000} emptyFallback={<p>Mur vide confirmé</p>} {...overrides} />
+  const featureRoutes: FeatureRoutes = {
+    profile: routes.profile, post: routes.post, page: routes.page, hub: routes.hub,
+    feed: (tag, context) => routes.feed(context?.scope, tag, context?.country),
+    sponsor: routes.sponsor, settings: routes.settings, attestation: routes.attestation, enter: routes.enter,
+  }
+  return (
+    <RoutingProvider routes={featureRoutes} Link={({ children, ...rest }) => <a {...rest}>{children}</a>}>
+      <ProfilePostPages membership={membership} handle="awa.demo" now={1_000} emptyFallback={<p>Mur vide confirmé</p>} {...overrides} />
+    </RoutingProvider>
+  )
 }
 
 beforeEach(() => {
@@ -160,6 +187,7 @@ describe("ProfilePostPages — le même chaînage pour le mur personnel", () => 
 
     expect(mocks.readProfile).toHaveBeenLastCalledWith({ handle: "awa.demo", cursor: null })
     expect(mocks.read).not.toHaveBeenCalled()
+    expect(screen.getAllByRole("link", { name: "#ÉTÉ" })[0]).toHaveAttribute("href", "/fil?tag=%C3%A9t%C3%A9")
     expect(screen.queryByText("feed.pagination.added:1")).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole("button", { name: "feed.pagination.loadMore" }))
 
@@ -274,10 +302,10 @@ describe("FeedPages — abonnements réactifs du fil DIASPORALE", () => {
     expect(screen.getByText("feed.pagination.added:1")).toHaveAttribute("aria-live", "polite")
   })
 
-  it("continue après une page vide munie d'un curseur sans annoncer de fil vide", () => {
+  it.each([undefined, "gabon"])("continue après une page vide munie d'un curseur, filtre %s", (tag) => {
     setPage(null, [], second)
     setPage(second, [post("accessible après filtrage")], null)
-    render(tree())
+    render(tree(tag === undefined ? {} : { tag }))
 
     expect(screen.queryByText("Fil vide confirmé")).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole("button", { name: "feed.pagination.loadMore" }))
@@ -395,7 +423,7 @@ describe("FeedPages — abonnements réactifs du fil DIASPORALE", () => {
     expect(mocks.unmounted).toHaveBeenCalledWith(cursorKey(third))
   })
 
-  it.each(["scope", "hub", "residence", "person", "source"] as const)("remet la chaîne à zéro après changement de %s", (kind) => {
+  it.each(["scope", "hub", "residence", "person", "source", "tag"] as const)("remet la chaîne à zéro après changement de %s", (kind) => {
     setPage(null, [post("première")], second)
     setPage(second, [post("seconde")], null)
     const view = render(tree())
@@ -403,7 +431,8 @@ describe("FeedPages — abonnements réactifs du fil DIASPORALE", () => {
     const overrides: Partial<FeedPagesProps> = kind === "scope" ? { scope: "diaspora" }
       : kind === "hub" ? { hubCountry: "CA" }
         : kind === "residence" ? { membership: { ...membership, facet: { ...membership.facet, countryOfResidence: "CA" } } }
-          : kind === "person" ? { membership: { ...membership, personId: "persons_autre" } } : {}
+          : kind === "person" ? { membership: { ...membership, personId: "persons_autre" } }
+            : kind === "tag" ? { tag: "été" } : {}
     if (kind === "source") mocks.kind = "demo"
     view.rerender(tree(overrides))
 
@@ -411,6 +440,40 @@ describe("FeedPages — abonnements réactifs du fil DIASPORALE", () => {
     expect(screen.getByRole("button", { name: "feed.pagination.loadMore" })).toBeInTheDocument()
     expect(mocks.unmounted).toHaveBeenCalledWith(cursorKey(second))
     expect(mocks.mounted.mock.calls.filter(([key]) => key === "first")).toHaveLength(2)
+  })
+
+  it("transmet le tag canonique à chaque page sans toucher au curseur, à la portée ni au pays du hub", () => {
+    setPage(null, [post("première")], second)
+    setPage(second, [post("seconde")], null)
+    render(tree({ scope: "mon_pays", hubCountry: "CA", tag: " İSTANBUL " }))
+    expect(mocks.read).toHaveBeenLastCalledWith({ scope: "mon_pays", hubCountry: "CA", tag: "i̇stanbul", cursor: null })
+    expect(screen.getByRole("link", { name: "#ÉTÉ" })).toHaveAttribute("href", "/fil?scope=mon_pays&tag=%C3%A9t%C3%A9&country=CA")
+    fireEvent.click(screen.getByRole("button", { name: "feed.pagination.loadMore" }))
+    expect(mocks.read).toHaveBeenLastCalledWith({ scope: "mon_pays", hubCountry: "CA", tag: "i̇stanbul", cursor: second })
+  })
+
+  it("retirer ou remplacer le tag démonte les anciennes pages et repart de la première", () => {
+    setPage(null, [post("première")], second)
+    setPage(second, [post("seconde")], null)
+    const view = render(tree({ tag: "gabon" }))
+    fireEvent.click(screen.getByRole("button", { name: "feed.pagination.loadMore" }))
+    view.rerender(tree({ tag: "été" }))
+    expect(screen.queryByRole("article", { name: "seconde" })).not.toBeInTheDocument()
+    expect(mocks.read).toHaveBeenLastCalledWith({ scope: "mon_pays", tag: "été", cursor: null })
+    fireEvent.click(screen.getByRole("button", { name: "feed.pagination.loadMore" }))
+    view.rerender(tree())
+    expect(screen.queryByRole("article", { name: "seconde" })).not.toBeInTheDocument()
+    expect(mocks.read).toHaveBeenLastCalledWith({ scope: "mon_pays", cursor: null })
+  })
+
+  it("un tag de même forme canonique ne réinitialise pas sa chaîne", () => {
+    setPage(null, [post("première")], second)
+    setPage(second, [post("seconde")], null)
+    const view = render(tree({ tag: " ÉTÉ " }))
+    fireEvent.click(screen.getByRole("button", { name: "feed.pagination.loadMore" }))
+    view.rerender(tree({ tag: "été" }))
+    expect(screen.getByRole("article", { name: "seconde" })).toBeInTheDocument()
+    expect(mocks.unmounted).not.toHaveBeenCalled()
   })
 
   it("transmet le hub et l'horloge à chaque carte et prévient d'une page lacunaire", () => {

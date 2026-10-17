@@ -172,7 +172,7 @@
   "consentPurpose": {
     "social_profile": {
       "title": "Social profile",
-      "body": "Required to be a member. Withdrawing it means leaving DIASPORALE."
+      "body": "Recorded when joining the shared profile. Withdrawing your profile and leaving DIASPORALE are separate actions, offered separately."
     },
     "directory": { "title": "Member directory", "body": "Appear in the directory, at the level you choose." },
     "notifications": { "title": "Notifications", "body": "Replies, mentions, life in your country." },
@@ -294,6 +294,10 @@
     "region": "Notices"
   },
   "feed": {
+    "tagFilter": "Posts tagged #{{tag}}",
+    "clearTag": "Clear filter",
+    "tagEmptyTitle": "No posts tagged #{{tag}}",
+    "tagEmptyBody": "Try another feed scope or clear the filter. Only posts you can read are shown.",
     "pagination": {
       "loadMore": "Show more posts",
       "loading": "Loading posts…",
@@ -575,7 +579,8 @@
     "edit": "Edit",
     "preview": "See myself as others do",
     "previewExit": "Back to my profile",
-    "previewNotice": "Preview of your details and diaspora facet for a member in another country who is not connected to you.",
+    "previewNotice": "Limited preview of your diaspora facet for an active member in another country who is not connected to you. Actual profile visibility also depends on the reader and publication rules.",
+    "managePublication": "Manage my profile publication",
     "posts": "Posts",
     "tabsLabel": "Profile content",
     "photos": "Photos",
@@ -643,6 +648,46 @@
     }
   },
   "settings": {
+    "profilePublication": {
+      "title": "Profile publication",
+      "globalScope": "This profile is shared by ANTSIA and DIASPORALE. These settings apply in both applications; the DIASPORALE directory is configured separately.",
+      "loadError": "Your personal profile could not be loaded.",
+      "reload": "Reload profile",
+      "unavailable": "Profile settings are unavailable for this session.",
+      "state": {
+        "published": "Profile publication recorded.",
+        "private": "Publication recorded, private mode enabled.",
+        "withdrawn": "Your profile is withdrawn.",
+        "unpublished": "Your profile is not published."
+      },
+      "privateLead": "Private mode removes you from searches and suggestions and closes new incoming follows and connection requests. Your known profile link, posts and existing relationships keep their usual visibility rules.",
+      "withdrawLead": "Withdrawing your profile makes the public profile unavailable and your name neutral. Your account, memberships, media, content, relationships and consents are retained. You remain a DIASPORALE member.",
+      "republishLead": "Republishing uses your retained identity and headline, as well as your privacy and directory choices. Moderation may delay profile visibility.",
+      "makePrivate": "Enable private mode",
+      "privacyOn": "Private mode enabled.",
+      "privacyOff": "Private mode disabled.",
+      "makeDiscoverable": "Disable private mode",
+      "withdraw": "Withdraw my profile",
+      "republish": "Republish my profile",
+      "working": "Saving…",
+      "saved": {
+        "privacy": "Privacy setting saved.",
+        "withdraw": "Profile withdrawal recorded.",
+        "republish": "Republication requested. Moderation may delay profile visibility."
+      },
+      "confirm": {
+        "withdraw": {
+          "title": "Withdraw the shared profile?",
+          "body": "Withdrawal applies to ANTSIA and DIASPORALE. Your public profile becomes unavailable and your name neutral; your data, content, relationships, memberships and consents are retained. You can republish from these settings.",
+          "confirm": "Confirm withdrawal"
+        },
+        "republish": {
+          "title": "Republish the shared profile?",
+          "body": "Republication is requested in ANTSIA and DIASPORALE using your retained identity and headline. Private mode and your directory choices are retained. Moderation may delay visibility.",
+          "confirm": "Confirm republication"
+        }
+      }
+    },
     "signingOut": "Signing out…",
     "title": "Settings",
     "memberships": "My networks",
@@ -660,7 +705,7 @@
     "visibilityLegend": "Who sees what",
     "saved": "Saved.",
     "directory": "Member directory",
-    "directoryLead": "Hidden by default. People contact you only through messaging, never through an address.",
+    "directoryLead": "Hidden by default. A private or withdrawn profile remains absent from the directory even when the chosen level is visible. People contact you only through messaging, never through an address.",
     "directoryNeedsConsent": "First turn on the “Member directory” consent below.",
     "directoryLevel": {
       "hidden": "Hidden",
@@ -668,14 +713,14 @@
       "network": "Visible to all members"
     },
     "consents": "Consents",
-    "consentsLead": "Each choice is time-stamped and can be withdrawn in one step.",
+    "consentsLead": "Your recorded consents and the choices available here. Each change is timestamped.",
     "consentRecorded": "Recorded on {{date}} — text of {{version}}",
     "consentGranted": "Consent given.",
     "consentRevoked": "Consent withdrawn.",
-    "leaveExplain": "Leaving DIASPORALE withdraws your social profile consent. Your ANTSIA membership remains.",
+    "leaveExplain": "Leaving DIASPORALE ends this membership. Your account, shared profile and ANTSIA membership remain.",
     "leave": "Leave DIASPORALE",
     "leaveConfirmTitle": "Leave DIASPORALE?",
-    "leaveConfirmBody": "Your profile will no longer be visible in DIASPORALE. You can come back; a new sponsorship may be needed.",
+    "leaveConfirmBody": "Your DIASPORALE membership and received sponsorship end. Your shared profile and consents are retained. You can return; a new sponsorship may be needed.",
     "left": "You have left DIASPORALE.",
     "sponsorHelp": "Sponsorship",
     "sponsorHelpLead": "A member verified for more than 30 days can sponsor a pending account using its handle.",

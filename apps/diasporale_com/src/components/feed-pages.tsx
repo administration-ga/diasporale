@@ -10,7 +10,7 @@ import {
   type FeedPagesState,
 } from "@antsia/social-features/features/reseau-personnel/reseau-feed-pages"
 import type { CountryCode, FeedScope } from "@diasporale/domain"
-import { Button, Card, PostCard, Skeleton } from "@diasporale/features"
+import { Button, Card, PostCard, RoutingProvider, Skeleton, useRouting } from "@diasporale/features"
 import {
   useActions,
   useDataSource,
@@ -22,7 +22,7 @@ import {
   type MembershipView,
 } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { useCallback, useEffect, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
 interface PostPagesProps {
@@ -34,6 +34,7 @@ interface PostPagesProps {
 export interface FeedPagesProps extends PostPagesProps {
   readonly scope: FeedScope
   readonly hubCountry?: CountryCode
+  readonly tag?: string
 }
 
 export interface ProfilePostPagesProps extends PostPagesProps {
@@ -41,7 +42,7 @@ export interface ProfilePostPagesProps extends PostPagesProps {
 }
 
 type PostPagesSource =
-  | { readonly kind: "feed"; readonly scope: FeedScope; readonly hubCountry?: CountryCode }
+  | { readonly kind: "feed"; readonly scope: FeedScope; readonly hubCountry?: CountryCode; readonly tag?: string }
   | { readonly kind: "profile"; readonly handle: string }
 
 interface PageReport {
@@ -62,9 +63,22 @@ interface ChainState {
 /** Le changement de lecteur ou de portée démonte tous les anciens abonnements. */
 export function FeedPages(props: FeedPagesProps) {
   const source = useDataSource()
+  const routing = useRouting()
   const country = props.hubCountry ?? props.membership.facet.countryOfResidence
-  const key = JSON.stringify([source.kind, props.membership.personId, "feed", props.scope, country])
-  return <PostPagesChain key={key} {...props} source={{ kind: "feed", scope: props.scope, ...(props.hubCountry === undefined ? {} : { hubCountry: props.hubCountry }) }} />
+  const tag = props.tag?.trim().toLowerCase() || undefined
+  const key = JSON.stringify([source.kind, props.membership.personId, "feed", props.scope, country, tag ?? null])
+  const scopedRoutes = useMemo(() => ({
+    ...routing.routes,
+    feed: (nextTag?: string, context?: Parameters<typeof routing.routes.feed>[1]) => routing.routes.feed(nextTag, context ?? {
+      scope: props.scope,
+      ...(props.hubCountry === undefined ? {} : { country: props.hubCountry }),
+    }),
+  }), [routing.routes, props.scope, props.hubCountry])
+  return (
+    <RoutingProvider routes={scopedRoutes} Link={routing.Link}>
+      <PostPagesChain key={key} {...props} source={{ kind: "feed", scope: props.scope, ...(props.hubCountry === undefined ? {} : { hubCountry: props.hubCountry }), ...(tag === undefined ? {} : { tag }) }} />
+    </RoutingProvider>
+  )
 }
 
 /** Le mur reprend la même chaîne ; son identité suit aussi le profil consulté. */
@@ -162,6 +176,7 @@ function PostPagesChain(props: PostPagesProps & { source: PostPagesSource }) {
             {...pageProps}
             scope={props.source.scope}
             {...(props.source.hubCountry === undefined ? {} : { hubCountry: props.source.hubCountry })}
+            {...(props.source.tag === undefined ? {} : { tag: props.source.tag })}
           />
         ) : <SubscribedProfilePostPage key={feedCursorKey(cursor)} {...pageProps} handle={props.source.handle} />
       })}
@@ -189,8 +204,8 @@ interface SubscribedPageProps {
 }
 
 /** Un composant par lecture : changer de source ne change jamais l'ordre des hooks. */
-function SubscribedFeedPage(props: SubscribedPageProps & { scope: FeedScope }) {
-  const page = useFeedPage({ scope: props.scope, ...(props.hubCountry === undefined ? {} : { hubCountry: props.hubCountry }), cursor: props.cursor })
+function SubscribedFeedPage(props: SubscribedPageProps & { scope: FeedScope; tag?: string }) {
+  const page = useFeedPage({ scope: props.scope, ...(props.hubCountry === undefined ? {} : { hubCountry: props.hubCountry }), ...(props.tag === undefined ? {} : { tag: props.tag }), cursor: props.cursor })
   return <SubscribedPostPage {...props} page={page} />
 }
 

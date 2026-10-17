@@ -22,7 +22,7 @@ const featureRoutes: FeatureRoutes = {
   post: routes.post,
   page: routes.page,
   hub: routes.hub,
-  feed: () => routes.feed(),
+  feed: (tag, context) => routes.feed(context?.scope, tag, context?.country),
   sponsor: routes.sponsor,
   settings: routes.settings,
   attestation: routes.attestation,

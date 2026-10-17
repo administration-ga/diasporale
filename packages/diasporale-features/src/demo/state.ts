@@ -47,6 +47,9 @@ export interface DemoPerson {
   readonly local: { readonly kind: "email" | "phone"; readonly value: string } | null
   /** Profil social : n'existe qu'APRÈS l'onboarding (adhésion explicite, invariant 5). */
   readonly profile: { readonly handle: string; readonly displayName: string; readonly headline: string | null } | null
+  /** Absents dans les états v7 existants : profil publié et découvrable, sans migration destructive. */
+  readonly withdrawnAt?: number
+  readonly privateAt?: number
   readonly administrationLink: boolean
   readonly createdAt: number
   /** Compte de démonstration proposé au sélecteur (clé de description). */

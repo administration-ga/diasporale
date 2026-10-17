@@ -47,10 +47,14 @@ export function PostCard(props: {
 }) {
   const { t, locale } = useDiasporaleT()
   const { routes, Link } = useRouting()
-  const { post } = props
+  const neutralAuthor = props.post.author.kind === "person" && props.post.author.handle.trim().length === 0
+  // Sans adresse publiée, aucun nom ou badge retenu ne doit réapparaître dans la carte ou ses actions.
+  const post = neutralAuthor
+    ? { ...props.post, author: { ...props.post.author, handle: "", displayName: t("bell.someone"), badges: [] } }
+    : props.post
   const [commentsOpen, setCommentsOpen] = useState(false)
   const share = usePostShare()
-  const authorHref = post.author.kind === "page" ? routes.page(post.author.handle) : routes.profile(post.author.handle)
+  const authorHref = neutralAuthor ? null : post.author.kind === "page" ? routes.page(post.author.handle) : routes.profile(post.author.handle)
   const mine = post.myReaction
   const MineIcon = mine ? REACTIONS[mine].icon : HeartIcon
 
@@ -63,17 +67,24 @@ export function PostCard(props: {
           </div>
         ) : null}
         <header className="flex items-start gap-3 px-4 pt-4">
-          <Avatar id={post.author.id} name={post.author.displayName} shape={post.author.kind === "page" ? "square" : "round"} />
+          <Avatar
+            id={neutralAuthor ? "neutral" : post.author.id}
+            name={post.author.displayName}
+            shape={post.author.kind === "page" ? "square" : "round"}
+            className={neutralAuthor ? "bg-muted text-muted-foreground" : undefined}
+          />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <Link
-                href={authorHref}
-                id={`post-${post.id}-auteur`}
-                className="truncate font-semibold text-foreground hover:underline focus-visible:shadow-focus"
-              >
-                {post.author.displayName}
-              </Link>
-              <TrustBadges badges={post.author.badges} />
+              {authorHref ? (
+                <Link
+                  href={authorHref}
+                  id={`post-${post.id}-auteur`}
+                  className="truncate font-semibold text-foreground hover:underline focus-visible:shadow-focus"
+                >
+                  {post.author.displayName}
+                </Link>
+              ) : <span id={`post-${post.id}-auteur`} className="truncate font-semibold text-foreground">{post.author.displayName}</span>}
+              {!neutralAuthor ? <TrustBadges badges={post.author.badges} /> : null}
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
               <Link href={routes.post(post.id)} className="rounded-sm hover:underline focus-visible:shadow-focus">

@@ -70,7 +70,17 @@ function Profile(props: { handle: string; membership: MembershipView }) {
   if (profile.status !== "ready") return <Skeleton className="h-72 w-full rounded-xl" />
   if (profile.data === null) {
     // Refus indistinct : profil inconnu, retiré, hors réseau ou bloqué (EXF-DG-19).
-    return <EmptyState icon={<UserRoundXIcon />} title={t("profile.unavailableTitle")} description={t("profile.unavailableBody")} />
+    const ownHandle = props.handle.replace(/^@/, "").toLowerCase() === props.membership.handle.toLowerCase()
+    return (
+      <>
+        <EmptyState icon={<UserRoundXIcon />} title={t("profile.unavailableTitle")} description={t("profile.unavailableBody")} />
+        {ownHandle ? (
+          <Button asChild variant="outline" className="self-start">
+            <NextLink href={`${routes.settings()}#profil`}>{t("profile.managePublication")}</NextLink>
+          </Button>
+        ) : null}
+      </>
+    )
   }
   const view = profile.data
   const facet: FacetProjection = view.isSelf && preview ? view.publicFacet : view.facet

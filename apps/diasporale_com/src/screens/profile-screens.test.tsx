@@ -207,6 +207,19 @@ describe("ProfileScreen — mur et confidentialité du profil DIASPORALE", () =>
     expect(mocks.cover).not.toHaveBeenCalled()
   })
 
+  it("garde un accès aux réglages de son profil indisponible, sans distinguer le motif public", () => {
+    mocks.profile = { status: "ready", data: null }
+    render(tree())
+    expect(screen.getByRole("link", { name: t("profile.managePublication") })).toHaveAttribute("href", `${routes.settings()}#profil`)
+  })
+
+  it("ne révèle aucun réglage personnel pour le profil indisponible d'autrui", () => {
+    mocks.profile = { status: "ready", data: null }
+    render(tree("autre.demo"))
+    expect(screen.queryByRole("link", { name: t("profile.managePublication") })).not.toBeInTheDocument()
+    expect(screen.getByText(t("profile.unavailableTitle"))).toBeInTheDocument()
+  })
+
   it.each([
     { isSelf: true, canPublish: true, visible: true },
     { isSelf: true, canPublish: false, visible: false },

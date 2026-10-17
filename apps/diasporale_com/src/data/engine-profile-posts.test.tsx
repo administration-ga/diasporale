@@ -17,10 +17,13 @@ const mocks = vi.hoisted(() => ({
   facet: null as unknown,
   query: vi.fn(),
   loaded: vi.fn(),
-  page: { data: undefined, isLoading: true, isError: false, error: null, refetch: vi.fn() } as {
+  page: { data: undefined, isLoading: true, isError: false, isSuccess: false, isFetching: true, dataUpdatedAt: 0, error: null, refetch: vi.fn() } as {
     data: unknown
     isLoading: boolean
     isError: boolean
+    isSuccess: boolean
+    isFetching: boolean
+    dataUpdatedAt: number
     error: unknown
     refetch: ReturnType<typeof vi.fn>
   },
@@ -91,7 +94,7 @@ beforeEach(() => {
     avatar: { url: null, withheld: null }, cover: { url: null, withheld: null }, badges: [], isMe: false,
   }
   mocks.facet = { facet: { countryOfResidence: "FR" }, preview: null }
-  mocks.page = { data: { items: [], nextCursor: null, pinned: null }, isLoading: false, isError: false, error: null, refetch: vi.fn().mockResolvedValue({}) }
+  mocks.page = { data: { items: [], nextCursor: null, pinned: null }, isLoading: false, isError: false, isSuccess: true, isFetching: false, dataUpdatedAt: 1, error: null, refetch: vi.fn().mockResolvedValue({}) }
 })
 
 afterEach(cleanup)
@@ -145,14 +148,14 @@ describe("source moteur — pages du mur indépendantes de la fiche", () => {
   })
 
   it("reprend la page par le hook public et absorbe un rejet de la tentative", async () => {
-    mocks.page = { data: undefined, isLoading: false, isError: true, error: new ConvexError({ code: "rateLimited" }), refetch: vi.fn().mockRejectedValue(new Error("hors connexion")) }
+    mocks.page = { ...mocks.page, data: undefined, isLoading: false, isError: true, isSuccess: false, error: new ConvexError({ code: "rateLimited" }), refetch: vi.fn().mockRejectedValue(new Error("hors connexion")) }
     const { data } = source()
     const { result, rerender } = renderHook(() => data.useProfilePostsPage({ handle: "awa.recette" }))
     expect(result.current).toMatchObject({ data: undefined, error: "rate_limited", isLoading: false })
     await act(async () => result.current.retry())
     expect(mocks.page.refetch).toHaveBeenCalledOnce()
 
-    mocks.page = { ...mocks.page, data: { items: [], nextCursor: null, pinned: null }, isError: false, error: null }
+    mocks.page = { ...mocks.page, data: { items: [], nextCursor: null, pinned: null }, isError: false, isSuccess: true, error: null }
     rerender()
     expect(result.current).toMatchObject({ data: { items: [] }, error: null })
   })
@@ -169,6 +172,90 @@ describe("source moteur — pages du mur indépendantes de la fiche", () => {
     expect(result.current).toMatchObject({ data: undefined, error: "suspended", isLoading: false })
     result.current.retry()
     expect(mocks.page.refetch).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    { code: "unauthenticated", error: "not_signed_in" },
+    { code: "profileRequired", error: "not_member" },
+    { code: "notFound", error: "not_found" },
+    { code: "statusInsufficient", error: "status_insufficient" },
+    { code: "membershipSuspended", error: "suspended" },
+    { code: "policyRefused", appRule: "network_unavailable", error: "network_unavailable" },
+  ])("retire publications et épingle après $error jusqu'à une réponse fraîche", ({ code, appRule, error }) => {
+    mocks.page.data = { items: [post("cached")], nextCursor: CURSOR, pinned: post("pinned") }
+    const { data } = source()
+    const { result, rerender } = renderHook(() => data.useProfilePostsPage({ handle: "awa.recette" }))
+    expect(result.current.data?.items).toHaveLength(2)
+    mocks.page = { ...mocks.page, isError: true, isSuccess: false, error: new ConvexError({ code, ...(appRule ? { appRule } : {}) }) }
+    rerender()
+    expect(result.current).toMatchObject({ data: undefined, error, isLoading: false })
+    mocks.page.refetch.mockResolvedValue(mocks.page)
+    act(() => result.current.retry())
+    mocks.page = { ...mocks.page, isError: false, isSuccess: true, isFetching: true, error: null }
+    rerender()
+    expect(result.current).toMatchObject({ data: undefined, error, isLoading: true })
+    mocks.page = { ...mocks.page, isError: true, isSuccess: false, isFetching: false, error: new Error("offline") }
+    rerender()
+    expect(result.current).toMatchObject({ data: undefined, error })
+    mocks.page = { ...mocks.page, isError: false, isSuccess: true, error: null }
+    rerender()
+    expect(result.current.data).toBeUndefined()
+    mocks.page = { ...mocks.page, data: { items: [post("fresh")], nextCursor: null, pinned: null }, dataUpdatedAt: 2 }
+    rerender()
+    expect(result.current).toMatchObject({ error: null, data: { items: [{ id: "fresh" }] } })
+  })
+
+  it("ne rouvre le même DTO et le même instant qu'après une reprise effectivement réussie", async () => {
+    mocks.page.data = { items: [post("cached")], nextCursor: null, pinned: null }
+    const { data } = source()
+    const { result, rerender } = renderHook(() => data.useProfilePostsPage({ handle: "awa.recette" }))
+    mocks.page = { ...mocks.page, isError: true, isSuccess: false, error: new ConvexError({ code: "notFound" }) }
+    rerender()
+    mocks.page.refetch.mockResolvedValue(mocks.page)
+    await act(async () => result.current.retry())
+    expect(result.current.data).toBeUndefined()
+    mocks.page = { ...mocks.page, isError: false, isSuccess: true, error: null }
+    rerender()
+    expect(result.current.data).toBeUndefined()
+    mocks.page.refetch.mockResolvedValue(mocks.page)
+    await act(async () => result.current.retry())
+    expect(result.current.data?.items.map((item) => item.id)).toEqual(["cached"])
+    expect(result.current.error).toBeNull()
+  })
+
+  it("le retour du droit de lecture attend une revalidation et ne rejoue pas le cache du mur", () => {
+    mocks.page.data = { items: [post("cached")], nextCursor: null, pinned: null }
+    const { data } = source()
+    const { result, rerender } = renderHook(() => data.useProfilePostsPage({ handle: "awa.recette" }))
+    mocks.membership = { ...MEMBERSHIP, status: "suspendue", capabilities: [] }
+    rerender()
+    result.current.retry()
+    expect(mocks.page.refetch).not.toHaveBeenCalled()
+    mocks.membership = { ...MEMBERSHIP }
+    rerender()
+    expect(result.current).toMatchObject({ data: undefined, error: "suspended" })
+    mocks.page = { ...mocks.page, dataUpdatedAt: 2 }
+    rerender()
+    expect(result.current.data?.items).toHaveLength(1)
+  })
+
+  it.each([
+    { handle: "autre.recette" },
+    { handle: "awa.recette", cursor: CURSOR },
+  ] satisfies ProfilePostsPageRequest[])("ignore une reprise appartenant à l'ancien mur ou curseur $handle/$cursor", async (next) => {
+    mocks.page.data = { items: [post("cached")], nextCursor: null, pinned: null }
+    let resolve!: (value: typeof mocks.page) => void
+    mocks.page.refetch.mockReturnValue(new Promise<typeof mocks.page>((yes) => { resolve = yes }))
+    const { data } = source()
+    const { result, rerender } = renderHook((args: ProfilePostsPageRequest) => data.useProfilePostsPage(args), { initialProps: { handle: "awa.recette" } as ProfilePostsPageRequest })
+    result.current.retry()
+    rerender(next)
+    mocks.page = { ...mocks.page, isError: true, isSuccess: false, error: new ConvexError({ code: "notFound" }) }
+    rerender(next)
+    mocks.page = { ...mocks.page, isError: false, isSuccess: true, error: null }
+    rerender(next)
+    await act(async () => { resolve(mocks.page) })
+    expect(result.current).toMatchObject({ data: undefined, error: "not_found" })
   })
 
   it("attend l'adhésion sans afficher de page cachée", () => {

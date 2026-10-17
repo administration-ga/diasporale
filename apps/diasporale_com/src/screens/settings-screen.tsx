@@ -31,7 +31,7 @@ import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { CopyIcon, DownloadIcon, Trash2Icon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter } from "next/navigation"
-import { useId, useState, type ReactNode } from "react"
+import { useId, useLayoutEffect, useRef, useState, type ReactNode } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -39,6 +39,7 @@ import { z } from "zod"
 import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
 import { ProfileImagesSettings } from "@/components/profile-images-settings"
+import { ProfilePublicationSettings } from "@/components/profile-publication-settings"
 import { SignOutSettings } from "@/components/sign-out-settings"
 import { LanguageSwitch, ThemeSwitch } from "@/components/preferences"
 import { routes } from "@/lib/routes"
@@ -50,7 +51,7 @@ export function SettingsScreen() {
       {(session) =>
         session.membership ? (
           <AppShell membership={session.membership}>
-            <Settings membership={session.membership} />
+            <Settings key={session.membership.personId} membership={session.membership} />
           </AppShell>
         ) : null
       }
@@ -80,6 +81,7 @@ function Settings(props: { membership: MembershipView }) {
     <>
       <h1 className="font-display text-3xl font-bold">{t("settings.title")}</h1>
       <MembershipSection membership={props.membership} />
+      <ProfilePublicationSettings key={props.membership.personId} membership={props.membership} />
       <ProfileImagesSettings membership={props.membership} />
       <FacetSection membership={props.membership} />
       <DirectorySection membership={props.membership} />
@@ -288,6 +290,11 @@ function ConsentsSection() {
   const consents = useMyConsents()
   const [leaveOpen, setLeaveOpen] = useState(false)
   const router = useRouter()
+  const active = useRef(false)
+  useLayoutEffect(() => {
+    active.current = true
+    return () => { active.current = false }
+  }, [])
   if (consents.status !== "ready") return null
   return (
     <Section id="consentements" title={t("settings.consents")} lead={t("settings.consentsLead")}>
@@ -315,6 +322,7 @@ function ConsentsSection() {
                 disabled={row.locked || row.disabled || (row.purpose === "consular_attestation" && !granted)}
                 onCheckedChange={async (checked) => {
                   const result = await actions.setConsent(row.purpose, checked)
+                  if (!active.current) return
                   if (!result.ok) toast.error(t(`errors.${result.code}`))
                   else toast.success(checked ? t("settings.consentGranted") : t("settings.consentRevoked"))
                 }}
@@ -336,7 +344,8 @@ function ConsentsSection() {
         body={t("settings.leaveConfirmBody")}
         confirm={t("settings.leave")}
         onConfirm={async () => {
-          const result = await actions.setConsent("social_profile", false)
+          const result = await actions.leaveDiasporale()
+          if (!active.current) return
           if (!result.ok) {
             toast.error(t(`errors.${result.code}`))
             return
@@ -449,6 +458,7 @@ function ConfirmSheet(props: {
   const { t } = useDiasporaleT()
   const [acknowledged, setAcknowledged] = useState(false)
   const [busy, setBusy] = useState(false)
+  const running = useRef(false)
   const id = useId()
   return (
     <Sheet
@@ -475,10 +485,16 @@ function ConfirmSheet(props: {
             variant={props.destructive ? "destructive" : "primary"}
             disabled={busy || (props.requireAcknowledge !== undefined && !acknowledged)}
             onClick={async () => {
+              if (running.current) return
+              running.current = true
               setBusy(true)
-              await props.onConfirm()
-              setBusy(false)
-              props.onOpenChange(false)
+              try {
+                await props.onConfirm()
+                props.onOpenChange(false)
+              } finally {
+                running.current = false
+                setBusy(false)
+              }
             }}
           >
             {busy ? t("common.pleaseWait") : props.confirm}

@@ -9,6 +9,7 @@
  * l'interface (`DiasporaleDataSource`) reste.
  */
 import { normalizeCivilName } from "@antsia/social-domain/civilName"
+import { isProfileDiscoverable, isProfilePublished } from "@antsia/social-domain/content"
 import {
   applyAttestationToFacet,
   applyMembershipEvent,
@@ -678,7 +679,7 @@ export class DemoStore {
   private memberTarget(personId: string, viewerId: string): DemoPerson | null {
     const target = this.state.persons[personId]
     const membership = target ? this.state.memberships[target.id] : undefined
-    if (!target?.profile || !membership || target.id === viewerId) return null
+    if (!target?.profile || !isProfileDiscoverable(target) || !membership || target.id === viewerId) return null
     const status = deriveMembershipStatus(membership.grounds, this.clock())
     return status === "partie" || status === "suspendue" ? null : target
   }
@@ -901,18 +902,63 @@ export class DemoStore {
   }
 
   // ── Paramètres, consentements, données ─────────────────────────────────
+  async setProfilePrivacy(personId: string, isPrivate: boolean): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    if (viewer.person.id !== personId) return fail("not_found")
+    if (!viewer.person.profile) return fail("not_member")
+    if ((viewer.person.privateAt !== undefined) === isPrivate) return OK
+    this.commit({ ...this.state, persons: { ...this.state.persons, [personId]: { ...viewer.person, privateAt: isPrivate ? this.clock() : undefined } } })
+    return OK
+  }
+
+  async withdrawProfile(personId: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    if (viewer.person.id !== personId) return fail("not_found")
+    if (!viewer.person.profile || !isProfilePublished(viewer.person)) return OK
+    this.commit({ ...this.state, persons: { ...this.state.persons, [personId]: { ...viewer.person, withdrawnAt: this.clock() } } })
+    return OK
+  }
+
+  async republishProfile(personId: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    if (viewer.person.id !== personId) return fail("not_found")
+    if (!viewer.person.profile) return fail("not_member")
+    if (isProfilePublished(viewer.person)) return OK
+    this.commit({ ...this.state, persons: { ...this.state.persons, [personId]: { ...viewer.person, withdrawnAt: undefined } } })
+    return OK
+  }
+
+  async leaveDiasporale(): Promise<ActionResult> {
+    const personId = this.state.session.personId
+    await this.pause()
+    const viewer = this.viewer()
+    if (!personId || !viewer) return fail("not_signed_in")
+    if (viewer.person.id !== personId) return fail("not_found")
+    if (!viewer.membership) return fail("not_member")
+    if (deriveMembershipStatus(viewer.membership.grounds, this.clock()) === "partie") return OK
+    const now = this.clock()
+    const left = this.withEvent(viewer.membership, { kind: "left", at: now }, now)
+    if (!left) return fail("not_member")
+    this.commit({
+      ...this.state,
+      memberships: { ...this.state.memberships, [personId]: { ...left, grounds: { ...left.grounds, sponsored: false } } },
+      sponsorships: this.state.sponsorships.map((item) => item.sponsoredId === personId && item.revokedAt === null ? { ...item, revokedAt: now } : item),
+    })
+    return OK
+  }
+
   async setConsent(purpose: ConsentPurpose, granted: boolean): Promise<ActionResult> {
     await this.pause()
     const viewer = this.viewer()
     if (!viewer?.membership) return fail("not_member")
     const now = this.clock()
     let membership = viewer.membership
-    if (purpose === "social_profile" && !granted) {
-      // Retirer le consentement au profil social, c'est quitter DIASPORALE.
-      const left = this.withEvent(membership, { kind: "left", at: now }, now)
-      if (!left) return fail("not_member")
-      membership = left
-    }
     if (purpose === "directory" && !granted) membership = { ...membership, directoryVisibility: "hidden" }
     this.commit({
       ...this.state,
