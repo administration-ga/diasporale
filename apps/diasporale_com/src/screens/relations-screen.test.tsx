@@ -23,6 +23,7 @@ const mocks = vi.hoisted(() => ({
   follows: vi.fn(),
   sent: vi.fn(),
   blocked: vi.fn(),
+  dismissed: vi.fn(),
 }))
 
 vi.mock("next/navigation", () => ({
@@ -112,6 +113,20 @@ vi.mock("@antsia/social-features/reseau-personnel", () => ({
   },
 }))
 
+vi.mock("@/components/dismissed-suggestions", () => ({
+  EngineDismissedSuggestions: (props: Record<string, never>) => {
+    const network = useNetwork()
+    const engineRoutes = useRoutes()
+    const [marker, setMarker] = useState("")
+    mocks.dismissed({ ...props, network, profileHref: engineRoutes.profile("awa.demo") })
+    return (
+      <section aria-label="Suggestions masquées du moteur">
+        <input aria-label="Repère des suggestions masquées" value={marker} onChange={(event) => setMarker(event.target.value)} />
+      </section>
+    )
+  },
+}))
+
 const membership: MembershipView = {
   personId: "persons_awa",
   handle: "awa.demo",
@@ -146,19 +161,19 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe("/relations — mes liens dans le réseau DIASPORALE", () => {
-  it("ouvre mes relations et rend les cinq destinations comme des liens nommés", () => {
+  it("ouvre mes relations et rend les six destinations comme des liens nommés", () => {
     render(screenTree())
 
     expect(mocks.gate).toHaveBeenLastCalledWith("member")
     expect(screen.getByRole("heading", { level: 1, name: "Mes relations" })).toBeInTheDocument()
-    const navigation = screen.getByRole("navigation", { name: "Relations, demandes, abonnements et blocages" })
+    const navigation = screen.getByRole("navigation", { name: "Relations, demandes, abonnements, blocages et suggestions" })
     const accepted = within(navigation).getByRole("link", { name: "Mes relations" })
     const received = within(navigation).getByRole("link", { name: "Demandes reçues" })
     const following = within(navigation).getByRole("link", { name: "Mes abonnements" })
     const sent = within(navigation).getByRole("link", { name: "Demandes envoyées" })
     const blocked = within(navigation).getByRole("link", { name: "Personnes bloquées" })
     expect(within(navigation).getAllByRole("link").map((link) => link.textContent)).toEqual([
-      "Mes relations", "Demandes reçues", "Demandes envoyées", "Mes abonnements", "Personnes bloquées",
+      "Mes relations", "Demandes reçues", "Demandes envoyées", "Mes abonnements", "Personnes bloquées", "Suggestions masquées",
     ])
     expect(accepted).toHaveAttribute("href", routes.relations())
     expect(accepted).toHaveAttribute("aria-current", "page")
@@ -174,6 +189,7 @@ describe("/relations — mes liens dans le réseau DIASPORALE", () => {
     expect(mocks.follows).not.toHaveBeenCalled()
     expect(mocks.sent).not.toHaveBeenCalled()
     expect(mocks.blocked).not.toHaveBeenCalled()
+    expect(mocks.dismissed).not.toHaveBeenCalled()
   })
 
   it("l'adresse des demandes sélectionne leur liste et réinitialise l'enfant en changeant d'onglet", () => {
@@ -183,7 +199,7 @@ describe("/relations — mes liens dans le réseau DIASPORALE", () => {
     mocks.search = "onglet=demandes"
     rerender(screenTree())
 
-    const navigation = screen.getByRole("navigation", { name: "Relations, demandes, abonnements et blocages" })
+    const navigation = screen.getByRole("navigation", { name: "Relations, demandes, abonnements, blocages et suggestions" })
     expect(within(navigation).getByRole("link", { name: "Demandes reçues" })).toHaveAttribute("aria-current", "page")
     expect(within(navigation).getByRole("link", { name: "Mes relations" })).not.toHaveAttribute("aria-current")
     expect(screen.getByRole("region", { name: "Liste personnelle du moteur" })).toHaveAttribute("data-kind", "received")
@@ -243,7 +259,7 @@ describe("/relations — mes liens dans le réseau DIASPORALE", () => {
     expect(screen.getByText("Les relations sont indisponibles ici")).toBeInTheDocument()
     expect(screen.getByText("Cette liste est réservée aux membres actifs de DIASPORALE. En démonstration, explorez les gestes de relation depuis les profils.")).toBeInTheDocument()
     expect(screen.queryByRole("region", { name: "Liste personnelle du moteur" })).not.toBeInTheDocument()
-    expect(screen.queryByRole("navigation", { name: "Relations, demandes, abonnements et blocages" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("navigation", { name: "Relations, demandes, abonnements, blocages et suggestions" })).not.toBeInTheDocument()
     expect(mocks.adapter).not.toHaveBeenCalled()
   })
 
@@ -266,7 +282,7 @@ describe("/relations — abonnements du moteur", () => {
 
   it("sélectionne l'adresse des abonnements seule et envoie la découverte vers l'annuaire opt-in", () => {
     render(screenTree())
-    const navigation = screen.getByRole("navigation", { name: "Relations, demandes, abonnements et blocages" })
+    const navigation = screen.getByRole("navigation", { name: "Relations, demandes, abonnements, blocages et suggestions" })
     expect(within(navigation).getByRole("link", { name: "Mes abonnements" })).toHaveAttribute("aria-current", "page")
     expect(within(navigation).getByRole("link", { name: "Mes relations" })).not.toHaveAttribute("aria-current")
     expect(mocks.adapter).not.toHaveBeenCalled()
@@ -316,7 +332,7 @@ describe("/relations — abonnements du moteur", () => {
     expect(marker()).toHaveValue("")
   })
 
-  it.each(["", "onglet=demandes", "onglet=envoyees", "onglet=abonnements", "onglet=blocages"])("attend un contexte cohérent avec l'adhésion avant toute lecture privée (%s)", (search) => {
+  it.each(["", "onglet=demandes", "onglet=envoyees", "onglet=abonnements", "onglet=blocages", "onglet=masquees"])("attend un contexte cohérent avec l'adhésion avant toute lecture privée (%s)", (search) => {
     mocks.search = search
     mocks.membership = { ...membership, personId: "persons_ali" }
     render(screenTree())
@@ -325,6 +341,7 @@ describe("/relations — abonnements du moteur", () => {
     expect(mocks.follows).not.toHaveBeenCalled()
     expect(mocks.sent).not.toHaveBeenCalled()
     expect(mocks.blocked).not.toHaveBeenCalled()
+    expect(mocks.dismissed).not.toHaveBeenCalled()
   })
 
   it("retire immédiatement la liste précédente pendant la résolution d'un nouveau lecteur", () => {
@@ -355,7 +372,7 @@ describe("/relations — abonnements du moteur", () => {
 
   it("traduit l'onglet, sa navigation et la destination de découverte en anglais", () => {
     render(screenTree("en"))
-    const navigation = screen.getByRole("navigation", { name: "Connections, requests, following and blocks" })
+    const navigation = screen.getByRole("navigation", { name: "Connections, requests, following, blocks and suggestions" })
     expect(within(navigation).getByRole("link", { name: "Following" })).toHaveAttribute("aria-current", "page")
     expect(screen.getByRole("link", { name: "Meet members" })).toHaveAttribute("href", routes.members())
     expect(mocks.follows).toHaveBeenLastCalledWith(expect.objectContaining({ discover: { href: routes.members(), label: "Meet members" } }))
@@ -368,6 +385,7 @@ describe("/relations — abonnements du moteur", () => {
     expect(mocks.follows).not.toHaveBeenCalled()
     expect(mocks.sent).not.toHaveBeenCalled()
     expect(mocks.blocked).not.toHaveBeenCalled()
+    expect(mocks.dismissed).not.toHaveBeenCalled()
   })
 })
 
@@ -388,6 +406,14 @@ const removalViews = [
     region: "Personnes bloquées du moteur",
     marker: "Repère des personnes bloquées",
   },
+  {
+    kind: "dismissed",
+    search: "onglet=masquees",
+    frenchLabel: "Suggestions masquées",
+    englishLabel: "Hidden suggestions",
+    region: "Suggestions masquées du moteur",
+    marker: "Repère des suggestions masquées",
+  },
 ] as const
 
 function expectNoEngineLists() {
@@ -396,19 +422,20 @@ function expectNoEngineLists() {
   expect(mocks.follows).not.toHaveBeenCalled()
   expect(mocks.sent).not.toHaveBeenCalled()
   expect(mocks.blocked).not.toHaveBeenCalled()
+  expect(mocks.dismissed).not.toHaveBeenCalled()
 }
 
 describe.each(removalViews)("/relations — $frenchLabel", (view) => {
   beforeEach(() => { mocks.search = view.search })
 
-  it("sélectionne son adresse parmi cinq liens et monte seulement sa surface avec le réseau de lecture", () => {
+  it("sélectionne son adresse parmi six liens et monte seulement sa surface avec le réseau de lecture", () => {
     render(screenTree())
 
     expect(mocks.gate).toHaveBeenLastCalledWith("member")
-    const navigation = screen.getByRole("navigation", { name: "Relations, demandes, abonnements et blocages" })
+    const navigation = screen.getByRole("navigation", { name: "Relations, demandes, abonnements, blocages et suggestions" })
     const links = within(navigation).getAllByRole("link")
     expect(links.map((link) => link.getAttribute("href"))).toEqual([
-      routes.relations(), routes.relations("received"), routes.relations("sent"), routes.relations("following"), routes.relations("blocked"),
+      routes.relations(), routes.relations("received"), routes.relations("sent"), routes.relations("following"), routes.relations("blocked"), routes.relations("dismissed"),
     ])
     const selected = within(navigation).getByRole("link", { name: view.frenchLabel })
     expect(selected).toHaveAttribute("href", `/relations?${view.search}`)
@@ -500,7 +527,7 @@ describe.each(removalViews)("/relations — $frenchLabel", (view) => {
     render(screenTree())
 
     expectNoEngineLists()
-    expect(screen.queryByRole("navigation", { name: "Relations, demandes, abonnements et blocages" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("navigation", { name: "Relations, demandes, abonnements, blocages et suggestions" })).not.toBeInTheDocument()
     if (state === "loading") {
       expect(screen.getByRole("status", { name: "Chargement du réseau" })).toBeInTheDocument()
       expect(screen.queryByText("Les relations sont indisponibles ici")).not.toBeInTheDocument()
@@ -517,13 +544,13 @@ describe.each(removalViews)("/relations — $frenchLabel", (view) => {
     expectNoEngineLists()
   })
 
-  it("traduit les cinq destinations et conserve la découverte propre à cette vue en anglais", () => {
+  it("traduit les six destinations et conserve la découverte propre à cette vue en anglais", () => {
     render(screenTree("en"))
 
-    const navigation = screen.getByRole("navigation", { name: "Connections, requests, following and blocks" })
+    const navigation = screen.getByRole("navigation", { name: "Connections, requests, following, blocks and suggestions" })
     const links = within(navigation).getAllByRole("link")
     expect(links.map((link) => link.textContent)).toEqual([
-      "My connections", "Received requests", "Sent requests", "Following", "Blocked people",
+      "My connections", "Received requests", "Sent requests", "Following", "Blocked people", "Hidden suggestions",
     ])
     expect(within(navigation).getByRole("link", { name: view.englishLabel })).toHaveAttribute("aria-current", "page")
     expect(mocks.adapter).not.toHaveBeenCalled()
@@ -534,7 +561,7 @@ describe.each(removalViews)("/relations — $frenchLabel", (view) => {
       expect(mocks.sent).toHaveBeenLastCalledWith(expect.objectContaining({ discover: { href: routes.members(), label: "Meet members" } }))
     } else {
       expect(screen.queryByRole("link", { name: "Meet members" })).not.toBeInTheDocument()
-      expect(mocks.blocked).toHaveBeenLastCalledWith({
+      expect(mocks[view.kind]).toHaveBeenLastCalledWith({
         profileHref: routes.profile("awa.demo"),
         network: expect.objectContaining({ networkId: network.networkId, personId: membership.personId }),
       })
@@ -543,8 +570,8 @@ describe.each(removalViews)("/relations — $frenchLabel", (view) => {
 })
 
 describe("/relations — piste des onglets au redimensionnement", () => {
-  it("révèle Blocages sans nouveau rendu, sans déplacer la page ou le focus, puis retire son listener", () => {
-    mocks.search = "onglet=blocages"
+  it.each(removalViews.filter((view) => view.kind !== "sent"))("révèle $frenchLabel sans nouveau rendu, sans déplacer la page ou le focus, puis retire son listener", (view) => {
+    mocks.search = view.search
     const added = vi.spyOn(window, "addEventListener")
     const removed = vi.spyOn(window, "removeEventListener")
     const scrollPage = vi.spyOn(window, "scrollTo").mockImplementation(() => {})
@@ -552,8 +579,8 @@ describe("/relations — piste des onglets au redimensionnement", () => {
     const pageLeft = document.documentElement.scrollLeft
     try {
       const { unmount } = render(screenTree())
-      const navigation = screen.getByRole("navigation", { name: "Relations, demandes, abonnements et blocages" })
-      const selected = within(navigation).getByRole("link", { name: "Personnes bloquées" })
+      const navigation = screen.getByRole("navigation", { name: "Relations, demandes, abonnements, blocages et suggestions" })
+      const selected = within(navigation).getByRole("link", { name: view.frenchLabel })
       const track = selected.parentElement!
       const trackRect = new DOMRect(0, 0, 1280, 40)
       const itemRect = new DOMRect(900, 0, 140, 40)
@@ -564,9 +591,9 @@ describe("/relations — piste des onglets au redimensionnement", () => {
       track.scrollLeft = 0
       document.documentElement.scrollTop = 214
       document.documentElement.scrollLeft = 13
-      const focused = screen.getByRole("textbox", { name: "Repère des personnes bloquées" })
+      const focused = screen.getByRole("textbox", { name: view.marker })
       focused.focus()
-      mocks.blocked.mockClear()
+      mocks[view.kind].mockClear()
 
       act(() => { window.dispatchEvent(new Event("resize")) })
       expect(track.scrollLeft).toBe(0)
@@ -578,7 +605,7 @@ describe("/relations — piste des onglets au redimensionnement", () => {
       expect(document.documentElement.scrollLeft).toBe(13)
       expect(scrollPage).not.toHaveBeenCalled()
       expect(document.activeElement).toBe(focused)
-      expect(mocks.blocked).not.toHaveBeenCalled()
+      expect(mocks[view.kind]).not.toHaveBeenCalled()
 
       unmount()
       expect(removed).toHaveBeenCalledWith("resize", resizeListener)

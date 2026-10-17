@@ -31,6 +31,9 @@ import type {
   ActionErrorCode,
   ActionResult,
   BookmarkView,
+  BookmarksPageQuery,
+  BookmarksPageRequest,
+  BookmarksPageView,
   CommentThreadView,
   CommentView,
   ConsentView,
@@ -53,11 +56,11 @@ import type {
   SuggestionView,
   UnreadCountView,
 } from "@diasporale/features/data"
-import { COMMENTS_PAGE, describeMediaFile, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
+import { BOOKMARKS_PAGE_SIZE, COMMENTS_PAGE, describeMediaFile, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
 import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
-import { useCallback, useMemo } from "react"
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
 
 import { routes } from "@/lib/routes"
 import { clearDiasporaleDrafts } from "@/lib/sign-out-state"
@@ -88,6 +91,7 @@ import {
 
 /** Taille d'une fenêtre du fil DIASPORALE (le moteur accepte jusqu'à cinquante lignes). */
 const FEED_PAGE = 30
+const BOOKMARKS_ACCESS_ERRORS: ReadonlySet<ActionErrorCode> = new Set(["not_signed_in", "not_member", "not_found", "status_insufficient", "suspended", "network_unavailable"])
 
 /**
  * La requête du fil pour une portée. « Pour vous » et « Récents » sont celles du
@@ -111,7 +115,7 @@ const BELL_PAGE = 30
 /** Les réponses d'une racine, lues d'un coup à la demande. */
 const REPLIES_PAGE = 50
 /** Les signets lus d'un coup (première page). */
-const BOOKMARKS_PAGE = 50
+const BOOKMARKS_PAGE = BOOKMARKS_PAGE_SIZE
 
 const LOADING = { status: "loading" } as const
 
@@ -384,11 +388,75 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       return page.state === "ready" ? ready(page.value.page.map(toBookmarkView)) : LOADING
     },
 
-    useSuggestions(): Loadable<readonly SuggestionView[]> {
-      const { networkId } = useMember()
+    useBookmarksPage(args: BookmarksPageRequest): BookmarksPageQuery {
+      const { auth, networkId, membership } = useMember()
       const id = networkId.state === "ready" ? networkId.value : null
-      const list = useLoaded(api.modules.diaspora.suggestions.forMe, id ? { networkId: id } : "skip")
-      for (const loaded of [networkId, list]) if (loaded.state === "error") return failed(loaded.code)
+      const member = membership.state === "ready" ? membership.value : null
+      const canRead = auth.isAuthenticated && id !== null && member?.capabilities.includes("read_network") === true
+      const query = useAuthenticatedConvexQuery(api.modules.marks.marks.paginateBookmarks,
+        canRead && id ? { networkId: id, paginationOpts: { numItems: BOOKMARKS_PAGE_SIZE, cursor: args.cursor ?? null } } : "skip",
+      )
+      const requestKey = JSON.stringify([id, args.cursor ?? null, canRead])
+      const generation = useMemo(() => Symbol(requestKey), [requestKey])
+      const activeGeneration = useRef<symbol | null>(null)
+      useLayoutEffect(() => {
+        activeGeneration.current = generation
+        return () => { if (activeGeneration.current === generation) activeGeneration.current = null }
+      }, [generation])
+      const [denial, setDenial] = useState<{ key: string; code: ActionErrorCode; dataUpdatedAt: number } | null>(null)
+      let error: ActionErrorCode | null = query.isError ? engineActionErrorCode(query.error) : null
+      if (auth.isUnauthenticated) error = "not_signed_in"
+      else if (networkId.state === "error") error = networkId.code
+      else if (membership.state === "error") error = membership.code
+      else if (networkId.state === "ready" && id === null) error = "network_unavailable"
+      else if (membership.state === "ready" && !member) error = "not_member"
+      else if (member && !member.capabilities.includes("read_network")) error = member.status === "suspendue" ? "suspended" : "not_member"
+      const denied = error !== null && BOOKMARKS_ACCESS_ERRORS.has(error)
+      const blocked = denial?.key === requestKey ? denial : null
+      const fresh = query.isSuccess && !query.isFetching && query.data !== undefined
+        && blocked !== null && query.dataUpdatedAt > blocked.dataUpdatedAt
+      useLayoutEffect(() => {
+        if (denied && error !== null) {
+          const code = error
+          setDenial((previous) => previous?.key === requestKey && previous.code === code && previous.dataUpdatedAt === query.dataUpdatedAt
+            ? previous : { key: requestKey, code, dataUpdatedAt: query.dataUpdatedAt })
+        } else if (fresh || (denial !== null && denial.key !== requestKey)) setDenial(null)
+      }, [denied, error, requestKey, query.dataUpdatedAt, fresh, denial])
+      const refetch = query.refetch
+      const retry = useCallback(async (): Promise<BookmarksPageView | undefined> => {
+        if (!canRead || activeGeneration.current !== generation) return undefined
+        try {
+          const result = await refetch()
+          if (activeGeneration.current !== generation || !result.isSuccess || result.isError || result.isFetching || result.data === undefined) return undefined
+          setDenial((previous) => previous?.key === requestKey ? null : previous)
+          return { items: result.data.page.map(toBookmarkView), continueCursor: result.data.continueCursor, isDone: result.data.isDone }
+        } catch { return undefined }
+      }, [canRead, refetch, requestKey, generation])
+      const data = useMemo(() => query.data === undefined ? undefined : {
+        items: query.data.page.map(toBookmarkView),
+        continueCursor: query.data.continueCursor,
+        isDone: query.data.isDone,
+      }, [query.data])
+      if (denied || (blocked !== null && !fresh)) return { data: undefined, isLoading: query.isFetching === true, error: denied ? error : blocked!.code, retry }
+      if (!canRead && error !== null) return { data: undefined, isLoading: false, error, retry }
+      if (!canRead) return { data: undefined, isLoading: true, error: null, retry }
+      return { data, isLoading: query.isFetching === true || (data === undefined && !query.isError), error, retry }
+    },
+
+    useSuggestions(): Loadable<readonly SuggestionView[]> {
+      const { auth, networkId, membership } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const member = membership.state === "ready" ? membership.value : null
+      const canPublish = auth.isAuthenticated && member?.capabilities.includes("publish") === true
+      const list = useLoaded(api.modules.diaspora.suggestions.forMe, id && canPublish ? { networkId: id } : "skip")
+      if (auth.isUnauthenticated) return failed("not_signed_in")
+      for (const loaded of [networkId, membership]) if (loaded.state === "error") return failed(loaded.code)
+      if (auth.isPending || networkId.state !== "ready" || membership.state !== "ready") return LOADING
+      if (id === null) return failed("network_unavailable")
+      if (!member) return failed("not_member")
+      if (!member.capabilities.includes("read_network")) return failed(member.status === "suspendue" ? "suspended" : "not_member")
+      if (!canPublish) return ready([])
+      if (list.state === "error") return failed(list.code)
       return list.state === "ready" ? ready(list.value.map(toSuggestionView)) : LOADING
     },
 

@@ -7,6 +7,8 @@ import { describeMediaFile, downscaleImage } from "../data/media"
 import type { DemoAccountView, DiasporaleDataSource } from "../data/port"
 import type {
   BookmarkView,
+  BookmarksPageQuery,
+  BookmarksPageRequest,
   CommentThreadView,
   CommentView,
   FeedCursorView,
@@ -22,6 +24,7 @@ import type {
   SuggestionView,
   UnreadCountView,
 } from "../data/types"
+import { BOOKMARKS_PAGE_SIZE } from "../data/types"
 import { splitDisplayName, suggestHandles } from "../lib/handle"
 import {
   bookmarksView,
@@ -231,6 +234,51 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
         const viewerId = state.session.personId
         return viewerId ? ready(bookmarksView(state, viewerId, store.now())) : { status: "error", code: "not_signed_in" }
       }, [version])
+    },
+
+    useBookmarksPage({ cursor = null }: BookmarksPageRequest): BookmarksPageQuery {
+      const version = useVersion()
+      return useMemo<BookmarksPageQuery>(() => {
+        const read = (): Omit<BookmarksPageQuery, "retry"> => {
+          const unavailable = (error: BookmarksPageQuery["error"]): Omit<BookmarksPageQuery, "retry"> => ({ data: undefined, isLoading: false, error })
+          if (version < 0) return { data: undefined, isLoading: true, error: null }
+          const state = store.getState()
+          const viewerId = state.session.personId
+          if (!viewerId) return unavailable("not_signed_in")
+          const membership = state.memberships[viewerId]
+          if (!membership) return unavailable("not_member")
+          const status = statusOf(state, viewerId, store.now())
+          if (status === null || !hasCapability(status, "read_network", { suspensionReadAccess: membership.grounds.suspension?.readAccess ?? "none" })) {
+            return unavailable(status === "suspendue" ? "suspended" : "not_member")
+          }
+          let boundary: { at: number; postId: string } | null = null
+          if (cursor !== null) {
+            try {
+              const decoded: unknown = JSON.parse(cursor)
+              if (!Array.isArray(decoded) || decoded.length !== 4 || decoded[0] !== "demo-bookmarks" || decoded[1] !== viewerId
+                || typeof decoded[2] !== "number" || !Number.isFinite(decoded[2]) || typeof decoded[3] !== "string") return unavailable("unknown")
+              boundary = { at: decoded[2], postId: decoded[3] }
+            } catch { return unavailable("unknown") }
+          }
+          // Comme une page native : la fenêtre de marques précède la projection
+          // gardée. Cinquante publications devenues illisibles ne sont pas la fin.
+          const marks = state.marks.filter((mark) => mark.personId === viewerId && mark.kind === "bookmark")
+            .sort((a, b) => b.createdAt - a.createdAt || (a.postId === b.postId ? 0 : a.postId < b.postId ? 1 : -1))
+            .filter((mark) => boundary === null || mark.createdAt < boundary.at || (mark.createdAt === boundary.at && mark.postId < boundary.postId))
+          const window = marks.slice(0, BOOKMARKS_PAGE_SIZE)
+          const visible = new Map(bookmarksView(state, viewerId, store.now()).map((item) => [item.postId, item]))
+          const last = window.at(-1)
+          return {
+            data: {
+              items: window.flatMap((mark) => { const item = visible.get(mark.postId); return item ? [item] : [] }),
+              isDone: marks.length <= BOOKMARKS_PAGE_SIZE,
+              continueCursor: last ? JSON.stringify(["demo-bookmarks", viewerId, last.createdAt, last.postId]) : "",
+            },
+            isLoading: false, error: null,
+          }
+        }
+        return { ...read(), retry: () => read().data }
+      }, [version, cursor])
     },
 
     useSuggestions() {

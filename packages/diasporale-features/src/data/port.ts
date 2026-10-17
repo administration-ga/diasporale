@@ -26,6 +26,8 @@ import type {
 
 import type {
   BookmarkView,
+  BookmarksPageQuery,
+  BookmarksPageRequest,
   CommentThreadView,
   CommentView,
   CountryHubView,
@@ -235,6 +237,8 @@ export interface DiasporaleDataSource {
   usePost(postId: string): Loadable<PostView | null>
   /** Mes signets, du plus récent ; une publication devenue illisible disparaît de la liste. */
   useBookmarks(): Loadable<readonly BookmarkView[]>
+  /** Page native des mêmes signets ; conserve les métadonnées même après filtrage. */
+  useBookmarksPage(args: BookmarksPageRequest): BookmarksPageQuery
   /** Des membres à rencontrer (EXF-DG-18) : six au plus, réservées aux membres actifs. */
   useSuggestions(): Loadable<readonly SuggestionView[]>
   /** Les commentaires d'une publication, des plus anciens aux plus récents, avec leurs premières réponses. */

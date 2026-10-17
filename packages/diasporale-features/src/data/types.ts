@@ -141,6 +141,27 @@ export interface BookmarkView {
   readonly markedAt: number
 }
 
+export const BOOKMARKS_PAGE_SIZE = 50
+
+/** Curseur opaque du fournisseur : jamais converti en curseur de fil. */
+export interface BookmarksPageRequest {
+  readonly cursor?: string | null
+}
+
+export interface BookmarksPageView {
+  readonly items: readonly BookmarkView[]
+  readonly continueCursor: string
+  readonly isDone: boolean
+}
+
+export interface BookmarksPageQuery {
+  readonly data: BookmarksPageView | undefined
+  readonly isLoading: boolean
+  readonly error: ActionErrorCode | null
+  /** Une page rendue par cette tentative est fraîche ; undefined ne réautorise aucun cache. */
+  readonly retry: () => Promise<BookmarksPageView | undefined> | BookmarksPageView | undefined
+}
+
 /** Les six motifs de signalement (EXF-DG-12), ceux du moteur (`CONTENT_REPORT_REASONS`). */
 export const REPORT_REASONS = ["harassment", "hate", "violence", "sexual_content", "misinformation", "other"] as const
 export type ReportReason = (typeof REPORT_REASONS)[number]

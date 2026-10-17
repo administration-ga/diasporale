@@ -63,7 +63,12 @@ function Members(props: { membership: MembershipView }) {
       <div>
         <h1 className="font-display text-3xl font-bold">{t("members.title")}</h1>
         <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{t("members.lead")}</p>
-        {network ? <Button asChild variant="outline" className="mt-3"><NextLink href={routes.relations()}>{t("nav.relations")}</NextLink></Button> : null}
+        {network ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button asChild variant="outline"><NextLink href={routes.relations()}>{t("nav.relations")}</NextLink></Button>
+            <Button asChild variant="outline"><NextLink href={routes.relations("dismissed")}>{t("relations.dismissedTab")}</NextLink></Button>
+          </div>
+        ) : null}
       </div>
 
       <Card className="flex flex-col gap-3 p-4">

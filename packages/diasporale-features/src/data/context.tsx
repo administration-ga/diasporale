@@ -4,7 +4,7 @@ import type { CountryCode, FeedScope } from "@diasporale/domain"
 import { createContext, useContext, type ReactNode } from "react"
 
 import type { DiasporaleDataSource } from "./port"
-import type { FeedPageRequest, ProfilePostsPageRequest } from "./types"
+import type { BookmarksPageRequest, FeedPageRequest, ProfilePostsPageRequest } from "./types"
 
 const DataSourceContext = createContext<DiasporaleDataSource | null>(null)
 
@@ -37,6 +37,7 @@ export const useComments = (postId: string) => useDataSource().useComments(postI
 export const useSuggestions = () => useDataSource().useSuggestions()
 export const usePost = (postId: string) => useDataSource().usePost(postId)
 export const useBookmarks = () => useDataSource().useBookmarks()
+export const useBookmarksPage = (args: BookmarksPageRequest) => useDataSource().useBookmarksPage(args)
 export const useReplies = (args: { postId: string; commentId: string | null }) => useDataSource().useReplies(args)
 export const useNotifications = () => useDataSource().useNotifications()
 export const useUnreadCount = () => useDataSource().useUnreadCount()

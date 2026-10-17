@@ -1016,8 +1016,8 @@
   },
   "relations": {
     "title": "My connections",
-    "lead": "Find your connections, requests and people you follow, and manage your blocks.",
-    "tabsLabel": "Connections, requests, following and blocks",
+    "lead": "Find your connections, requests and follows, and manage your personal choices.",
+    "tabsLabel": "Connections, requests, following, blocks and suggestions",
     "acceptedTab": "My connections",
     "receivedTab": "Received requests",
     "sentTab": "Sent requests",
@@ -1039,7 +1039,25 @@
     "accepted": "Request accepted. You are now connected.",
     "declined": "Request declined.",
     "unavailableTitle": "Connections are unavailable here",
-    "unavailableBody": "This list is available to active DIASPORALE members. In the demo, explore connection actions from profiles."
+    "unavailableBody": "This list is available to active DIASPORALE members. In the demo, explore connection actions from profiles.",
+    "dismissedTab": "Hidden suggestions",
+    "dismissed": {
+      "title": "Hidden suggestions",
+      "body": "Members may be suggested again only if they still meet the current eligibility rules. This action creates no connection or follow.",
+      "neutral": "Hidden suggestion",
+      "hiddenAt": "Hidden on {{date}}",
+      "restore": "Remove hiding preference",
+      "restoreLabel": "Remove hiding preference for {{name}}",
+      "restoring": "Removing…",
+      "restored": "Hiding preference updated.",
+      "restoreFailed": "The hiding preference could not be removed.",
+      "empty": "You have no hidden suggestions.",
+      "loading": "Loading hidden suggestions…",
+      "loadMore": "Show more hidden suggestions",
+      "errorTitle": "Unable to load hidden suggestions",
+      "errorBody": "Retry to refresh your preferences.",
+      "retry": "Try again"
+    }
   },
   "members": {
     "title": "Members",
@@ -1157,7 +1175,10 @@
     "emptyTitle": "No saved posts.",
     "emptyBody": "Save a post from its “…” menu to find it here.",
     "open": "Open",
-    "remove": "Remove"
+    "remove": "Remove",
+    "loadMore": "Show more saved posts",
+    "loadingMore": "Loading saved posts…",
+    "retry": "Try again"
   },
   "bell": {
     "open": "Notifications",

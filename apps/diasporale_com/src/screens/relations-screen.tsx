@@ -10,17 +10,19 @@ import { useSearchParams } from "next/navigation"
 import { useLayoutEffect, useRef } from "react"
 
 import { AppShell } from "@/components/app-shell"
+import { EngineDismissedSuggestions } from "@/components/dismissed-suggestions"
 import { Gate, GateSkeleton } from "@/components/gate"
 import { IcomIsland, useEngineNetwork, useIcomState } from "@/components/icom"
 import { EnginePersonalConnections } from "@/components/personal-connections"
 import { routes } from "@/lib/routes"
 
-type RelationsView = "accepted" | "received" | "sent" | "following" | "blocked"
+type RelationsView = "accepted" | "received" | "sent" | "following" | "blocked" | "dismissed"
 const RELATIONS_VIEWS: ReadonlyMap<string, RelationsView> = new Map([
   ["demandes", "received"],
   ["envoyees", "sent"],
   ["abonnements", "following"],
   ["blocages", "blocked"],
+  ["masquees", "dismissed"],
 ])
 
 /** Mes liens dans DIASPORALE ; la découverte reste exclusivement dans l'annuaire opt-in. */
@@ -79,6 +81,7 @@ function Relations(props: { membership: MembershipView }) {
               { id: "sent", label: t("relations.sentTab"), href: routes.relations("sent"), active: kind === "sent" },
               { id: "following", label: t("relations.followingTab"), href: routes.relations("following"), active: kind === "following" },
               { id: "blocked", label: t("relations.blockedTab"), href: routes.relations("blocked"), active: kind === "blocked" },
+              { id: "dismissed", label: t("relations.dismissedTab"), href: routes.relations("dismissed"), active: kind === "dismissed" },
             ]}
             renderLink={(item, className, children) => (
               <NextLink key={item.id} ref={item.active ? selectedTab : undefined} href={item.href} className={className} aria-current={item.active ? "page" : undefined} scroll={false}>
@@ -93,7 +96,9 @@ function Relations(props: { membership: MembershipView }) {
                 ? <SentInvitationsSection discover={{ href: routes.members(), label: t("relations.discover") }} />
                 : kind === "blocked"
                   ? <BlockedPeopleSection />
-                  : <EnginePersonalConnections kind={kind} canRespond={props.membership.canPublish} />}
+                  : kind === "dismissed"
+                    ? <EngineDismissedSuggestions />
+                    : <EnginePersonalConnections kind={kind} canRespond={props.membership.canPublish} />}
           </IcomIsland>
         </>
       ) : icom.status === "loading" ? <GateSkeleton /> : (

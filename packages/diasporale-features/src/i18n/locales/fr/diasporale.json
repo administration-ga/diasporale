@@ -1016,8 +1016,8 @@
   },
   "relations": {
     "title": "Mes relations",
-    "lead": "Retrouvez vos relations, vos demandes et vos abonnements, et gérez vos blocages.",
-    "tabsLabel": "Relations, demandes, abonnements et blocages",
+    "lead": "Retrouvez vos relations, vos demandes et vos abonnements, et gérez vos choix personnels.",
+    "tabsLabel": "Relations, demandes, abonnements, blocages et suggestions",
     "acceptedTab": "Mes relations",
     "receivedTab": "Demandes reçues",
     "sentTab": "Demandes envoyées",
@@ -1039,7 +1039,25 @@
     "accepted": "Demande acceptée. Vous êtes maintenant en relation.",
     "declined": "Demande refusée.",
     "unavailableTitle": "Les relations sont indisponibles ici",
-    "unavailableBody": "Cette liste est réservée aux membres actifs de DIASPORALE. En démonstration, explorez les gestes de relation depuis les profils."
+    "unavailableBody": "Cette liste est réservée aux membres actifs de DIASPORALE. En démonstration, explorez les gestes de relation depuis les profils.",
+    "dismissedTab": "Suggestions masquées",
+    "dismissed": {
+      "title": "Suggestions masquées",
+      "body": "Retirer un masquage permet une nouvelle proposition seulement si le membre est toujours éligible. Aucune connexion ni aucun abonnement n’est créé.",
+      "neutral": "Suggestion masquée",
+      "hiddenAt": "Masquée le {{date}}",
+      "restore": "Retirer le masquage",
+      "restoreLabel": "Retirer le masquage de {{name}}",
+      "restoring": "Retrait en cours…",
+      "restored": "Choix de masquage mis à jour.",
+      "restoreFailed": "Le masquage n’a pas pu être retiré.",
+      "empty": "Vous n’avez aucune suggestion masquée.",
+      "loading": "Chargement des suggestions masquées…",
+      "loadMore": "Voir plus de suggestions masquées",
+      "errorTitle": "Impossible de charger les suggestions masquées",
+      "errorBody": "Réessayez pour actualiser vos choix.",
+      "retry": "Réessayer"
+    }
   },
   "members": {
     "title": "Membres",
@@ -1157,7 +1175,10 @@
     "emptyTitle": "Aucune publication enregistrée.",
     "emptyBody": "Enregistrez une publication depuis son menu « … » pour la retrouver ici.",
     "open": "Ouvrir",
-    "remove": "Retirer"
+    "remove": "Retirer",
+    "loadMore": "Voir plus d’enregistrements",
+    "loadingMore": "Chargement des enregistrements…",
+    "retry": "Réessayer"
   },
   "bell": {
     "open": "Notifications",
