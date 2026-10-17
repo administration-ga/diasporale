@@ -145,6 +145,39 @@ Vérifications des étapes closes :
   saturation sans suppression supplémentaire ; frontend ANTSIA 3030 rétabli, `/entrer`
   HTTP 200. Seuls 3210 et 3030 écoutent ; créneau PA6 rendu à ANTSIA.
   Détails, gardes, limites de preuve et clôture coordonnée dans `docs/04` ; aucun push ni production.
+- **PD4 — suggestions masquées et pagination des signets, 17/10, implémentation** :
+  plan [`docs/08_PLAN_PD4_SUGGESTIONS_MASQUEES_ET_SIGNETS.md`](08_PLAN_PD4_SUGGESTIONS_MASQUEES_ET_SIGNETS.md).
+  `/relations` possède six onglets, dont `?onglet=masquees`, alimenté par le composant local
+  `EngineDismissedSuggestions` et la façade `diaspora.suggestions.paginateDismissed` /
+  `restoreDismissed`. La projection relit les droits actuels de l’annuaire et les blocages :
+  profil autorisé ou ligne neutre ; restauration privée limitée à l’identifiant de version,
+  sans créer de relation ni de suivi. Les choix personnels restent lisibles et restaurables
+  en attente ; les propositions `forMe` attendent l’adhésion résolue et le droit de publier,
+  la surface privée du moteur restant fermée en démonstration. Le scan des 500 premiers
+  masquages est remplacé par une recherche exacte indexée pour chaque candidat du vivier borné.
+  ANTSIA ferme aussi l’ancienne liste générique par `policyRefused` sur les réseaux gouvernés,
+  avec un test de transition ; elle n’est pas montée dans DIASPORALE.
+  Modification de publication, partage cité et liste `/enregistrements` existaient déjà ;
+  le manque corrigé ici est la pagination des signets : port `useBookmarksPage`, fenêtres
+  natives de 50, toutes pages abonnées, dédoublonnage et frontières réalignées par le
+  réducteur public du moteur, continuation d’une page filtrée vide et reprise sans perdre
+  les lignes valides. Démonstration paginée ; retrait verrouillé par ligne, version de signet
+  et lecteur, sans retrait ni avis si le serveur confirme que le signet reste enregistré.
+  Noms civils structurés également normalisés via le module partagé `social-domain/civilName` :
+  formulaire IDN simulé, Zod, écriture et hydratation, avec conservation des alias et sujets.
+  Aucune donnée civile consulaire ni preuve signée réécrite ; le raccord IDN réel reste distinct.
+  **Passe finale complète code 0** : 6 786 tests, dont 953 DIASPORALE ; dix espaces typés
+  et neuf lints sans erreur, source gelée vérifiée. Journal `verify-analysis15.log`,
+  Node 22.22.3, GOMAXPROCS 2, heap 1 536 Mio et créneau global réservé.
+  Backend local : concurrence d’analyse un, budget temporaire d’analyse 15 s ; délai
+  applicatif 1 s et assertions/délais des tests inchangés. Preuve distincte du budget
+  d’analyse par défaut 4 s et de toute production ; détails et tentatives précédentes dans `docs/04`.
+  **Commits locaux** : `4a48fc6` (masquées/signets), `bce25cd` (noms civils simulés),
+  moteur `b03498b` (masquées/réducteur), `18cd63e` (civil), préférences ANTSIA `8737055`.
+  **Chrome à reprendre** : première compilation de connexion non aboutie sous Node 25 puis 22,
+  aucune nouvelle recette authentifiée ; seul frontend 3031 arrêté, backend repris par ANTSIA.
+  Ces repères concernent cette nouvelle tranche seulement ; les preuves antérieures restent
+  historiques et acquises dans leur périmètre. PD4 reste en cours.
 - **e)** Côté gabon-diplomatie, sur deux branches en worktree (le `main` partagé n'est pas
   touché) : #184 `DIASPORA-ATTESTATION-V1` (route signée HMAC, exclusions indiscernables,
   idempotence par `consentRef`, journal à empreinte, correspondance e-mail par

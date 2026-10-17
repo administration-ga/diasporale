@@ -21,11 +21,12 @@
 | Carte de publication | `PostCard` | EXF-DG-10, 12 | ✅ | DTO `myFeed` | auteur d'une page : sa carte ; « signé par » attend PD5 ; mentions (lien vers le profil) et mots-dièse découpés par le moteur (`splitBodyRich`), dans les commentaires aussi, casse de l'auteur gardée (ANTSIA l'abaisse) ; un mot-dièse n'ouvre pas encore de recherche ; médias : photo seule à ses proportions, grille carrée de deux à quatre, retenue de la garde dite (analyse en cours, bloqué), sans visionneuse plein écran ; partage : « Partager » sur une publication publique et publiée, avec son compte, et l'original intégré, re-gardé pour chaque lecteur (« indisponible » s'il ne se lit plus) |
 | Réactions (4 genres) | palette de la carte | EXF-DG-12 | ✅ | `engagement.toggleReaction` | — |
 | Commentaires | feuille « Commentaires » | EXF-DG-12 | ✅ | `engagement.paginateComments`, `paginateReplies`, `comment`, `removeComment` | pas d'édition d'un commentaire |
-| Menu « … » | `PostMenu` | EXF-DG-12, 40 | 🟡 | `marks.toggleMark`, `hidePost`, `muteAuthor`, `moderation.reportPost`, `posts.remove` | sans « Modifier », sans relais ; signets sans liste |
+| Menu « … » | `PostMenu` | EXF-DG-12, 40 | ✅ | `marks.toggleMark`, `hidePost`, `muteAuthor`, `moderation.reportPost`, `posts.edit`, `posts.remove` | modification de sa publication déjà livrée ; partage cité depuis la carte et son composeur ; liste privée des signets déjà présente à `/enregistrements`, pagination complétée dans la tranche du 17/10 ci-dessous |
+| Signets | `/enregistrements` | EXF-DG-12 | 🟡 | `marks.paginateBookmarks`, `marks.toggleMark` | port `useBookmarksPage`, pages natives réactives de 50 et démonstration paginée ; vide filtré non terminal, reprise et retrait protégés implémentés ; **VÉRIFICATION EN ATTENTE** pour cette pagination |
 | Profil personne (`ProfilPersonnePage`) | `/@handle` | EXF-DG-07, 08 | 🟡 | `getPublicProfile`, `diaspora.profile.memberFacet`, `posts.personPosts` | facette projetée ; mur paginé par le curseur du moteur ; photo et couverture lues et modifiables depuis les réglages en mode moteur ; aperçu limité aux informations et à la facette, publications et albums masqués (suite du 16/10 ci-dessous) |
-| Relations (`PeoplePanel`, hooks de pagination) | `/relations` : cinq onglets — relations, demandes reçues, envoyées, abonnements, blocages ; barre du profil et cloche | EXF-DG-18, 43 | 🟡 | `graph.connections.*`, `graph.follows.*`, `suggestions.paginateSentInvitations`, `graph.blocks.paginateMine`, surfaces paginées du moteur | cinq listes raccordées en mode moteur, pages natives réactives et reprise ; lecture, désabonnement, annulation versionnée et déblocage en attente ; réponses et nouveau suivi au droit de publier ; blocages propres rendus sans identité de la cible ; découverte réservée à l’annuaire opt-in ; annulation envoyée et déblocage recettés dans Chrome entre comptes fictifs ; refus, versions et notification d’annulation couverts par les tests ; démonstration fermée |
+| Relations (`PeoplePanel`, hooks de pagination) | `/relations` : six onglets — relations, demandes reçues, envoyées, abonnements, blocages, masquées ; barre du profil et cloche | EXF-DG-18, 43 | 🟡 | `graph.connections.*`, `graph.follows.*`, `suggestions.paginateSentInvitations`, `graph.blocks.paginateMine`, `diaspora.suggestions.paginateDismissed` / `restoreDismissed`, surfaces paginées du moteur et composant local `EngineDismissedSuggestions` | six listes raccordées en mode moteur, pages natives réactives et reprise ; lecture des choix personnels, désabonnement, annulation versionnée, déblocage et restauration des masquages accessibles en attente ; réponses et nouveau suivi au droit de publier ; blocages propres sans identité ; masquées avec profils actuellement autorisés par l’annuaire ou ligne neutre ; découverte réservée à l’annuaire opt-in ; preuves Chrome antérieures pour annulation/déblocage conservées ci-dessous ; démonstration fermée ; **VÉRIFICATION EN ATTENTE** pour le sixième onglet |
 | Annuaire et recherche | `/membres` | EXF-DG-19, 46 | ✅ | `diaspora.directory.searchMembers` | opt-in par niveau ; masqué introuvable, même par identifiant exact |
-| Suggestions | « Des membres à rencontrer » (rail du fil, `/membres`) | EXF-DG-18 | ✅ | `diaspora.suggestions.forMe`, `suggestions.dismiss` | pas de liste « masquées » à rouvrir (`restore` existe côté moteur) |
+| Suggestions | « Des membres à rencontrer » (rail du fil, `/membres`), `/relations?onglet=masquees` | EXF-DG-18 | 🟡 | `diaspora.suggestions.forMe`, `suggestions.dismiss`, façade `diaspora.suggestions.paginateDismissed` / `restoreDismissed` | propositions fermées tant que le lecteur ne peut pas publier ; choix masqués privés paginés et restaurables par identifiant de version, avec relecture actuelle de l’annuaire et des blocages ; scan des 500 masquages remplacé par des recherches exactes indexées ; API générique de liste non montée ; vérification automatisée verte ; recette Chrome de ce complément à terminer |
 | Cloche | `NotificationBell` | EXF-DG-38 | ✅ | `notifications.bell.*` | le partage d'une publication se dit (« a partagé votre publication ») ; genres de PD5 à PD8 dits « nouvelle activité » d'ici là |
 | Hub pays | `/pays/[iso]` | EXF-DG-15, 16 | 🟡 | `diaspora.hubs.getCountryHub`, voies du fil | compteurs et fil local ; pages, associations, entreprises (PD5) et évènements (PD7) vides ; membres opt-in par la recherche filtrée |
 | Sélecteur de pays (C11) | `CountrySwitch` | EXF-DG-15 | ✅ | — | accès rapide : mon pays, puis les trois derniers choisis (ce navigateur) |
@@ -529,3 +530,119 @@ par cette session.
 - **Écart hors périmètre signalé à ANTSIA** : pendant une redirection du lecteur en attente,
   `/fil` appelle `diaspora.suggestions.forMe` et reçoit `statusInsufficient` ; non corrigé
   dans cette tranche.
+
+### Suggestions masquées et signets paginés — 17/10, vérification automatisée verte
+
+- **Périmètre et état** : réalisation du plan
+  [`docs/08_PLAN_PD4_SUGGESTIONS_MASQUEES_ET_SIGNETS.md`](08_PLAN_PD4_SUGGESTIONS_MASQUEES_ET_SIGNETS.md).
+  Sources applicatives committées localement : `4a48fc6` (masquées/signets), `bce25cd`
+  (noms civils simulés). Vérification finale complète code 0, recette Chrome à terminer.
+  PD4 reste ouvert. Les résultats et restitutions de serveurs des sections précédentes
+  constituent des preuves historiques distinctes.
+- **Sixième onglet** : `/relations?onglet=masquees` monte le composant local DIASPORALE
+  `EngineDismissedSuggestions`, sans la recherche générique de `PeoplePanel`. Les pages de
+  douze utilisent la façade `diaspora.suggestions.paginateDismissed` ; maximum serveur de
+  cinquante lignes et 2 Mio par page. Chaque page reste abonnée ; le réducteur public
+  `cursor-pages` du moteur porte fusion, frontières, générations et reprise. La découverte
+  reste exclusivement `/membres` ; la surface privée du moteur reste fermée en démonstration.
+- **Identité relue pour chaque lecteur** : la façade applique les règles actuelles de
+  l’annuaire DIASPORALE et des blocages avant toute projection. Une cible encore autorisée
+  possède son mini-profil ; sinon la ligne demeure neutre, sans nom, handle, avatar ni lien.
+  En attente, la liste des choix personnels et leur restauration restent accessibles,
+  avec identité neutre faute de droit d’annuaire. Aucune nouvelle relation, aucun suivi
+  et aucune notification au tiers ne résultent de cette restauration.
+- **Restauration versionnée** : mutation `diaspora.suggestions.restoreDismissed` avec
+  `networkId` et `dismissalId`, l’identifiant du masquage servant de version. Acteur et
+  réseau bornent le choix ; un bouton ancien ne retire pas un nouveau masquage de la même
+  cible. Mutex immédiat par ligne, retrait après succès et protection contre une résolution
+  pour un ancien lecteur. ANTSIA ferme également l’ancienne liste générique
+  `suggestions.paginateDismissed` par `policyRefused` sur les réseaux gouvernés, avant toute
+  projection, avec test de transition et conservation des choix enregistrés. Elle n’est pas
+  montée ici ; les signatures des anciennes mutations restent intactes.
+- **Exclusion complète des choix masqués** : `diaspora.suggestions.forMe` remplace le scan
+  des 500 premières lignes par un lookup exact indexé de chaque candidat du vivier borné
+  à 120. Un masquage situé au-delà de la première tranche ne se perd plus. Dans l’adaptateur
+  de l’application, `forMe` reste ignoré tant que l’adhésion est non résolue ou que le lecteur
+  ne peut pas publier ; un membre en attente reçoit une liste de propositions vide.
+  Cela corrige dans cette nouvelle tranche l’appel `statusInsufficient` signalé plus haut.
+- **Signets au-delà des cinquante premiers** : `/enregistrements` et le retrait existaient
+  déjà, comme la modification de publication et le partage cité. Le nouveau port
+  `useBookmarksPage` conserve l’ancien `useBookmarks` et transmet les curseurs natifs
+  opaques, sans les convertir en curseurs de fil. Fenêtres de cinquante, toutes pages
+  montées et réactives, dédoublonnage par publication, amont prioritaire, descendants
+  abandonnés si la frontière change ; page filtrée vide non terminale continuable.
+  Erreur et reprise conservent les lignes valides ; lecteur, réseau ou mode remettent la
+  chaîne à zéro. La démonstration possède sa pagination locale cohérente. Le rendu reste
+  l’aperçu réduit autorisé par le DTO, sans fabriquer de carte de publication complète.
+- **Retrait des signets** : verrou immédiat par ligne et clé de composant composée de
+  `postId` et `markedAt`. Retrait local limité à cette version après succès public ;
+  si `toggleBookmark` renvoie `bookmarked: true`, la ligne attend la vérité réactive,
+  sans avis de retrait ni seconde bascule automatique. La résolution d’une ancienne
+  version distinguée par `markedAt` ou d’un ancien lecteur ne retire pas la nouvelle ligne
+  et ne lui adresse pas d’avis. Une panne garde la commande réessayable. Limite conservée
+  du contrat `toggleBookmark` : aucun jeton conditionnel ne distingue un réenregistrement
+  ayant exactement le même horodatage ; aucune nouvelle garantie backend n’est ajoutée.
+- **Refus et confidentialité des pages en cache** : les projections réactives sont reportées
+  avant peinture. Un refus d’accès en lecture ou en retrait masque toute la chaîne concernée ;
+  chaque page doit apporter sa propre réponse de reprise autorisée, dans la génération
+  courante. Le succès d’une autre page, un rendu de cache ou une ancienne réponse ne la
+  réautorise pas. Le refus d’un retrait de signet déclenche une relecture sans annoncer de
+  suppression ni relancer la bascule. Les pannes temporaires gardent les lignes valides.
+- **Cibles UI code 0, 17/10** : 148 tests dans quatre fichiers de l’application (38 masquées,
+  38 écran signets, 21 adaptateur et 51 intégration des relations), puis 10 de démonstration.
+  Un worker, heap Node de 1 Gio, délais de tests et hooks de 30 s ; assertions conservées.
+  Journaux `/tmp/diasporale-pd4-hidden-bookmarks-app-targets-final.log` (13,73 s) et
+  `/tmp/diasporale-pd4-bookmarks-demo-targets-final.log` (1,70 s). Avertissement Node 25
+  `localstorage-file` connu, sans erreur de test. La première passe interrompue n’est pas comptée.
+- **Noms civils structurés** : module pur partagé `@antsia/social-domain/civilName`,
+  NFC, patronymes en capitales et prénoms par segment, accents/apostrophes/tirets conservés.
+  Le formulaire IDN simulé normalise réellement les champs au blur, par Zod et avant écriture ;
+  les snapshots locaux sont corrigés sans perdre les identifiants ni les données voisines.
+  Fixtures civiles explicites, sans découpage d’un nom social. Les alias choisis, sujets,
+  attributs de confiance et consentements sont conservés ; aucune donnée civile consulaire
+  ni preuve signée n’est ajoutée ou réécrite. Limite du sujet fictif dérivé du nom : une ancienne
+  forme `ß` peut différer d’une nouvelle saisie déjà normalisée `SS` ; aucun rapprochement
+  par nom ni changement du sujet historique. Ce parcours n’est pas le raccord IDN réel.
+- **Passe finale complète code 0** : 6 786 tests, dont 953 DIASPORALE (domaine 190,
+  features 285, application 478), dix espaces typés et neuf lints sans erreur. Journal
+  `/tmp/diasporale-pd4-hidden-bookmarks-verify-analysis15.log`. Répartition totale : backend
+  1 551 en 52,06 s, cliquets 124, scripts 29, social-domain 473, contrats 57, diaspora-domain
+  190, UI 86, social-features 3 154, API 238, diasporale-features 285, admin 78, ANTSIA 43,
+  DIASPORALE 478. Les 18 cas backend des masquées et 31 cas civils sont inclus ; les deux
+  correctifs Hooks, dimensions des avatars, `content-visibility` et focus ANTSIA sont vérifiés.
+  Les trente fichiers de code contrôlés sont identiques au gel avant/après la passe.
+- **Configuration de preuve** : Node 22.22.3 pour toute la chaîne, heap 1 536 Mio,
+  `GOMAXPROCS=2`, tâches sérialisées et créneau réservé avec les trois chats voisins.
+  Backend local : concurrence d’analyse un et budget d’analyse temporaire **15 s**,
+  preuve minimale `/tmp/antsia-pa7-backend-local-analysis15-proof.json`. Délai applicatif
+  conservé à 1 s et délais/assertions des tests inchangés. Aucun contrôle neutralisé.
+  Cette passe ne prouve pas le budget d’analyse par défaut 4 s ni une livraison de production.
+- **Tentatives précédentes distinctes** : `/tmp/antsia-pa7-verify-final.log` avait 6 786 verts
+  avant les derniers détails UI. `verify-release.log` a échoué sur le focus ANTSIA, corrigé
+  par son propriétaire. Les essais `verify-final.log`, `verify-node22.log` et
+  `verify-coordinated.log` ont rencontré le budget d’analyse 4 s. `verify-final-retry.log`
+  a été interrompu après 11 min 16 s de backend Node 25 sans bilan. `verify-serial.log`
+  (concurrence d’analyse un) a passé codegen/types, puis rencontré un délai LiveKit avant
+  interruption 130 ; `verify-bounded.log` a été interrompu 130 après codegen/types pour
+  laisser finir les publications voisines, sans bilan de tests. Ces derniers journaux ont
+  tous le préfixe `/tmp/diasporale-pd4-hidden-bookmarks-` ; aucun total final n’en est déduit.
+  Charge globale observée jusqu’à 128,58 et 51 processus exécutables ; cause exclusive
+  non établie. Aucun processus étranger arrêté. ANTSIA a retiré son seul cache console
+  autorisé ; DIASPORALE n’a supprimé aucun cache, donnée ou session.
+- **Commits locaux** : application `4a48fc6`, civil simulé `bce25cd`, moteur
+  masquées/réducteur `b03498b`, civil `18cd63e`, préférences ANTSIA `8737055`. Aucun push.
+- **Chrome — recette à reprendre** : aucune nouvelle session authentifiée ni mutation
+  de recette. La première compilation de `/entrer/code` n’a pas abouti pendant les tentatives
+  Webpack sous Node 25 (plus de huit minutes) puis Node 22 (plus de deux minutes).
+  Journaux `/tmp/diasporale-pd4-hidden-bookmarks-chrome.log` et `-chrome-node22.log` ;
+  résolution de fichiers observée, sans diagnostic applicatif concluant. Le premier lancement
+  Node 22 utilisait un chemin de binaire absent, corrigé vers celui de l’application avant
+  la tentative effective. Aucun écran métier, rendu mobile, focus ou console authentifiée
+  de cette nouvelle tranche n’est revendiqué ; les recettes précédentes restent historiques.
+- **Serveurs et ressources** : créneau rendu par ANTSIA, baseline sans frontend ; seul
+  DIASPORALE 3031 a été démarré puis arrêté proprement. Chrome remis sur son unique onglet
+  vide, sans émulation de viewport/thème ni autre navigateur. ANTSIA reprend son backend local
+  après des délais aussi observés dans ses crons ; aucun cache, environnement, donnée ou
+  session supprimé. Disque observé entre 0,7 et 3,1 Gio libres ; aucun nettoyage par DIASPORALE.
+- **Suite PD4** : reprendre cette recette puis les commandes de confidentialité et de retrait
+  du profil ; cette tranche ne clôt ni PD4 ni les portes IDN/consulaires réelles.
