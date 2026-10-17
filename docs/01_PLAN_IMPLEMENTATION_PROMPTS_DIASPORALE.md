@@ -48,7 +48,7 @@ PD4 reste ouvert pour les autres écarts de parité.
 Tranche suivante du **17/10/2026**, sources vérifiées et recette Chrome partielle : visionneuse des médias,
 édition des commentaires/réponses et textes du profil sans republication incidente.
 Commits locaux DIASPORALE `8a44990` et moteur ANTSIA `0693832` ; plan, preuves et reprise dans [`docs/10`](10_VISIONNEUSE_COMMENTAIRES_IDENTITE_PD4.md).
-Sources raccordées dans l’application réelle ; verify commun code0,7173tests,10typages/9lints sans erreur. Commentaire/réponse édités et persistants, profil retiré édité sans republication implicite confirmés dans Chrome. Fin de la republication explicite et recette médias réels attendent le déverrouillage du Mac et un accès légitime au sélecteur de fichiers. PD4 reste ouvert.
+Sources raccordées dans l’application réelle ; nouveau passage commun code 0, 7 179 tests, dix typages et neuf contrôles de qualité sans erreur (93 avertissements conservés), 1 570 sources identiques avant/après. Commentaire/réponse édités et persistants, profil retiré édité sans republication implicite confirmés dans Chrome. Après déverrouillage, photo seule et partage cité réellement lus à 320/375/1 280 px, clair/sombre, Échap et restitution du focus validés. Republication explicite relue et confirmée, identité d’origine conservée. Plusieurs images et vidéo restent à jouer après sélection légitime des fichiers fictifs dans une session auteur accessible. PD4 reste ouvert.
 
 Vérifications des étapes closes :
 - **a)** 197 cas `bun test`, couverture lignes et fonctions 100 % imposée par
