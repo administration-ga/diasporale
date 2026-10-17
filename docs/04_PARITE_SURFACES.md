@@ -2,7 +2,7 @@
 
 > Tenu par la session de construction (PD4, point 6 du plan `docs/01`). État au 17/10/2026.
 
-> **Tranche du 17/10 vérifiée, recette partielle** : visionneuse médias, édition des commentaires et textes du profil raccordés ; nouveau passage commun 7 179 tests/code 0, dix typages et neuf contrôles de qualité sans erreur (93 avertissements), 1 570 sources identiques. Chrome confirme commentaires/réponses, édition du profil retiré puis republication explicite, photo seule et partage cité à 320/375/1 280 px, clair/sombre, Échap et restitution du focus. Plusieurs images et vidéo restent à terminer après sélection légitime des fichiers. [Preuves et reprise docs/10](10_VISIONNEUSE_COMMENTAIRES_IDENTITE_PD4.md).
+> **Tranche du 17/10 vérifiée, recette partielle** : visionneuse médias, édition des commentaires et textes du profil raccordés ; passage commun final après corrections visuelles, 7 179 tests/code 0, dix typages des espaces et neuf contrôles de qualité sans erreur (94 avertissements), 1 580 sources identiques et sans dérive à la relecture. Chrome confirme commentaires/réponses, édition du profil retiré puis republication explicite, photo seule et partage cité à 320/375/1 280 px, clair/sombre, Échap et restitution du focus. Plusieurs images et vidéo restent non validées : dernier post sans média au stockage, capture du composeur humain attendue pour identifier le décalage avec le Chrome piloté. [Preuves et reprise docs/10](10_VISIONNEUSE_COMMENTAIRES_IDENTITE_PD4.md).
 
 ## 1. Surfaces de PD4 (EXF-DG-07 à 19)
 
