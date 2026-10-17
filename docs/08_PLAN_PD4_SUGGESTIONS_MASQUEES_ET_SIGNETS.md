@@ -121,8 +121,12 @@ suppression de cache ou de session prévu.
 - Les premières passes sous charge, le dépassement du test LiveKit et les analyses à 4 s
   sont des tentatives distinctes : journaux et limites dans `docs/04`. Aucun total final
   n’en est dérivé. ANTSIA a corrigé le focus de ses seules préférences avant cette passe verte.
-- Chrome reste à terminer : première compilation de connexion non aboutie sous Node 25
-  puis 22 pendant les essais précédents, aucun scénario métier de cette tranche encore validé.
-  Les seuls frontends de test ont été arrêtés, l’onglet remis à vide ; backend confié à ANTSIA.
+- Chrome moteur terminé : masquage/restauration et vide après rechargement, retour du
+  candidat encore éligible sans relation/suivi ; signets 50→51 uniques→retrait50→reload50,
+  continuation terminale vide. 320/375/1280 sans débordement, focus clavier et console propres.
+  Pagination masquées >12 et transitions de droits couvertes automatiquement, sans rejeu croisé
+  pending ; démonstration paginée vérifiée par tests. Détails et limites dans docs/04.
+  Émulation supprimée, onglet remis à vide, Next3031 arrêté, backend ANTSIA conservé et
+  créneau rendu aux trois chats. Commits source4a48fc6/bce25cd, moteurb03498b/18cd63e.
 - La limite historique des sujets IDN fictifs `ß`/`SS` ne justifie aucun rapprochement par nom
   ni réécriture de sujet. Les cas civils ne valent pas raccord OIDC réel. PD4 reste ouvert.

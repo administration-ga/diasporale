@@ -174,8 +174,11 @@ Vérifications des étapes closes :
   d’analyse par défaut 4 s et de toute production ; détails et tentatives précédentes dans `docs/04`.
   **Commits locaux** : `4a48fc6` (masquées/signets), `bce25cd` (noms civils simulés),
   moteur `b03498b` (masquées/réducteur), `18cd63e` (civil), préférences ANTSIA `8737055`.
-  **Chrome à reprendre** : première compilation de connexion non aboutie sous Node 25 puis 22,
-  aucune nouvelle recette authentifiée ; seul frontend 3031 arrêté, backend repris par ANTSIA.
+  **Chrome terminé** : masquage/restauration/vide après rechargement, candidat de nouveau
+  éligible sans connexion ni suivi ; signets 50→51 uniques→retrait50→rechargement50,
+  continuation terminale vide. 320/375/1 280 sans débordement, focus clavier et console propres.
+  Session fictive existante conservée, émulation supprimée, onglet remis à vide ; 3031 arrêté,
+  baseline sans frontend restituée, backend temporaire15s rendu à ANTSIA. Créneau rendu aux trois chats.
   Ces repères concernent cette nouvelle tranche seulement ; les preuves antérieures restent
   historiques et acquises dans leur périmètre. PD4 reste en cours.
 - **e)** Côté gabon-diplomatie, sur deux branches en worktree (le `main` partagé n'est pas
