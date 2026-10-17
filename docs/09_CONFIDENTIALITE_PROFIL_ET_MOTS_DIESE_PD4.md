@@ -54,9 +54,11 @@ Cette tranche ne clôt pas tout PD4. Visionneuse complète des médias, modifica
 - Pays Canada et portée conservés dans les liens ; retrait du filtre supprime seulement le tag. Le fil filtré de cette recette n'a qu'une correspondance : les multiples pages filtrées et les fenêtres vides continuables sont couvertes automatiquement, sans être revendiquées comme recette Chrome multi-page filtrée.
 - 320 px sombre, 375 px clair et 1 280 px sombre : absence de débordement mesurée après correction du sélecteur d'apparence (il dépassait de 5 px à 320). Feuilles et carte filtrée inspectées visuellement. Console finale sans erreur.
 - Aucune recette Chrome croisée des annuaires ou du départ réel n'est revendiquée ; contrats et projections couverts par les tests. Aucun média ou session supprimé ; la publication fictive de recette reste locale.
-- Next3031 arrêté code0, backend3210 conservé. Après reconnexion du navigateur, onglet vide et émulation supprimée confirmés, dimensions initiales 1 280×690 et préférence sombre restaurées. Créneau CPU restitué après le dernier contrôle ; confirmation du retour de la console ANTSIA attendue de son propriétaire.
+- Next3031 arrêté code0, backend3210 conservé. Après reconnexion du navigateur, onglet vide et émulation supprimée confirmés, dimensions initiales 1 280×690 et préférence sombre restaurées. Créneau CPU restitué après le dernier contrôle. ANTSIA a repris la baseline : réseau3030 à la place de console3032 pour sa nouvelle demande PA8, un seul Next, selon la décision annoncée dans son chat.
 
 ## Vérification finale du snapshot recetté
+
+Commit applicatif local `cf97785025474c2cfd6bb3f32208d0d3cc23efb2`,40 chemins ; aucun envoi distant.
 
 - `bun run --cwd ../ANTSIA verify` terminé **code0** après la correction responsive : **6 909 tests**, dont **1 124 DIASPORALE** (238 domaine, 309 features, 577 application), dix espaces typés et neuf lints sans erreur. Les 123 nouveaux cas sont inclus. Les avertissements préexistants sont conservés ; les deux avertissements introduits sur les marqueurs de contexte ont été corrigés.
 - Journal local : `/tmp/diasporale-pd4-privacy-tags-verify-chrome-final.log`. Les **36 fichiers source** sont identiques au gel avant/après cette dernière passe. Moteur de référence `24d28240e6501582ddc248421e210a541d8e5af1`, avant les nouvelles écritures PA8 coordonnées.
