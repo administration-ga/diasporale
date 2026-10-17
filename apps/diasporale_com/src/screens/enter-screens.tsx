@@ -1,14 +1,28 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Button, Card, Checkbox, Field, FloatingNotice, Input, Label, RadioCard, RadioGroup, cn } from "@diasporale/features"
+import {
+  Button,
+  Card,
+  Checkbox,
+  Field,
+  FloatingNotice,
+  Input,
+  Label,
+  RadioCard,
+  RadioGroup,
+  cn,
+  normalizeCivilName,
+  normalizeFamilyName,
+  normalizeGivenNames,
+} from "@diasporale/features"
 import { useActions, useDataSource, useSession } from "@diasporale/features/data"
 import { DEMO_IDN_IDENTITIES, isValidDestination } from "@diasporale/features/demo"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { ArrowRightIcon, FlaskConicalIcon, IdCardIcon, KeyRoundIcon, MailIcon, PhoneIcon, ShieldCheckIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useId, useState, type ReactNode } from "react"
+import { useEffect, useId, useState, type FocusEvent, type ReactNode } from "react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -102,8 +116,8 @@ function DoorLink(props: { href: string; icon: ReactNode; title: string; body: s
 
 const idnSchema = z.object({
   identity: z.string().min(1, "idn_identity_required"),
-  firstName: z.string().trim(),
-  lastName: z.string().trim(),
+  firstName: z.string().transform(normalizeGivenNames),
+  lastName: z.string().transform(normalizeFamilyName),
   loa: z.enum(["1", "2", "3"]),
   gabonese: z.boolean(),
   consent: z.boolean().refine((value) => value, "idn_consent_required"),
@@ -130,9 +144,10 @@ export function IdnScreen() {
 
   const onSubmit = form.handleSubmit(async (values) => {
     const preset = DEMO_IDN_IDENTITIES.find((item) => item.key === values.identity)
+    const names = normalizeCivilName(preset ?? values)
     const input = preset
-      ? { firstName: preset.firstName, lastName: preset.lastName, loa: preset.loa, gaboneseNationality: preset.gaboneseNationality }
-      : { firstName: values.firstName, lastName: values.lastName, loa: Number(values.loa), gaboneseNationality: values.gabonese }
+      ? { ...names, loa: preset.loa, gaboneseNationality: preset.gaboneseNationality }
+      : { ...names, loa: Number(values.loa), gaboneseNationality: values.gabonese }
     const result = await actions.signInWithIdn(input)
     if (!result.ok) {
       toast.error(t(`errors.${result.code}`))
@@ -182,10 +197,18 @@ export function IdnScreen() {
           <Card className="flex flex-col gap-4 p-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field id={`${ids}-prenom`} label={t("idn.firstName")}>
-                {(control) => <Input id={control.id} autoComplete="given-name" {...form.register("firstName")} />}
+                {(control) => (
+                  <Input id={control.id} autoComplete="given-name" {...form.register("firstName", {
+                    onBlur: (event: FocusEvent<HTMLInputElement>) => form.setValue("firstName", normalizeGivenNames(event.target.value), { shouldDirty: true, shouldValidate: true }),
+                  })} />
+                )}
               </Field>
               <Field id={`${ids}-nom`} label={t("idn.lastName")}>
-                {(control) => <Input id={control.id} autoComplete="family-name" {...form.register("lastName")} />}
+                {(control) => (
+                  <Input id={control.id} autoComplete="family-name" {...form.register("lastName", {
+                    onBlur: (event: FocusEvent<HTMLInputElement>) => form.setValue("lastName", normalizeFamilyName(event.target.value), { shouldDirty: true, shouldValidate: true }),
+                  })} />
+                )}
               </Field>
             </div>
             <Field id={`${ids}-loa`} label={t("idn.loa")} hint={t("idn.loaHint")}>

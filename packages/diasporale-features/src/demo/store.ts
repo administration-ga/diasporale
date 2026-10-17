@@ -8,6 +8,7 @@
  * exception. Cette implémentation disparaît au câblage du moteur (PD2/PD4) :
  * l'interface (`DiasporaleDataSource`) reste.
  */
+import { normalizeCivilName } from "@antsia/social-domain/civilName"
 import {
   applyAttestationToFacet,
   applyMembershipEvent,
@@ -77,6 +78,19 @@ export function isValidDestination(destination: CodeDestination): boolean {
   return destination.kind === "email" ? EMAIL.test(value) : PHONE.test(value) && value.replace(/\D/g, "").length >= 8
 }
 
+/** Corrige seulement les deux champs civils déjà structurés, jamais le profil ni les claims. */
+function canonicalCivilNames(state: DemoState): DemoState {
+  let persons: Record<string, DemoPerson> | null = null
+  for (const [id, person] of Object.entries(state.persons)) {
+    if (!person?.idn || typeof person.idn.firstName !== "string" || typeof person.idn.lastName !== "string") continue
+    const names = normalizeCivilName(person.idn)
+    if (names.firstName === person.idn.firstName && names.lastName === person.idn.lastName) continue
+    persons ??= { ...state.persons }
+    persons[id] = { ...person, idn: { ...person.idn, ...names } }
+  }
+  return persons === null ? state : { ...state, persons }
+}
+
 export class DemoStore {
   private state: DemoState
   private version = 0
@@ -111,7 +125,11 @@ export class DemoStore {
       const raw = this.storage?.getItem(DEMO_STORAGE_KEY)
       if (raw) {
         const parsed = JSON.parse(raw) as DemoState
-        if (parsed.version === DEMO_STATE_VERSION) return parsed
+        if (parsed.version === DEMO_STATE_VERSION) {
+          const canonical = canonicalCivilNames(parsed)
+          if (canonical !== parsed) this.persist(canonical)
+          return canonical
+        }
       }
     } catch {
       // Stockage illisible ou bloqué : on repart du jeu de démonstration.
@@ -119,14 +137,18 @@ export class DemoStore {
     return createDemoSeed(this.clock())
   }
 
-  private commit(next: DemoState): void {
-    this.state = next
-    this.version += 1
+  private persist(next: DemoState): void {
     try {
       this.storage?.setItem(DEMO_STORAGE_KEY, JSON.stringify(next))
     } catch {
       // Stockage plein ou interdit : la démonstration continue en mémoire.
     }
+  }
+
+  private commit(next: DemoState): void {
+    this.state = canonicalCivilNames(next)
+    this.version += 1
+    this.persist(this.state)
     for (const listener of this.listeners) listener()
   }
 
@@ -177,12 +199,14 @@ export class DemoStore {
   // ── Entrée ─────────────────────────────────────────────────────────────
   async signInWithIdn(input: IdnSignInInput): Promise<ActionResult> {
     await this.pause()
-    const firstName = input.firstName.trim()
-    const lastName = input.lastName.trim()
-    if (!firstName || !lastName || !Number.isInteger(input.loa) || input.loa < 0 || input.loa > 4) {
+    if (!input || typeof input !== "object" || typeof input.firstName !== "string" || typeof input.lastName !== "string"
+      || !Number.isInteger(input.loa) || input.loa < 0 || input.loa > 4) {
       return fail("idn_invalid")
     }
-    const sub = demoIdnSub(firstName, lastName)
+    const names = normalizeCivilName(input)
+    if (!names.firstName || !names.lastName) return fail("idn_invalid")
+    // Le sujet de démonstration garde sa dérivation historique, avant toute expansion de casse Unicode.
+    const sub = demoIdnSub(input.firstName.trim(), input.lastName.trim())
     const existing = Object.values(this.state.persons).find((person) => person.idn?.sub === sub)
     const now = this.clock()
     if (existing) {
@@ -192,7 +216,7 @@ export class DemoStore {
     const [id, sequence] = this.nextId("p")
     const person: DemoPerson = {
       id,
-      idn: { sub, loa: input.loa, gaboneseNationality: input.gaboneseNationality, firstName, lastName },
+      idn: { sub, loa: input.loa, gaboneseNationality: input.gaboneseNationality, ...names },
       local: null,
       // Aucun profil créé d'office : il naîtra de l'onboarding, avec consentement.
       profile: null,

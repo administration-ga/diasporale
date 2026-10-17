@@ -12,6 +12,7 @@ export { countryName, residenceCountryOptions, filterCountryOptions, searchKey }
 export { formatDate, formatNumber, formatRelative, calendarParts } from "./lib/format"
 export { avatarTone, initials } from "./lib/avatar"
 export { handleRefusal, normalizeHandle, suggestHandles, HANDLE_MAX_LENGTH, HANDLE_MIN_LENGTH } from "./lib/handle"
+export { normalizeCivilName, normalizeFamilyName, normalizeGivenNames, type CivilNameParts } from "@antsia/social-domain/civilName"
 
 export { Button, buttonVariants, type ButtonProps } from "./primitives/button"
 export { Field, Input, Label, Textarea } from "./primitives/field"
