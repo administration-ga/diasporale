@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { canAlsoPublishOnRoot, isCountryOpen, type CountryCode } from "@diasporale/domain"
 import { GlobeIcon, ImagePlusIcon, LoaderCircleIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react"
-import { type ChangeEvent, type KeyboardEvent, useEffect, useId, useRef, useState } from "react"
+import { type ChangeEvent, type FormEvent, type KeyboardEvent, useEffect, useId, useRef, useState } from "react"
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -148,6 +148,9 @@ export function PostComposerSheet(props: {
   const [mediaError, setMediaError] = useState<ActionErrorCode | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   const attachedCount = useRef(0)
+  // Le verrou précède même la validation asynchrone : un sélecteur déjà ouvert
+  // ne doit pas ajouter des photos à une publication dont le contenu est parti.
+  const submissionInFlight = useRef(false)
   const audience = useWatch({ control: form.control, name: "audience" })
   const reach = useWatch({ control: form.control, name: "reach" })
   const body = useWatch({ control: form.control, name: "body" })
@@ -195,7 +198,7 @@ export function PostComposerSheet(props: {
   function attachFiles(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? [])
     event.target.value = ""
-    if (files.length === 0) return
+    if (submissionInFlight.current || files.length === 0) return
     const chosen: { file: File; kind: PostMediaKind }[] = []
     for (const file of files) {
       const kind = postMediaKindOf(file.type)
@@ -238,6 +241,7 @@ export function PostComposerSheet(props: {
   }
 
   function detach(index: number, key: string) {
+    if (submissionInFlight.current) return
     const entry = attachments[key]
     if (entry) releasePreview(entry.previewUrl)
     setAttachments((current) => without(current, key))
@@ -252,7 +256,7 @@ export function PostComposerSheet(props: {
     setMediaError(null)
   }
 
-  const onSubmit = form.handleSubmit(async (values) => {
+  const publishValidatedForm = form.handleSubmit(async (values) => {
     const media: PublishMediaInput[] = []
     for (const item of values.media) {
       const state = attachments[item.key]?.state
@@ -285,6 +289,17 @@ export function PostComposerSheet(props: {
     props.onOpenChange(false)
   })
 
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (submissionInFlight.current) return
+    submissionInFlight.current = true
+    try {
+      await publishValidatedForm(event)
+    } finally {
+      submissionInFlight.current = false
+    }
+  }
+
   const countryLabel = countryName(props.memberCountry, locale)
   const reviewNotice = reach === "local" && !isCountryOpen(props.memberCountry, props.openCountries)
   const bodyError = form.formState.errors.body?.message
@@ -297,7 +312,10 @@ export function PostComposerSheet(props: {
         hideDescription
         closeLabel={t("common.close")}
       >
-        <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
+        <form onSubmit={onSubmit} className="flex flex-col gap-5" aria-busy={form.formState.isSubmitting} noValidate>
+          {/* Le succès ne doit effacer que le contenu effectivement envoyé.
+              Un fieldset conserve les valeurs RHF tout en gelant tous les contrôles. */}
+          <fieldset disabled={form.formState.isSubmitting} className="contents">
           {share ? (
             <div className="flex flex-col gap-1.5">
               <p className="text-sm font-medium">{t("composer.shareOriginal")}</p>
@@ -488,6 +506,7 @@ export function PostComposerSheet(props: {
               {form.formState.isSubmitting ? t("composer.publishing") : t("composer.publish")}
             </Button>
           </div>
+          </fieldset>
         </form>
       </SheetContent>
     </Sheet>
