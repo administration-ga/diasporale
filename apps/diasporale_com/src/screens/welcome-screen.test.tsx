@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { RoutingProvider, type FeatureRoutes, type LinkComponent } from "@diasporale/features"
-import { DataSourceProvider } from "@diasporale/features/data"
+import { DataSourceProvider, type DiasporaleActions } from "@diasporale/features/data"
 import { DemoStore, createDemoDataSource } from "@diasporale/features/demo"
+import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
 import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
@@ -21,7 +22,10 @@ vi.mock("next/navigation", () => ({
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+  vi.unstubAllGlobals()
 })
+
+const t = getFixedT("fr")
 
 const featureRoutes: FeatureRoutes = {
   profile: routes.profile,
@@ -40,12 +44,13 @@ const PlainLink: LinkComponent = ({ href, children, ...rest }) => (
   </a>
 )
 
-async function signedInAwa() {
+async function signedInAwa(actions: Partial<DiasporaleActions> = {}) {
   const store = new DemoStore(null, () => Date.UTC(2026, 9, 14, 12), 0)
   await store.signInWithIdn({ firstName: "Awa", lastName: "Ogooué", loa: 2, gaboneseNationality: true })
+  const source = createDemoDataSource(store)
   render(
     <I18nProvider locale="fr">
-      <DataSourceProvider source={createDemoDataSource(store)}>
+      <DataSourceProvider source={{ ...source, actions: { ...source.actions, ...actions } }}>
         <RoutingProvider routes={featureRoutes} Link={PlainLink}>
           <WelcomeScreen />
         </RoutingProvider>
@@ -53,6 +58,17 @@ async function signedInAwa() {
     </I18nProvider>,
   )
   return { store, user: userEvent.setup() }
+}
+
+/** La navigation de page (`window.location.assign`), que jsdom n'exécute pas. */
+function stubPageNavigation() {
+  const assign = vi.fn()
+  vi.stubGlobal("window", new Proxy(window, {
+    get(target, property) {
+      return property === "location" ? { assign } : Reflect.get(target, property, target)
+    },
+  }))
+  return assign
 }
 
 describe("/bienvenue — l'onboarding en trois écrans", () => {
@@ -95,5 +111,33 @@ describe("/bienvenue — l'onboarding en trois écrans", () => {
     const me = store.getState().session.personId ?? ""
     expect(store.statusOf(me)).toBe("declaree")
     expect(store.getState().memberships[me]?.directoryVisibility).toBe("hidden")
+  })
+})
+
+describe("/bienvenue — la sortie d'un compte connecté sans adhésion", () => {
+  it("se déconnecte partout depuis l'accueil, puis la démonstration recharge la porte", async () => {
+    const assign = stubPageNavigation()
+    const { store, user } = await signedInAwa()
+
+    // Ni les réglages ni la porte ne s'ouvrent à ce compte : l'accueil porte sa sortie.
+    expect(await screen.findByText(t("welcome.notYourAccount").replace(/\s+/g, " "))).toBeInTheDocument()
+    expect(store.getState().session.personId).not.toBeNull()
+    await user.click(screen.getByRole("button", { name: t("settings.signOutEverywhere") }))
+
+    await vi.waitFor(() => expect(assign).toHaveBeenCalledExactlyOnceWith(routes.home()))
+    expect(store.getState().session.personId ?? null).toBeNull()
+  })
+
+  it("dit un échec générique et laisse réessayer", async () => {
+    stubPageNavigation()
+    const signOutEverywhere = vi.fn<DiasporaleActions["signOutEverywhere"]>().mockRejectedValueOnce(new Error("diagnostic privé de la révocation")).mockResolvedValue(undefined)
+    const { user } = await signedInAwa({ signOutEverywhere })
+
+    await user.click(await screen.findByRole("button", { name: t("settings.signOutEverywhere") }))
+    expect(await screen.findByRole("alert")).toHaveTextContent(t("errors.unknown"))
+    expect(screen.queryByText(/diagnostic privé/)).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: t("settings.signOutEverywhere") }))
+    await vi.waitFor(() => expect(signOutEverywhere).toHaveBeenCalledTimes(2))
   })
 })

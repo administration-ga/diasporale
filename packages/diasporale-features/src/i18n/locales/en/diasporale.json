@@ -144,7 +144,8 @@
     "consentsLegend": "Consents",
     "consentsFooter": "You can withdraw each consent in one step from your settings.",
     "submit": "Join DIASPORALE",
-    "joined": "Welcome to DIASPORALE."
+    "joined": "Welcome to DIASPORALE.",
+    "notYourAccount": "Not your account, or want to switch?"
   },
   "consent": {
     "required": "Required",

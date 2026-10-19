@@ -127,10 +127,11 @@ Gestes réels, joués par l'application à la première entrée :
   - suspension à la racine : « Compte de démonstration prêt : Christelle IVANGA. », puis l'avis
     « Votre compte est suspendu ». Côté moteur, la racine est « suspendue » et l'adhésion
     DIASPORALE est restée « vérifiée ».
-- Remarques relevées en recette, non corrigées ici :
-  - un compte connecté sans adhésion (l'extérieur, comme le nouvel arrivant) n'a aucune sortie
-    dans l'accueil : ni « Se déconnecter », ni réglages. Pour changer d'acteur, il faut vider la
-    session de ce navigateur ;
-  - sous l'avis de suspension, le fil d'un compte suspendu dit « Les publications ne sont pas
-    disponibles. Vérifiez votre connexion », le message générique de tout refus de lecture.
-    C'est déjà le cas pour « Membre suspendu ».
+- Remarques relevées en recette :
+  - CORRIGÉE le 19/10 au soir : un compte connecté sans adhésion (l'extérieur, comme le nouvel
+    arrivant) n'avait aucune sortie dans l'accueil, ni « Se déconnecter », ni réglages. Le bas de
+    `/bienvenue` porte désormais « Ce n'est pas votre compte, ou vous voulez en changer ? » et
+    « Se déconnecter partout », la même déconnexion que les réglages (`useSignOutEverywhere`) ;
+  - NON CORRIGÉE : sous l'avis de suspension, le fil d'un compte suspendu dit « Les publications
+    ne sont pas disponibles. Vérifiez votre connexion », le message générique de tout refus de
+    lecture. C'est déjà le cas pour « Membre suspendu ».
