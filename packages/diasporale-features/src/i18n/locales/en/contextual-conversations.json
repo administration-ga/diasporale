@@ -15,5 +15,10 @@
   },
   "contextualRules": {
     "context_address_forbidden": "No exact address here: give a neighbourhood or a public place instead."
+  },
+  "errors": {
+    "context_not_open": "This conversation is not open yet: it opens with the request, the accepted mentoring or the shortlisting.",
+    "context_closed": "The conversation for this connection is closed for now.",
+    "context_unavailable": "This conversation is unavailable for now."
   }
 }

@@ -17,6 +17,15 @@ import type { ConversationKind } from "@diasporale/domain"
 import type { ActionResult } from "./port"
 import type { Loadable } from "./types"
 
+/**
+ * Les refus EXPLICITES d'une ouverture, que le moteur ne dit qu'à une partie (contrat §5.3) :
+ * l'objet n'est pas en phase d'ouverture ; la conversation est close, ou le réseau ne
+ * l'ouvre pas encore ; l'autre côté n'a plus personne pour la recevoir. Un tiers reçoit
+ * `not_found`, comme pour un identifiant inventé.
+ */
+export const CONVERSATION_ERROR_CODES = ["context_not_open", "context_closed", "context_unavailable"] as const
+export type ConversationErrorCode = (typeof CONVERSATION_ERROR_CODES)[number]
+
 /** L'objet qui ouvre une conversation : sa nature et son identifiant, rien de son contenu. */
 export interface ConversationObjectRef {
   readonly kind: ConversationKind

@@ -74,6 +74,10 @@ const ENGINE_RULES: Readonly<Record<string, ActionErrorCode>> = {
   PAGE_CLAIM_PENDING: "page_claim_pending",
   PAGE_CLAIM_EVIDENCE_COUNT: "page_claim_evidence_count",
   PAGE_CLAIM_NOTE_TOO_LONG: "page_claim_note_too_long",
+  // Conversations de mise en relation (CC-6) : refus explicites d'une ouverture, dits à une partie seulement.
+  CONTEXT_NOT_OPEN: "context_not_open",
+  CONTEXT_CLOSED: "context_closed",
+  CONTEXT_UNAVAILABLE: "context_unavailable",
 }
 
 /** Le code FERMÉ d'une erreur levée par une fonction du moteur. */

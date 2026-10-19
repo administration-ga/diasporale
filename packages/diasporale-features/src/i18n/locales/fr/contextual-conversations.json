@@ -15,5 +15,10 @@
   },
   "contextualRules": {
     "context_address_forbidden": "Pas d'adresse exacte ici : indiquez plutôt un quartier ou un lieu public."
+  },
+  "errors": {
+    "context_not_open": "Cette conversation n'est pas encore ouverte : elle s'ouvre avec la demande, le mentorat accepté ou la présélection.",
+    "context_closed": "La conversation de cette mise en relation est fermée pour le moment.",
+    "context_unavailable": "Cette conversation est indisponible pour le moment."
   }
 }
