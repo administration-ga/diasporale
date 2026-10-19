@@ -1,0 +1,12 @@
+{
+  "pageManagedServices": {
+    "filterLabel": "Offer status",
+    "all": "All statuses",
+    "lead": "Find this page’s offers by status. Only active offers appear in its catalogue.",
+    "reset": "Clear the filter",
+    "emptyTitle": "No offers with this status",
+    "emptyBody": "Choose another status or clear the filter to find all offers from this page.",
+    "finishEditing": "Save or close the form before changing the displayed status.",
+    "closeEditor": "Close the editor"
+  }
+}

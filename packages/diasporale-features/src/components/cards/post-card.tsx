@@ -1,7 +1,7 @@
 "use client"
 
 import type { CountryCode } from "@diasporale/domain"
-import { GlobeIcon, HandHeartIcon, HeartIcon, LightbulbIcon, MessageCircleIcon, PartyPopperIcon, Repeat2Icon, type LucideIcon } from "lucide-react"
+import { GlobeIcon, HandHeartIcon, HeartIcon, LightbulbIcon, MessageCircleIcon, PartyPopperIcon, type LucideIcon } from "lucide-react"
 import { DropdownMenu } from "radix-ui"
 import { useState } from "react"
 
@@ -14,7 +14,7 @@ import { useRouting } from "../../routing"
 import { PostCommentsSheet } from "../comments"
 import { PostMediaGrid } from "../post-media"
 import { PostMenu } from "../post-menu"
-import { isShareable, SharedPostEmbed, usePostShare } from "../post-share"
+import { PostShareButton, SharedPostEmbed } from "../post-share"
 import { RichText } from "../rich-text"
 import { ContentScopeTag } from "../country-tag"
 import { ModerationBanner } from "../moderation-banner"
@@ -32,7 +32,7 @@ const REACTIONS: Record<ReactionKind, { icon: LucideIcon; key: string }> = {
  * `social-features` n'est pas dupliqué) : auteur et badges P1, étiquette pays
  * ou portée, corps, réactions. L'auteur voit l'état de modération de sa
  * publication (carte flottante en tête, qu'il peut écarter) ; une publication
- * `root` dit qu'elle est aussi lue dans ANTIA.
+ * `root` dit qu'elle est aussi lue dans ANTSIA.
  */
 export function PostCard(props: {
   post: PostView
@@ -47,10 +47,13 @@ export function PostCard(props: {
 }) {
   const { t, locale } = useDiasporaleT()
   const { routes, Link } = useRouting()
-  const { post } = props
+  const neutralAuthor = props.post.author.kind === "person" && props.post.author.handle.trim().length === 0
+  // Sans adresse publiée, aucun nom ou badge retenu ne doit réapparaître dans la carte ou ses actions.
+  const post = neutralAuthor
+    ? { ...props.post, author: { ...props.post.author, handle: "", displayName: t("bell.someone"), badges: [] } }
+    : props.post
   const [commentsOpen, setCommentsOpen] = useState(false)
-  const share = usePostShare()
-  const authorHref = post.author.kind === "page" ? routes.page(post.author.handle) : routes.profile(post.author.handle)
+  const authorHref = neutralAuthor ? null : post.author.kind === "page" ? routes.page(post.author.handle) : routes.profile(post.author.handle)
   const mine = post.myReaction
   const MineIcon = mine ? REACTIONS[mine].icon : HeartIcon
 
@@ -63,17 +66,24 @@ export function PostCard(props: {
           </div>
         ) : null}
         <header className="flex items-start gap-3 px-4 pt-4">
-          <Avatar id={post.author.id} name={post.author.displayName} shape={post.author.kind === "page" ? "square" : "round"} />
+          <Avatar
+            id={neutralAuthor ? "neutral" : post.author.id}
+            name={post.author.displayName}
+            shape={post.author.kind === "page" ? "square" : "round"}
+            className={neutralAuthor ? "bg-muted text-muted-foreground" : undefined}
+          />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <Link
-                href={authorHref}
-                id={`post-${post.id}-auteur`}
-                className="truncate font-semibold text-foreground hover:underline focus-visible:shadow-focus"
-              >
-                {post.author.displayName}
-              </Link>
-              <TrustBadges badges={post.author.badges} />
+              {authorHref ? (
+                <Link
+                  href={authorHref}
+                  id={`post-${post.id}-auteur`}
+                  className="truncate font-semibold text-foreground hover:underline focus-visible:shadow-focus"
+                >
+                  {post.author.displayName}
+                </Link>
+              ) : <span id={`post-${post.id}-auteur`} className="truncate font-semibold text-foreground">{post.author.displayName}</span>}
+              {!neutralAuthor ? <TrustBadges badges={post.author.badges} /> : null}
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
               <Link href={routes.post(post.id)} className="rounded-sm hover:underline focus-visible:shadow-focus">
@@ -144,19 +154,7 @@ export function PostCard(props: {
             <MessageCircleIcon className="size-4" aria-hidden />
             {t("post.comments", { count: post.commentCount })}
           </button>
-          {share && isShareable(post) ? (
-            <button
-              type="button"
-              aria-haspopup="dialog"
-              onClick={() => share(post)}
-              aria-label={post.shareCount > 0 ? t("post.shareCounted", { count: post.shareCount }) : undefined}
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-md px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:shadow-focus"
-            >
-              <Repeat2Icon className="size-4" aria-hidden />
-              {t("post.share")}
-              {post.shareCount > 0 ? <span className="tabular-nums" aria-hidden>· {post.shareCount}</span> : null}
-            </button>
-          ) : null}
+          {post.moderation === "published" ? <PostShareButton key={post.id} post={post} /> : null}
           {post.visibility === "root" ? (
             <span className="ml-auto inline-flex items-center gap-1 rounded-[var(--radius-xs)] bg-tag-diaspora px-2 py-1 text-[11px] font-semibold text-tag-diaspora-foreground">
               <GlobeIcon className="size-3.5" aria-hidden />

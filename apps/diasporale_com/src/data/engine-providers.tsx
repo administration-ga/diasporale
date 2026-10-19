@@ -1,19 +1,20 @@
 "use client"
 
 /**
- * Le branchement de diasporale.com sur le moteur ANTIA (PD2) : client Convex du
+ * Le branchement de diasporale.com sur le moteur ANTSIA (PD2) : client Convex du
  * moteur, session Better Auth par le proxy `/api/auth/*` de cette origine,
  * création de la personne à la première session (`ensureMyPerson`, rien n'est
  * recopié ni publié), puis la source de données « moteur » pour tout l'arbre.
  */
-import type { RefreshableCrossDomainAuthClient } from "@antia/api/cross-domain-session-bootstrap"
-import { EngineConvexProvider } from "@antia/api/next-provider"
+import type { RefreshableCrossDomainAuthClient } from "@antsia/api/cross-domain-session-bootstrap"
+import { EngineConvexProvider } from "@antsia/api/next-provider"
 import { api } from "@convex/_generated/api"
 import { DataSourceProvider } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { useConvex } from "convex/react"
 import { type ReactNode, useState } from "react"
 
+import { EngineIcom } from "@/components/icom"
 import { authClient } from "@/lib/auth-client"
 import { publicEnv } from "@/lib/env"
 
@@ -43,9 +44,13 @@ export function EngineDataProviders(props: { children: ReactNode }) {
       convexUrl={publicEnv.convexUrl}
       authClient={authClient as unknown as RefreshableCrossDomainAuthClient}
       ensurePerson={api.modules.people.persons.ensureMyPerson}
+      isSessionActive={api.modules.platform.authentication.mySession}
       labels={{ loading: t("engine.sessionLoading"), failed: t("engine.sessionFailed"), retry: t("engine.sessionRetry") }}
     >
-      <EngineSource>{props.children}</EngineSource>
+      <EngineSource>
+        {/* iCom (PD7) : la couche de communication du moteur, montée une fois, à côté des pages. */}
+        <EngineIcom>{props.children}</EngineIcom>
+      </EngineSource>
     </EngineConvexProvider>
   )
 }

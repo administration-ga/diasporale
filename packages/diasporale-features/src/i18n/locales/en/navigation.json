@@ -1,0 +1,62 @@
+{
+  "nav": {
+    "explore": "Explore",
+    "services": "Services",
+    "communities": "Communities",
+    "myRequests": "My requests",
+    "myActivity": "My activity",
+    "myAssociations": "My associations",
+    "myData": "My data",
+    "personal": "My space",
+    "account": {
+      "open": "Account menu ({{name}})",
+      "title": "My account",
+      "description": "Your profile, your settings and your personal spaces.",
+      "close": "Close the account menu"
+    },
+    "publish": {
+      "suspendedHint": "Posting is unavailable while the account is suspended",
+      "suspendedBody": "You'll be able to post again when the suspension ends. Decisions and appeals are in “My data”.",
+      "close": "Close the explanation"
+    },
+    "zone": {
+      "title": "Area you're viewing: {{country}}",
+      "body": "Your country of residence doesn't change: {{home}}.",
+      "back": "Back to my country"
+    },
+    "myApplications": "My applications",
+    "myMentoring": "My mentoring",
+    "community": {
+      "label": "Community life in the country",
+      "mutualAid": "Mutual aid",
+      "arrivalKit": "Arrival kit",
+      "mentoring": "Mentoring",
+      "jobs": "Jobs"
+    },
+    "moderation": "Moderation"
+  },
+  "explore": {
+    "title": "Explore",
+    "lead": "Find members, pages and communities across the whole network.",
+    "membersBody": "Search among the members who chose to appear in the directory. Contact goes through messaging.",
+    "membersAction": "Search for a member",
+    "servicesBody": "Hairdressing, translation, photography, help settling in: find a diaspora skill near you.",
+    "servicesAction": "Browse services",
+    "countriesTitle": "Open countries",
+    "countriesLead": "Each hub brings together a country's news, events, associations and companies.",
+    "countriesEmptyTitle": "No country is open yet.",
+    "countriesEmptyBody": "A country opens with two relay associations and one moderator. Your country's hub can already be read.",
+    "countriesErrorTitle": "The list of countries is unavailable.",
+    "countriesErrorBody": "Check your connection and reload the page to try again.",
+    "reload": "Reload the page",
+    "myCommunity": "See my community",
+    "mutualAidBody": "Ask a practical question or offer your help, and find volunteer missions from associations.",
+    "mutualAidAction": "Open mutual aid",
+    "arrivalKitBody": "Paperwork, housing, health, transport: dated, sourced and reviewed resources, city by city.",
+    "arrivalKitAction": "Browse the arrival kit",
+    "mentoringBody": "Volunteer members share their experience of studying, working or settling in.",
+    "mentoringAction": "Find a mentor",
+    "jobsBody": "Job offers published by diaspora companies and associations, and the talents who chose to be visible.",
+    "jobsAction": "See job offers"
+  }
+}

@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { BookmarkCheckIcon, BookmarkIcon, EyeOffIcon, FlagIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon, VolumeXIcon, type LucideIcon } from "lucide-react"
+import { BookmarkCheckIcon, BookmarkIcon, EyeOffIcon, FlagIcon, InfoIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon, VolumeXIcon, type LucideIcon } from "lucide-react"
 import { DropdownMenu } from "radix-ui"
 import { useId, useState, type ReactNode } from "react"
 import { Controller, useForm } from "react-hook-form"
@@ -11,6 +11,7 @@ import { z } from "zod"
 import { useActions } from "../data/context"
 import { REPORT_NOTE_MAX, REPORT_REASONS, type PostView } from "../data/types"
 import { POST_BODY_MAX } from "./composer"
+import { PostExplanationSheet } from "./post-explanation"
 import { useDiasporaleT } from "../i18n/client"
 import { cn } from "../lib/cn"
 import { Button } from "../primitives/button"
@@ -22,10 +23,13 @@ import { Sheet, SheetContent } from "../primitives/sheet"
  * Le menu « … » d'une publication (EXF-DG-12) : l'enregistrer, la masquer pour
  * soi, mettre son auteur en sourdine, la signaler — ou retirer la sienne. Tout
  * est privé : l'auteur n'apprend ni le signet, ni le masquage, ni la sourdine.
+ * « Pourquoi cette publication ? » dit, pour celle d'autrui, pourquoi elle est là
+ * (DG-019).
  */
 export function PostMenu(props: { post: PostView }) {
   const { t } = useDiasporaleT()
   const actions = useActions()
+  const [explaining, setExplaining] = useState(false)
   const [reporting, setReporting] = useState(false)
   const [removing, setRemoving] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -73,6 +77,9 @@ export function PostMenu(props: { post: PostView }) {
               </>
             ) : (
               <>
+                <MenuItem icon={InfoIcon} onSelect={() => setExplaining(true)}>
+                  {t("postWhy.menu")}
+                </MenuItem>
                 <MenuItem icon={EyeOffIcon} onSelect={hide}>
                   {t("postMenu.hide")}
                 </MenuItem>
@@ -95,7 +102,10 @@ export function PostMenu(props: { post: PostView }) {
           <RemovePostSheet postId={post.id} open={removing} onOpenChange={setRemoving} />
         </>
       ) : (
-        <ReportPostSheet postId={post.id} open={reporting} onOpenChange={setReporting} />
+        <>
+          <PostExplanationSheet post={post} open={explaining} onOpenChange={setExplaining} />
+          <ReportPostSheet postId={post.id} open={reporting} onOpenChange={setReporting} />
+        </>
       )}
     </>
   )

@@ -1,7 +1,7 @@
 /*
- * Couche Tailwind v4 PROPRE à DIASPORALE — à importer APRÈS `@antia/ui/styles.css`
+ * Couche Tailwind v4 PROPRE à DIASPORALE — à importer APRÈS `@antsia/ui/styles.css`
  * (qui relie déjà polices, famille shadcn, rayons, variante sombre et base du
- * moteur), le thème `@antia/ui/themes/diasporale.css` et `extras.css`.
+ * moteur), le thème `@antsia/ui/themes/diasporale.css` et `extras.css`.
  *
  * Ici seulement : les utilitaires des rôles propres (étiquette pays, badges,
  * tons des cartes flottantes, avatars), les reliefs nommés, le mouvement, et

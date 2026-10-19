@@ -23,7 +23,7 @@ describe("visibilité — network par défaut, root seulement par geste sur une 
     expect(DEFAULT_REACH).toBe("local")
   })
 
-  test("la case « aussi sur ANTIA » n'existe que pour l'audience publique", () => {
+  test("la case « aussi sur ANTSIA » n'existe que pour l'audience publique", () => {
     for (const audience of POST_AUDIENCES) {
       expect(canAlsoPublishOnRoot(audience)).toBe(audience === "public")
     }

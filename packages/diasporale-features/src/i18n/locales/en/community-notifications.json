@@ -1,0 +1,25 @@
+{
+  "bell": {
+    "system": {
+      "aid_answer_received": "An answer was published to your question.",
+      "aid_answer_retained": "Your answer was selected.",
+      "aid_mission_signup": "Someone signed up for a mission of your page.",
+      "mentoring_request_received": "You received a mentoring request.",
+      "mentoring_request_accepted": "Your mentoring request was accepted.",
+      "mentoring_request_declined": "Your mentoring request was not accepted.",
+      "mentoring_closed": "A mentorship was closed.",
+      "job_application_received": "An application arrived for one of your page’s job offers.",
+      "job_application_shortlisted": "Your application was shortlisted.",
+      "job_application_not_selected": "Your application was not selected.",
+      "kit_resource_reviewed": "Your arrival kit resource was reviewed."
+    },
+    "communityLink": {
+      "aidQuestion": "See the question",
+      "aidMission": "See the mission",
+      "mentoringRequest": "See my mentoring",
+      "jobApplicationTeam": "See applications",
+      "jobApplicationCandidate": "See my applications",
+      "kitResource": "See the resource"
+    }
+  }
+}

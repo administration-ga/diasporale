@@ -1,0 +1,297 @@
+{
+  "mentoring": {
+    "meta": {
+      "search": "Mentoring",
+      "profile": "A mentor",
+      "mine": "My mentoring"
+    },
+    "unavailableTitle": "Mentoring unavailable",
+    "unavailableBody": "Mentoring is not available right now. Please try again later.",
+    "volunteer": "Mentoring is voluntary: no fee, no payment. No contact details are shown: once your request is accepted, you talk through messaging.",
+    "card": {
+      "languages": "Languages: {{languages}}",
+      "full": "Full for now",
+      "open": "View {{name}}'s profile"
+    },
+    "status": {
+      "sent": "Awaiting reply",
+      "accepted": "Mentoring under way",
+      "declined": "Declined by the mentor",
+      "cancelled": "Withdrawn",
+      "expired": "Expired without reply",
+      "closed": "Mentoring ended"
+    },
+    "state": {
+      "active": "Active",
+      "paused": "Paused",
+      "retired": "Withdrawn"
+    },
+    "closedBy": {
+      "mentee": "Ended by the mentee.",
+      "mentor": "Ended by the mentor.",
+      "system": "Ended automatically."
+    },
+    "time": {
+      "inZone": "{{slot}} ({{zone}})",
+      "yours": "That is {{slot}} your time ({{zone}})"
+    },
+    "list": {
+      "retry": "Try again",
+      "loadMore": "Show more",
+      "loadingMore": "Loading…"
+    },
+    "sheet": {
+      "close": "Close",
+      "back": "Back",
+      "working": "Sending…"
+    },
+    "slot": {
+      "zoneHint": "Times in your time zone: {{zone}}.",
+      "date": "Date",
+      "start": "From",
+      "end": "To",
+      "cta": "Suggest a time",
+      "update": "Change the time",
+      "title": "Suggest a time",
+      "description": "{{name}} will see this time in their request; you can discuss it through messaging.",
+      "confirm": "Suggest this time",
+      "done": "Time suggested."
+    },
+    "accept": {
+      "cta": "Accept",
+      "title": "Accept this request",
+      "description": "You will mentor {{name}} on a voluntary basis. Pick one of the wished times, or suggest one later.",
+      "choice": "Chosen time",
+      "noSlot": "No time for now",
+      "confirm": "Accept the request",
+      "done": "Request accepted."
+    },
+    "decline": {
+      "cta": "Decline",
+      "title": "Decline this request",
+      "description": "{{name}} will know you cannot mentor them.",
+      "confirm": "Decline the request",
+      "done": "Request declined."
+    },
+    "cancel": {
+      "cta": "Withdraw my request",
+      "title": "Withdraw my request",
+      "description": "The mentor will no longer be able to reply.",
+      "confirm": "Withdraw the request",
+      "done": "Request withdrawn."
+    },
+    "close": {
+      "cta": "End the mentoring",
+      "title": "End this mentoring",
+      "description": "The mentoring with {{name}} ends; the mentor's place is freed.",
+      "confirm": "End the mentoring",
+      "done": "Mentoring ended."
+    },
+    "reason": {
+      "label": "Reason (optional)",
+      "hint": "No phone number, email address or exact address."
+    },
+    "retire": {
+      "title": "Withdraw my mentor profile",
+      "description": "You will no longer be shown as a mentor. Your pending requests will be declined and your ongoing mentoring ended. You can become a mentor again at any time.",
+      "confirm": "Withdraw my profile",
+      "done": "Mentor profile withdrawn."
+    },
+    "next": {
+      "deadline": "Reply expected before {{date}}",
+      "slot": "Suggested time: {{slot}} ({{zone}})",
+      "accepted": "Mentoring under way: talk through messaging.",
+      "updated": "Updated on {{date}}"
+    },
+    "party": {
+      "unknown": "Member with a withdrawn profile"
+    },
+    "requestCard": {
+      "withMentor": "With {{name}} · {{domain}}",
+      "fromMentee": "From {{name}} · {{domain}}",
+      "show": "Show details",
+      "hide": "Hide details"
+    },
+    "detail": {
+      "notFound": "This request is no longer available.",
+      "message": "Message",
+      "wishedSlots": "Wished times",
+      "noWishedSlots": "No wished time: to be agreed through messaging.",
+      "slot": "Time suggested by the mentor",
+      "contact": "Talk through messaging: no contact details are shared here.",
+      "reason": "Reason"
+    },
+    "moderation": {
+      "profileRemoved": "Your mentor profile was removed by the moderation team: members no longer see it and it can no longer be edited.",
+      "requestRemoved": "Removed by the moderation team: the mentor no longer sees this request."
+    },
+    "mine": {
+      "title": "My mentoring",
+      "lead": "Your mentoring requests and, if you are a mentor, the ones you receive.",
+      "tabsLabel": "My mentoring sections",
+      "tabRequests": "My requests",
+      "tabProfile": "My mentor profile",
+      "sentTitle": "Requests sent",
+      "sentEmptyTitle": "No request sent",
+      "sentEmptyBody": "Find a volunteer mentor in your country and ask them for mentoring.",
+      "browse": "Find a mentor",
+      "receivedTitle": "Requests received",
+      "filterLabel": "Show received requests",
+      "filterSent": "Pending",
+      "filterAccepted": "Under way",
+      "filterAll": "All",
+      "receivedEmptyTitle": "No request here",
+      "receivedEmptyBody": "Requests you receive as a mentor will appear here."
+    },
+    "search": {
+      "title": "Mentoring",
+      "lead": "Diaspora members help you settle in, on a voluntary basis: housing, studies, work, family and paperwork.",
+      "myMentoring": "My mentoring",
+      "label": "Find a mentor",
+      "country": "Country",
+      "domain": "Area of help",
+      "anyDomain": "All areas",
+      "submit": "Search",
+      "results": "Mentors: {{country}}",
+      "resultsLabel": "Mentors found",
+      "emptyTitle": "No mentor yet",
+      "emptyBody": "No active mentor here yet ({{country}}). Come back soon, or become a mentor yourself.",
+      "emptyDomain": "No active mentor in this area ({{country}}). Try all areas."
+    },
+    "become": {
+      "cta": "Become a mentor",
+      "title": "Become a mentor",
+      "description": "Offer your help, on a voluntary basis, to members arriving in your country. You choose your areas, your languages and how many people you mentor; you can pause or withdraw at any time.",
+      "again": "You withdrew your mentor profile. You can become a mentor again at any time, with a new agreement.",
+      "statusInsufficient": "Your membership must be declared to become a mentor."
+    },
+    "form": {
+      "domains": "Areas of help",
+      "domainsHint": "At least one area.",
+      "presentation": "Introduction",
+      "presentationHint": "{{min}} to {{max}} characters, no phone number, email address or exact address.",
+      "languages": "Languages",
+      "languagesHint": "Up to {{max}} languages.",
+      "country": "Country where you help",
+      "countryHint": "The country of your mentoring is visible to members.",
+      "city": "City (optional)",
+      "cityHint": "Shown according to the visibility of the city on your diaspora profile.",
+      "availability": "Availability",
+      "availabilityHint": "For example: weekday evenings.",
+      "capacity": "People mentored at the same time",
+      "capacityHint": "Beyond this, you no longer receive new requests.",
+      "reminder": "Mentoring is voluntary: no fee. Do not give any contact details here; contact goes through messaging.",
+      "consent": "I choose to appear as a mentor to network members, with my published name, my areas and my country. I can withdraw at any time.",
+      "create": "Become a mentor",
+      "save": "Save",
+      "saving": "Saving…",
+      "created": "You are now a mentor, thank you!",
+      "saved": "Mentor profile saved."
+    },
+    "panel": {
+      "title": "My mentor profile",
+      "capacity_one": "{{count}} person mentored out of {{max}}",
+      "capacity_other": "{{count}} people mentored out of {{max}}",
+      "pending_one": "{{count}} request awaiting your reply",
+      "pending_other": "{{count}} requests awaiting your reply",
+      "pausedNote": "Profile paused: you no longer appear in search and receive no new requests.",
+      "domains": "Areas",
+      "languages": "Languages",
+      "place": "Place",
+      "cityCountry": "{{city}}, {{country}}",
+      "availability": "Availability",
+      "presentation": "Introduction",
+      "cityVisibility": "Your city is shown according to the visibility of the city on your diaspora profile (settings).",
+      "edit": "Edit",
+      "closeEdit": "Close editing",
+      "pause": "Pause",
+      "resume": "Resume",
+      "retire": "Withdraw my profile",
+      "viewPublic": "View my public profile",
+      "paused": "Mentor profile paused.",
+      "resumed": "Mentor profile resumed."
+    },
+    "profile": {
+      "back": "Back to mentoring",
+      "notFoundTitle": "Mentor not found",
+      "notFoundBody": "This profile does not exist, is paused or is not available to you.",
+      "title": "{{name}}, volunteer mentor",
+      "presentation": "Introduction",
+      "availability": "Availability",
+      "requestTitle": "Ask for mentoring",
+      "self": "This is your mentor profile, as members see it.",
+      "alreadyRequested": "You already have an open request with this mentor.",
+      "followRequests": "Follow my requests",
+      "full": "This mentor already mentors the number of people they chose. Come back later."
+    },
+    "request": {
+      "cta": "Ask for mentoring",
+      "statusInsufficient": "Your membership must be declared to ask for mentoring.",
+      "title": "Ask {{name}} for mentoring",
+      "description": "Your request waits for a reply for fourteen days at most. Once accepted, you talk through messaging.",
+      "domain": "Area",
+      "goal": "Your goal",
+      "goalHint": "In one sentence, {{min}} to {{max}} characters.",
+      "message": "Your message",
+      "messageHint": "Explain your situation in at least {{min}} characters, with no phone number, email address or exact address.",
+      "slots": "Wished times (optional, three at most)",
+      "slotsHint": "Times in your time zone: {{zone}}.",
+      "slot": "Time {{index}}",
+      "removeSlot": "Remove time {{index}}",
+      "addSlot": "Add a time",
+      "reminder": "No contact details here: once your request is accepted, you talk through messaging. Mentoring is voluntary.",
+      "consent": "I agree that {{name}} sees my published name, my goal and my message.",
+      "submit": "Send the request",
+      "sending": "Sending…",
+      "sent": "Request sent",
+      "sentBody": "{{name}} receives your request and will reply here, in “My mentoring”."
+    }
+  },
+  "errors": {
+    "mentor_consent_required": "Tick the box to confirm you choose to be a mentor.",
+    "mentor_domains_required": "Choose at least one area of help.",
+    "mentor_domain_invalid": "Choose an area from the list.",
+    "mentor_presentation_too_short": "Your introduction is too short.",
+    "mentor_presentation_too_long": "Your introduction is too long.",
+    "mentor_languages_required": "Choose at least one language.",
+    "mentor_language_invalid": "Choose a language from the list.",
+    "mentor_languages_too_many": "You chose too many languages.",
+    "mentor_country_invalid": "Choose a diaspora country of residence.",
+    "mentor_city_invalid": "Enter a city on one line, without an address.",
+    "mentor_availability_too_short": "Enter your availability.",
+    "mentor_availability_too_long": "Your availability is too long.",
+    "mentor_capacity_invalid": "Choose between one and ten people to mentor.",
+    "mentor_capacity_below_active": "You already mentor more people: end a mentoring first.",
+    "mentor_profile_exists": "You are already a mentor: edit your profile from “My mentoring”.",
+    "mentor_profile_retired": "Your mentor profile is withdrawn: become a mentor again to edit it.",
+    "mentor_profile_version_changed": "Your profile changed in the meantime. Reload the page.",
+    "mentoring_contact_forbidden": "Remove the phone number or email address: contact goes through messaging.",
+    "mentoring_address_forbidden": "Remove the exact address: only give a city or neighbourhood.",
+    "mentoring_consent_required": "Tick the box to agree that the mentor sees your name and message.",
+    "mentoring_domain_not_offered": "This mentor does not help in this area.",
+    "mentoring_goal_too_short": "Describe your goal in a few words.",
+    "mentoring_goal_too_long": "Your goal is too long: one sentence is enough.",
+    "mentoring_message_too_short": "Your message is too short.",
+    "mentoring_message_too_long": "Your message is too long.",
+    "mentoring_slots_too_many": "Three times at most.",
+    "mentoring_slot_invalid": "This time is not valid: check its start and end.",
+    "mentoring_slot_past": "This time has already passed.",
+    "mentoring_slot_too_far": "This time is too far ahead.",
+    "mentoring_time_invalid": "Invalid date or time.",
+    "mentoring_time_nonexistent": "This time does not exist that day (clocks go forward).",
+    "mentoring_time_ambiguous": "This time occurs twice that day (clocks go back): choose another one.",
+    "mentoring_time_zone_invalid": "Unknown time zone.",
+    "mentoring_self_request": "You cannot be your own mentor.",
+    "mentoring_pair_open": "You already have an open request with this mentor.",
+    "mentoring_mentee_limit": "You already have several pending requests: wait for a reply or withdraw one.",
+    "mentoring_mentor_full": "This mentor is not taking new requests right now.",
+    "mentoring_idempotency_conflict": "This request changed since it was first sent. Check it, then send it again.",
+    "mentoring_request_expired": "This request expired without a reply.",
+    "mentoring_request_closed": "This request is closed.",
+    "mentoring_request_not_open": "This action is no longer possible for this request.",
+    "mentoring_action_forbidden": "This action is not yours to take.",
+    "mentoring_capacity_reached": "You already mentor the number of people you chose: end a mentoring or raise your limit.",
+    "mentoring_slot_version_changed": "The time changed in the meantime. Reload the request.",
+    "mentoring_reason_too_long": "The reason is too long."
+  }
+}

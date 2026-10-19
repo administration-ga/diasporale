@@ -1,6 +1,6 @@
 "use client"
 
-import { splitBodyRich } from "@antia/social-domain/richText"
+import { splitBodyRich } from "@antsia/social-domain/richText"
 import { Fragment, type ReactNode } from "react"
 
 import { useRouting } from "../routing"
@@ -8,7 +8,7 @@ import { useRouting } from "../routing"
 export type RichPart =
   | { readonly kind: "text"; readonly text: string }
   | { readonly kind: "mention"; readonly handle: string; readonly text: string }
-  | { readonly kind: "tag"; readonly text: string }
+  | { readonly kind: "tag"; readonly tag: string; readonly text: string }
 
 /**
  * Longueur, dans le texte d'origine, du jeton qui suit le « # » ou le « @ » : le
@@ -37,14 +37,15 @@ export function richParts(text: string): RichPart[] {
     const end = cursor + 1 + originalLength(text, cursor + 1, segment.value)
     const original = text.slice(cursor, end)
     cursor = end
-    return segment.type === "mention" ? { kind: "mention", handle: segment.value, text: original } : { kind: "tag", text: original }
+    return segment.type === "mention" ? { kind: "mention", handle: segment.value, text: original } : { kind: "tag", tag: segment.value, text: original }
   })
 }
 
 /**
  * Le corps d'une publication ou d'un commentaire : les mentions mènent au profil
  * (le moteur, lui, n'avise que les personnes réellement joignables) ; les
- * mots-dièse sont mis en valeur. Aucun HTML n'est interprété.
+ * mots-dièse mènent au même fil autorisé, filtré par leur jeton canonique.
+ * Aucun HTML n'est interprété.
  */
 export function RichText(props: { text: string }): ReactNode {
   const { routes, Link } = useRouting()
@@ -58,9 +59,9 @@ export function RichText(props: { text: string }): ReactNode {
     }
     if (part.kind === "tag") {
       return (
-        <span key={index} className="font-medium text-[var(--esp-accent-deep)]">
+        <Link key={index} href={routes.feed(part.tag)} className="font-medium text-[var(--esp-accent-deep)] hover:underline focus-visible:shadow-focus">
           {part.text}
-        </span>
+        </Link>
       )
     }
     return <Fragment key={index}>{part.text}</Fragment>

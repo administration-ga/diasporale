@@ -1,7 +1,7 @@
-// Preset Next partagé du moteur (@antia/eslint-config/next : Next officiel, jsx-a11y,
+// Preset Next partagé du moteur (@antsia/eslint-config/next : Next officiel, jsx-a11y,
 // imports inter-produits interdits), resserré pour DIASPORALE : `any` et l'autofocus
 // sont des erreurs, pas des avertissements.
-import next from "@antia/eslint-config/next"
+import next from "@antsia/eslint-config/next"
 import { defineConfig } from "eslint/config"
 
 export default defineConfig([

@@ -1,0 +1,12 @@
+{
+  "pageReviews": {
+    "tab": "Reviews",
+    "title": "Reviews of this page’s services",
+    "lead": "These reviews concern services from this page and are linked to an appointment. The displayed evidence specifies what was confirmed.",
+    "manageLead": "Read published reviews of your page’s services and reply on behalf of the organisation.",
+    "empty": "There are no published, accessible reviews for this page.",
+    "openOffer": "View the service “{{title}}”",
+    "unavailableTitle": "Page reviews unavailable",
+    "unavailableBody": "Reviews of this page’s services are currently unavailable here."
+  }
+}

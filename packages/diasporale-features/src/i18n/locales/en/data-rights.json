@@ -1,0 +1,131 @@
+{
+  "settings": {
+    "dataRights": {
+      "lead": "Export the data of your ANTSIA account, shared by all its networks, request its erasure and review the moderation decisions that concern you. These remain available if your membership is suspended.",
+      "unavailable": "These actions are not available here yet.",
+      "loading": "Loading…",
+      "export": {
+        "title": "Export my data",
+        "lead": "The JSON file gathers what your ANTSIA account holds about you across all its networks: profile, memberships, consents, posts, sent messages… It contains only your own data, never anyone else's. It is assembled in this browser, then saved to your device.",
+        "preparing": "Preparing the file…",
+        "progress": "Step {{done}} of {{total}}",
+        "progressLabel": "Export progress",
+        "stop": "Stop",
+        "last": "Last export prepared on {{date}}."
+      },
+      "erasure": {
+        "title": "Account erasure",
+        "lead": "Erasure covers your whole ANTSIA account and all its networks, DIASPORALE included.",
+        "loadError": "The status of your erasure request could not be read.",
+        "scope": "The request covers your whole ANTSIA account, across all its networks, not just DIASPORALE.",
+        "grace": "Nothing is erased right away: erasure will start in {{days}} days, on {{date}}. Until then, you can cancel your request from this page.",
+        "final": "When the time comes, all your sessions will be closed; erasure can no longer be cancelled and nothing can be restored.",
+        "leaveInstead": "To only leave DIASPORALE and keep your account, choose “Leave DIASPORALE” instead.",
+        "exportFirst": "To keep a copy of your data, download it before confirming.",
+        "confirm": "Request erasure",
+        "requested": "Request recorded: erasure will start on {{date}}.",
+        "pending": "Erasure requested on {{requested}}. It will start on {{due}}.",
+        "daysLeft_one": "You have {{count}} day left to cancel.",
+        "daysLeft_other": "You have {{count}} days left to cancel.",
+        "cancel": "Cancel my erasure request",
+        "cancelled": "Request cancelled: your account is kept.",
+        "processing": "Your account is being erased. This can no longer be cancelled; your sessions will be closed."
+      },
+      "decisions": {
+        "title": "Moderation decisions",
+        "lead": "Decisions taken on your content or your account, across all the networks of your ANTSIA account, their reasons and your appeals. People who reported are never named.",
+        "loadError": "Decisions could not be loaded.",
+        "empty": "No moderation decision concerns you.",
+        "emptyPage": "No other decision.",
+        "previous": "Previous decisions",
+        "next": "Next decisions",
+        "page": "Page {{number}}",
+        "network": "Network: {{name}}",
+        "otherNetwork": "another network of your account",
+        "openedAt": "Case opened on {{date}}",
+        "ground": "Report reason: {{ground}}",
+        "preReview": "Review before publication",
+        "unspecified": "Unspecified reason",
+        "decisionReason": "Decision reason: “{{reason}}”",
+        "sanctionsLabel": "Measures taken",
+        "sanctionUntil": "Ends: {{date}}",
+        "sanctionReason": "Reason: “{{reason}}”",
+        "appealsLabel": "Appeals",
+        "appealLine": "{{level}}: {{status}}",
+        "appealAnswer": "Answer: “{{reason}}”",
+        "appeal": "Appeal this decision",
+        "appealReason": "Why are you appealing this decision?",
+        "appealReasonHint": "Between {{min}} and {{max}} characters. Your reason will be read by the team reviewing the appeal.",
+        "appealSubmit": "Send the appeal",
+        "appealSent": "Appeal sent: its answer will appear here.",
+        "appealExists": "An appeal is already recorded for this decision.",
+        "surface": {
+          "post": "Post",
+          "comment": "Comment",
+          "groupMessage": "Group message",
+          "event": "Event",
+          "page": "Page",
+          "person": "Account",
+          "live": "Live",
+          "story": "Story",
+          "album": "Album",
+          "serviceReview": "Service review",
+          "serviceReviewReply": "Reply to a review",
+          "commerceOffer": "Shop offer",
+          "commercialMessage": "Commercial message",
+          "contextualMessage": "Message in a connection",
+          "commerceJob": "Shop job offer",
+          "diasporaAidQuestion": "Mutual-aid question",
+          "diasporaAidAnswer": "Mutual-aid answer",
+          "diasporaAidMission": "Volunteer mission",
+          "diasporaMentorProfile": "Mentor profile",
+          "diasporaMentoringRequest": "Mentoring request",
+          "diasporaKitResource": "Arrival kit resource",
+          "diasporaJobOffer": "Diaspora job offer",
+          "diasporaTalentProfile": "Talent profile",
+          "diasporaJobApplication": "Job application"
+        },
+        "status": {
+          "open": "Awaiting review",
+          "reviewing": "Under review",
+          "dismissed": "Dismissed",
+          "actioned": "Measure taken"
+        },
+        "sanction": {
+          "warning": "Warning",
+          "removal": "Content removal",
+          "mute": "Mute",
+          "suspension": "Suspension",
+          "exclusion": "Exclusion"
+        },
+        "sanctionStatus": {
+          "active": "In force",
+          "expired": "Ended",
+          "revoked": "Lifted"
+        },
+        "appealLevel": {
+          "network": "Appeal to the network administration",
+          "platform": "Appeal to the ANTSIA platform team"
+        },
+        "appealHint": {
+          "network": "Your appeal will be reviewed by the network administration, by someone other than the person who decided.",
+          "platform": "Your appeal will be reviewed by the ANTSIA platform team, by someone other than the person who decided."
+        },
+        "appealStatus": {
+          "open": "under review",
+          "upheld": "decision upheld",
+          "overturned": "decision overturned"
+        }
+      }
+    }
+  },
+  "errors": {
+    "erasure_not_cancellable": "The cancellation period has passed: erasure can no longer be cancelled.",
+    "export_unavailable": "Export is temporarily unavailable. Please try again later.",
+    "export_expired": "This export is no longer available: request a new one.",
+    "export_interrupted": "Assembling the file was interrupted; no file was saved. Please try again.",
+    "export_cancelled": "Export stopped: no file was saved.",
+    "export_download_failed": "This browser could not save the file.",
+    "appeal_reason_length": "The appeal reason must be between {{min}} and {{max}} characters."
+  }
+}

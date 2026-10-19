@@ -1,0 +1,44 @@
+{
+  "contentReports": {
+    "action": {
+      "diasporaAidQuestion": "Report the question",
+      "diasporaAidAnswer": "Report the answer",
+      "diasporaAidMission": "Report the mission",
+      "diasporaMentorProfile": "Report this mentor profile",
+      "diasporaMentoringRequest": "Report the request",
+      "diasporaKitResource": "Report abuse",
+      "diasporaJobOffer": "Report the offer",
+      "diasporaTalentProfile": "Report the profile",
+      "diasporaJobApplication": "Report the application"
+    },
+    "title": {
+      "diasporaAidQuestion": "Report this question",
+      "diasporaAidAnswer": "Report this answer",
+      "diasporaAidMission": "Report this volunteer mission",
+      "diasporaMentorProfile": "Report this mentor profile",
+      "diasporaMentoringRequest": "Report this mentoring request",
+      "diasporaKitResource": "Report abuse or false information",
+      "diasporaJobOffer": "Report this job offer",
+      "diasporaTalentProfile": "Report this talent profile",
+      "diasporaJobApplication": "Report this application"
+    },
+    "description": "Choose a reason. The content is hidden for you right away and the network's moderation team reviews it. Its author doesn't learn who reported it.",
+    "descriptionDemo": "Choose a reason. The content is hidden for you right away, in this browser.",
+    "demoNotice": "Demonstration: nothing is sent. The content is only hidden for you, in this browser.",
+    "reasonLegend": "Reason for the report",
+    "kitHint": "Information that is simply out of date is reported separately, as outdated information. This report is for abuse or false information.",
+    "confirm": "Confirm the report",
+    "sent": "Report sent: the content is hidden for you.",
+    "sentDemo": "Demonstration: report noted in this browser, nothing is sent. The content is hidden for you.",
+    "already": "You had already reported this content: it stays hidden for you.",
+    "masked": {
+      "title": "Reported content",
+      "body": "You reported this content: it is hidden for you while the moderation team reviews it.",
+      "bodyDemo": "Demonstration: you reported this content, it is hidden for you in this browser. Nothing was sent."
+    }
+  },
+  "errors": {
+    "content_report_target_invalid": "This content can't be reported here.",
+    "content_report_unavailable": "Reporting isn't possible right now (a restriction applies or a limit was reached). Try again later."
+  }
+}

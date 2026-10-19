@@ -1,0 +1,18 @@
+{
+  "pagePublications": {
+    "publishAs": "Publish as {{name}}",
+    "composeTitle": "Page post",
+    "composeDescription": "Write a post on behalf of {{name}}.",
+    "identity": "You are posting as {{name}}",
+    "networkNotice": "This post follows the page’s visibility rules in DIASPORALE.",
+    "placeholder": "What’s new with {{name}}?",
+    "followersAudience": "Followers of this page only",
+    "noCountry": "To post in a country, first add the page’s country in its settings.",
+    "sent": "Post submitted as {{name}}.",
+    "remove": "Remove from page",
+    "removeTitle": "Remove this post?",
+    "removeDescription": "It will be removed from the page and the feeds where it appears. This removal applies to the whole page team.",
+    "removeConfirm": "Remove post",
+    "removed": "Post removed from the page."
+  }
+}

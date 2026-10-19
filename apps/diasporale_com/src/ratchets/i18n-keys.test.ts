@@ -23,6 +23,7 @@ import { DEMO_IDN_IDENTITIES } from "@diasporale/features/demo"
 import { SUPPORTED_LOCALES } from "@diasporale/features/i18n"
 import { describe, expect, it } from "vitest"
 
+import { LOT_FAMILIES } from "./i18n-families"
 import { productSources, readLocale } from "./sources"
 
 /**
@@ -91,11 +92,20 @@ const FAMILIES: string[] = [
   ...each(FACET_FIELDS, (field) => [`facet.field.${field}`]),
   ...each(FIELD_VISIBILITY_LEVELS, (level) => [`facet.visibility.${level}`]),
   ...each(DIRECTORY_VISIBILITY_LEVELS, (level) => [`settings.directoryLevel.${level}`]),
+  ...each(["published", "private", "withdrawn", "unpublished"] as const, (state) => [`settings.profilePublication.state.${state}`]),
+  ...each(["privacy", "withdraw", "republish"] as const, (command) => [`settings.profilePublication.saved.${command}`]),
+  ...each(["withdraw", "republish"] as const, (command) => [
+    `settings.profilePublication.confirm.${command}.title`,
+    `settings.profilePublication.confirm.${command}.body`,
+    `settings.profilePublication.confirm.${command}.confirm`,
+  ]),
   ...each(["notice", "privacy"] as const, (kind) => [
     `legal.${kind}.title`,
     ...range(4).flatMap((section) => [`legal.${kind}.section${section}.title`, `legal.${kind}.section${section}.body`]),
   ]),
   ...[...ERROR_CODES].map((errorCode) => `errors.${errorCode}`),
+  // Les familles des chantiers du plan global (`./i18n-families/<chantier>.ts`).
+  ...LOT_FAMILIES,
 ]
 
 describe("cliquet i18n — clés", () => {

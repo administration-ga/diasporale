@@ -1,0 +1,25 @@
+{
+  "pagePinning": {
+    "section": "Annonce épinglée",
+    "loading": "Lecture de l’annonce épinglée…",
+    "errorTitle": "L’annonce épinglée n’a pas pu être lue",
+    "errorBody": "Les publications restent disponibles ci-dessous. Relisez l’annonce avant de modifier l’épingle.",
+    "retry": "Réessayer",
+    "pin": "Épingler",
+    "unpin": "Retirer l’épingle",
+    "pinTitle": "Épingler cette publication ?",
+    "unpinTitle": "Retirer l’épingle de cette publication ?",
+    "pinDescription": "Cette publication apparaîtra en tête du mur de la page pour les personnes qui peuvent la lire.",
+    "unpinDescription": "La publication restera sur le mur de la page. Seule son épingle sera retirée.",
+    "replaceWarning": "Une annonce est déjà épinglée. Cette publication la remplacera en tête du mur ; l’ancienne annonce restera publiée.",
+    "audienceKept": "L’audience de la publication reste la même. Ce geste ne la republie pas et n’envoie pas de notification.",
+    "confirmPin": "Confirmer l’épingle",
+    "confirmUnpin": "Confirmer le retrait",
+    "saved": "Épingle enregistrée",
+    "changedSinceOpening": "L’épingle a changé depuis l’ouverture. Fermez cette fenêtre puis rouvrez-la pour confirmer à partir de la nouvelle lecture.",
+    "readRequired": "La lecture de l’épingle doit être disponible avant de confirmer. Votre choix reste conservé dans cette fenêtre."
+  },
+  "errors": {
+    "page_pin_changed": "L’épingle a été modifiée entre-temps. Fermez cette fenêtre puis rouvrez-la pour consulter la version actuelle avant de confirmer."
+  }
+}

@@ -57,7 +57,8 @@ describe("couches de la charte — barres 40, feuilles 50, pile des avis 55, men
 
   it("la pile des avis se pose entre les feuilles et les menus", () => {
     const providers = readFileSync(new URL("components/providers.tsx", APP_SRC), "utf8")
-    expect(openingTag(providers, providers.indexOf("<Toaster"))).toMatch(/className="[^"]*!z-55\b/)
+    // La région des avis (`ToastRegion`) transmet ses propriétés au `Toaster` de sonner, monté dans son hôte.
+    expect(openingTag(providers, providers.indexOf("<ToastRegion"))).toMatch(/className="[^"]*!z-55\b/)
     const sheet = readFileSync(new URL("primitives/sheet.tsx", FEATURES_SRC), "utf8")
     // Le voile et le panneau de la feuille.
     expect(sheet.match(/\bz-50\b/g)).toHaveLength(2)

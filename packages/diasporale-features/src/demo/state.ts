@@ -8,6 +8,7 @@
  * aucune donnée consulaire. Les dates sont relatives au premier chargement,
  * pour que la démonstration reste vivante.
  */
+import { normalizeCivilName } from "@antsia/social-domain/civilName"
 import {
   DEFAULT_FACET_VISIBILITY,
   LIGHT_ACCOUNT_GROUNDS,
@@ -46,6 +47,9 @@ export interface DemoPerson {
   readonly local: { readonly kind: "email" | "phone"; readonly value: string } | null
   /** Profil social : n'existe qu'APRÈS l'onboarding (adhésion explicite, invariant 5). */
   readonly profile: { readonly handle: string; readonly displayName: string; readonly headline: string | null } | null
+  /** Absents dans les états v7 existants : profil publié et découvrable, sans migration destructive. */
+  readonly withdrawnAt?: number
+  readonly privateAt?: number
   readonly administrationLink: boolean
   readonly createdAt: number
   /** Compte de démonstration proposé au sélecteur (clé de description). */
@@ -133,6 +137,17 @@ export interface DemoMark {
   readonly postId: string
   readonly kind: "bookmark" | "hidden"
   readonly createdAt: number
+  /** Identité du choix masqué ; absente des instantanés v7 antérieurs. */
+  readonly choiceId?: string
+}
+
+/** Métadonnées des sourdines, sans modifier le tableau historique de paires. */
+export interface DemoMuteChoice {
+  readonly personId: string
+  readonly targetId: string
+  readonly choiceId: string
+  /** Zéro pour une paire héritée dont la date n'a jamais été enregistrée. */
+  readonly createdAt: number
 }
 
 /** Un signalement (EXF-DG-12) : la publication est aussitôt masquée pour la personne qui signale. */
@@ -155,6 +170,8 @@ export interface DemoComment {
   /** La racine à laquelle la réponse se rattache ; `null` pour une racine. */
   readonly parentId: string | null
   readonly removedAt: number | null
+  /** Absent sur les instantanés v7 existants ; renseigné seulement après une édition. */
+  readonly editedAt?: number
 }
 
 export interface DemoEvent {
@@ -211,6 +228,8 @@ export interface DemoState {
   readonly sponsorships: readonly DemoSponsorship[]
   readonly consents: readonly DemoConsent[]
   readonly pages: Readonly<Record<string, DemoPage>>
+  /** Choix collectif des pages ; absent dans les instantanés v7 antérieurs. */
+  readonly pagePinnedPosts?: Readonly<Record<string, string>>
   readonly posts: readonly DemoPost[]
   readonly events: readonly DemoEvent[]
   readonly connections: readonly (readonly [string, string])[]
@@ -223,6 +242,8 @@ export interface DemoState {
   readonly marks: readonly DemoMark[]
   /** Sourdines : [qui se tait, qui est tu]. */
   readonly mutes: readonly (readonly [string, string])[]
+  /** Facultatif pour relire les instantanés v7 sans remise à zéro. */
+  readonly muteChoices?: readonly DemoMuteChoice[]
   readonly reports: readonly DemoReport[]
   /** « Ne plus me proposer » : [qui écarte, qui est écarté]. */
   readonly suggestionDismissals: readonly (readonly [string, string])[]
@@ -244,9 +265,9 @@ const HOUR = 60 * 60 * 1000
 
 /** Identités IDN proposées par l'écran de connexion simulé (aucune n'existe). */
 export const DEMO_IDN_IDENTITIES = [
-  { key: "awa", firstName: "Awa", lastName: "Ogooué", loa: 2, gaboneseNationality: true },
-  { key: "yannick", firstName: "Yannick", lastName: "Nyanga", loa: 1, gaboneseNationality: true },
-  { key: "foreign", firstName: "Camille", lastName: "Martin", loa: 2, gaboneseNationality: false },
+  { key: "awa", firstName: "Awa", lastName: "OGOOUÉ", loa: 2, gaboneseNationality: true },
+  { key: "yannick", firstName: "Yannick", lastName: "NYANGA", loa: 1, gaboneseNationality: true },
+  { key: "foreign", firstName: "Camille", lastName: "MARTIN", loa: 2, gaboneseNationality: false },
 ] as const
 
 function member(
@@ -273,14 +294,13 @@ function person(
   handle: string,
   headline: string | null,
   createdAt: number,
-  options: { idnLoa?: number; administrationLink?: boolean; demoAccountKey?: string; email?: string } = {},
+  options: { idn?: { firstName: string; lastName: string; loa: number }; administrationLink?: boolean; demoAccountKey?: string; email?: string } = {},
 ): DemoPerson {
-  const [firstName = "", ...rest] = displayName.split(" ")
   return {
     id,
     idn:
-      options.idnLoa !== undefined
-        ? { sub: `idn-${id}`, loa: options.idnLoa, gaboneseNationality: true, firstName, lastName: rest.join(" ") }
+      options.idn !== undefined
+        ? { sub: `idn-${id}`, loa: options.idn.loa, gaboneseNationality: true, ...normalizeCivilName(options.idn) }
         : null,
     local: options.email !== undefined ? { kind: "email", value: options.email } : null,
     profile: { handle, displayName, headline },
@@ -298,21 +318,21 @@ export function createDemoSeed(now: number): DemoState {
       email: "mireille@example.com",
     }),
     "p-prisca": person("p-prisca", "Prisca Abanga", "prisca.abanga", "Étudiante en droit à Bordeaux", now - 160 * DAY, {
-      idnLoa: 2,
+      idn: { firstName: "Prisca", lastName: "ABANGA", loa: 2 },
       demoAccountKey: "demo.accounts.prisca",
     }),
     "p-steeve": person("p-steeve", "Steeve Ngounié", "steeve.ngounie", "Développeur à Lyon", now - 75 * DAY, {
-      idnLoa: 1,
+      idn: { firstName: "Steeve", lastName: "NGOUNIÉ", loa: 1 },
       demoAccountKey: "demo.accounts.steeve",
     }),
     "p-rodrigue": person("p-rodrigue", "Rodrigue Komo", "rodrigue.komo", "Ingénieur à Montréal", now - 40 * DAY, {
       email: "rodrigue@example.com",
     }),
     "p-nadia": person("p-nadia", "Nadia Mpassa", "nadia.mpassa", "Entrepreneuse à Bruxelles", now - 300 * DAY, {
-      idnLoa: 2,
+      idn: { firstName: "Nadia", lastName: "MPASSA", loa: 2 },
     }),
     "p-clarisse": person("p-clarisse", "Clarisse Mbéi", "clarisse.mbei", null, now - 210 * DAY, {
-      idnLoa: 3,
+      idn: { firstName: "Clarisse", lastName: "MBÉI", loa: 3 },
       administrationLink: true,
     }),
   }

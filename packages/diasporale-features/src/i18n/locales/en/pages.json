@@ -1,0 +1,51 @@
+{
+  "page": {
+    "follow": "Follow",
+    "unfollow": "Unfollow",
+    "followed": "You now follow {{name}}.",
+    "unfollowed": "You no longer follow {{name}}.",
+    "followNeedsStatus": "Following a page opens with a declared membership; you can already read everything.",
+    "followers_one": "{{count}} follower",
+    "followers_other": "{{count}} followers",
+    "postCount_one": "{{count}} post",
+    "postCount_other": "{{count}} posts",
+    "errorTitle": "This page could not be displayed.",
+    "retry": "Try again",
+    "morePosts": "Only the page's most recent posts are shown here.",
+    "kind": {
+      "media": "Media",
+      "community": "Community"
+    },
+    "directory": {
+      "title": "Pages on the network",
+      "lead": "Associations, companies, media and institutions present on DIASPORALE.",
+      "searchLabel": "Search for a page",
+      "searchPlaceholder": "Name, acronym or address of a page",
+      "searchHint": "Search starts at {{min}} characters; without a search, official and verified pages come first.",
+      "countryLabel": "Country of the pages",
+      "allCountries": "All countries",
+      "chooseCountry": "Choose a country",
+      "chooseCountryTitle": "Pages of a country",
+      "chooseCountryDescription": "Show only the pages declared in this country.",
+      "resultsLabel": "Pages found",
+      "count_one": "{{count}} page shown.",
+      "count_other": "{{count}} pages shown.",
+      "errorTitle": "The page directory could not be loaded.",
+      "retry": "Try again",
+      "emptyTitle": "No pages yet.",
+      "emptyBody": "Pages created by associations, companies and institutions will appear here.",
+      "noMatchTitle": "No page matches “{{query}}”.",
+      "noMatchBody": "Check the spelling, or search in all countries.",
+      "loadMore": "Show more",
+      "loadingMore": "Loading…",
+      "unavailable": "The page directory is not available here.",
+      "following": "Following"
+    }
+  },
+  "hub": {
+    "pagesError": "The pages of this country could not be loaded.",
+    "pagesRetry": "Try again",
+    "morePages": "All pages in the directory",
+    "pagesElsewhere": "Other pages of this country can be found in the page directory."
+  }
+}

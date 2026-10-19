@@ -2,23 +2,42 @@
 title: "DIASPORALE.COM — Plan d'implémentation en prompts"
 version: "1.0"
 date: "2026-10-14"
-statut: "Plan d'exécution — prompts Claude Code (Opus), à exécuter après ANTIA PA0–PA7"
+maj: "2026-10-18"
+statut: "Plan d'exécution — prompts Claude Code (Opus), à exécuter après ANTSIA PA0–PA7"
 projet: "DIASPORALE"
 reference: "NTSAGUI/DIASPORALE/PI/2026/001"
 dependances:
   - "ECOSYSTEMES/DIASPORALE/docs/00_CAHIER_DES_CHARGES_DIASPORALE.md (exigences EXF-DG / EXT-DG)"
-  - "ECOSYSTEMES/ANTIA/docs/01_PLAN_IMPLEMENTATION_PROMPTS_ANTIA.md (le moteur : PA0 → PA7 doivent être clos)"
-  - "Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTIA_2026-10-14.md"
+  - "ECOSYSTEMES/ANTSIA/docs/01_PLAN_IMPLEMENTATION_PROMPTS_ANTSIA.md (le moteur : PA0 → PA7 doivent être clos)"
+  - "Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTSIA_2026-10-14.md"
 ---
 
 # DIASPORALE.COM — Plan d'implémentation en prompts
 
 ## État d'avancement (tenu par la session de construction)
 
-> Session de construction ouverte le 14/10/2026 (Opus 5.5, effort maximal). Le moteur ANTIA
+État mis à jour le **18/10/2026** ; PD4 reste en cours.
+
+> **Suite pagination de l’agenda du 18/10** : [pages natives organisés/participations, événements à venir/historique](30_PAGINATION_AGENDA_PERSONNEL_DG023.md) raccordées au panneau commun et à `/agenda`, sans limite globale de deux cents sur ce nouveau parcours. Ancien aperçu borné conservé ; lecteur attendu, droits vivants, pages vides continuables, reprise et fournisseurs moteur/démo. Contrôles et commit applicatif toujours différés ; DG-023/PD7 restent ouverts.
+
+> **Plan global et relais Claude du 18/10** : la vague pages/associations/services possède ses premières sources raccordées ; Codex reprend les avis et réponses DG-016 après les demandes/rendez-vous laissés par Claude. Les contrôles et recettes de cette vague sont différés sur instruction du propriétaire. État détaillé et limites : [docs/18 — Exécution](18_EXECUTION_VAGUE_G.md), [docs/19 — Avis de services](19_REPRISE_CLAUDE_AVIS_SERVICES_DG016.md). Les anciens résultats ci-dessous ne couvrent pas ces ajouts.
+
+> **Suite associative du 18/10** : groupe privé thématique et événements sous identité d'association raccordés, entrée et inscriptions volontaires ; contrôles toujours différés. Le [rapport DG-010](21_GROUPES_EVENEMENTS_ASSOCIATIONS_DG010.md) précise les limites V1 et les recettes restant à jouer. PD5/PD7 restent ouverts.
+
+> **Suite capacité et liste d'attente du 18/10** : [DG-023](22_CAPACITES_LISTES_ATTENTE_EVENEMENTS_DG023.md) raccorde une capacité facultative, la file FIFO, les états personnels et l'attribution des places libérées. Scénarios écrits sans exécution ; PD7 et les extensions événementielles restent ouverts.
+
+> **Suite clôture et rappels du 18/10** : [dates limites et rappels personnels J-1](24_DATES_LIMITES_RAPPELS_EVENEMENTS_DG023.md) raccordés aux événements associatifs, fournisseurs et interface. Jobs durables par participation, opt-in et droits relus ; les contrôles, le codegen commun et les preuves de réception restent différés. Aucun cron global ajouté.
+
+> **Suite présences QR du 18/10** : [billets personnels temporaires et accueil par les responsables](27_PRESENCES_QR_EVENEMENTS_DG023.md) raccordés au détail associatif ; aperçu avant confirmation, relevé paginé et correction versionnée, fournisseurs moteur/démo. Contrôles/codegen/recettes toujours différés ; PD7 reste ouvert.
+
+> **Suite galerie du 18/10** : [galerie après événement](28_GALERIE_APRES_EVENEMENTS_DG023.md) raccordée au détail associatif, au composeur et à la visionneuse existants. Publication collective par les responsables après la fin, audience actuelle de l'événement, pagination et retrait ; fournisseurs moteur/démo. Sources sans contrôles ; iCal, convergence d'agenda et preuves de délivrance restent ouverts.
+
+> **Suite calendrier du 18/10** : [export iCal et agenda personnel](29_EXPORT_ICAL_AGENDA_ASSOCIATIF_DG023.md) raccordés en sources. `/agenda` réutilise le panneau du moteur avec inscriptions associatives explicites, états confirmé/attente/annulé et droits actuels ; export ponctuel sans inscription ni abonnement. Contrôles et imports dans les calendriers tiers restent différés ; DG-023/PD7 ne sont pas clôturés.
+
+> Session de construction ouverte le 14/10/2026 (Opus 5.5, effort maximal). Le moteur ANTSIA
 > se construit en parallèle : tant qu'il n'existe pas, DIASPORALE avance sur ce qui n'en
 > dépend pas (étapes a → e du prompt de lancement, `docs/02`), puis enchaîne PD0 → PD10
-> au fil des jalons d'ANTIA (PA2, PA3, PA7).
+> au fil des jalons d'ANTSIA (PA2, PA3, PA7).
 
 | Prompt | Clos le | Commit |
 |---|---|---|
@@ -27,12 +46,25 @@ dependances:
 | c) `apps/diasporale_com` sur fournisseur factice (R1 à blanc sur :3031) | 2026-10-14 | `f5aff56` |
 | d) `packages/diasporale-features` (C1–C17, CountrySwitch, badges, ModerationBanner, états vides) | 2026-10-14 | `b953739` |
 | e) Contrats côté gabon-diplomatie (PR brouillon) + fournisseur d'attestation factice | 2026-10-15 | PR brouillon administration-ga/gabon-diplomatie#184 (`7d01f215`) et #185 (`540d3c45`), non fusionnées ; fournisseur factice `b953739`, lecture stricte `bb76017` |
-| PD0 Câblage dans le moteur | en cours (15/10) | ANTIA `5535a63`, `97cec07` (installation), `2454aed` (catalogue) ; DIASPORALE `fa307c0`, `dffbe4b`, `fc8acef`, `1752d22` — reste `docker build` (disque de la machine) |
-| PD1 Domaine diaspora et réseau `diasporale` dans le moteur | 2026-10-15 | domaine `7c5575e`, `c622cb9`, `c067746` ; tranche ANTIA `22b0383` (tables), `7cfafdd` (fonctions) ; côté moteur, par ANTIA : `97cec07` (`managedBy`, aides d'admission, `failAppRule`, seaux), `bf1f46c` (schéma) — reste la ligne de `convex/crons.ts` (demandée à ANTIA) |
-| PD2 Entrer dans DIASPORALE (IDN, compte léger, handle, consentements) | partiel (15/10) | DIASPORALE `140a82c`, `a8ea1a9` ; tranche ANTIA `8176491`, `ecae28d` ; ANTIA `187adb6` (`isHandleAvailable`, proxy d'authentification commun) — R3 joué contre le moteur local ; reste R1 (IDN dans le moteur : PA4 d'ANTIA ; client OIDC sandbox `diasporale`) |
-| PD3 Attestation consulaire `DIASPORA-ATTESTATION-V1` | partiel (15/10) | gabon-diplomatie : PR brouillon #184 (étape e) ; domaine `77fa3ff`, `3fa4213` ; tranche ANTIA `ac2eca3`, `be59fcf` ; application `34fa44a` — reste la recette R2 réelle (clé de service et URL de consulat.ga sur un déploiement, après validation juridique ; empreinte d'adresse d'un compte léger : PA4) |
-| PD4 Fil, hub pays, profils et relations | en cours (15/10) | DIASPORALE `000b89d` (profils), `758f46d` (relations), `5c96109` (cloche), `1559188` (« Membres », annuaire opt-in), `492f4d0` (portée et pays, fil par voies, mur), `d5eb7a2` (commentaires), `aaaab80` (menu d'une publication), `03b8875` (suggestions ; publications de page), `53f8a48` (changement de hub mémorisé), `00002bf` (parité des surfaces, `docs/04`), `458d768` (publication seule, modification, signets), `892c7e5` (brouillon durable, mentions et mots-dièse — PR administration-ga/diasporale#1), médias du composeur (quatre photos ou une vidéo seule, texte alternatif, garde des fichiers — PR administration-ga/diasporale#5), partage cité et idempotence (PR administration-ga/diasporale#6) ; tranche ANTIA `010a5d8` (`memberFacet`, cloche), `759643b` (journal de la modération), `bce7185` (annuaire de la tranche), `21380c1` (suggestions) ; ANTIA `817a433` (annuaire générique refusé sur un réseau gouverné), `3069a61` (fil par voies), `9f4308b` (texte riche du moteur — PR administration-ga/antia#1) — reste stories (surface `@antia/social-features/stories`) et albums (surface du lot F2 d'ANTIA) à brancher, la recette Chrome complète |
-| PD5 → PD10 | — | — |
+| PD0 Câblage dans le moteur | en cours (15/10) | ANTSIA `5535a63`, `97cec07` (installation), `2454aed` (catalogue) ; DIASPORALE `fa307c0`, `dffbe4b`, `fc8acef`, `1752d22` — reste `docker build` (disque de la machine) |
+| PD1 Domaine diaspora et réseau `diasporale` dans le moteur | 2026-10-15 | domaine `7c5575e`, `c622cb9`, `c067746` ; tranche ANTSIA `22b0383` (tables), `7cfafdd` (fonctions) ; côté moteur, par ANTSIA : `97cec07` (`managedBy`, aides d'admission, `failAppRule`, seaux), `bf1f46c` (schéma) — reste la ligne de `convex/crons.ts` (demandée à ANTSIA) |
+| PD2 Entrer dans DIASPORALE (IDN, compte léger, handle, consentements) | partiel (15/10) | DIASPORALE `140a82c`, `a8ea1a9` ; tranche ANTSIA `8176491`, `ecae28d` ; ANTSIA `187adb6` (`isHandleAvailable`, proxy d'authentification commun) — R3 joué contre le moteur local ; reste R1 (IDN dans le moteur : PA4 d'ANTSIA ; client OIDC sandbox `diasporale`) |
+| PD3 Attestation consulaire `DIASPORA-ATTESTATION-V1` | partiel (15/10) | gabon-diplomatie : PR brouillon #184 (étape e) ; domaine `77fa3ff`, `3fa4213` ; tranche ANTSIA `ac2eca3`, `be59fcf` ; application `34fa44a` — reste la recette R2 réelle (clé de service et URL de consulat.ga sur un déploiement, après validation juridique ; empreinte d'adresse d'un compte léger : PA4) |
+| PD4 Fil, hub pays, profils et relations | en cours (17/10) | DIASPORALE `000b89d` (profils), `758f46d` (relations), `5c96109` (cloche), `1559188` (« Membres », annuaire opt-in), `492f4d0` (portée et pays, fil par voies, mur), `d5eb7a2` (commentaires), `aaaab80` (menu d'une publication), `03b8875` (suggestions ; publications de page), `53f8a48` (changement de hub mémorisé), `00002bf` (parité des surfaces, `docs/04`), `458d768` (publication seule, modification, signets), `892c7e5` (brouillon durable, mentions et mots-dièse — PR administration-ga/diasporale#1), médias du composeur (quatre photos ou une vidéo seule, texte alternatif, garde des fichiers — PR administration-ga/diasporale#5), partage cité et idempotence (PR administration-ga/diasporale#6) ; tranche ANTSIA `010a5d8` (`memberFacet`, cloche), `759643b` (journal de la modération), `bce7185` (annuaire de la tranche), `21380c1` (suggestions) ; ANTSIA `817a433` (annuaire générique refusé sur un réseau gouverné), `3069a61` (fil par voies), `9f4308b` (texte riche du moteur — PR administration-ga/antia#1) — stories du fil et albums du profil committés localement le 16/10 (`31a16d9`, surfaces du moteur, recette Chrome locale) ; suite `/relations` (`30f9f1e`) : listes paginées du moteur, demandes reçues et réponses, 23 tests ajoutés, lecture seule puis acceptation jouées entre deux comptes fictifs ; refus et pagination réelle recettés ensuite, fil et hub paginés par le curseur du moteur, reprise d'erreur du hub (37 tests supplémentaires, verify commun vert) ; mur personnel ensuite paginé et images du profil raccordées aux mutations publiques du moteur ; aperçu limité aux informations publiques ; recette Chrome locale du mur et des images, déconnexion globale raccordée à PA4 ; albums complétés côté surfaces (pagination, reprise, audiences enregistrées et retrait confirmé), stories lisibles en attente sans composeur ; pagination/reprise/publication, audiences et retrait recettés entre comptes ; story média réellement lue en attente, accès direct à la création sans composeur recetté après déverrouillage ; complément de graine et recette validé par le contrôle commun PA5 (6 223 tests, code 0 ; les 17 anciens échecs sont résolus) ; complément committé (`9413ac6`, moteur `ee5fb44`) ; onglet Mes abonnements et désabonnement en attente raccordés ensuite, recette Chrome locale jouée, détails et limites dans `docs/04` ; demandes envoyées, annulation versionnée et déblocages raccordés le 17/10 (DIASPORALE `a1de52e`, backend `1637c12`, surfaces moteur `a2350ca`) : 6 365 tests, verify code 0 ; blocage/déblocage en attente et annulation envoyée entre comptes fictifs validés dans Chrome ; PD4 reste ouvert |
+| PD7 Évènements, groupes de conversation, iCom et direct | en cours (15/10) | iCom (point 3) monté depuis le moteur : carte, pages `/messages` et `/actus`, « Écrire » et « Appeler » du profil — branche locale `pd7/icom`, PR après le push d'ANTSIA (`517bf13` iCom, `f1eed7f` réseau personnel) |
+| PD5, PD6, PD8 → PD10 | — | — |
+
+Complément PD4 du **17/10/2026** : après les suggestions masquées et signets paginés
+(`4a48fc6`, `bce25cd`), les réglages du profil commun couvrent le privé, le retrait et la
+republication explicite ; le départ DIASPORALE est distinct. Les mots-dièse ouvrent le fil
+filtré et paginé, avec portée/pays conservés. La recette Chrome locale est terminée ;
+les preuves et limites de cette tranche sont tenues dans `docs/09` et `docs/04`.
+PD4 reste ouvert pour les autres écarts de parité.
+
+Tranche suivante du **17/10/2026**, sources vérifiées et recette Chrome partielle : visionneuse des médias,
+édition des commentaires/réponses et textes du profil sans republication incidente.
+Commits locaux DIASPORALE `8a44990` et moteur ANTSIA `0693832` ; plan, preuves et reprise dans [`docs/10`](10_VISIONNEUSE_COMMENTAIRES_IDENTITE_PD4.md).
+Sources raccordées dans l’application réelle ; correctif du 18/10 `9317ec5` : ajout tardif de fichiers et modifications bloqués pendant la soumission. Dernier passage officiel commun : code 0, **7 186 tests**, dont sept nouveaux cas du vrai composeur, dix typages des espaces et neuf contrôles de qualité sans erreur (94 avertissements conservés), 1 581 sources identiques avant/après. La correction de session ANTSIA ultérieure est distincte de cet instantané. Commentaire/réponse édités et persistants, profil retiré édité sans republication implicite confirmés dans Chrome. Photo seule et partage cité réellement lus à 320/375/1 280 px, clair/sombre, Échap et restitution du focus validés ; republication explicite relue et identité d’origine conservée. Vidéo existante de 14,92 s réellement lue le 18/10 dans le Chrome corrélé du membre en attente : progression, pause, agrandissement sans autoplay, clavier/Échap/focus et persistance après rechargement validés à 1 100 × 690 px clair. Aucun nouvel envoi ni attribution de création ; audio et autres formats d’écran non éprouvés pour cette vidéo. Les deux photos restent non validées : les trois cartes de recette présentes ont zéro image ; ANTSIA centralise une publication manuelle de deux photos sans texte et son lien, sans réutiliser la fenêtre auteur instable. Preuves et limites : `docs/10` et `docs/12`. PD4 reste ouvert.
 
 Vérifications des étapes closes :
 - **a)** 197 cas `bun test`, couverture lignes et fonctions 100 % imposée par
@@ -46,18 +78,18 @@ Vérifications des étapes closes :
   → France / Lyon → identifiant → consentements → hub), 320, 375 et 1452 px sans défilement
   horizontal, thèmes clair et sombre, console sans erreur. Cliquets : clés i18n (aucune clé
   morte, codes d'erreur fermés), aucune couleur ni chaîne affichée en dur.
-- **PD0 (en cours)** : installation unique dans `ANTIA/` (espaces de travail `../DIASPORALE/*`,
+- **PD0 (en cours)** : installation unique dans `ANTSIA/` (espaces de travail `../DIASPORALE/*`,
   catalogue complété, port 3031, verify du moteur couvrant DIASPORALE) ; installation provisoire
   supprimée ; `createEngineNextConfig`, tsconfig et ESLint du moteur ; i18n par `createAppI18n` du
-  moteur ; charte servie par `@antia/ui` + thème `diasporale.css` + rôles propres `extras.css` ;
+  moteur ; charte servie par `@antsia/ui` + thème `diasporale.css` + rôles propres `extras.css` ;
   Dockerfile en contexte ECOSYSTEMES (non construit : disque de la machine). Vérifié : typecheck,
   212 + 155 + 15 tests, lint ; rendu contrôlé dans le navigateur, clair et sombre.
-- **PD1** : tranche `ANTIA/convex/modules/diaspora/` (tables, faits, adhésion, parrainage,
+- **PD1** : tranche `ANTSIA/convex/modules/diaspora/` (tables, faits, adhésion, parrainage,
   facette, hubs, graine, manifeste) sur les règles de `@diasporale/domain`. Vérifié dans l'arbre
-  ANTIA : typecheck convex et tests 0, 67 tests convex (dont 23 de la tranche : compte léger en
-  attente qui ne publie pas, parrainage qui le passe déclaré, adhésion ANTIA dérivée, refus
+  ANTSIA : typecheck convex et tests 0, 67 tests convex (dont 23 de la tranche : compte léger en
+  attente qui ne publie pas, parrainage qui le passe déclaré, adhésion ANTSIA dérivée, refus
   indistinct de la cible, quota et ancienneté du parrain, retrait, départ, IDN étrangère, Gabon
-  refusé comme pays, annuaire sous consentement, membre d'ANTIA seul sans accès, compteurs
+  refusé comme pays, annuaire sous consentement, membre d'ANTSIA seul sans accès, compteurs
   matérialisés jamais calculés à la lecture, graine idempotente), 35 cliquets (dont « toute
   fonction sociale bornée par le réseau », qui couvre la tranche) ; domaine 228 tests, 100 %.
   **Écarts au plan, assumés** :
@@ -78,7 +110,7 @@ Vérifications des étapes closes :
   - deux comptes `@exemple.test` entrés par code à usage unique (outils de développement du moteur) ;
   - accueil en trois étapes, propositions et disponibilité d'identifiant par le moteur, aucune case
     précochée ;
-  - adhésion « en attente » et adhésion ANTIA dérivée, carte de statut, « Publier » désactivé ;
+  - adhésion « en attente » et adhésion ANTSIA dérivée, carte de statut, « Publier » désactivé ;
   - parrain rendu vérifié par la graine de recette ; identifiant inconnu refusé de façon indistincte ;
   - parrainage, puis filleul « déclaré » (relevé en base).
   La recette a révélé une boucle de rendus (requêtes non mémorisées), corrigée en `a8ea1a9`.
@@ -99,10 +131,10 @@ Vérifications des étapes closes :
   retiré, attestation confirmée ou non) ; retrait de parrainage par la modération motivé et inscrit au
   journal du moteur. Recette sur :3031 contre le moteur local : profil et aperçu, demande de connexion,
   première publication (portée « toute la diaspora ») et réaction ; **R4** constaté en base (publication
-  `visibility: network` dans `diasporale`, sans « publier aussi sur ANTIA »). Vérifié : `bun run verify`
+  `visibility: network` dans `diasporale`, sans « publier aussi sur ANTSIA »). Vérifié : `bun run verify`
   vert (232 + 175 + 47 tests) ; tranche 35 tests, 53 cliquets. **Faille relevée** : l'annuaire
   générique du moteur listait les membres de `diasporale` sans leur accord (opt-in de DIASPORALE) —
-  corrigée par ANTIA (`817a433` : chemin générique refusé sur un réseau gouverné, drapeau
+  corrigée par ANTSIA (`817a433` : chemin générique refusé sur un réseau gouverné, drapeau
   `directoryListed` posé par la tranche).
   Suite du 15/10, toutes vérifiées par `bun run verify` vert (208 + 57 tests) puis en recette sur :3031 :
   - **cloche** (`5c96109`) : demande de relation acceptée depuis la cloche, l'avis passe « acceptée » et lu ;
@@ -116,10 +148,67 @@ Vérifications des étapes closes :
     « Récents », pas dans « Toute la diaspora » ; mur de l'auteur.
   **Écarts assumés** :
   - relecture avant publication (invariant 10) : le moteur ne retient encore rien (PA5, crochet de
-    politique accordé par ANTIA) ; d'ici là, publication locale refusée à l'écran pour un pays non ouvert —
+    politique accordé par ANTSIA) ; d'ici là, publication locale refusée à l'écran pour un pays non ouvert —
     garde d'écran seulement, **bloquant pour la mise en ligne** ;
   - les publications de développement d'avant le lot 7 n'ont pas de portée : aucune voie ne les sert
     (données locales seulement).
+- **PD4 — complément du 17/10** : cinq onglets de relations raccordés, dont demandes
+  envoyées et annulation versionnée, blocages propres et confirmation du déblocage.
+  Commits locaux : DIASPORALE `a1de52e`, backend ANTSIA `1637c12`, surfaces moteur `a2350ca`.
+  `verify` commun **code 0, 6 365 tests**, 97 cas de plus que la tranche précédente ;
+  codegen, types Convex/tests, dix typages et neuf lints sans erreur, avertissements
+  préexistants. Preuve : `/tmp/diasporale-pd4-requests-blocks-verify-release.log`.
+  **Chrome réel** : lecteur `pd4.lecture` en attente, ANTSIA dérivée déclarée ; blocage sans
+  relation/suivi préalable, ligne neutre dédoublonnée, annulation de la confirmation sans
+  changement, déblocage confirmé et état vide persistant après rechargement ; suivre et
+  demander une connexion restent fermés. Rendu 320 sombre, 375 clair et 1 280 sombre sans
+  débordement ; onglet actif conservé visible lors du redimensionnement.
+  **Chrome, annulation validée ensuite** : compte vérifié `relations.recette` connecté par
+  le parcours réel, demande envoyée à `pd4.lecture`, une ligne en attente puis annulation
+  effective ; avis « Demande annulée. », liste vide persistante après rechargement complet,
+  « Se connecter » de nouveau proposé sur le profil. Refus/version/notification `cancelled`
+  couverts par les tests ; aucune tentative réelle du destinataire après annulation.
+  Console de la dernière navigation propre, sans nier un 404 transitoire non reproduit
+  pendant le parcours. DIASPORALE 3031 arrêté, backend 3210 rétabli après une nouvelle
+  saturation sans suppression supplémentaire ; frontend ANTSIA 3030 rétabli, `/entrer`
+  HTTP 200. Seuls 3210 et 3030 écoutent ; créneau PA6 rendu à ANTSIA.
+  Détails, gardes, limites de preuve et clôture coordonnée dans `docs/04` ; aucun push ni production.
+- **PD4 — suggestions masquées et pagination des signets, 17/10, implémentation** :
+  plan [`docs/08_PLAN_PD4_SUGGESTIONS_MASQUEES_ET_SIGNETS.md`](08_PLAN_PD4_SUGGESTIONS_MASQUEES_ET_SIGNETS.md).
+  `/relations` possède six onglets, dont `?onglet=masquees`, alimenté par le composant local
+  `EngineDismissedSuggestions` et la façade `diaspora.suggestions.paginateDismissed` /
+  `restoreDismissed`. La projection relit les droits actuels de l’annuaire et les blocages :
+  profil autorisé ou ligne neutre ; restauration privée limitée à l’identifiant de version,
+  sans créer de relation ni de suivi. Les choix personnels restent lisibles et restaurables
+  en attente ; les propositions `forMe` attendent l’adhésion résolue et le droit de publier,
+  la surface privée du moteur restant fermée en démonstration. Le scan des 500 premiers
+  masquages est remplacé par une recherche exacte indexée pour chaque candidat du vivier borné.
+  ANTSIA ferme aussi l’ancienne liste générique par `policyRefused` sur les réseaux gouvernés,
+  avec un test de transition ; elle n’est pas montée dans DIASPORALE.
+  Modification de publication, partage cité et liste `/enregistrements` existaient déjà ;
+  le manque corrigé ici est la pagination des signets : port `useBookmarksPage`, fenêtres
+  natives de 50, toutes pages abonnées, dédoublonnage et frontières réalignées par le
+  réducteur public du moteur, continuation d’une page filtrée vide et reprise sans perdre
+  les lignes valides. Démonstration paginée ; retrait verrouillé par ligne, version de signet
+  et lecteur, sans retrait ni avis si le serveur confirme que le signet reste enregistré.
+  Noms civils structurés également normalisés via le module partagé `social-domain/civilName` :
+  formulaire IDN simulé, Zod, écriture et hydratation, avec conservation des alias et sujets.
+  Aucune donnée civile consulaire ni preuve signée réécrite ; le raccord IDN réel reste distinct.
+  **Passe finale complète code 0** : 6 786 tests, dont 953 DIASPORALE ; dix espaces typés
+  et neuf lints sans erreur, source gelée vérifiée. Journal `verify-analysis15.log`,
+  Node 22.22.3, GOMAXPROCS 2, heap 1 536 Mio et créneau global réservé.
+  Backend local : concurrence d’analyse un, budget temporaire d’analyse 15 s ; délai
+  applicatif 1 s et assertions/délais des tests inchangés. Preuve distincte du budget
+  d’analyse par défaut 4 s et de toute production ; détails et tentatives précédentes dans `docs/04`.
+  **Commits locaux** : `4a48fc6` (masquées/signets), `bce25cd` (noms civils simulés),
+  moteur `b03498b` (masquées/réducteur), `18cd63e` (civil), préférences ANTSIA `8737055`.
+  **Chrome terminé** : masquage/restauration/vide après rechargement, candidat de nouveau
+  éligible sans connexion ni suivi ; signets 50→51 uniques→retrait50→rechargement50,
+  continuation terminale vide. 320/375/1 280 sans débordement, focus clavier et console propres.
+  Session fictive existante conservée, émulation supprimée, onglet remis à vide ; 3031 arrêté,
+  baseline sans frontend restituée, backend temporaire15s rendu à ANTSIA. Créneau rendu aux trois chats.
+  Ces repères concernent cette nouvelle tranche seulement ; les preuves antérieures restent
+  historiques et acquises dans leur périmètre. PD4 reste en cours.
 - **e)** Côté gabon-diplomatie, sur deux branches en worktree (le `main` partagé n'est pas
   touché) : #184 `DIASPORA-ATTESTATION-V1` (route signée HMAC, exclusions indiscernables,
   idempotence par `consentRef`, journal à empreinte, correspondance e-mail par
@@ -129,11 +218,11 @@ Vérifications des étapes closes :
   `DIASPORA_PARTNER_KEYS`, validation juridique, durée du journal, `convex codegen` sur un
   déploiement de développement avant fusion.
 - **d)** 142 tests (parcours R1, R2, R3 sur le magasin de démonstration, composants,
-  parité fr / en, contrastes). Lancer depuis PD0 : `bun install` dans `ANTIA/` (installation
-  unique), puis `bun run --cwd ../ANTIA dev:diasporale` ou `bun run dev` à la racine de DIASPORALE.
+  parité fr / en, contrastes). Lancer depuis PD0 : `bun install` dans `ANTSIA/` (installation
+  unique), puis `bun run --cwd ../ANTSIA dev:diasporale` ou `bun run dev` à la racine de DIASPORALE.
 
 **Arbitrages pris par défaut** (recommandations du cahier `docs/00` §20, retenues comme
-valeurs de travail jusqu'à décision écrite du propriétaire) : A1 ANTIA / `antia.ga`, DIASPORALE.COM
+valeurs de travail jusqu'à décision écrite du propriétaire) : A1 ANTSIA / `antsia.ga`, DIASPORALE.COM
 confirmé ; A2 un moteur, trois réseaux, deux dépôts ; A3 un parrain vérifié depuis plus de
 30 jours, dix parrainages par fenêtre glissante de 30 jours, `en_attente` en lecture seule ;
 A4 attestation consulaire par contrat minimal consenti, après validation juridique (sinon
@@ -164,7 +253,7 @@ Règles d'exécution héritées du programme :
   Convex, de projets d'hébergement, de secrets et de domaines, qui restent au propriétaire.
 - **Jamais** : secret dans le dépôt, donnée réelle de consulat.ga dans le moteur, lecture de
   base à base, `--rapide` sans demande explicite, force-push.
-- **Dépôts touchés** : `ECOSYSTEMES/ANTIA` (le moteur et ses paquets ; la tranche
+- **Dépôts touchés** : `ECOSYSTEMES/ANTSIA` (le moteur et ses paquets ; la tranche
   `convex/modules/diaspora`), `ECOSYSTEMES/DIASPORALE` (l'application et ses paquets),
   `ECOSYSTEMES/GABON_DIPLOMATIE` (les deux contrats, par PR, en coordination avec le
   développeur qui publie la prod), `SERVICES_TRANSVERSES/identite.ga` (client OIDC, par le
@@ -172,8 +261,8 @@ Règles d'exécution héritées du programme :
 
 ## 1. Préalables vérifiables (liste à cocher avant PD0)
 
-- [ ] ANTIA PA0 → PA7 clos : moteur avec deux réseaux de test, identité IDN, modération V1,
-      paquets `social-domain`, `social-features`, console ; `bun run verify` vert dans `ANTIA/`.
+- [ ] ANTSIA PA0 → PA7 clos : moteur avec deux réseaux de test, identité IDN, modération V1,
+      paquets `social-domain`, `social-features`, console ; `bun run verify` vert dans `ANTSIA/`.
 - [ ] Décisions A1 à A11 du cahier `docs/00` §20 rendues et écrites (au moins A1, A2, A3, A7, A8).
 - [ ] Dépôt `administration-ga/diasporale` créé par le propriétaire (vide) ; domaine
       `diasporale.com` confirmé.
@@ -189,14 +278,14 @@ Règles d'exécution héritées du programme :
 ```text
 [PRÉAMBULE COMMUN — DIASPORALE]
 Tu travailles dans « Digital GABON/DIGITAL_GOUV/ ». Lis d'abord
-ECOSYSTEMES/DIASPORALE/docs/00_CAHIER_DES_CHARGES_DIASPORALE.md, ECOSYSTEMES/ANTIA/docs/00_CAHIER_DES_CHARGES_ANTIA.md
-et ECOSYSTEMES/ANTIA/CLAUDE.md. Le moteur social vit dans ECOSYSTEMES/ANTIA (backend Convex, paquets
+ECOSYSTEMES/DIASPORALE/docs/00_CAHIER_DES_CHARGES_DIASPORALE.md, ECOSYSTEMES/ANTSIA/docs/00_CAHIER_DES_CHARGES_ANTSIA.md
+et ECOSYSTEMES/ANTSIA/CLAUDE.md. Le moteur social vit dans ECOSYSTEMES/ANTSIA (backend Convex, paquets
 social-domain et social-features) ; DIASPORALE est une application de ce moteur, espace de travail bun
-externe déclaré dans ANTIA/package.json. Règles non négociables :
+externe déclaré dans ANTSIA/package.json. Règles non négociables :
 - dix règles de duplication (copier d'abord, en-tête de provenance, périmètre d'adaptation fermé, aucun
   import de _generated/schéma/table du socle ou de gabon-diplomatie, tests portés, fusion sans écrasement,
   jetons sans fork, tranches verticales, gardes testées, parité prouvée) ;
-- invariants R1–R8 : networkId partout, visibilité network par défaut, adhésion dérivée vers antia,
+- invariants R1–R8 : networkId partout, visibilité network par défaut, adhésion dérivée vers antsia,
   une personne un handle, badges calculés côté serveur, modération par réseau, aucune donnée consulaire,
   adhésion explicite ;
 - code en anglais, UI en français via i18n (aucune chaîne en dur), TypeScript strict, validateurs précis
@@ -212,9 +301,9 @@ externe déclaré dans ANTIA/package.json. Règles non négociables :
 
 | Source | Cible | Prompt |
 |---|---|---|
-| Moteur ANTIA (`convex/modules/{networks,people,posts,graph,pages,groups,events,messaging,calls,live,notifications,moderation,files,consents}`) | consommé tel quel ; seed du réseau `diasporale` | PD1 |
-| `ANTIA/packages/social-features` (fil, profil, relations, groupes, évènements, pages, albums, stories, notifications, messagerie, direct) | montés dans `DIASPORALE/apps/diasporale_com` avec le contexte réseau `diasporale` et la charte DIASPORALE | PD4, PD7 |
-| Nouveau : `ANTIA/convex/modules/diaspora/` (`countryHubs`, `sponsorships`, `consularAttestations`, `communityImports`, V2 : `jobPostings`, `jobApplications`, `jobAlerts`, `classifieds`, `mentorships`) | tranche propre à la diaspora, dans le moteur | PD1, PD3, PD5, PD8 |
+| Moteur ANTSIA (`convex/modules/{networks,people,posts,graph,pages,groups,events,messaging,calls,live,notifications,moderation,files,consents}`) | consommé tel quel ; seed du réseau `diasporale` | PD1 |
+| `ANTSIA/packages/social-features` (fil, profil, relations, groupes, évènements, pages, albums, stories, notifications, messagerie, direct) | montés dans `DIASPORALE/apps/diasporale_com` avec le contexte réseau `diasporale` et la charte DIASPORALE | PD4, PD7 |
+| Nouveau : `ANTSIA/convex/modules/diaspora/` (`countryHubs`, `sponsorships`, `consularAttestations`, `communityImports`, V2 : `jobPostings`, `jobApplications`, `jobAlerts`, `classifieds`, `mentorships`) | tranche propre à la diaspora, dans le moteur | PD1, PD3, PD5, PD8 |
 | Nouveau : `DIASPORALE/packages/diasporale-domain` (TS pur : facette, éligibilité, parrainage, pays, portée, badges) | SSOT métier de DIASPORALE, importé par le moteur et par l'application | PD1 |
 | Nouveau : `DIASPORALE/packages/diasporale-features` (hub pays, CountrySwitch, cartes C1–C17, onboarding diaspora, modération pays, emploi, annonces, entraide) | surfaces propres | PD2, PD4, PD5, PD6, PD8 |
 | `GABON_DIPLOMATIE/packages/backend/convex` : nouvelle route HTTP `DIASPORA-ATTESTATION-V1`, export `DIASPORA-COMMUNAUTE-V1`, boutons « Rejoindre DIASPORALE » et « Activer IDN » | côté consulat.ga, par PR | PD3, PD5 |
@@ -229,23 +318,23 @@ externe déclaré dans ANTIA/package.json. Règles non négociables :
 **Objectif.** Un dépôt `DIASPORALE` qui compile comme espace de travail externe du moteur, sans
 une ligne de métier.
 
-**Contexte.** Le moteur est dans `ECOSYSTEMES/ANTIA` (PA0–PA7 clos). Le modèle d'un espace de
+**Contexte.** Le moteur est dans `ECOSYSTEMES/ANTSIA` (PA0–PA7 clos). Le modèle d'un espace de
 travail externe est celui des applications de l'État vis-à-vis du socle (ADR-0165) et de
 `PLATEFORMES_PUBLIQUES/demarche.ga` (annexe D §C.6 du plan). Les quatre câblages invisibles en
 local sont connus : workspace absent du `package.json`, `ARG` manquants dans le Dockerfile,
 liaison IAM, domain mapping.
 
-> Vérifie les préalables du §1 (lis `ANTIA/docs/01` : PA0–PA7 doivent être marqués clos dans
+> Vérifie les préalables du §1 (lis `ANTSIA/docs/01` : PA0–PA7 doivent être marqués clos dans
 > son encart d'état) ; si l'un manque, arrête-toi et liste ce qui manque.
 > 1. Dans `ECOSYSTEMES/DIASPORALE/` (déjà ouvert : README, CLAUDE.md, docs/), crée
 >    `apps/diasporale_com` (Next.js 16, React 19, Tailwind v4, `output: "standalone"`,
 >    `outputFileTracingRoot` et `turbopack.root` = `ECOSYSTEMES`, alias vers le `node_modules`
 >    du moteur, CSP comme demarche.ga), `packages/diasporale-domain` (TS pur, zéro dépendance,
 >    tests `bun test`) et `packages/diasporale-features` (React, dépend de
->    `@antia/social-features`, `@antia/ui`, `@antia/api`). Noms de paquets : `diasporale-com`,
+>    `@antsia/social-features`, `@antsia/ui`, `@antsia/api`). Noms de paquets : `diasporale-com`,
 >    `@diasporale/domain`, `@diasporale/features`. `tsconfig` étend celui du moteur ; alias
->    `@convex/*` → `../ANTIA/convex/*` (typage seulement).
-> 2. Dans `ANTIA/package.json`, ajoute les workspaces `../DIASPORALE/apps/*` et
+>    `@convex/*` → `../ANTSIA/convex/*` (typage seulement).
+> 2. Dans `ANTSIA/package.json`, ajoute les workspaces `../DIASPORALE/apps/*` et
 >    `../DIASPORALE/packages/*` ; régénère `bun.lock` depuis une installation propre ; ajoute
 >    les scripts `dev:diasporale` (port 3031) et l'entrée `diasporale` du catalogue de
 >    déploiement du moteur (service, Dockerfile en contexte `ECOSYSTEMES`, `site_url`
@@ -255,14 +344,14 @@ liaison IAM, domain mapping.
 > 3. Page d'accueil provisoire `/` de `diasporale_com` : titre, « bientôt », aucun contenu
 >    inventé (doctrine de communication publique) ; `/sante-fonctionnelle` qui répond 200.
 > 4. `Dockerfile` autoportant en contexte `ECOSYSTEMES` (copie du moteur puis de
->    DIASPORALE, `bun install --frozen-lockfile` dans ANTIA, build dans l'app, image
+>    DIASPORALE, `bun install --frozen-lockfile` dans ANTSIA, build dans l'app, image
 >    `node:20-alpine`, port 8080).
 > 5. `.gitignore`, `README` et `CLAUDE.md` du dépôt mis à jour (commandes réelles).
-> Interdits : aucun module métier, aucune table. Critère de sortie : `bun install` dans ANTIA
-> passe ; `bun run --cwd ANTIA dev:diasporale` sert la page ; `bun run verify` du moteur reste
-> vert ; `docker build` du Dockerfile réussit en local ; commit dans DIASPORALE et dans ANTIA.
+> Interdits : aucun module métier, aucune table. Critère de sortie : `bun install` dans ANTSIA
+> passe ; `bun run --cwd ANTSIA dev:diasporale` sert la page ; `bun run verify` du moteur reste
+> vert ; `docker build` du Dockerfile réussit en local ; commit dans DIASPORALE et dans ANTSIA.
 
-**Critères de done.** Deux commits (ANTIA : workspaces et catalogue ; DIASPORALE : squelette) ;
+**Critères de done.** Deux commits (ANTSIA : workspaces et catalogue ; DIASPORALE : squelette) ;
 `verify` vert ; page servie ; image construite.
 **Vérification.** `bun run verify` ; `curl` de `/sante-fonctionnelle` ; `docker build`.
 **Couvre.** EXT-DG-01 (origines), EXT-DG-10 (coût : un seul projet Convex).
@@ -275,7 +364,7 @@ liaison IAM, domain mapping.
 facettes, sa tranche propre et ses tests.
 
 **Contexte.** Le moteur fournit `networks`, `persons`, `identityLinks`, `networkMemberships`,
-`personFacets` et `requireMembership` (cahier ANTIA §11–12). La doctrine `déclaré → vérifié`
+`personFacets` et `requireMembership` (cahier ANTSIA §11–12). La doctrine `déclaré → vérifié`
 est celle du programme.
 
 > 1. `DIASPORALE/packages/diasporale-domain` : `facet.ts` (schéma de facette : `countryOfResidence`
@@ -286,27 +375,27 @@ est celle du programme.
 >    `reach.ts` (`local | diaspora`), `countries.ts` (liste ISO, pays ouverts), `badges.ts`
 >    (règles pures : Officiel, Vérifié, Agent public, Communauté). Tests `bun test` : 100 % des
 >    transitions et des refus.
-> 2. Dans le moteur, tranche `ANTIA/convex/modules/diaspora/` : `tables.ts` (`countryHubs`
+> 2. Dans le moteur, tranche `ANTSIA/convex/modules/diaspora/` : `tables.ts` (`countryHubs`
 >    {networkId, country, open, counters matérialisés, updatedAt}, `sponsorships` {networkId,
 >    sponsorPersonId, sponsoredPersonId, createdAt, revokedAt?}, `consularAttestations`
 >    {personId, subjectKind, subjectHash, result, country?, postSlug?, since?, consentId,
 >    requestedAt, respondedAt}, `communityImports` {importRef, kind, status, createdAt}),
 >    `manifest.ts`, `membership.ts` (`joinDiasporale` : crée l'adhésion `diasporale` au statut
->    issu de `eligibility`, la facette, et l'adhésion dérivée `antia` ; `sponsor`,
+>    issu de `eligibility`, la facette, et l'adhésion dérivée `antsia` ; `sponsor`,
 >    `revokeSponsorship` ; `leave`), `hubs.ts` (`getCountryHub`, `listOpenCountries`,
 >    cron quotidien de matérialisation des compteurs), index `by_network_country`. Validateurs
->    précis. Seed du réseau `diasporale` (`kind closed`, `parentId antia`, politique
+>    précis. Seed du réseau `diasporale` (`kind closed`, `parentId antsia`, politique
 >    `declared_or_verified`, visibilité `network`, pays ouverts = `["FR"]`), idempotent, gardé par
 >    une confirmation hors production.
 > 3. Tests convex-test : un compte léger est `en_attente` et ne publie pas ; un parrainage le
->    passe `declaree` ; l'adhésion `antia` dérivée existe ; `networkId` obligatoire sur toute
->    query de la tranche ; un membre d'`antia` seul ne lit pas un contenu `network` de
+>    passe `declaree` ; l'adhésion `antsia` dérivée existe ; `networkId` obligatoire sur toute
+>    query de la tranche ; un membre d'`antsia` seul ne lit pas un contenu `network` de
 >    `diasporale` ; les compteurs de hub ne sont jamais calculés à la lecture.
 > Critère de sortie : typecheck convex 0 ; suite du moteur verte (ancienne et nouvelle) ; le
 > cliquet « toute query sociale est bornée par le réseau » couvre la tranche `diaspora`.
 
 **Critères de done.** Domaine pur testé ; tranche `diaspora` avec tests ; seed idempotent.
-**Vérification.** `bun run --cwd ANTIA test:domain`, `test`, `typecheck:convex`.
+**Vérification.** `bun run --cwd ANTSIA test:domain`, `test`, `typecheck:convex`.
 **Couvre.** EXF-DG-04 (parrainage), EXF-DG-08 (facette), EXF-DG-15/16 (hubs, portée), EXT-DG-02 (compteurs).
 
 ---
@@ -379,7 +468,7 @@ et accord du propriétaire requis (préalable).
 >    Rate limit par clé. Tests convex-test : chaque exclusion, chaque code d'erreur, la
 >    signature invalide, l'idempotence.
 > 3. ADR `docs/adr/0006-consulat-atteste-ne-federe-pas-d-identite.md` (gabarit du dépôt).
-> **Côté moteur** (`ANTIA/convex/modules/diaspora/attestation.ts`) :
+> **Côté moteur** (`ANTSIA/convex/modules/diaspora/attestation.ts`) :
 > 4. Mutation `requestConsularAttestation` : exige l'adhésion `diasporale`, enregistre le
 >    consentement (`consents`, finalité `consular_attestation`), crée la ligne
 >    `consularAttestations` et planifie l'action `callAttestation` (clé de service en variable
@@ -425,7 +514,7 @@ DIASPORALE (A7) est arrêtée.
 >    entreprises, pages officielles, membres opt-in), `/@[handle]`, `/@[handle]/albums/[id]`,
 >    `/actus`, `/parametres` (déjà), coquille mobile et bureau (bascule 960 px héritée).
 >    `NetworkProvider` = `diasporale` ; aucune URL `/espace` ne subsiste (grep nul).
-> 2. Composeur : audience, pays ou portée `diaspora`, case « Publier aussi sur ANTIA »
+> 2. Composeur : audience, pays ou portée `diaspora`, case « Publier aussi sur ANTSIA »
 >    (seulement si audience publique) avec une ligne d'explication ; `CountryChip` et
 >    `ScopeBadge` sur toute carte ; badges P1 (Officiel, Vérifié, Agent public, Communauté)
 >    sur cartes et pages.
@@ -435,11 +524,11 @@ DIASPORALE (A7) est arrêtée.
 >    `CountrySwitch` (feuille de sélection, mémorisation locale puis facette).
 > 5. Vocabulaire : « membres » et « communauté » remplacent « agents » et « administrations »
 >    (liste fermée de remplacements dans `i18n/fr.json`) ; fuseau horaire = pays de résidence.
-> 6. Tests : composants montés clés (fil, hub, composeur avec la case ANTIA, profil) ; test de
+> 6. Tests : composants montés clés (fil, hub, composeur avec la case ANTSIA, profil) ; test de
 >    contrat « aucun `/espace` » ; test « un contenu `network` n'est jamais rendu avec
 >    `networkId` ≠ diasporale » ; parité cochée pour chaque écran repris
 >    (`docs/03_PARITE_SURFACES.md`).
-> Critère de sortie : R4 joué (contexte séparé) avec l'application ANTIA de dev ou une query
+> Critère de sortie : R4 joué (contexte séparé) avec l'application ANTSIA de dev ou une query
 > directe ; typecheck, tests, lint verts ; `web-design-guidelines` sans défaut bloquant ;
 > vérification réelle dans Chrome à 320 px, 375 px et 1 280 px, thème sombre.
 
@@ -469,7 +558,7 @@ claims), `companies`, `communityEvents`, `posts`, `orgs` (postes, `jurisdictionC
 >    communiqués publiés (titre, corps, date, poste émetteur). Tests : aucun champ personnel
 >    dans la sortie (test d'allowlist).
 > **Côté moteur** :
-> 2. `ANTIA/convex/modules/diaspora/import.ts` : action d'import idempotente par `importRef`
+> 2. `ANTSIA/convex/modules/diaspora/import.ts` : action d'import idempotente par `importRef`
 >    (`kind:slug`), qui crée les pages (postes → `ownerKind institution`, `trust official` ;
 >    associations → `association`, `trust community`, `claimable: true` ; entreprises →
 >    `company`), les évènements publics (organisateur = page), les communiqués (publications
@@ -549,8 +638,10 @@ modération) et P4 (états de modération visibles pour l'auteur).
 conversation, messagerie et appels, directs d'évènements.
 
 **Contexte.** Le moteur fournit `events` (agenda hérité), `groupThreads` et messagerie
-(PA3), `calls` LiveKit (PA3, après l'audit iAppel demandé par ANTIA PA1), `live` (direct
+(PA3), `calls` LiveKit (PA3, après l'audit iAppel demandé par ANTSIA PA1), `live` (direct
 hérité). Specs F03, F08, F13 ; écrans E03–E05, E14, E24.
+
+**Précision d'exécution du 18/10.** Pour les événements associatifs DG-023, le rappel J-1 ci-dessous utilise un job durable individuel après opt-in, plutôt qu'un balayage cron global ; J-1 vaut 24 heures réelles. Le [rapport de tranche](24_DATES_LIMITES_RAPPELS_EVENEMENTS_DG023.md) décrit les garde-fous et les contrôles encore différés. Le prompt historique ne constitue pas une preuve d'achèvement.
 
 > 1. Évènements communautaires : extension `eventRegistrations` (capacité, date limite, liste
 >    d'attente, inscription, QR de présence, galerie), `organizerKind ∈ {person, association,
@@ -625,7 +716,7 @@ push.
 `mobile-ui-v2`) et la maquette « Accueil — Feed Communauté » (pager horizontal, header
 stable). Le moteur expose la même API ; Better Auth `bearer` pour le mobile.
 
-> 1. `DIASPORALE/apps/diasporale_mobile` (Expo, Expo Router, React Native, `@antia/api` en mode
+> 1. `DIASPORALE/apps/diasporale_mobile` (Expo, Expo Router, React Native, `@antsia/api` en mode
 >    bearer, i18n partagé) ; design system mobile : jetons DIASPORALE, composants `FlatCard`,
 >    `Badge`, `Avatar`, `Chip`, `Sheet` (reprise des patrons de `mobile-ui-v2`, pas de copie de
 >    code consulaire).
@@ -691,5 +782,5 @@ stable). Le moteur expose la même API ; Better Auth `bearer` pour le mobile.
       annonce ; aucun chiffre public n'est affirmé sans mesure.
 - [ ] Les textes légaux sont validés par un juriste ; le dossier APDPVP est déposé ; le
       registre des consentements est alimenté.
-- [ ] `bun run verify` vert dans ANTIA (moteur + DIASPORALE) ; mise en ligne vérifiée après coup
+- [ ] `bun run verify` vert dans ANTSIA (moteur + DIASPORALE) ; mise en ligne vérifiée après coup
       et rapportée ; mémoire du programme mise à jour.

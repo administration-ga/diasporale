@@ -1,6 +1,6 @@
 "use client"
 
-import { Button, DemoBanner, DemoChip } from "@diasporale/features"
+import { Button, DemoBanner, DemoChip, cn } from "@diasporale/features"
 import { useDataSource } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import NextLink from "next/link"
@@ -85,23 +85,23 @@ export function PublicShell(props: { children: ReactNode; hideEnter?: boolean })
   )
 }
 
-export function SiteFooter() {
+export function SiteFooter(props: { compact?: boolean } = {}) {
   const { t } = useDiasporaleT()
   return (
-    <footer className="mt-16 border-t border-border">
-      <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-6 px-4 py-8 md:flex-row md:items-start md:justify-between">
-        <div className="flex flex-col gap-2">
+    <footer className={cn("border-t border-border", props.compact ? "bg-card" : "mt-16")}>
+      <div className={cn("mx-auto flex w-full max-w-[1120px] flex-col gap-6 px-4 py-8 md:flex-row md:items-start md:justify-between", props.compact && "gap-4 py-5 max-md:items-center max-md:text-center")}>
+        <div className={cn("flex flex-col gap-2", props.compact && "hidden min-[960px]:flex")}>
           <Wordmark />
           <p className="max-w-sm text-[13px] text-muted-foreground">{t("footer.publisher")}</p>
         </div>
-        <nav aria-label={t("footer.label")} className="flex flex-col gap-2 text-sm">
-          <NextLink href={routes.legalNotice()} className="hover:underline focus-visible:shadow-focus">
+        <nav aria-label={t("footer.label")} className={cn("flex gap-2 text-sm", props.compact ? "flex-wrap justify-center gap-x-5" : "flex-col")}>
+          <NextLink href={routes.legalNotice()} className="inline-flex min-h-11 items-center hover:underline focus-visible:shadow-focus">
             {t("footer.legalNotice")}
           </NextLink>
-          <NextLink href={routes.privacy()} className="hover:underline focus-visible:shadow-focus">
+          <NextLink href={routes.privacy()} className="inline-flex min-h-11 items-center hover:underline focus-visible:shadow-focus">
             {t("footer.privacy")}
           </NextLink>
-          <NextLink href={routes.charte()} className="hover:underline focus-visible:shadow-focus">
+          <NextLink href={routes.charte()} className="inline-flex min-h-11 items-center hover:underline focus-visible:shadow-focus">
             {t("footer.charte")}
           </NextLink>
         </nav>

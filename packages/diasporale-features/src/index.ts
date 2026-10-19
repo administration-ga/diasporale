@@ -2,7 +2,7 @@
  * @diasporale/features — surfaces propres à DIASPORALE.
  *
  * Les surfaces du réseau social (fil complet, profil, relations, groupes,
- * messagerie, appels…) viendront de `@antia/social-features` (PA6) ; ce paquet
+ * messagerie, appels…) viendront de `@antsia/social-features` (PA6) ; ce paquet
  * porte ce que la diaspora AJOUTE : l'étiquette pays, le sélecteur de pays,
  * les badges de confiance, les cartes C1–C17, les cartes flottantes (statut,
  * modération, démonstration), le composeur à portée.
@@ -12,6 +12,7 @@ export { countryName, residenceCountryOptions, filterCountryOptions, searchKey }
 export { formatDate, formatNumber, formatRelative, calendarParts } from "./lib/format"
 export { avatarTone, initials } from "./lib/avatar"
 export { handleRefusal, normalizeHandle, suggestHandles, HANDLE_MAX_LENGTH, HANDLE_MIN_LENGTH } from "./lib/handle"
+export { normalizeCivilName, normalizeFamilyName, normalizeGivenNames, type CivilNameParts } from "@antsia/social-domain/civilName"
 
 export { Button, buttonVariants, type ButtonProps } from "./primitives/button"
 export { Field, Input, Label, Textarea } from "./primitives/field"
@@ -41,6 +42,7 @@ export { CountrySwitch } from "./components/country-switch"
 export { BELL_ACTOR_LED_KINDS, BELL_SYSTEM_KINDS, NotificationBell } from "./components/notification-bell"
 export { MemberSuggestions } from "./components/suggestions"
 export { PostCard } from "./components/cards/post-card"
+export { PostMediaGrid } from "./components/post-media"
 export { EventCard } from "./components/cards/event-card"
 export { AssociationCard, CompanyCard, OfficialPageCard } from "./components/cards/page-cards"
 export { ClassifiedCard, GroupCard, JobCard, MentorCard, TalentCard } from "./components/cards/community-cards"
@@ -55,3 +57,4 @@ export {
 export { PostComposerSheet, POST_BODY_MAX } from "./components/composer"
 export { isShareable, PostShareProvider, SharedPostEmbed, usePostShare } from "./components/post-share"
 export { RoutingProvider, useRouting, type FeatureRoutes, type LinkComponent } from "./routing"
+export * from "./components/discovery"

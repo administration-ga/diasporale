@@ -1,5 +1,5 @@
 /**
- * Projections du moteur ANTIA vers les vues de DIASPORALE (`@diasporale/features/data`)
+ * Projections du moteur ANTSIA vers les vues de DIASPORALE (`@diasporale/features/data`)
  * — fonctions PURES, testées sans moteur. Le serveur a déjà allowlisté ce qu'il
  * rend ; ici, on ne fait que changer de forme, et une valeur hors forme (un pays
  * inconnu, une facette absente) fait retomber la vue au plus prudent.
@@ -31,13 +31,19 @@ import {
   type MemberHitView,
   type MembershipView,
   type OpenCountryView,
+  type OwnProfileView,
   type PostMediaView,
   type PostView,
   type PublishMediaInput,
   type SharedPostView,
+  COMMUNITY_NOTIFICATION_KINDS,
+  CONTEXTUAL_NOTIFICATION_KINDS,
   NOTIFICATION_KINDS,
+  SERVICE_NOTIFICATION_KINDS,
+  type CommunityNoticeView,
   type NotificationKind,
   type NotificationView,
+  type ProfileImageView,
   type ProfileView,
   type RelationView,
   type SponsorDashboardView,
@@ -57,6 +63,18 @@ type PublicProfile = NonNullable<FunctionReturnType<typeof api.modules.people.pr
 type MemberFacet = NonNullable<FunctionReturnType<typeof api.modules.diaspora.profile.memberFacet>>
 type MyConsents = FunctionReturnType<typeof api.modules.diaspora.membership.myConsents>
 export type FacetArgs = FunctionArgs<typeof api.modules.diaspora.facet.updateMyFacet>["facet"]
+
+/** La fiche personnelle reste lisible après retrait ; elle n'est jamais un DTO public. */
+export function toOwnProfileView(person: MyPerson): OwnProfileView {
+  return {
+    personId: person._id,
+    handle: person.handle ?? null,
+    displayName: person.displayName ?? null,
+    headline: person.headline ?? null,
+    published: person.published,
+    private: person.private,
+  }
+}
 
 /** Le compte de la session : la porte d'entrée (IDN et sa garantie, ou compte léger à adresse masquée). */
 export function toAccountView(person: MyPerson, identity: MyIdentity, email: string | null): AccountView {
@@ -97,7 +115,7 @@ export function toMembershipView(person: MyPerson, membership: MyMembership): Me
     verifiedSince: membership.verifiedSince,
     sponsoredBy: membership.sponsoredBy,
     attestation: membership.attestation,
-    root: { network: "antia", status: membership.root.status ?? "partie", derivedFrom: "diasporale" },
+    root: { network: "antsia", status: membership.root.status ?? "partie", derivedFrom: "diasporale" },
     canPublish: membership.capabilities.includes("publish"),
     rateTier: membership.rateTier,
     directoryVisibility: membership.directoryVisibility,
@@ -110,7 +128,14 @@ export function toOpenCountries(hubs: readonly HubView[]): OpenCountryView[] {
   )
 }
 
-/** Le hub d'un pays : compteurs matérialisés ; pages, associations, entreprises et évènements arrivent avec PD5 et PD7. */
+/**
+ * Le hub d'un pays : ses compteurs MATÉRIALISÉS par le passage nocturne (membres
+ * sous seuil, associations et entreprises actives du pays — DG-007), jamais
+ * comptés à la lecture. Ses pages se lisent par la capacité « pages »
+ * (`diaspora.hubPages.listCountryPages`, bornée par nature, `toHubPagesView`) :
+ * les listes du hub restent vides ici plutôt que recopiées ; les évènements
+ * arrivent avec PD7.
+ */
 export function toCountryHubView(hub: HubView, country: CountryCode): CountryHubView {
   return {
     country,
@@ -174,7 +199,7 @@ function authorOf(item: FeedItem): PostView["author"] {
   }
   return {
     kind: "person",
-    id: item.author.personId,
+    id: item.author.personId ?? "",
     handle: item.author.handle ?? "",
     displayName: item.author.displayName ?? "",
     badges: item.author.badges,
@@ -226,6 +251,7 @@ export function toSharedPostView(share: NonNullable<FeedItem["share"]>): SharedP
 export function toPostView(item: FeedItem): PostView {
   return {
     id: item._id,
+    ...(item.eventGalleryId === undefined ? {} : { eventGalleryId: item.eventGalleryId }),
     author: authorOf(item),
     body: item.body,
     media: item.media.map(toPostMediaView),
@@ -243,6 +269,7 @@ export function toPostView(item: FeedItem): PostView {
     isMine: item.isMine,
     bookmarked: item.viewer.bookmarked,
     edited: item.editedAt !== null,
+    editedAt: item.editedAt,
   }
 }
 
@@ -309,6 +336,11 @@ function toFacetProjection(projection: Omit<FacetProjection, "countryOfResidence
  * facette projetée pour le lecteur (`memberFacet`) et mur de l'auteur
  * (`personPosts`). Le nom du poste arrive avec les pages (PD5).
  */
+function toProfileImage(image: PublicProfile["avatar"] | undefined): ProfileImageView | null {
+  if (!image || (image.url === null && image.withheld === null)) return null
+  return { url: image.withheld === null ? image.url : null, withheld: image.withheld }
+}
+
 export function toProfileView(profile: PublicProfile, member: MemberFacet, posts: readonly PostView[] = []): ProfileView {
   const facet = toFacetProjection(member.facet)
   return {
@@ -316,6 +348,8 @@ export function toProfileView(profile: PublicProfile, member: MemberFacet, posts
     handle: profile.handle,
     displayName: profile.displayName,
     headline: profile.headline,
+    avatar: toProfileImage(profile.avatar),
+    cover: toProfileImage(profile.cover),
     badges: profile.badges,
     facet,
     publicFacet: member.preview ? toFacetProjection(member.preview) : facet,
@@ -369,6 +403,26 @@ type EngineNotification = FunctionReturnType<typeof api.modules.notifications.be
 
 const SPOKEN_KINDS: ReadonlySet<string> = new Set(NOTIFICATION_KINDS)
 
+type ServiceNoticeView = import("@diasporale/features/data").ServiceNoticeView
+
+/** Les avis de mise en relation (DG-010, DG-015, DG-016) : leur cible vient du moteur, relue avec les droits du lecteur. */
+const SERVICE_NOTICE_KINDS: ReadonlySet<string> = new Set(SERVICE_NOTIFICATION_KINDS)
+
+/** La cible d'un avis de mise en relation, telle que le moteur l'a relue : un interlocuteur et des références, jamais un contenu. */
+function toServiceNoticeView(notice: EngineNotification["serviceNotice"]): ServiceNoticeView | null {
+  return notice ? { audience: notice.audience, requestId: notice.requestId, pageHandle: notice.pageHandle } : null
+}
+
+/** Les avis de la vie communautaire (vague H) : l'objet qu'ils ouvrent, relu par le moteur avec les droits du lecteur. */
+const COMMUNITY_NOTICE_KINDS: ReadonlySet<string> = new Set(COMMUNITY_NOTIFICATION_KINDS)
+
+/** Les avis d'une conversation de mise en relation (CC-2b) : le fil est leur seul sujet. */
+const CONTEXTUAL_NOTICE_KINDS: ReadonlySet<string> = new Set(CONTEXTUAL_NOTIFICATION_KINDS)
+
+function toCommunityNoticeView(notice: EngineNotification["communityNotice"]): CommunityNoticeView | null {
+  return notice ? { audience: notice.audience, opens: notice.opens, objectId: notice.objectId, pageHandle: notice.pageHandle } : null
+}
+
 /**
  * Un avis de la cloche du moteur. Un genre que DIASPORALE ne sait pas dire se dit
  * « nouvelle activité » ; une demande de relation porte son état VIVANT (encore à
@@ -391,12 +445,19 @@ export function toNotificationView(item: EngineNotification): NotificationView {
   return {
     id: item.notificationId,
     kind,
-    actor: item.actor?.handle && item.actor.displayName ? { handle: item.actor.handle, displayName: item.actor.displayName } : null,
+    actor: item.kind !== "association_event_reminder" && item.actor?.handle && item.actor.displayName ? { handle: item.actor.handle, displayName: item.actor.displayName } : null,
     createdAt: item.createdAt,
     read: item.readAt !== null,
     pendingConnectionId,
     inviteOutcome,
     postId: subject?.kind === "post" ? subject.id : null,
+    ...(item.kind === "association_event_reminder" ? { associationEvent: subject?.kind === "event" && item.associationEvent?.eventId === subject.id ? { eventId: item.associationEvent.eventId, pageHandle: item.associationEvent.pageHandle } : null } : {}),
+    ...(SERVICE_NOTICE_KINDS.has(item.kind) ? { serviceNotice: toServiceNoticeView(item.serviceNotice) } : {}),
+    ...(COMMUNITY_NOTICE_KINDS.has(item.kind) ? { communityNotice: toCommunityNoticeView(item.communityNotice) } : {}),
+    // P16 · G9 : la carte de la page porteuse n'est servie qu'au signataire vivant d'un dossier de page ; sinon « Mes données ».
+    ...(item.kind === "moderation_decision" ? { moderationDecision: { pageHandle: item.page?.handle ?? null } } : {}),
+    // CC-6 : le fil d'une conversation de mise en relation, relu pour le destinataire par le moteur.
+    ...(CONTEXTUAL_NOTICE_KINDS.has(item.kind) ? { contextualThreadId: subject?.kind === "contextualThread" ? subject.id : null } : {}),
   }
 }
 
@@ -431,5 +492,96 @@ export function toBookmarkView(item: EngineBookmark): BookmarkView {
     body: item.body,
     publishedAt: item.publishedAt,
     markedAt: item.markedAt,
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Pages (DG-007, chantier « pages ») — fiche, annuaire, listes du hub
+// ═══════════════════════════════════════════════════════════════
+
+type PageView = import("@diasporale/features/data").PageView
+type PageDetailView = import("@diasporale/features/data").PageDetailView
+type PageDirectoryEntry = import("@diasporale/features/data").PageDirectoryEntry
+type PageDirectoryPage = import("@diasporale/features/data").PageDirectoryPage
+type HubPagesView = import("@diasporale/features/data").HubPagesView
+type EngineTrustBadge = import("@diasporale/domain").TrustBadge
+type EnginePageTrust = import("@diasporale/domain").PageTrustLevel
+
+type EnginePage = NonNullable<FunctionReturnType<typeof api.modules.pages.pages.getPage>>
+type EnginePageWall = FunctionReturnType<typeof api.modules.pages.pages.pagePosts>
+type EnginePageSummary = FunctionReturnType<typeof api.modules.pages.pages.paginateDiscover>["page"][number]
+type EngineHubPages = FunctionReturnType<typeof api.modules.diaspora.hubPages.listCountryPages>
+type EngineHubPage = EngineHubPages["associations"][number]
+type EnginePageStanding = FunctionReturnType<typeof api.modules.diaspora.hubPages.pageStanding>
+type EnginePageCard = Pick<EnginePage, "pageId" | "handle" | "name" | "shortName" | "logoUrl" | "badge" | "ownerKind" | "country">
+  & { readonly city?: EnginePage["city"] | undefined; readonly associationType?: EnginePage["associationType"] | undefined; readonly sector?: EnginePage["sector"] | undefined }
+
+/** La confiance d'une page se lit dans son badge, calculé par le moteur depuis elle (jamais déclaré). */
+function pageTrustOf(badge: EngineTrustBadge): EnginePageTrust {
+  return badge === "official" || badge === "verified" ? badge : "community"
+}
+
+/**
+ * La carte allowlistée d'une page du moteur, dans les mots de DIASPORALE : le
+ * logo tel que la garde des fichiers le délivre, un pays hors diaspora écarté
+ * (jamais deviné), la ville et la catégorie déclarées par la page quand elles existent.
+ */
+function toEnginePageView(card: EnginePageCard, extra: { readonly description: string | null; readonly followerCount: number; readonly claimable: boolean }): PageView {
+  return {
+    id: card.pageId,
+    handle: card.handle,
+    name: card.name,
+    ownerKind: card.ownerKind,
+    trust: pageTrustOf(card.badge),
+    badge: card.badge,
+    country: card.country !== null && isResidenceCountry(card.country) ? card.country : null,
+    city: card.city ?? null,
+    ...(card.associationType != null ? { associationType: card.associationType } : {}),
+    ...(card.sector != null ? { sector: card.sector } : {}),
+    description: extra.description ?? "",
+    followers: extra.followerCount,
+    claimable: extra.claimable,
+    shortName: card.shortName,
+    logoUrl: card.logoUrl,
+  }
+}
+
+/**
+ * La fiche d'une page : la projection de `getPage` (compteurs de l'agrégat,
+ * bannière par la garde des fichiers, rôle VIVANT et abonnement du lecteur), la
+ * première fenêtre du mur projetée comme le fil, et la revendicabilité jugée par
+ * la tranche. Le moteur n'a pas d'organisateur « page » : aucun évènement inventé.
+ */
+export function toPageDetailView(page: EnginePage, wall: EnginePageWall, standing: EnginePageStanding): PageDetailView {
+  return {
+    page: toEnginePageView(page, { description: page.description, followerCount: page.followerCount, claimable: standing?.claimable ?? false }),
+    bannerUrl: page.bannerUrl,
+    postCount: page.postCount,
+    posts: wall.items.map(toPostView),
+    morePosts: wall.nextCursor !== null,
+    events: [],
+    viewer: { role: page.viewer.role, following: page.viewer.following },
+  }
+}
+
+/** Une ligne de l'annuaire du moteur ; il ne dit pas la revendicabilité (la fiche la dit). */
+export function toPageDirectoryEntry(row: EnginePageSummary): PageDirectoryEntry {
+  return { ...toEnginePageView(row, { description: row.description, followerCount: row.followerCount, claimable: false }), following: row.following }
+}
+
+/** Une fenêtre de l'annuaire : la fin se lit dans `isDone`, jamais dans une fenêtre vide. */
+export function toPageDirectoryPage(result: { readonly page: readonly EnginePageSummary[]; readonly isDone: boolean; readonly continueCursor: string }): PageDirectoryPage {
+  return { items: result.page.map(toPageDirectoryEntry), isDone: result.isDone, continueCursor: result.isDone ? null : result.continueCursor }
+}
+
+/** Les pages publiées et lisibles d'un pays (tranche `diaspora`), par nature, bornées. */
+export function toHubPagesView(hub: EngineHubPages, country: CountryCode): HubPagesView {
+  const view = (row: EngineHubPage) => toEnginePageView(row, row)
+  return {
+    country,
+    officialPages: hub.officialPages.map(view),
+    associations: hub.associations.map(view),
+    companies: hub.companies.map(view),
+    more: hub.more,
   }
 }

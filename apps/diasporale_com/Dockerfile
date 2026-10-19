@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
-# Image AUTOPORTANTE de diasporale.com, application externe du moteur ANTIA.
+# Image AUTOPORTANTE de diasporale.com, application externe du moteur ANTSIA.
 #
-# Contexte de construction = le dossier ECOSYSTEMES (parent d'ANTIA et de
-# DIASPORALE), avec UNE installation : celle d'ANTIA, dont le package.json
+# Contexte de construction = le dossier ECOSYSTEMES (parent d'ANTSIA et de
+# DIASPORALE), avec UNE installation : celle d'ANTSIA, dont le package.json
 # déclare les espaces de travail ../DIASPORALE/apps/* et ../DIASPORALE/packages/*.
 # Fichier d'exclusion : Dockerfile.dockerignore, à côté (liste blanche).
 #
@@ -32,9 +32,9 @@ ENV NEXT_PUBLIC_CONVEX_URL=${NEXT_PUBLIC_CONVEX_URL} \
     NODE_OPTIONS=--max-old-space-size=4096
 WORKDIR /src
 
-COPY ANTIA ./ANTIA
+COPY ANTSIA ./ANTSIA
 COPY DIASPORALE ./DIASPORALE
-RUN cd ANTIA && bun install --frozen-lockfile
+RUN cd ANTSIA && bun install --frozen-lockfile
 RUN cd DIASPORALE/apps/diasporale_com && bun run build
 
 # ── Étape 2 : image d'exécution minimale (sortie standalone de Next) ─────────

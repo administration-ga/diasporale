@@ -31,7 +31,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const { locale, t } = await getAppT()
   return (
-    <html lang={locale} data-charte="diasporale" suppressHydrationWarning>
+    <html lang={locale} data-charte="diasporale" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="min-h-dvh">
         <a
           href={anchors.content}

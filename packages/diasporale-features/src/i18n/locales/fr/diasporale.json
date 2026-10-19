@@ -1,11 +1,15 @@
 {
-  "brand": { "name": "DIASPORALE" },
+  "brand": {
+    "name": "DIASPORALE"
+  },
   "meta": {
     "title": "DIASPORALE — le réseau des Gabonais de l'étranger",
     "titleTemplate": "%s · DIASPORALE",
     "description": "Le réseau social fermé de la diaspora gabonaise : votre pays, votre communauté, des contenus dont on sait toujours qui les publie."
   },
-  "a11y": { "skipToContent": "Aller au contenu" },
+  "a11y": {
+    "skipToContent": "Aller au contenu"
+  },
   "common": {
     "back": "Retour",
     "cancel": "Annuler",
@@ -23,6 +27,8 @@
     "profile": "Profil",
     "sponsor": "Parrainer",
     "members": "Membres",
+    "relations": "Mes relations",
+    "messages": "Messages",
     "settings": "Réglages"
   },
   "footer": {
@@ -34,43 +40,34 @@
   },
   "preferences": {
     "language": "Langue",
-    "locale": { "fr": "Français", "en": "English" },
+    "locale": {
+      "fr": "Français",
+      "en": "English"
+    },
     "theme": "Thème",
-    "themeOption": { "light": "Clair", "dark": "Sombre", "system": "Système" }
+    "themeOption": {
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
+    }
   },
   "landing": {
-    "title": "La diaspora gabonaise, pays par pays.",
-    "lead": "Un réseau fermé, réservé aux Gabonais de l'étranger. Chaque contenu porte son pays, chaque auteur montre sa confiance, et le contact passe toujours par la messagerie.",
-    "ctaEnter": "Entrer dans DIASPORALE",
-    "ctaHow": "Comment on entre",
-    "free": "Gratuit pour les membres.",
-    "boardTitle": "Pays ouverts",
-    "boardOpen": "Ouvert",
-    "boardFooter": "Votre pays n'est pas dans la liste ? Entrez quand même : vous lisez dès aujourd'hui, et vos publications sont relues par l'équipe du réseau avant d'apparaître.",
-    "principlesTitle": "Trois règles, sur chaque écran",
-    "principleCountryTitle": "Le pays d'abord",
-    "principleCountryBody": "Tout contenu porte son pays, ou la mention « Toute la diaspora ». Votre fil commence par votre pays de résidence.",
-    "principleTrustTitle": "La confiance se voit",
-    "principleTrustBody": "Officiel, Vérifié, Agent public ou Communauté : le badge est calculé par la plateforme, jamais déclaré par l'auteur.",
-    "principleContactTitle": "Le contact passe par la messagerie",
-    "principleContactBody": "Aucune adresse, aucun numéro de téléphone sur une page ou une annonce : un bouton « Écrire » les remplace.",
-    "sampleCity": "Lyon",
-    "howTitle": "Comment on entre",
-    "howLead": "Deux portes, et jamais de mot de passe.",
-    "doorIdnTitle": "Avec votre identité numérique IDN",
-    "doorIdnBody": "Vous vous connectez avec identite.ga, l'identité numérique gabonaise. Votre compte est déclaré dès l'entrée.",
-    "doorIdnNote": "Avec un niveau de garantie 2, vous portez le badge Vérifié.",
-    "doorCodeTitle": "Avec un code reçu par e-mail ou SMS",
-    "doorCodeBody": "Un compte léger : vous lisez votre hub tout de suite. Vous publiez après le parrainage d'un membre vérifié, ou après la vérification de votre inscription consulaire.",
-    "doorCodeNote": "Le parrain doit être vérifié depuis plus de 30 jours.",
-    "stepsTitle": "Ensuite, trois écrans",
-    "step1": "Votre pays et votre ville de résidence.",
-    "step2": "Votre nom affiché et votre identifiant, que vous choisissez.",
-    "step3": "Vos consentements, un par un, aucun coché d'avance.",
-    "verifyNote": "Une inscription au consulat ? Vous pourrez demander la vérification de votre inscription consulaire : vous consentez, nous recevons une confirmation, et votre compte devient Vérifié.",
-    "closing": "Votre pays de résidence est déjà là. Votre communauté aussi."
+    "title": "Retrouvez les vôtres,\noù que vous soyez.",
+    "lead": "Échangez avec les Gabonais du monde, partagez votre quotidien et créez votre propre réseau.",
+    "eligibility": "Le réseau des Gabonais de l’étranger.",
+    "signInTitle": "Se connecter à DIASPORALE",
+    "idnContinue": "Continuer avec IDN",
+    "idnUnavailable": "La connexion IDN sera disponible prochainement.",
+    "or": "ou",
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte",
+    "newHere": "Nouveau sur DIASPORALE ?",
+    "free": "L’inscription est gratuite.",
+    "privacy": "Votre e-mail reste privé. Connexion par code, sans mot de passe.",
+    "boardTitle": "Votre communauté, pays par pays."
   },
   "entry": {
+    "signOutIncomplete": "La déconnexion complète n’a pas pu être confirmée. D’autres appareils peuvent rester connectés et des données de ce navigateur peuvent subsister. Reconnectez-vous pour réessayer la déconnexion dès que la connexion est rétablie.",
     "title": "Entrer dans DIASPORALE",
     "lead": "Choisissez votre porte. Vous ne créerez jamais de mot de passe.",
     "idnTitle": "Identité numérique IDN",
@@ -109,7 +106,10 @@
     "title": "Recevoir un code",
     "lead": "Un code à usage unique, valable 10 minutes. Il ne sert qu'une fois.",
     "kindLabel": "Recevoir le code par",
-    "kind": { "email": "E-mail", "phone": "SMS" },
+    "kind": {
+      "email": "E-mail",
+      "phone": "SMS"
+    },
     "emailLabel": "Votre adresse e-mail",
     "phoneLabel": "Votre numéro de téléphone",
     "destinationHint": "Elle reste privée : aucun membre ne la voit.",
@@ -126,7 +126,7 @@
     "step1Title": "Où vivez-vous ?",
     "step1Lead": "Votre pays de résidence est le contexte de tout ce que vous verrez. Vous pourrez le changer plus tard.",
     "step2Title": "Comment vous appeler ?",
-    "step2Lead": "Votre nom affiché et votre identifiant sont les mêmes dans DIASPORALE et dans ANTIA.",
+    "step2Lead": "Votre nom affiché et votre identifiant sont les mêmes dans DIASPORALE et dans ANTSIA.",
     "step3Title": "Vos choix",
     "step3Lead": "Chaque consentement est séparé, révocable à tout moment dans vos réglages.",
     "countryLabel": "Pays de résidence",
@@ -169,15 +169,24 @@
   "consentPurpose": {
     "social_profile": {
       "title": "Profil social",
-      "body": "Requis pour être membre. Le retirer, c'est quitter DIASPORALE."
+      "body": "Enregistré lors de l’inscription au profil commun. Retirer le profil et quitter DIASPORALE sont des gestes distincts, proposés séparément."
     },
-    "directory": { "title": "Annuaire des membres", "body": "Apparaître dans l'annuaire, au niveau que vous choisissez." },
-    "notifications": { "title": "Notifications", "body": "Réponses, mentions, vie de votre pays." },
+    "directory": {
+      "title": "Annuaire des membres",
+      "body": "Apparaître dans l'annuaire, au niveau que vous choisissez."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "body": "Réponses, mentions, vie de votre pays."
+    },
     "consular_attestation": {
       "title": "Attestation consulaire",
       "body": "Donné au moment de la vérification. Le retirer empêche toute nouvelle demande."
     },
-    "talents": { "title": "Profil professionnel visible", "body": "Bientôt : l'annuaire des talents arrive avec l'emploi." }
+    "talents": {
+      "title": "Profil professionnel visible",
+      "body": "Bientôt : l'annuaire des talents arrive avec l'emploi."
+    }
   },
   "status": {
     "regionLabel": "Statut de votre compte",
@@ -253,7 +262,7 @@
         "step1": "Entrer, puis « Identité numérique IDN » ; choisir Awa Ogooué et autoriser.",
         "step2": "Choisir « France », saisir « Lyon ».",
         "step3": "Choisir un identifiant proposé, puis cocher le profil social.",
-        "step4": "Constater : compte déclaré, hub France, adhésion ANTIA dérivée dans les réglages."
+        "step4": "Constater : compte déclaré, hub France, adhésion ANTSIA dérivée dans les réglages."
       },
       "r2": {
         "title": "R2 — Vérifier son inscription consulaire",
@@ -291,6 +300,21 @@
     "region": "Avis"
   },
   "feed": {
+    "tagFilter": "Publications avec #{{tag}}",
+    "clearTag": "Retirer le filtre",
+    "tagEmptyTitle": "Aucune publication avec #{{tag}}",
+    "tagEmptyBody": "Essayez une autre portée ou retirez le filtre. Seules les publications que vous pouvez lire apparaissent.",
+    "pagination": {
+      "loadMore": "Voir plus de publications",
+      "loading": "Chargement des publications…",
+      "retry": "Réessayer",
+      "errorTitle": "Les publications ne sont pas disponibles.",
+      "errorBody": "Vérifiez votre connexion et réessayez. Les publications déjà affichées restent accessibles.",
+      "lacunar": "Certaines publications peuvent manquer dans ce fil. Vous pouvez continuer à parcourir les suivantes.",
+      "added_one": "{{count}} publication supplémentaire affichée.",
+      "added_other": "{{count}} publications supplémentaires affichées.",
+      "noneAdded": "Aucune publication supplémentaire à afficher sur cette page."
+    },
     "title": "Fil",
     "scopesLabel": "Portées du fil",
     "scope": {
@@ -365,8 +389,8 @@
     "audienceLegend": "Qui peut lire",
     "audiencePublic": "Tous les membres de DIASPORALE",
     "audienceConnections": "Mes relations",
-    "alsoOnRoot": "Publier aussi sur ANTIA",
-    "alsoOnRootHint": "Elle sera aussi lue dans ANTIA, le réseau public, et restera dans DIASPORALE.",
+    "alsoOnRoot": "Publier aussi sur ANTSIA",
+    "alsoOnRootHint": "Elle sera aussi lue dans ANTSIA, le réseau public, et restera dans DIASPORALE.",
     "alsoOnRootDisabled": "Possible seulement pour une publication lisible par tous les membres.",
     "publish": "Publier",
     "publishing": "Publication…",
@@ -385,8 +409,17 @@
     },
     "comments_one": "{{count}} commentaire",
     "comments_other": "{{count}} commentaires",
-    "alsoOnRoot": "Aussi dans ANTIA",
+    "alsoOnRoot": "Aussi dans ANTSIA",
     "share": "Partager",
+    "shareActions": {
+      "title": "Partager la publication",
+      "description": "Les destinataires doivent avoir accès à cette publication pour la consulter.",
+      "link": "Lien de la publication",
+      "copyLink": "Copier le lien",
+      "copied": "Lien copié.",
+      "copyFailed": "La copie automatique a échoué. Le lien est sélectionné : copiez-le manuellement.",
+      "quote": "Partager dans mon fil"
+    },
     "shareCounted_one": "Partager, déjà partagée {{count}} fois",
     "shareCounted_other": "Partager, déjà partagée {{count}} fois",
     "sharedLabel": "Publication partagée",
@@ -397,7 +430,15 @@
       "video": "Vidéo jointe à la publication",
       "scanPending": "Analyse du fichier en cours…",
       "quarantined": "Fichier retenu par la garde des fichiers",
-      "unavailable": "Média indisponible"
+      "unavailable": "Média indisponible",
+      "openImage": "Agrandir la photo {{position}} sur {{total}}",
+      "expandVideo": "Agrandir la vidéo",
+      "viewer": {
+        "title": "Médias de la publication",
+        "position": "Média {{position}} sur {{total}}",
+        "previous": "Média précédent",
+        "next": "Média suivant"
+      }
     }
   },
   "event": {
@@ -443,8 +484,6 @@
     "metaTitle": "Page",
     "see": "Voir la page",
     "claimable": "Revendicable",
-    "claim": "Revendiquer cette page",
-    "claimSoon": "La revendication avec justificatifs arrive avec l'import des associations.",
     "kind": {
       "institution": "Institution",
       "association": "Association",
@@ -502,10 +541,18 @@
   "contact": {
     "write": "Écrire",
     "writeTo": "Écrire à {{name}}",
-    "soon": "La messagerie arrive bientôt : aucun contact ne passera par une adresse ou un numéro affiché."
+    "soon": "La messagerie arrive bientôt : aucun contact ne passera par une adresse ou un numéro affiché.",
+    "needsRelation": "Écrire est réservé à vos relations : connectez-vous d'abord.",
+    "call": "Appeler",
+    "callTo": "Appeler {{name}}"
   },
-  "filters": { "advanced": "Plus de filtres" },
+  "filters": {
+    "advanced": "Plus de filtres"
+  },
   "hub": {
+    "errorTitle": "Les informations de ce pays ne sont pas disponibles.",
+    "errorBody": "Vérifiez votre connexion et rechargez la page pour réessayer.",
+    "reload": "Recharger la page",
     "metaTitle": "Hub pays",
     "title": "La communauté — {{country}}",
     "open": "Pays ouvert",
@@ -536,7 +583,7 @@
       "groupes": "Groupes"
     },
     "welcomeTitle": "Bienvenue, {{name}}.",
-    "welcomeBody": "Vous êtes aussi membre d'ANTIA, le réseau public, avec le même profil. Ce que vous publiez ici reste dans DIASPORALE, sauf si vous cochez « Publier aussi sur ANTIA ».",
+    "welcomeBody": "Vous êtes aussi membre d'ANTSIA, le réseau public, avec le même profil. Ce que vous publiez ici reste dans DIASPORALE, sauf si vous cochez « Publier aussi sur ANTSIA ».",
     "emptyPosts": "Aucune publication dans le hub {{country}} pour l'instant.",
     "emptyPostsBody": "Une information pratique, une question, un bon plan : la première publication lance le hub.",
     "emptyEvents": "Aucun évènement prévu — {{country}}.",
@@ -555,13 +602,51 @@
     "edit": "Modifier",
     "preview": "Me voir comme les autres",
     "previewExit": "Revenir à mon profil",
-    "previewNotice": "Aperçu : ce que voit un membre d'un autre pays, sans relation avec vous.",
+    "previewNotice": "Aperçu limité de votre facette diaspora pour un membre actif d’un autre pays, sans relation avec vous. La visibilité réelle du profil dépend aussi du lecteur et des règles de publication.",
+    "managePublication": "Gérer la publication de mon profil",
     "posts": "Publications",
+    "tabsLabel": "Contenus du profil",
+    "photos": "Photos",
+    "albums": "Albums",
     "noPosts": "{{name}} n'a encore rien publié.",
     "noPostsSelf": "Vous n'avez encore rien publié.",
     "unavailableTitle": "Ce profil n'est pas disponible.",
     "unavailableBody": "Il n'existe pas, ou vous ne pouvez pas le voir.",
-    "bookmarks": "Mes enregistrements"
+    "bookmarks": "Mes enregistrements",
+    "errorTitle": "Le profil ne s’affiche pas.",
+    "errorBody": "Impossible de charger ce profil. Réessayez dans un instant.",
+    "reload": "Recharger le profil",
+    "previewPostsUnavailable": "Les publications et les albums sont masqués dans cet aperçu. Leur visibilité dépend de chaque lecteur.",
+    "images": {
+      "edit": "Modifier mes images",
+      "title": "Photo et couverture",
+      "shared": "Ces images appartiennent à votre profil ANTSIA et sont partagées entre vos réseaux. Leur affichage respecte les droits de chaque lecteur.",
+      "readOnly": "La modification des images nécessite une adhésion active à DIASPORALE.",
+      "unavailable": "Vos images ne sont pas disponibles pour le moment.",
+      "avatar": "Photo de profil",
+      "cover": "Image de couverture",
+      "chooseAvatar": "Choisir une photo de profil",
+      "chooseCover": "Choisir une couverture",
+      "requirements": "JPEG, PNG ou WebP, jusqu’à 5 Mio par image.",
+      "saveAvatar": "Enregistrer la photo",
+      "saveCover": "Enregistrer la couverture",
+      "saving": "Enregistrement…",
+      "removeAvatar": "Retirer ma photo",
+      "removeCover": "Retirer ma couverture",
+      "confirmRemove": "Retirer cette image de votre profil dans tous vos réseaux ? Le fichier déjà déposé n’est pas supprimé par ce geste.",
+      "cancel": "Annuler",
+      "required": "Choisissez une image non vide.",
+      "updated": "Image enregistrée.",
+      "pending": "Image enregistrée, en attente de vérification avant affichage.",
+      "blocked": "Cette image ne peut pas être affichée. Vous pouvez en choisir une autre.",
+      "removed": "Image retirée de votre profil."
+    }
+  },
+  "albums": {
+    "metaTitle": "Album photo",
+    "unavailableTitle": "Albums indisponibles",
+    "previewUnavailableBody": "Les albums ne sont pas proposés dans cet aperçu.",
+    "unavailableBody": "Les albums nécessitent une adhésion active au réseau. Ils ne sont pas proposés en démonstration."
   },
   "facet": {
     "country": "Pays de résidence",
@@ -586,13 +671,81 @@
     }
   },
   "settings": {
+    "contentPreferences": {
+      "title": "Mon fil",
+      "lead": "Retrouvez les publications masquées et les auteurs mis en sourdine. Ces choix sont privés et concernent uniquement votre fil DIASPORALE.",
+      "hiddenTab": "Publications masquées",
+      "mutedTab": "Auteurs en sourdine",
+      "emptyHidden": "Vous n’avez aucune publication masquée.",
+      "emptyMuted": "Vous n’avez aucun auteur en sourdine.",
+      "emptyPage": "Rien à afficher sur cette page.",
+      "unavailablePost": "Publication indisponible",
+      "unknownAuthor": "Profil non affiché",
+      "noText": "Publication avec média",
+      "hiddenAt": "Masquée le {{date}}",
+      "mutedAt": "Mis en sourdine le {{date}}",
+      "showPost": "Voir la publication",
+      "restoreHidden": "Ne plus masquer",
+      "restoreMuted": "Ne plus mettre en sourdine",
+      "restoring": "Rétablissement…",
+      "restoredHidden": "Le masquage est annulé.",
+      "restoredMuted": "La mise en sourdine est annulée.",
+      "error": "Impossible de charger ces choix.",
+      "retry": "Réessayer",
+      "next": "Suivant",
+      "previous": "Précédent",
+      "page": "Page {{number}}",
+      "moved": "Ce choix a déjà été mis à jour.",
+      "unavailableLead": "Les détails ne sont plus accessibles. Vous pouvez quand même annuler ce choix."
+    },
+    "profilePublication": {
+      "title": "Publication du profil",
+      "globalScope": "Ce profil est commun à ANTSIA et DIASPORALE. Ces réglages s’appliquent dans les deux applications ; l’annuaire DIASPORALE se règle séparément.",
+      "loadError": "Le profil personnel n’a pas pu être chargé.",
+      "reload": "Recharger le profil",
+      "unavailable": "Les réglages du profil sont indisponibles pour cette session.",
+      "state": {
+        "published": "Publication du profil enregistrée.",
+        "private": "Publication enregistrée, mode privé activé.",
+        "withdrawn": "Votre profil est retiré.",
+        "unpublished": "Votre profil n’est pas publié."
+      },
+      "privateLead": "Le mode privé vous retire des recherches et suggestions et ferme les nouveaux abonnements et demandes entrants. Votre lien connu, vos publications et vos relations existantes conservent leurs règles habituelles de visibilité.",
+      "withdrawLead": "Retirer le profil rend votre fiche publique indisponible et votre nom neutre. Le compte, les adhésions, médias, contenus, relations et consentements sont conservés. Vous restez membre de DIASPORALE.",
+      "republishLead": "La republication reprend votre identité et votre accroche conservées, ainsi que vos choix de confidentialité et d’annuaire. La modération peut retarder la visibilité du profil.",
+      "makePrivate": "Passer en mode privé",
+      "privacyOn": "Mode privé activé.",
+      "privacyOff": "Mode privé désactivé.",
+      "makeDiscoverable": "Désactiver le mode privé",
+      "withdraw": "Retirer mon profil",
+      "republish": "Republier mon profil",
+      "working": "Enregistrement…",
+      "saved": {
+        "privacy": "Réglage de confidentialité enregistré.",
+        "withdraw": "Retrait du profil enregistré.",
+        "republish": "Republication demandée. La modération peut retarder la visibilité du profil."
+      },
+      "confirm": {
+        "withdraw": {
+          "title": "Retirer le profil commun ?",
+          "body": "Le retrait s’applique à ANTSIA et DIASPORALE. Votre fiche publique devient indisponible et votre nom neutre ; vos données, contenus, liens, adhésions et consentements sont conservés. Vous pourrez republier depuis ces réglages.",
+          "confirm": "Confirmer le retrait"
+        },
+        "republish": {
+          "title": "Republier le profil commun ?",
+          "body": "La republication est demandée dans ANTSIA et DIASPORALE avec l’identité et l’accroche conservées. Le mode privé et vos choix d’annuaire sont conservés. La modération peut retarder la visibilité.",
+          "confirm": "Confirmer la republication"
+        }
+      }
+    },
+    "signingOut": "Déconnexion…",
     "title": "Réglages",
     "memberships": "Mes réseaux",
-    "membershipsLead": "Entrer dans DIASPORALE vous a aussi fait membre d'ANTIA. Vos contextes restent séparés.",
+    "membershipsLead": "Entrer dans DIASPORALE vous a aussi fait membre d'ANTSIA. Vos contextes restent séparés.",
     "memberSince": "Membre depuis le {{date}}",
     "sponsoredBy": "Parrainé par {{name}} (@{{handle}})",
-    "rootName": "ANTIA",
-    "rootDerived": "Adhésion dérivée de DIASPORALE : même profil, même identifiant. Quitter DIASPORALE ne vous retire pas d'ANTIA.",
+    "rootName": "ANTSIA",
+    "rootDerived": "Adhésion dérivée de DIASPORALE : même profil, même identifiant. Quitter DIASPORALE ne vous retire pas d'ANTSIA.",
     "attestationVerified": "Inscription consulaire vérifiée.",
     "attestationNotConfirmed": "Nous n'avons pas pu confirmer votre inscription consulaire.",
     "attestationNone": "Inscription consulaire non vérifiée.",
@@ -602,7 +755,7 @@
     "visibilityLegend": "Qui voit quoi",
     "saved": "Enregistré.",
     "directory": "Annuaire des membres",
-    "directoryLead": "Masqué par défaut. On vous contacte seulement par la messagerie, jamais par une adresse.",
+    "directoryLead": "Masqué par défaut. Un profil privé ou retiré reste absent de l’annuaire, même si le niveau choisi est visible. On vous contacte seulement par la messagerie, jamais par une adresse.",
     "directoryNeedsConsent": "Activez d'abord le consentement « Annuaire des membres » ci-dessous.",
     "directoryLevel": {
       "hidden": "Masqué",
@@ -610,14 +763,14 @@
       "network": "Visible de tous les membres"
     },
     "consents": "Consentements",
-    "consentsLead": "Chaque choix est horodaté et révocable d'un geste.",
+    "consentsLead": "Vos consentements enregistrés et les choix disponibles ici. Chaque modification est horodatée.",
     "consentRecorded": "Enregistré le {{date}} — texte du {{version}}",
     "consentGranted": "Consentement donné.",
     "consentRevoked": "Consentement retiré.",
-    "leaveExplain": "Quitter DIASPORALE retire votre consentement au profil social. Votre adhésion à ANTIA reste.",
+    "leaveExplain": "Quitter DIASPORALE termine cette adhésion. Votre compte, votre profil commun et votre adhésion à ANTSIA restent.",
     "leave": "Quitter DIASPORALE",
     "leaveConfirmTitle": "Quitter DIASPORALE ?",
-    "leaveConfirmBody": "Votre profil ne sera plus visible dans DIASPORALE. Vous pourrez revenir ; un nouveau parrainage pourra être nécessaire.",
+    "leaveConfirmBody": "Votre adhésion à DIASPORALE prend fin, ainsi que votre parrainage reçu. Votre profil commun et vos consentements sont conservés. Vous pourrez revenir ; un nouveau parrainage pourra être nécessaire.",
     "left": "Vous avez quitté DIASPORALE.",
     "sponsorHelp": "Parrainage",
     "sponsorHelpLead": "Un membre vérifié depuis plus de 30 jours peut parrainer un compte en attente avec son identifiant.",
@@ -626,18 +779,26 @@
     "handleCopied": "Identifiant copié.",
     "goSponsor": "Parrainer quelqu'un",
     "data": "Mes données",
-    "dataLead": "Téléchargez tout ce que DIASPORALE sait de vous, ou effacez votre compte.",
     "export": "Télécharger mes données",
     "exported": "Données téléchargées.",
     "delete": "Effacer mon compte",
     "deleteConfirmTitle": "Effacer votre compte ?",
     "deleteConfirmBody": "Votre profil, vos publications, vos réactions, vos consentements et vos parrainages seront effacés. Les contenus qui vous citaient afficheront « compte supprimé ».",
     "deleteAcknowledge": "Je comprends que l'effacement est définitif.",
-    "deleted": "Votre compte est effacé.",
     "appearance": "Langue et apparence",
     "session": "Session",
     "sessionLead": "Déconnecte cet appareil et tous les autres.",
-    "signOutEverywhere": "Se déconnecter partout"
+    "signOutEverywhere": "Se déconnecter partout",
+    "profileIdentity": {
+      "title": "Nom et accroche",
+      "lead": "Ces textes sont communs à ANTSIA et DIASPORALE. Les enregistrer conserve votre choix privé et l’état publié ou retiré du profil.",
+      "edit": "Modifier le nom et l’accroche",
+      "name": "Nom affiché",
+      "nameHint": "Un nom choisi librement pour votre profil social. Votre identifiant reste inchangé.",
+      "headline": "Accroche",
+      "headlineHint": "Facultative, {{max}} caractères maximum. Vider le champ retire l’accroche.",
+      "save": "Enregistrer les textes"
+    }
   },
   "sponsor": {
     "title": "Parrainer",
@@ -727,14 +888,14 @@
   },
   "charte": {
     "title": "Charte « Sable de la diaspora »",
-    "eyebrow": "Charte graphique · version 3.2 · 15 octobre 2026",
+    "eyebrow": "Charte graphique · version 3.3 · 17 octobre 2026",
     "heading": "Sable de la diaspora",
     "lead": "Les composants de DIASPORALE, montés avec des données fictives, pour relire et recetter l'interface dans les deux thèmes.",
     "tocLabel": "Sommaire de la charte",
     "section": {
       "color": {
         "title": "Couleur",
-        "lead": "Six couleurs nommées, une seule teinte chaude par thème, presque sans saturation : rien ne vire au beige ni au brun. Le fond est la couche la plus basse, chaque surface qui monte s'éclaircit."
+        "lead": "Six couleurs nommées, une seule teinte chaude par thème, presque sans saturation : rien ne vire au beige ni au brun. En clair, le fond papier porte les cartes sable ; en sombre, les cartes s'éclaircissent sur le fond nuit."
       },
       "contrast": {
         "title": "Contraste",
@@ -762,7 +923,7 @@
       },
       "cards": {
         "title": "Cartes",
-        "lead": "Papier sur sable en clair, carte relevée sur la nuit en sombre : la carte se lève par la clarté, sans filet. Chaque contenu porte son pays."
+        "lead": "Cartes sable sur fond papier en clair, cartes éclaircies sur fond nuit en sombre : les surfaces se distinguent par la clarté, sans filet. Chaque contenu porte son pays."
       },
       "controls": {
         "title": "Commandes",
@@ -772,7 +933,7 @@
     "theme": {
       "light": "Clair",
       "dark": "Sombre",
-      "lightRoles": "Fond sable · carte papier · texte encre",
+      "lightRoles": "Fond papier · carte sable · texte encre",
       "darkRoles": "Fond nuit · carte relevée · texte sable",
       "text": "Le texte principal",
       "secondary": "Le texte secondaire, plus discret",
@@ -781,11 +942,11 @@
     "swatch": {
       "sable": {
         "name": "Sable",
-        "role": "Fond clair, texte sombre"
+        "role": "Cartes claires, texte sombre"
       },
       "papier": {
         "name": "Papier",
-        "role": "Carte claire"
+        "role": "Fond clair"
       },
       "encre": {
         "name": "Encre",
@@ -947,6 +1108,64 @@
       "postMine": "Ma publication, en relecture : la carte flottante n'est montrée qu'à son autrice ou son auteur."
     }
   },
+  "messages": {
+    "title": "Messages"
+  },
+  "stories": {
+    "title": "Statuts"
+  },
+  "icom": {
+    "unavailableTitle": "Messagerie indisponible",
+    "unavailable": {
+      "demo": "La messagerie et les appels passent par le réseau en service : la démonstration ne les porte pas.",
+      "networkMissing": "La messagerie n'est pas encore ouverte sur ce réseau : revenez un peu plus tard."
+    }
+  },
+  "relations": {
+    "title": "Mes relations",
+    "lead": "Retrouvez vos relations, vos demandes et vos abonnements, et gérez vos choix personnels.",
+    "tabsLabel": "Relations, demandes, abonnements, blocages et suggestions",
+    "acceptedTab": "Mes relations",
+    "receivedTab": "Demandes reçues",
+    "sentTab": "Demandes envoyées",
+    "followingTab": "Mes abonnements",
+    "blockedTab": "Personnes bloquées",
+    "member": "Membre",
+    "loading": "Chargement de vos relations…",
+    "errorTitle": "La liste n’a pas pu être actualisée",
+    "errorBody": "Réessayez dans un instant. Les éléments déjà chargés restent affichés.",
+    "retry": "Réessayer",
+    "emptyAcceptedTitle": "Vous n’avez pas encore de relation",
+    "emptyAcceptedBody": "Rencontrez des membres dans l’annuaire et proposez-leur de vous connecter.",
+    "emptyReceivedTitle": "Aucune demande en attente",
+    "emptyReceivedBody": "Vos prochaines demandes de connexion apparaîtront ici.",
+    "discover": "Rencontrer des membres",
+    "loadMore": "Voir la suite",
+    "loadingMore": "Chargement…",
+    "readOnly": "Vous pourrez répondre aux demandes lorsque votre adhésion vous permettra de publier.",
+    "accepted": "Demande acceptée. Vous êtes maintenant en relation.",
+    "declined": "Demande refusée.",
+    "unavailableTitle": "Les relations sont indisponibles ici",
+    "unavailableBody": "Cette liste est réservée aux membres actifs de DIASPORALE. En démonstration, explorez les gestes de relation depuis les profils.",
+    "dismissedTab": "Suggestions masquées",
+    "dismissed": {
+      "title": "Suggestions masquées",
+      "body": "Retirer un masquage permet une nouvelle proposition seulement si le membre est toujours éligible. Aucune connexion ni aucun abonnement n’est créé.",
+      "neutral": "Suggestion masquée",
+      "hiddenAt": "Masquée le {{date}}",
+      "restore": "Retirer le masquage",
+      "restoreLabel": "Retirer le masquage de {{name}}",
+      "restoring": "Retrait en cours…",
+      "restored": "Choix de masquage mis à jour.",
+      "restoreFailed": "Le masquage n’a pas pu être retiré.",
+      "empty": "Vous n’avez aucune suggestion masquée.",
+      "loading": "Chargement des suggestions masquées…",
+      "loadMore": "Voir plus de suggestions masquées",
+      "errorTitle": "Impossible de charger les suggestions masquées",
+      "errorBody": "Réessayez pour actualiser vos choix.",
+      "retry": "Réessayer"
+    }
+  },
   "members": {
     "title": "Membres",
     "lead": "Les membres qui ont choisi d'apparaître dans l'annuaire. Le contact passe par la messagerie : aucune coordonnée n'est affichée.",
@@ -987,7 +1206,10 @@
     "showReplies_one": "Voir {{count}} réponse",
     "showReplies_other": "Voir les {{count}} réponses",
     "edited": "modifié",
-    "someone": "Un membre"
+    "someone": "Un membre",
+    "edit": "Modifier",
+    "editLabel": "Modifier votre commentaire",
+    "updated": "Commentaire modifié."
   },
   "postMenu": {
     "open": "Plus d'actions sur cette publication",
@@ -1063,7 +1285,10 @@
     "emptyTitle": "Aucune publication enregistrée.",
     "emptyBody": "Enregistrez une publication depuis son menu « … » pour la retrouver ici.",
     "open": "Ouvrir",
-    "remove": "Retirer"
+    "remove": "Retirer",
+    "loadMore": "Voir plus d’enregistrements",
+    "loadingMore": "Chargement des enregistrements…",
+    "retry": "Réessayer"
   },
   "bell": {
     "open": "Notifications",
@@ -1203,6 +1428,7 @@
     "delivery_unavailable": "Le code n'a pas pu être envoyé pour le moment. Réessayez dans un instant.",
     "feature_unavailable": "Cette fonction n'est pas encore ouverte.",
     "network_unavailable": "DIASPORALE est injoignable pour le moment. Réessayez dans un instant.",
-    "status_insufficient": "Votre statut ne permet pas encore ce geste : demandez un parrainage ou vérifiez votre inscription consulaire."
+    "status_insufficient": "Votre statut ne permet pas encore ce geste : demandez un parrainage ou vérifiez votre inscription consulaire.",
+    "headline_too_long": "L’accroche est trop longue (160 caractères maximum)."
   }
 }

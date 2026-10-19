@@ -1,0 +1,94 @@
+{
+  "serviceReviews": {
+    "list": {
+      "title": "Avis sur ce service",
+      "lead": "Les avis sont liés à un rendez-vous. La preuve affichée précise ce qui a été confirmé.",
+      "empty": "Aucun avis publié pour ce service."
+    },
+    "mine": {
+      "title": "Mon avis",
+      "lead": "Vous pouvez partager votre expérience après la fin du rendez-vous, avec votre accord explicite.",
+      "write": "Donner mon avis",
+      "edit": "Modifier mon avis"
+    },
+    "proof": {
+      "bookingConfirmed": "Rendez-vous confirmé — la réalisation n’est pas attestée.",
+      "completionDeclared": "Réalisation déclarée par le professionnel — sans vérification indépendante."
+    },
+    "moderation": {
+      "published": "Publié dans DIASPORALE",
+      "pending": "En attente de modération. Ce contenu n’est pas encore publié.",
+      "removed": "Ce contenu a été retiré par la modération."
+    },
+    "rating": "Note : {{rating}} sur 5",
+    "authorUnavailable": "Membre indisponible",
+    "withdrawn": "Vous avez retiré cet avis. Il ne peut pas être republié.",
+    "working": "Enregistrement…",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "form": {
+      "title": "Partager mon expérience",
+      "editTitle": "Modifier mon avis",
+      "description": "Votre avis peut être lu par les membres du réseau après modération. Il ne contient aucune coordonnée ni adresse précise.",
+      "rating": "Votre note",
+      "chooseRating": "Choisir une note",
+      "ratingChoice": "{{rating}} sur 5",
+      "body": "Votre expérience",
+      "hint": "Décrivez la prestation. Ne publiez ni numéro, ni e-mail, ni adresse de domicile.",
+      "consent": "J’accepte de publier cet avis et mon nom social dans DIASPORALE, après modération.",
+      "save": "Enregistrer les modifications",
+      "publish": "Soumettre mon avis",
+      "saved": "Votre avis a été enregistré. Son état de modération est indiqué dans votre demande."
+    },
+    "withdraw": {
+      "cta": "Retirer mon avis",
+      "title": "Retirer ce contenu",
+      "description": "Le contenu ne sera plus visible. Ce retrait est définitif pour cet avis ou cette réponse.",
+      "confirm": "Confirmer le retrait"
+    },
+    "reply": {
+      "title": "Réponse du professionnel",
+      "description": "Vous répondez au nom de la page. Votre réponse est modérée séparément de l’avis.",
+      "cta": "Répondre à cet avis",
+      "edit": "Modifier la réponse",
+      "body": "Votre réponse",
+      "save": "Soumettre la réponse",
+      "saved": "Votre réponse a été enregistrée. Son état de modération est affiché séparément.",
+      "withdraw": "Retirer la réponse",
+      "withdrawn": "La réponse a été retirée."
+    },
+    "report": {
+      "cta": "Signaler cet avis",
+      "reply": "Signaler la réponse",
+      "title": "Signaler un contenu",
+      "description": "Votre signalement est transmis à la modération. Il ne retire pas automatiquement le contenu pour les autres membres.",
+      "reason": "Motif du signalement",
+      "spam": "Contenu indésirable",
+      "harassment": "Harcèlement ou propos injurieux",
+      "fraud": "Fraude ou faux avis",
+      "other": "Autre motif",
+      "send": "Envoyer le signalement",
+      "saved": "Votre signalement a été envoyé à la modération."
+    }
+  },
+  "errors": {
+    "review_rating_invalid": "Choisissez une note entière entre 1 et 5.",
+    "review_body_too_short": "Votre avis doit contenir au moins 10 caractères.",
+    "review_body_too_long": "Votre avis ne peut pas dépasser 2 000 caractères.",
+    "review_reply_too_short": "Votre réponse doit contenir au moins 2 caractères.",
+    "review_reply_too_long": "Votre réponse ne peut pas dépasser 1 000 caractères.",
+    "review_contact_forbidden": "Retirez les coordonnées de ce texte.",
+    "review_address_forbidden": "Retirez l’adresse précise de ce texte.",
+    "review_consent_required": "Votre accord est nécessaire pour publier cet avis.",
+    "review_booking_required": "Un rendez-vous confirmé est nécessaire pour donner un avis.",
+    "review_booking_not_finished": "Vous pourrez donner votre avis après la fin du rendez-vous.",
+    "review_booking_ineligible": "Ce rendez-vous ne permet pas de déposer un avis.",
+    "review_own_page": "Vous ne pouvez pas évaluer une prestation de votre propre page.",
+    "review_not_requester": "Seule la personne qui a demandé cette prestation peut donner un avis.",
+    "review_already_exists": "Un avis existe déjà pour cette prestation. Retrouvez-le dans votre demande.",
+    "review_version_changed": "Ce contenu a changé. Fermez le formulaire et relisez sa version actuelle.",
+    "review_withdrawn": "Ce contenu a été retiré et ne peut pas être republié.",
+    "review_reply_unavailable": "Vous ne pouvez plus répondre à cet avis.",
+    "review_not_published": "Cet avis n’est pas publié."
+  }
+}

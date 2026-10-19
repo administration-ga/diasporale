@@ -1,6 +1,6 @@
 /**
  * Les médias d'une publication (EXF-DG-10), côté écran : LES règles du moteur
- * (`@antia/social-domain/content` : mêmes types, mêmes poids, vidéo seule, texte
+ * (`@antsia/social-domain/content` : mêmes types, mêmes poids, vidéo seule, texte
  * alternatif borné), dites en codes fermés ; et ce que le navigateur sait mesurer
  * d'un fichier avant de l'envoyer (dimensions, durée). Aucune règle n'est
  * réécrite ici : l'écran refuse exactement ce que le moteur refuserait.
@@ -13,8 +13,8 @@ import {
   POST_VIDEO_MIME_TYPES,
   type PostMediaInput,
   type PostMediaKind,
-} from "@antia/social-domain/content"
-import { isDomainViolation } from "@antia/social-domain/violation"
+} from "@antsia/social-domain/content"
+import { isDomainViolation } from "@antsia/social-domain/violation"
 
 import type { ActionErrorCode } from "./errors"
 import type { ActionResult } from "./port"

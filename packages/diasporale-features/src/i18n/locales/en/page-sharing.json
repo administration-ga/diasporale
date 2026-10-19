@@ -1,0 +1,15 @@
+{
+  "pageSharing": {
+    "open": "Share",
+    "openPage": "Share the {{name}} page",
+    "title": "Share this page",
+    "description": "Copy its link or choose a sharing option.",
+    "accessNotice": "Access to this page requires DIASPORALE membership. Sharing its link does not make it public or grant access.",
+    "link": "Page link",
+    "copyLink": "Copy link",
+    "copied": "Page link copied.",
+    "copyFailed": "Automatic copying is unavailable. The link is selected: copy it manually.",
+    "nativeShare": "More sharing options",
+    "shareFailed": "Sharing did not complete. You can copy the page link."
+  }
+}

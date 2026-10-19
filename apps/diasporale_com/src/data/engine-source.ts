@@ -2,7 +2,7 @@
 
 /**
  * La source de données « moteur » de DIASPORALE (PD2) : la même interface que la
- * démonstration (`DiasporaleDataSource`), branchée sur le moteur ANTIA.
+ * démonstration (`DiasporaleDataSource`), branchée sur le moteur ANTSIA.
  *
  * - Lectures : abonnements Convex aux fonctions du moteur — tranche `diaspora`
  *   (adhésion, hubs, parrainage, consentements) et chemins génériques (personne,
@@ -11,12 +11,15 @@
  * - Écritures : client Convex et client Better Auth (codes à usage unique) ;
  *   chacune rend un résultat à code FERMÉ (`errors.<code>`), jamais une exception.
  * - Ce que le moteur ne sert pas encore rend `feature_unavailable` : IDN et SMS
- *   (PA4), export et effacement (PA5), profils et pages (PD4, PD5) — jamais une
- *   donnée inventée. L'attestation consulaire (PD3) rend `attestation_unavailable`
- *   tant que le déploiement n'a pas sa clé de service.
+ *   (PA4) — jamais une donnée inventée. L'attestation consulaire (PD3) rend
+ *   `attestation_unavailable` tant que le déploiement n'a pas sa clé de service.
+ * - Les capacités du plan global (docs/14 : pages, gestion des pages, services,
+ *   demandes, droits personnels, associations, avis) vivent chacune dans son
+ *   fichier `engine-<capacité>.ts`, sur les briques communes de `engine-kit.ts`.
  */
-import type { EngineAuthClient } from "@antia/api/auth-client"
-import { useStableConvexAuth } from "@antia/api/hooks"
+import type { EngineAuthClient } from "@antsia/api/auth-client"
+import { signOutEverywhere } from "@antsia/api/sign-out-everywhere"
+import { useAuthenticatedConvexQuery, useStableConvexAuth } from "@antsia/api/hooks"
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
 import {
@@ -30,18 +33,28 @@ import type {
   ActionErrorCode,
   ActionResult,
   BookmarkView,
+  BookmarksPageQuery,
+  BookmarksPageRequest,
+  BookmarksPageView,
   CommentThreadView,
   CommentView,
   ConsentView,
+  ContentPreferenceItem,
+  ContentPreferencesPage,
+  ContentPreferencesQuery,
+  ContentPreferencesRequest,
   CountryHubView,
   DiasporaleActions,
   DiasporaleDataSource,
+  FeedPageQuery,
+  FeedPageRequest,
   Loadable,
   MemberHitView,
   OpenCountryView,
   PostView,
   NotificationView,
   ProfileView,
+  ProfilePostsPageRequest,
   ReactionKind,
   RelationView,
   SessionView,
@@ -49,15 +62,48 @@ import type {
   SuggestionView,
   UnreadCountView,
 } from "@diasporale/features/data"
-import { COMMENTS_PAGE, describeMediaFile, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
+import { BOOKMARKS_PAGE_SIZE, COMMENTS_PAGE, describeMediaFile, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
 import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
-import { useMemo } from "react"
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
 
 import { routes } from "@/lib/routes"
+import { clearDiasporaleDrafts } from "@/lib/sign-out-state"
 
 import { authActionErrorCode, engineActionErrorCode } from "./engine-errors"
+import {
+  type EngineSourceDeps,
+  failed,
+  LOADING,
+  type Loaded,
+  PAGE_ACCESS_ERRORS,
+  ready,
+  Refusal,
+  useEngineMember,
+  useLoaded,
+  useNetworkId,
+  useReadablePostsQuery,
+} from "./engine-kit"
+import { createEngineAssociations } from "./engine-associations"
+import { createEngineDataRights } from "./engine-data-rights"
+import { createEnginePageAdmin } from "./engine-page-admin"
+import { createEnginePages, useEnginePage } from "./engine-pages"
+import { createEnginePagePublications } from "./engine-page-publications"
+import { createEngineProfileImagesActions } from "./engine-profile-images"
+import { createEngineServiceRequests } from "./engine-service-requests"
+import { createEngineServiceReviews } from "./engine-service-reviews"
+import { createEngineAssociationActivities } from "./engine-association-activities"
+import { createEngineServices } from "./engine-services"
+import { createEngineContentReports } from "./engine-content-reports"
+import { createEngineMutualAid } from "./engine-mutual-aid"
+import { createEngineArrivalKit } from "./engine-arrival-kit"
+import { createEngineMentoring } from "./engine-mentoring"
+import { createEngineJobs } from "./engine-jobs"
+import { createEngineModerationDesk } from "./engine-moderation-desk"
+import { createEnginePilotMetrics } from "./engine-pilot-metrics"
+import { createEngineConversations } from "./engine-conversations"
+import { createEnginePageDecisions } from "./engine-page-decisions"
 import {
   toAccountView,
   toConsentViews,
@@ -73,6 +119,7 @@ import {
   toWall,
   toNotificationView,
   toOpenCountries,
+  toOwnProfileView,
   toPostView,
   toProfileView,
   toRelationView,
@@ -80,7 +127,7 @@ import {
   toSponsorDashboardView,
 } from "./engine-views"
 
-/** Une page du fil, la plus grande que le moteur serve. */
+/** Taille d'une fenêtre du fil DIASPORALE (le moteur accepte jusqu'à cinquante lignes). */
 const FEED_PAGE = 30
 
 /**
@@ -105,62 +152,7 @@ const BELL_PAGE = 30
 /** Les réponses d'une racine, lues d'un coup à la demande. */
 const REPLIES_PAGE = 50
 /** Les signets lus d'un coup (première page). */
-const BOOKMARKS_PAGE = 50
-
-const LOADING = { status: "loading" } as const
-
-function ready<T>(data: T): Loadable<T> {
-  return { status: "ready", data }
-}
-
-function failed<T>(code: ActionErrorCode): Loadable<T> {
-  return { status: "error", code }
-}
-
-type Loaded<T> = { readonly state: "loading" } | { readonly state: "error"; readonly code: ActionErrorCode } | { readonly state: "ready"; readonly value: T }
-
-/**
- * Une query du moteur dont l'erreur se LIT (`useQueries` la rend au lieu de la
- * lever) : un refus du serveur devient un code fermé, pas un écran d'erreur.
- *
- * L'objet de requêtes est MÉMORISÉ sur une clé stable (nom de la fonction et
- * arguments sérialisés), comme le fait le `useQuery` de Convex : un objet neuf à
- * chaque rendu relancerait l'abonnement à chaque rendu, sans fin.
- */
-function useLoaded<Query extends FunctionReference<"query">>(
-  query: Query,
-  args: FunctionArgs<Query> | "skip",
-): Loaded<FunctionReturnType<Query>> {
-  const name = getFunctionName(query)
-  const argsKey = args === "skip" ? null : JSON.stringify(convexToJson(args as Value))
-  const queries = useMemo(() => {
-    const request: RequestForQueries = {}
-    if (argsKey !== null) {
-      request.value = { query: makeFunctionReference<"query">(name), args: jsonToConvex(JSON.parse(argsKey) as never) as Record<string, Value> }
-    }
-    return request
-  }, [name, argsKey])
-  const results = useQueries(queries) as Record<string, unknown>
-  if (argsKey === null) return { state: "loading" }
-  const value = results.value
-  if (value === undefined) return { state: "loading" }
-  if (value instanceof Error) return { state: "error", code: engineActionErrorCode(value) }
-  return { state: "ready", value: value as FunctionReturnType<Query> }
-}
-
-/** Le réseau `diasporale`, résolu par son identifiant public (projection publique du moteur). */
-function useNetworkId(): Loaded<Id<"networks"> | null> {
-  const network = useLoaded(api.modules.networks.networks.getBySlug, { slug: DIASPORALE_NETWORK_SLUG })
-  if (network.state !== "ready") return network
-  return { state: "ready", value: network.value?._id ?? null }
-}
-
-export interface EngineSourceDeps {
-  readonly convex: ConvexReactClient
-  readonly authClient: EngineAuthClient
-  /** Attente entre deux lectures de l'issue d'une attestation (remplaçable dans les tests). */
-  readonly sleep?: (ms: number) => Promise<void>
-}
+const BOOKMARKS_PAGE = BOOKMARKS_PAGE_SIZE
 
 /** L'issue d'une attestation se lit au plus quinze secondes : au-delà, elle est tenue pour indisponible. */
 export const ATTESTATION_POLL_MS = 750
@@ -168,20 +160,160 @@ export const ATTESTATION_POLLS = 20
 
 const realSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
+export type { EngineSourceDeps } from "./engine-kit"
+
 export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSource {
   /** Réactions connues du lecteur, relevées par le fil : « retirer ma réaction » rejoue la même. */
   const myReactions = new Map<string, ReactionKind | null>()
 
-  function useMember() {
-    const auth = useStableConvexAuth()
-    const networkId = useNetworkId()
-    const id = networkId.state === "ready" ? networkId.value : null
-    const membership = useLoaded(api.modules.diaspora.membership.myMembership, auth.isAuthenticated && id ? { networkId: id } : "skip")
-    return { auth, networkId, membership }
+  async function ownPerson(personId: string) {
+    const person = await deps.convex.query(api.modules.people.persons.getMyPerson, {})
+    if (!person) throw new Refusal("not_signed_in")
+    if (person._id !== personId) throw new Refusal("not_found")
+    return person
   }
+
+  async function profileCommand(work: () => Promise<void>): Promise<ActionResult> {
+    try {
+      await work()
+      return { ok: true, value: null }
+    } catch (error) {
+      return { ok: false, code: error instanceof Refusal ? error.code : engineActionErrorCode(error) }
+    }
+  }
+
+  const useMember = useEngineMember
+  const associationActivities = createEngineAssociationActivities(deps)
 
   return {
     kind: "engine",
+    profileImages: createEngineProfileImagesActions({ convex: deps.convex }),
+    // Capacités des chantiers du plan global (docs/14), chacune dans son fichier.
+    // Les publications lues dans une fiche de page alimentent aussi « retirer ma réaction ».
+    pages: createEnginePages(deps, { onPosts: (posts) => { for (const post of posts) myReactions.set(post.id, post.myReaction) } }),
+    pagePublications: createEnginePagePublications(deps, { onPosts: (posts) => { for (const post of posts) myReactions.set(post.id, post.myReaction) } }),
+    pageAdmin: createEnginePageAdmin(deps),
+    services: createEngineServices(deps),
+    serviceRequests: createEngineServiceRequests(deps),
+    dataRights: createEngineDataRights(deps),
+    associations: createEngineAssociations(deps),
+    associationGroups: associationActivities.groups,
+    associationEvents: associationActivities.events,
+    serviceReviews: createEngineServiceReviews(deps),
+    contentReports: createEngineContentReports(deps),
+    // Vague H du plan global (entraide, kit d'arrivée, mentorat, emploi, modération, mesure).
+    mutualAid: createEngineMutualAid(deps),
+    arrivalKit: createEngineArrivalKit(deps),
+    mentoring: createEngineMentoring(deps),
+    jobs: createEngineJobs(deps),
+    moderationDesk: createEngineModerationDesk(deps),
+    pilotMetrics: createEnginePilotMetrics(deps),
+    // P16 · G9 : décisions qui ont retiré un contenu porté par une page, et leur recours.
+    pageDecisions: createEnginePageDecisions(deps),
+    conversations: createEngineConversations(deps),
+    contentPreferences: {
+      usePage(args: ContentPreferencesRequest): ContentPreferencesQuery {
+        const { auth, networkId, membership } = useMember()
+        const id = networkId.state === "ready" ? networkId.value : null
+        const member = membership.state === "ready" ? membership.value : null
+        const canRead = auth.isAuthenticated && id !== null && member?.capabilities.includes("read_network") === true
+        const reference = args.kind === "hiddenPosts"
+          ? api.modules.diaspora.contentPreferences.paginateHiddenPosts
+          : api.modules.diaspora.contentPreferences.paginateMutedAuthors
+        const query = useAuthenticatedConvexQuery(reference, canRead && id ? {
+          networkId: id,
+          expectedPersonId: args.personId as Id<"persons">,
+          paginationOpts: { cursor: args.cursor, numItems: 20 },
+        } : "skip")
+        let error: ActionErrorCode | null = query.isError ? engineActionErrorCode(query.error) : null
+        if (auth.isUnauthenticated) error = "not_signed_in"
+        else if (networkId.state === "error") error = networkId.code
+        else if (membership.state === "error") error = membership.code
+        else if (networkId.state === "ready" && id === null) error = "network_unavailable"
+        else if (membership.state === "ready" && !member) error = "not_member"
+        else if (member && !member.capabilities.includes("read_network")) error = member.status === "suspendue" ? "suspended" : "not_member"
+        const requestKey = JSON.stringify([id, args.personId, args.kind, args.cursor, canRead])
+        // Le cache d'un ancien lecteur ou d'une page refusée ne réautorise jamais la lecture.
+        const readable = useReadablePostsQuery<{ page: ContentPreferenceItem[]; continueCursor: string; isDone: boolean }>(query, requestKey, canRead, error)
+        const retry = async () => { readable.retry() }
+        if (readable.error) return { ...failed<ContentPreferencesPage>(readable.error), retry }
+        if (readable.data === undefined) return { ...LOADING, retry }
+        return {
+          status: "ready",
+          data: {
+            items: readable.data.page.map((row) => ({
+              choiceId: row.choiceId,
+              at: row.at,
+              postId: row.postId,
+              body: row.body,
+              author: row.author,
+            })),
+            continueCursor: readable.data.isDone ? null : readable.data.continueCursor,
+            isDone: readable.data.isDone,
+          },
+          retry,
+        }
+      },
+      async restore({ personId, kind, choiceId }) {
+        try {
+          await ownPerson(personId)
+          const network = await deps.convex.query(api.modules.networks.networks.getBySlug, { slug: DIASPORALE_NETWORK_SLUG })
+          if (!network) throw new Refusal("network_unavailable")
+          const result = kind === "hiddenPosts"
+            ? await deps.convex.mutation(api.modules.diaspora.contentPreferences.restoreHiddenPost, {
+              networkId: network._id,
+              expectedPersonId: personId as Id<"persons">,
+              choiceId: choiceId as Id<"postMarks">,
+            })
+            : await deps.convex.mutation(api.modules.diaspora.contentPreferences.restoreMutedAuthor, {
+              networkId: network._id,
+              expectedPersonId: personId as Id<"persons">,
+              choiceId: choiceId as Id<"mutes">,
+            })
+          return { ok: true, value: result }
+        } catch (error) {
+          return { ok: false, code: error instanceof Refusal ? error.code : engineActionErrorCode(error) }
+        }
+      },
+    },
+    profilePublication: {
+      updateIdentity: (personId, input) => profileCommand(async () => {
+        const person = await ownPerson(personId)
+        if (!person.handle || !person.displayName) throw new Refusal("not_member")
+        await deps.convex.mutation(api.modules.people.profile.updateMyProfile, {
+          expectedPersonId: personId as Id<"persons">,
+          displayName: input.displayName,
+          headline: input.headline,
+        })
+      }),
+      useMyProfile() {
+        const auth = useStableConvexAuth()
+        const person = useLoaded(api.modules.people.persons.getMyPerson, auth.isAuthenticated ? {} : "skip")
+        if (auth.isPending) return LOADING
+        if (!auth.isAuthenticated) return failed("not_signed_in")
+        if (person.state === "error") return failed(person.code)
+        return person.state === "ready" ? ready(person.value ? toOwnProfileView(person.value) : null) : LOADING
+      },
+      setPrivacy: (personId, isPrivate) => profileCommand(async () => {
+        const person = await ownPerson(personId)
+        if (!person.handle || !person.displayName) throw new Refusal("not_member")
+        if (person.private !== isPrivate) await deps.convex.mutation(api.modules.people.profile.setMyProfilePrivacy, { private: isPrivate })
+      }),
+      withdraw: (personId) => profileCommand(async () => {
+        const person = await ownPerson(personId)
+        if (person.published) await deps.convex.mutation(api.modules.people.profile.withdrawMyProfile, {})
+      }),
+      republish: (personId) => profileCommand(async () => {
+        const person = await ownPerson(personId)
+        if (person.published) return
+        if (!person.handle || !person.displayName) throw new Refusal("not_member")
+        await deps.convex.mutation(api.modules.people.profile.publishMyProfile, {
+          handle: person.handle,
+          displayName: person.displayName,
+          ...(person.headline === undefined ? {} : { headline: person.headline }),
+        })
+      }),
+    },
 
     useSession(): Loadable<SessionView> {
       const { auth, networkId, membership } = useMember()
@@ -237,20 +369,82 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       return ready(posts)
     },
 
+    useFeedPage(args: FeedPageRequest): FeedPageQuery {
+      const { auth, networkId, membership } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const member = membership.state === "ready" ? membership.value : null
+      const residence = member?.facet?.countryOfResidence
+      const country = args.hubCountry ?? (residence !== undefined && parseResidenceCountry(residence).ok ? (residence as CountryCode) : null)
+      const tag = args.tag?.trim().toLowerCase() || undefined
+      const canRead = auth.isAuthenticated && id !== null && country !== null && member?.capabilities.includes("read_network") === true
+      const query = useAuthenticatedConvexQuery(
+        api.modules.posts.posts.myFeed,
+        canRead && id && country ? {
+          networkId: id,
+          limit: FEED_PAGE,
+          ...feedRequest(args.scope, country),
+          ...(tag === undefined ? {} : { tag }),
+          ...(args.cursor ? { cursor: { publishedAt: args.cursor.publishedAt, postId: args.cursor.postId as Id<"posts"> } } : {}),
+        } : "skip",
+      )
+      let error: ActionErrorCode | null = query.isError ? engineActionErrorCode(query.error) : null
+      if (auth.isUnauthenticated) error = "not_signed_in"
+      else if (networkId.state === "error") error = networkId.code
+      else if (membership.state === "error") error = membership.code
+      else if (networkId.state === "ready" && id === null) error = "network_unavailable"
+      else if (membership.state === "ready" && (!member || country === null)) error = "not_member"
+      else if (member && !member.capabilities.includes("read_network")) error = member.status === "suspendue" ? "suspended" : "not_member"
+      const page = useReadablePostsQuery(query, JSON.stringify(["feed", id, args.scope, country, tag ?? null, args.cursor ?? null]), canRead, error)
+      const items = page.data === undefined ? undefined : toFeed(page.data.items, args.scope, country as CountryCode)
+      if (items) for (const post of items) myReactions.set(post.id, post.myReaction)
+      return {
+        ...page,
+        data: page.data === undefined || items === undefined ? undefined : { items, nextCursor: page.data.nextCursor, lacunar: page.data.lacunar },
+      }
+    },
+
     useProfile(handle: string): Loadable<ProfileView | null> {
       const { networkId } = useMember()
       const id = networkId.state === "ready" ? networkId.value : null
       const args = id ? { networkId: id, handle } : "skip"
       const profile = useLoaded(api.modules.people.profile.getPublicProfile, args)
       const member = useLoaded(api.modules.diaspora.profile.memberFacet, args)
-      const wall = useLoaded(api.modules.posts.posts.personPosts, id ? { networkId: id, handle, limit: FEED_PAGE } : "skip")
-      for (const loaded of [networkId, profile, member, wall]) if (loaded.state === "error") return failed(loaded.code)
-      if (profile.state !== "ready" || member.state !== "ready" || wall.state !== "ready") return LOADING
+      for (const loaded of [networkId, profile, member]) if (loaded.state === "error") return failed(loaded.code)
+      if (profile.state !== "ready" || member.state !== "ready") return LOADING
       // Inconnu, non publié, hors réseau ou bloqué : le même « introuvable ».
       if (!profile.value || !member.value) return ready(null)
-      const posts = toWall(wall.value)
-      for (const post of posts) myReactions.set(post.id, post.myReaction)
-      return ready(toProfileView(profile.value, member.value, posts))
+      return ready(toProfileView(profile.value, member.value))
+    },
+
+    useProfilePostsPage(args: ProfilePostsPageRequest): FeedPageQuery {
+      const { auth, networkId, membership } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const member = membership.state === "ready" ? membership.value : null
+      const canRead = auth.isAuthenticated && id !== null && member?.capabilities.includes("read_network") === true
+      const handle = args.handle.trim().replace(/^@/, "").toLowerCase()
+      const query = useAuthenticatedConvexQuery(
+        api.modules.posts.posts.personPosts,
+        canRead && id ? {
+          networkId: id,
+          handle,
+          limit: FEED_PAGE,
+          ...(args.cursor ? { cursor: { publishedAt: args.cursor.publishedAt, postId: args.cursor.postId as Id<"posts"> } } : {}),
+        } : "skip",
+      )
+      let error: ActionErrorCode | null = query.isError ? engineActionErrorCode(query.error) : null
+      if (auth.isUnauthenticated) error = "not_signed_in"
+      else if (networkId.state === "error") error = networkId.code
+      else if (membership.state === "error") error = membership.code
+      else if (networkId.state === "ready" && id === null) error = "network_unavailable"
+      else if (membership.state === "ready" && !member) error = "not_member"
+      else if (member && !member.capabilities.includes("read_network")) error = member.status === "suspendue" ? "suspended" : "not_member"
+      const page = useReadablePostsQuery(query, JSON.stringify(["profile", id, handle, args.cursor ?? null]), canRead, error)
+      const items = page.data === undefined ? undefined : toWall({ items: page.data.items, pinned: args.cursor ? null : page.data.pinned })
+      if (items) for (const post of items) myReactions.set(post.id, post.myReaction)
+      return {
+        ...page,
+        data: page.data === undefined || items === undefined ? undefined : { items, nextCursor: page.data.nextCursor, lacunar: false },
+      }
     },
 
     useRelation(personId: string): Loadable<RelationView> {
@@ -300,11 +494,75 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       return page.state === "ready" ? ready(page.value.page.map(toBookmarkView)) : LOADING
     },
 
-    useSuggestions(): Loadable<readonly SuggestionView[]> {
-      const { networkId } = useMember()
+    useBookmarksPage(args: BookmarksPageRequest): BookmarksPageQuery {
+      const { auth, networkId, membership } = useMember()
       const id = networkId.state === "ready" ? networkId.value : null
-      const list = useLoaded(api.modules.diaspora.suggestions.forMe, id ? { networkId: id } : "skip")
-      for (const loaded of [networkId, list]) if (loaded.state === "error") return failed(loaded.code)
+      const member = membership.state === "ready" ? membership.value : null
+      const canRead = auth.isAuthenticated && id !== null && member?.capabilities.includes("read_network") === true
+      const query = useAuthenticatedConvexQuery(api.modules.marks.marks.paginateBookmarks,
+        canRead && id ? { networkId: id, paginationOpts: { numItems: BOOKMARKS_PAGE_SIZE, cursor: args.cursor ?? null } } : "skip",
+      )
+      const requestKey = JSON.stringify([id, args.cursor ?? null, canRead])
+      const generation = useMemo(() => Symbol(requestKey), [requestKey])
+      const activeGeneration = useRef<symbol | null>(null)
+      useLayoutEffect(() => {
+        activeGeneration.current = generation
+        return () => { if (activeGeneration.current === generation) activeGeneration.current = null }
+      }, [generation])
+      const [denial, setDenial] = useState<{ key: string; code: ActionErrorCode; dataUpdatedAt: number } | null>(null)
+      let error: ActionErrorCode | null = query.isError ? engineActionErrorCode(query.error) : null
+      if (auth.isUnauthenticated) error = "not_signed_in"
+      else if (networkId.state === "error") error = networkId.code
+      else if (membership.state === "error") error = membership.code
+      else if (networkId.state === "ready" && id === null) error = "network_unavailable"
+      else if (membership.state === "ready" && !member) error = "not_member"
+      else if (member && !member.capabilities.includes("read_network")) error = member.status === "suspendue" ? "suspended" : "not_member"
+      const denied = error !== null && PAGE_ACCESS_ERRORS.has(error)
+      const blocked = denial?.key === requestKey ? denial : null
+      const fresh = query.isSuccess && !query.isFetching && query.data !== undefined
+        && blocked !== null && query.dataUpdatedAt > blocked.dataUpdatedAt
+      useLayoutEffect(() => {
+        if (denied && error !== null) {
+          const code = error
+          setDenial((previous) => previous?.key === requestKey && previous.code === code && previous.dataUpdatedAt === query.dataUpdatedAt
+            ? previous : { key: requestKey, code, dataUpdatedAt: query.dataUpdatedAt })
+        } else if (fresh || (denial !== null && denial.key !== requestKey)) setDenial(null)
+      }, [denied, error, requestKey, query.dataUpdatedAt, fresh, denial])
+      const refetch = query.refetch
+      const retry = useCallback(async (): Promise<BookmarksPageView | undefined> => {
+        if (!canRead || activeGeneration.current !== generation) return undefined
+        try {
+          const result = await refetch()
+          if (activeGeneration.current !== generation || !result.isSuccess || result.isError || result.isFetching || result.data === undefined) return undefined
+          setDenial((previous) => previous?.key === requestKey ? null : previous)
+          return { items: result.data.page.map(toBookmarkView), continueCursor: result.data.continueCursor, isDone: result.data.isDone }
+        } catch { return undefined }
+      }, [canRead, refetch, requestKey, generation])
+      const data = useMemo(() => query.data === undefined ? undefined : {
+        items: query.data.page.map(toBookmarkView),
+        continueCursor: query.data.continueCursor,
+        isDone: query.data.isDone,
+      }, [query.data])
+      if (denied || (blocked !== null && !fresh)) return { data: undefined, isLoading: query.isFetching === true, error: denied ? error : blocked!.code, retry }
+      if (!canRead && error !== null) return { data: undefined, isLoading: false, error, retry }
+      if (!canRead) return { data: undefined, isLoading: true, error: null, retry }
+      return { data, isLoading: query.isFetching === true || (data === undefined && !query.isError), error, retry }
+    },
+
+    useSuggestions(): Loadable<readonly SuggestionView[]> {
+      const { auth, networkId, membership } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const member = membership.state === "ready" ? membership.value : null
+      const canPublish = auth.isAuthenticated && member?.capabilities.includes("publish") === true
+      const list = useLoaded(api.modules.diaspora.suggestions.forMe, id && canPublish ? { networkId: id } : "skip")
+      if (auth.isUnauthenticated) return failed("not_signed_in")
+      for (const loaded of [networkId, membership]) if (loaded.state === "error") return failed(loaded.code)
+      if (auth.isPending || networkId.state !== "ready" || membership.state !== "ready") return LOADING
+      if (id === null) return failed("network_unavailable")
+      if (!member) return failed("not_member")
+      if (!member.capabilities.includes("read_network")) return failed(member.status === "suspendue" ? "suspended" : "not_member")
+      if (!canPublish) return ready([])
+      if (list.state === "error") return failed(list.code)
       return list.state === "ready" ? ready(list.value.map(toSuggestionView)) : LOADING
     },
 
@@ -354,8 +612,8 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       return count.state === "ready" ? ready(count.value) : LOADING
     },
 
-    // Les pages du réseau (officielles, associations, entreprises) : PD5. Rien n'est inventé d'ici là.
-    usePage: () => failed("feature_unavailable"),
+    // Les pages du réseau (officielles, associations, entreprises) : DG-007, `engine-pages.ts`.
+    usePage: useEnginePage,
 
     useHandleSuggestions(displayName: string): readonly string[] {
       const auth = useStableConvexAuth()
@@ -392,12 +650,6 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
   let networkId: Id<"networks"> | null = null
   /** L'adresse à laquelle le dernier code a été envoyé (la vérification la reprend). */
   let pendingEmail: string | null = null
-
-  class Refusal extends Error {
-    constructor(readonly code: ActionErrorCode) {
-      super(code)
-    }
-  }
 
   async function diasporale(): Promise<Id<"networks">> {
     if (networkId) return networkId
@@ -444,9 +696,19 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     },
 
     async signOutEverywhere() {
-      // Révocation de toutes les sessions côté moteur : PA4. Ici, la session de cet appareil.
-      await deps.authClient.signOut().catch(() => undefined)
-      if (typeof window !== "undefined") window.location.assign(routes.enter())
+      await signOutEverywhere(deps.authClient, {
+        resetLocalState: () => {
+          myReactions.clear()
+          networkId = null
+          pendingEmail = null
+          clearDiasporaleDrafts()
+        },
+        // La navigation reste sous le verrou du moteur, pour préserver l'avis
+        // même lorsque la garde de session observe la révocation en parallèle.
+        navigate: (result) => {
+          if (typeof window !== "undefined") window.location.assign(routes.enterAfterSignOut(!result.serverRevoked || !result.localCleared))
+        },
+      })
     },
 
     checkHandle: (handle) => attempt(() => deps.convex.query(api.modules.people.profile.isHandleAvailable, { handle })),
@@ -528,6 +790,16 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           postId: input.postId as Id<"posts">,
           body: input.body,
           ...(input.parentCommentId !== undefined ? { parentCommentId: input.parentCommentId as Id<"postComments"> } : {}),
+        })
+        return null
+      }),
+
+    editComment: (commentId, body) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.engagement.engagement.editComment, {
+          networkId: await diasporale(),
+          commentId: commentId as Id<"postComments">,
+          body,
         })
         return null
       }),
@@ -714,6 +986,16 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         return null
       }),
 
+    leaveDiasporale: () => attempt(async () => {
+      const expected = await deps.convex.query(api.modules.people.persons.getMyPerson, {})
+      if (!expected) throw new Refusal("not_signed_in")
+      const id = await diasporale()
+      const current = await deps.convex.query(api.modules.people.persons.getMyPerson, {})
+      if (!current || current._id !== expected._id) throw new Refusal("not_found")
+      await deps.convex.mutation(api.modules.diaspora.membership.leaveDiasporale, { networkId: id })
+      return null
+    }),
+
     updateFacet: (input) =>
       attempt(async () => {
         await deps.convex.mutation(api.modules.diaspora.facet.updateMyFacet, { networkId: await diasporale(), facet: toFacetArgs(input) })
@@ -727,7 +1009,7 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
       }),
 
     // Export et effacement : exécutés par le moteur (PA5).
-    exportMyData: unavailable,
-    deleteMyAccount: unavailable,
+    exportMyData: () => createEngineDataRights(deps).exportMyData(),
+    deleteMyAccount: () => createEngineDataRights(deps).deleteMyAccount(),
   }
 }

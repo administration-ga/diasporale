@@ -1,0 +1,147 @@
+{
+  "associations": {
+    "entry": {
+      "title": "Adhésion",
+      "lead": "Suivre la page vous donne son actualité. Adhérer, c'est demander à rejoindre l'association : ses responsables acceptent ou non votre demande.",
+      "unavailable": "L'adhésion aux associations n'est pas encore disponible ici.",
+      "request": "Devenir adhérent",
+      "memberSince": "Vous faites partie des adhérents depuis le {{date}}.",
+      "role": "Votre rôle : {{role}}",
+      "pending": "Demande envoyée le {{date}}. Les responsables de l'association y répondront.",
+      "yourMessage": "Votre mot : {{message}}",
+      "previousRejected": "Votre précédente demande n'a pas été retenue.",
+      "removed": "Les responsables vous ont exclu de cette association.",
+      "readmissionAllowed": "Ils vous autorisent à présenter une nouvelle demande.",
+      "left": "Vous avez quitté cette association.",
+      "notManaged": "Cette association n'a pas encore d'équipe sur DIASPORALE : aucune demande ne peut y être traitée pour l'instant.",
+      "rejoinBlocked": "Une nouvelle demande n'est possible qu'avec l'accord des responsables de l'association.",
+      "tooSoon": "Vous pourrez présenter une nouvelle demande à partir du {{date}}.",
+      "statusInsufficient": "Pour demander à adhérer, votre adhésion à DIASPORALE doit d'abord être déclarée.",
+      "manage": "Gérer les adhérents",
+      "myAssociations": "Mes associations"
+    },
+    "requestSheet": {
+      "title": "Devenir adhérent",
+      "description": "Votre demande est adressée aux responsables de l'association. Ils voient votre profil publié et votre mot, jamais vos coordonnées.",
+      "message": "Un mot pour les responsables (facultatif)",
+      "messageHint": "{{max}} caractères au plus.",
+      "free": "Adhérer sur DIASPORALE est gratuit. Une éventuelle cotisation se règle directement avec l'association et n'ouvre aucun accès payant au réseau.",
+      "submit": "Envoyer ma demande"
+    },
+    "cancelRequest": "Annuler ma demande",
+    "leave": "Quitter l'association",
+    "leaveConfirm": {
+      "title": "Quitter l'association ?",
+      "body": "Vous ne ferez plus partie de ses adhérents. Une nouvelle demande restera possible.",
+      "confirm": "Quitter"
+    },
+    "reason": "Motif : {{reason}}",
+    "role": {
+      "member": "Membre",
+      "animator": "Animateur"
+    },
+    "status": {
+      "requested": "Demande en attente",
+      "accepted": "Adhésion acceptée",
+      "rejected": "Demande non retenue",
+      "cancelled": "Demande annulée",
+      "left": "Adhésion quittée",
+      "removed": "Exclusion"
+    },
+    "feedback": {
+      "requested": "Votre demande est envoyée aux responsables.",
+      "cancelled": "Votre demande est annulée.",
+      "left": "Vous avez quitté l'association.",
+      "accepted": "Demande acceptée.",
+      "rejected": "Demande refusée.",
+      "removed": "Adhérent exclu.",
+      "roleChanged": "Rôle mis à jour.",
+      "readmissionAllowed": "Nouvelle demande autorisée."
+    },
+    "list": {
+      "previous": "Précédents",
+      "next": "Suivants",
+      "page": "Page {{number}}",
+      "emptyPage": "Rien de plus sur cette page."
+    },
+    "unavailable": {
+      "title": "Les associations ne sont pas disponibles ici.",
+      "body": "Ce fournisseur de données ne sert pas encore l'adhésion aux associations."
+    },
+    "members": {
+      "metaTitle": "Adhérents de l'association",
+      "title": "Adhérents et demandes",
+      "backToPage": "Retour à la page de l'association",
+      "lead": "Cette liste n'est visible que des responsables de l'association. Elle ne constitue pas un registre légal des adhérents.",
+      "roleNote": {
+        "admin": "Administrateur de la page, vous traitez les demandes et gérez les adhérents.",
+        "signatory": "Signataire de la page, vous traitez les demandes. Exclure, nommer un animateur ou autoriser une nouvelle demande revient à un administrateur."
+      },
+      "tabsLabel": "Listes de l'association",
+      "tab": {
+        "requested": "Demandes",
+        "accepted": "Adhérents",
+        "removed": "Exclusions"
+      },
+      "empty": {
+        "requested": "Aucune demande en attente.",
+        "accepted": "Aucun adhérent pour l'instant. Chaque adhésion naît de la demande d'une personne : personne n'est inscrit d'office.",
+        "removed": "Aucune exclusion."
+      },
+      "notFoundTitle": "Cette liste n'est pas disponible.",
+      "notFoundBody": "Elle n'existe pas, ou vous n'êtes pas responsable de cette association.",
+      "unknownPerson": "Profil non publié",
+      "requestedAt": "Demande du {{date}}",
+      "memberSince": "Adhérent depuis le {{date}}",
+      "removedAt": "Exclu le {{date}}",
+      "role": "Rôle : {{role}}",
+      "message": "Son mot : {{message}}",
+      "readmissionAllowed": "Nouvelle demande autorisée.",
+      "accept": "Accepter",
+      "reject": "Refuser",
+      "makeAnimator": "Nommer animateur",
+      "makeMember": "Repasser membre",
+      "remove": "Exclure",
+      "allowReadmission": "Autoriser une nouvelle demande"
+    },
+    "rejectSheet": {
+      "title": "Refuser la demande de {{name}} ?",
+      "description": "La personne verra que sa demande n'est pas retenue, avec votre motif si vous en donnez un. Elle pourra redemander dans {{days}} jours.",
+      "reason": "Motif (facultatif)",
+      "reasonHint": "{{max}} caractères au plus.",
+      "confirm": "Refuser la demande"
+    },
+    "removeSheet": {
+      "title": "Exclure {{name}} de l'association ?",
+      "description": "La personne quittera la liste des adhérents et lira votre motif. Elle ne pourra redemander qu'avec l'accord d'un administrateur.",
+      "reason": "Motif (obligatoire)",
+      "reasonHint": "Entre {{min}} et {{max}} caractères.",
+      "confirm": "Exclure"
+    },
+    "mine": {
+      "metaTitle": "Mes associations",
+      "title": "Mes associations",
+      "lead": "Vos adhésions et vos demandes. Suivre une page reste un autre geste : il vous donne son actualité, sans vous faire adhérer.",
+      "since": "Depuis le {{date}}",
+      "emptyTitle": "Vous n'avez encore demandé à rejoindre aucune association.",
+      "emptyBody": "Trouvez une association depuis le hub de votre pays, puis demandez à la rejoindre depuis sa page.",
+      "emptyAction": "Voir le hub de mon pays"
+    }
+  },
+  "errors": {
+    "association_not_managed": "Cette association n'a pas encore d'équipe sur DIASPORALE : aucune demande ne peut y être traitée pour l'instant.",
+    "association_request_pending": "Votre demande est déjà en attente.",
+    "association_already_member": "Vous faites déjà partie des adhérents de cette association.",
+    "association_rejoin_blocked": "Après une exclusion, une nouvelle demande n'est possible qu'avec l'accord des responsables.",
+    "association_request_too_soon": "Votre précédente demande n'a pas été retenue : une nouvelle demande sera possible un peu plus tard.",
+    "association_not_pending": "Cette demande n'est plus en attente.",
+    "association_not_member": "Cette adhésion n'est pas (ou plus) en cours.",
+    "association_not_removed": "Cette personne n'est pas exclue de l'association.",
+    "association_version_conflict": "La liste a changé entre-temps : relisez-la avant de décider.",
+    "association_admin_required": "Ce geste revient à un administrateur de la page.",
+    "association_self_removal": "On ne s'exclut pas soi-même : utilisez « Quitter l'association ».",
+    "association_message_too_long": "Votre mot est trop long.",
+    "association_reason_required": "Une exclusion se motive : précisez le motif.",
+    "association_reason_too_long": "Le motif est trop long."
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "pagePublications": {
+    "publishAs": "Publier au nom de {{name}}",
+    "composeTitle": "Publication de la page",
+    "composeDescription": "Rédiger une publication au nom de {{name}}.",
+    "identity": "Vous publiez au nom de {{name}}",
+    "networkNotice": "Cette publication suit les règles de visibilité de la page dans DIASPORALE.",
+    "placeholder": "Quelles nouvelles de {{name}} ?",
+    "followersAudience": "Abonnés de cette page uniquement",
+    "noCountry": "Pour publier dans un pays, renseignez d’abord le pays de la page dans sa gestion.",
+    "sent": "Publication envoyée au nom de {{name}}.",
+    "remove": "Retirer de la page",
+    "removeTitle": "Retirer cette publication ?",
+    "removeDescription": "Elle sera retirée de la page et des fils où elle apparaît. Ce retrait concerne toute l’équipe de la page.",
+    "removeConfirm": "Retirer la publication",
+    "removed": "Publication retirée de la page."
+  }
+}

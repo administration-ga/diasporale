@@ -5,7 +5,7 @@ import { productSources } from "./sources"
 /**
  * Cliquet « aucune couleur en dur » (invariant de la charte) : depuis PD0, les
  * couleurs de DIASPORALE vivent dans le thème du moteur
- * (`ANTIA/packages/ui/src/themes/diasporale.css`). Dans le produit, AUCUNE
+ * (`ANTSIA/packages/ui/src/themes/diasporale.css`). Dans le produit, AUCUNE
  * couleur littérale, sans exception depuis la charte v2 (15/10/2026 : le filet
  * tricolore et les couleurs du drapeau sont retirés). Partout, des rôles
  * (`bg-card`, `text-muted-foreground`, `var(--dg-…)`) — jamais `#hex`, `rgb()`,

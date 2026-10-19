@@ -1,0 +1,20 @@
+{
+  "pageDecisions": {
+    "tab": "Décisions",
+    "title": "Décisions de modération",
+    "lead": "Les décisions qui ont retiré un contenu porté par cette page (mission bénévole, offre d'emploi, ressource du kit d'arrivée, réponse à un avis, évènement), leurs motifs et les recours de la page. Les personnes qui ont signalé ne sont jamais nommées. Tout signataire de la page peut contester.",
+    "empty": "Aucune décision n'a retiré de contenu de cette page.",
+    "emptyPage": "Aucune autre décision.",
+    "loadError": "Les décisions de la page n'ont pas pu être chargées.",
+    "lost": "Vous ne signez plus pour cette page : ses décisions ne vous sont plus accessibles.",
+    "unavailableTitle": "Décisions indisponibles",
+    "unavailableBody": "Cette version ne sert pas encore les décisions de modération des pages."
+  },
+  "bell": {
+    "system": {
+      "moderation_decision": "Une décision de modération a été rendue."
+    },
+    "openMyDecisions": "Voir mes décisions",
+    "openPageDecisions": "Voir les décisions de la page"
+  }
+}

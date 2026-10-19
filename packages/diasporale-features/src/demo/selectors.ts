@@ -5,6 +5,7 @@
  * `network`, portées du fil, refus indistinct (un profil introuvable et un
  * profil inaccessible rendent la même chose : `null`).
  */
+import { isProfileDiscoverable, isProfilePublished } from "@antsia/social-domain/content"
 import {
   admitsInFeedScope,
   capabilitiesOf,
@@ -28,6 +29,7 @@ import {
   type CountryCode,
   type FeedScope,
   type MembershipStatus,
+  type PageTrustLevel,
   type TrustBadge,
 } from "@diasporale/domain"
 import { CONSENT_PURPOSES, CONSENT_TEXT_VERSIONS, isConsentActive } from "@diasporale/domain"
@@ -43,8 +45,10 @@ import type {
   MemberHitView,
   MembershipView,
   OpenCountryView,
+  OwnProfileView,
   PageDetailView,
   PageView,
+  PageViewerRole,
   PostMediaView,
   PostView,
   ProfileView,
@@ -58,8 +62,28 @@ import type {
 } from "../data/types"
 import { COMMENT_REPLIES_PREVIEW, COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH } from "../data/types"
 import { maskDestination } from "../data/mask"
+import { PAGE_DIRECTORY_QUERY_MIN_LENGTH, type HubPagesView, type PageDirectoryEntry, type PageDirectoryRequest } from "../data/pages-port"
 import type { DemoAccountView } from "../data/port"
 import type { DemoComment, DemoPage, DemoPost, DemoState } from "./state"
+
+/** Les champs gardés pour soi ne sont jamais une projection d'acteur public. */
+function publishedProfile(state: DemoState, personId: string) {
+  const person = state.persons[personId]
+  return person?.profile && isProfilePublished(person) ? person.profile : null
+}
+
+export function ownProfileView(state: DemoState, personId: string): OwnProfileView | null {
+  const person = state.persons[personId]
+  if (!person) return null
+  return {
+    personId,
+    handle: person.profile?.handle ?? null,
+    displayName: person.profile?.displayName ?? null,
+    headline: person.profile?.headline ?? null,
+    published: Boolean(person.profile) && isProfilePublished(person),
+    private: person.privateAt !== undefined,
+  }
+}
 
 export function statusOf(state: DemoState, personId: string, now: number): MembershipStatus | null {
   const membership = state.memberships[personId]
@@ -77,7 +101,27 @@ export function badgesOfPerson(state: DemoState, personId: string, now: number):
   })
 }
 
-export function pageView(page: DemoPage): PageView {
+/** Aucun abonnement local à une page (la démonstration les tient à côté de l'état, `demo/pages.ts`). */
+export const NO_PAGE_FOLLOWS: ReadonlySet<string> = new Set()
+
+/** La clé d'un abonnement local : [qui suit, quelle page]. */
+export function pageFollowKey(personId: string, pageId: string): string {
+  return `${personId}|${pageId}`
+}
+
+/** Les abonnés locaux d'une page — comptés, jamais devinés. */
+export function localPageFollowers(follows: ReadonlySet<string>, pageId: string): number {
+  let count = 0
+  for (const key of follows) if (key.endsWith(`|${pageId}`)) count += 1
+  return count
+}
+
+/**
+ * Une page fictive telle que la lit un membre. Sans contexte, les abonnés du jeu
+ * fictif (zéro) et la revendicabilité de la règle du domaine ; la capacité
+ * « pages » y joint les abonnements locaux et le rôle du lecteur.
+ */
+export function pageView(page: DemoPage, context: { readonly follows?: ReadonlySet<string> } = {}): PageView {
   const trust = pageTrustLevel({ ownerKind: page.ownerKind, source: page.source, claimValidated: page.claimValidated })
   return {
     id: page.id,
@@ -89,10 +133,12 @@ export function pageView(page: DemoPage): PageView {
     country: page.country,
     city: page.city,
     description: page.description,
-    followers: page.followers,
+    followers: page.followers + localPageFollowers(context.follows ?? NO_PAGE_FOLLOWS, page.id),
     claimable: trust === "community" && page.ownerKind !== "institution",
     ...(page.associationType ? { associationType: page.associationType } : {}),
     ...(page.sector ? { sector: page.sector } : {}),
+    shortName: null,
+    logoUrl: null,
   }
 }
 
@@ -108,13 +154,13 @@ function authorOf(state: DemoState, author: DemoPost["author"], now: number): Au
       badges: view ? [view.badge] : ["community"],
     }
   }
-  const person = state.persons[author.id]
+  const profile = publishedProfile(state, author.id)
   return {
     kind: "person",
     id: author.id,
-    handle: person?.profile?.handle ?? "",
-    displayName: person?.profile?.displayName ?? "",
-    badges: badgesOfPerson(state, author.id, now),
+    handle: profile?.handle ?? "",
+    displayName: profile?.displayName ?? "",
+    badges: profile ? badgesOfPerson(state, author.id, now) : [],
   }
 }
 
@@ -149,7 +195,7 @@ export function notificationsView(state: DemoState, viewerId: string): Notificat
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, NOTIFICATIONS_PAGE)
     .map((item) => {
-      const actor = item.actorId ? state.persons[item.actorId]?.profile : undefined
+      const actor = item.actorId ? publishedProfile(state, item.actorId) : null
       const request = item.connectionRequestId ? state.connectionRequests.find((candidate) => candidate.id === item.connectionRequestId) : undefined
       const isRequest = item.kind === "connection_request"
       return {
@@ -204,7 +250,7 @@ function listedMemberView(state: DemoState, viewerId: string, personId: string, 
   const membership = state.memberships[personId]
   const viewerMembership = state.memberships[viewerId]
   const viewerStatus = statusOf(state, viewerId, now)
-  if (!person?.profile || !membership || !viewerMembership || !viewerStatus) return null
+  if (!person?.profile || !isProfileDiscoverable(person) || !membership || !viewerMembership || !viewerStatus) return null
   const facet = membership.facet
   const viewerCountry = viewerMembership.facet.countryOfResidence
   const isSelf = personId === viewerId
@@ -288,13 +334,16 @@ export function isConnected(state: DemoState, a: string, b: string): boolean {
  */
 export function canRead(state: DemoState, post: DemoPost, viewerId: string, now: number): boolean {
   const isMine = post.author.kind === "person" && post.author.id === viewerId
-  if (!isReadableByOthers(post.moderation) && !isMine) return false
+  const pageContext = PAGE_READING_CONTEXTS.get(state)
+  const isPageSignatory = post.author.kind === "page" && (pageContext?.isSignatory?.(post.author.id, viewerId) ?? false)
+  if (!isReadableByOthers(post.moderation) && !isMine && !isPageSignatory) return false
   const status = statusOf(state, viewerId, now)
   if (status === null) return false
   const readAccess = state.memberships[viewerId]?.grounds.suspension?.readAccess ?? "none"
   if (!capabilitiesOf(status, { suspensionReadAccess: readAccess }).has("read_network")) return false
-  if (isMine) return true
+  if (isMine || isPageSignatory) return true
   if (post.audience === "connections") return post.author.kind === "person" && isConnected(state, post.author.id, viewerId)
+  if (post.audience === "page") return post.author.kind === "page" && (pageContext?.isFollowing?.(post.author.id, viewerId) ?? false)
   return post.audience === "public"
 }
 
@@ -338,6 +387,7 @@ export function postView(state: DemoState, post: DemoPost, viewerId: string, now
     isMine: post.author.kind === "person" && post.author.id === viewerId,
     bookmarked: state.marks.some((mark) => mark.personId === viewerId && mark.postId === post.id && mark.kind === "bookmark"),
     edited: post.editedAt !== null,
+    editedAt: post.editedAt,
   }
 }
 
@@ -402,13 +452,13 @@ function liveComments(state: DemoState, postId: string, viewerId: string): DemoC
 }
 
 function commentView(state: DemoState, item: DemoComment, viewerId: string): CommentView {
-  const profile = state.persons[item.authorId]?.profile
+  const profile = publishedProfile(state, item.authorId)
   return {
     id: item.id,
     author: { personId: item.authorId, handle: profile?.handle ?? null, displayName: profile?.displayName ?? null },
     body: item.body,
     createdAt: item.createdAt,
-    edited: false,
+    edited: item.editedAt !== undefined,
     isMine: item.authorId === viewerId,
   }
 }
@@ -499,16 +549,17 @@ function eventView(state: DemoState, event: DemoState["events"][number], now: nu
 /** Compteurs « matérialisés » du hub — recalculés depuis l'état, comme le ferait le cron quotidien. */
 export function hubCounters(state: DemoState, country: CountryCode, now: number) {
   const members = Object.entries(state.memberships).filter(
-    ([personId, membership]) =>
-      membership.facet.countryOfResidence === country &&
-      countsAsHubMember({
+    ([personId, membership]) => {
+      const person = state.persons[personId]
+      return !!person?.profile && isProfileDiscoverable(person) && membership.facet.countryOfResidence === country && countsAsHubMember({
         status: deriveMembershipStatus(membership.grounds, now),
         directoryVisibility: membership.directoryVisibility,
         directoryConsent: isConsentActive(
           state.consents.filter((record) => record.personId === personId),
           "directory",
         ),
-      }),
+      })
+    },
   ).length
   const pages = Object.values(state.pages).filter((page) => page.country === country)
   return presentHubCounters({
@@ -524,7 +575,7 @@ export function hubCounters(state: DemoState, country: CountryCode, now: number)
 export function countryHubView(state: DemoState, country: CountryCode, now: number): CountryHubView {
   const pages = Object.values(state.pages)
     .filter((page) => page.country === country)
-    .map(pageView)
+    .map((page) => pageView(page))
   return {
     country,
     open: isCountryOpen(country, state.openCountries),
@@ -555,7 +606,7 @@ export function membershipView(state: DemoState, personId: string, now: number):
   const status = deriveMembershipStatus(membership.grounds, now)
   const badges = badgesOfPerson(state, personId, now)
   const sponsorship = state.sponsorships.find((item) => item.sponsoredId === personId && item.revokedAt === null)
-  const sponsor = sponsorship ? state.persons[sponsorship.sponsorId] : undefined
+  const sponsor = sponsorship ? publishedProfile(state, sponsorship.sponsorId) : null
   const rootVerified = badges.includes("verified")
   return {
     personId,
@@ -566,12 +617,12 @@ export function membershipView(state: DemoState, personId: string, now: number):
     facet: membership.facet,
     joinedAt: membership.joinedAt,
     verifiedSince: membership.verifiedSince,
-    sponsoredBy: sponsor?.profile ? { handle: sponsor.profile.handle, displayName: sponsor.profile.displayName } : null,
+    sponsoredBy: sponsor ? { handle: sponsor.handle, displayName: sponsor.displayName } : null,
     attestation: membership.attestation,
-    // Politique `open` du réseau racine (cahier ANTIA §6.2) : déclarée d'emblée,
+    // Politique `open` du réseau racine (cahier ANTSIA §6.2) : déclarée d'emblée,
     // vérifiée avec une preuve forte ; une suspension racine se lit partout.
     root: {
-      network: "antia",
+      network: "antsia",
       status: status === "partie" ? "declaree" : status === "suspendue" ? "suspendue" : rootVerified ? "verifiee" : "declaree",
       derivedFrom: "diasporale",
     },
@@ -599,12 +650,14 @@ export function sessionView(state: DemoState, now: number): SessionView {
 }
 
 /** `awa@example.com` → `a…@example.com` ; `+33 6 12 34 56 78` → `…5678`. Jamais l'adresse entière à l'écran. */
-export function profileView(state: DemoState, handle: string, viewerId: string | null, now: number): ProfileView | null {
+export function profileView(state: DemoState, handle: string, viewerId: string | null, now: number, options: { readonly includePosts?: boolean } = {}): ProfileView | null {
   const person = Object.values(state.persons).find((candidate) => candidate.profile?.handle === handle)
   const membership = person ? state.memberships[person.id] : undefined
-  if (!person?.profile || !membership || viewerId === null) return null
+  if (!person?.profile || !isProfilePublished(person) || !membership || viewerId === null) return null
+  if (deriveMembershipStatus(membership.grounds, now) === "partie") return null
   const viewerStatus = statusOf(state, viewerId, now)
-  if (viewerStatus === null) return null
+  const readAccess = state.memberships[viewerId]?.grounds.suspension?.readAccess ?? "none"
+  if (viewerStatus === null || !capabilitiesOf(viewerStatus, { suspensionReadAccess: readAccess }).has("read_network")) return null
   const isSelf = person.id === viewerId
   // Un blocage dans la paire : le même « introuvable » qu'un identifiant inconnu.
   if (!isSelf && blockedBetween(state, viewerId, person.id)) return null
@@ -629,12 +682,14 @@ export function profileView(state: DemoState, handle: string, viewerId: string |
     handle: person.profile.handle,
     displayName: person.profile.displayName,
     headline: person.profile.headline,
+    avatar: null,
+    cover: null,
     badges: badgesOfPerson(state, person.id, now),
     facet,
     publicFacet,
     postName: postPage?.name ?? null,
     isSelf,
-    posts: state.posts
+    posts: options.includePosts === false ? [] : state.posts
       .filter((post) => post.author.kind === "person" && post.author.id === person.id)
       .filter((post) => canRead(state, post, viewerId, now) && !setAside(state, post, viewerId, false))
       .sort((a, b) => b.createdAt - a.createdAt)
@@ -661,7 +716,7 @@ export function sponsorDashboardView(state: DemoState, viewerId: string, now: nu
       .filter((item) => item.sponsorId === viewerId)
       .sort((a, b) => b.createdAt - a.createdAt)
       .map((item) => {
-        const sponsored = state.persons[item.sponsoredId]?.profile
+        const sponsored = publishedProfile(state, item.sponsoredId)
         return {
           id: item.id,
           sponsored: { handle: sponsored?.handle ?? "", displayName: sponsored?.displayName ?? "" },
@@ -699,20 +754,134 @@ export function demoAccountsView(state: DemoState): DemoAccountView[] {
     }))
 }
 
-/** Fiche d'une page (institution, association, entreprise) : identité propre, publications, évènements. */
-export function pageDetailView(state: DemoState, handle: string, viewerId: string | null, now: number): PageDetailView | null {
-  const page = Object.values(state.pages).find((candidate) => candidate.handle === handle)
+// ═══════════════════════════════════════════════════════════════
+// Pages (DG-007) — fiche, annuaire, listes du hub
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Ce que la capacité « pages » de démonstration joint à une page fictive :
+ * l'identité et la confiance à jour (surcouches de la gestion des pages) et le
+ * rôle VIVANT du lecteur. Sans elle, la page du jeu fictif, sans rôle.
+ */
+export type DemoPageStanding = (page: DemoPage, base: PageView) => { readonly view: PageView; readonly role: PageViewerRole | null }
+
+export interface DemoPageContext {
+  /** Les abonnements locaux ([qui suit, quelle page], `pageFollowKey`). */
+  readonly follows?: ReadonlySet<string>
+  readonly standing?: DemoPageStanding
+  /** Identités de la gestion des pages, y compris celles créées dans ce navigateur. */
+  readonly pages?: Readonly<Record<string, DemoPage>>
+  readonly isSignatory?: (pageId: string, personId: string) => boolean
+  readonly isFollowing?: (pageId: string, personId: string) => boolean
+}
+
+/** Contexte de lecture seulement : il ne se sérialise jamais dans le jeu fictif. */
+const PAGE_READING_CONTEXTS = new WeakMap<DemoState, DemoPageContext>()
+
+export function withDemoPageContext(state: DemoState, context: DemoPageContext): DemoState {
+  const projected = context.pages ? { ...state, pages: context.pages } : state
+  PAGE_READING_CONTEXTS.set(projected, context)
+  return projected
+}
+
+/** L'ordre de l'annuaire, comme le moteur : la confiance d'abord. */
+const PAGE_TRUST_RANK: Readonly<Record<PageTrustLevel, number>> = { official: 2, verified: 1, community: 0 }
+
+/** Pages montrées par nature dans le hub, comme le moteur ; au-delà, l'annuaire. */
+export const DEMO_HUB_PAGES_PER_KIND = 12
+
+/** La page fictive d'une adresse (repliée comme une adresse saisie), quel que soit le lecteur. */
+export function findDemoPage(state: DemoState, rawHandle: string): DemoPage | null {
+  const handle = rawHandle.trim().replace(/^@/, "").toLowerCase()
+  return Object.values(state.pages).find((candidate) => candidate.handle === handle) ?? null
+}
+
+function standingOf(page: DemoPage, context: DemoPageContext): { view: PageView; role: PageViewerRole | null } {
+  const base = pageView(page, { follows: context.follows ?? NO_PAGE_FOLLOWS })
+  return context.standing ? context.standing(page, base) : { view: base, role: null }
+}
+
+/** Chaque mot cherché commence un mot du nom, du sigle ou de l'adresse — sans accents, comme le moteur. */
+function matchesPage(query: string, page: PageView): boolean {
+  const words = fold(`${page.name} ${page.shortName ?? ""} ${page.handle} ${page.handle.replace(/[._-]+/g, " ")}`).split(/\s+/)
+  return fold(query)
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((term) => words.some((word) => word.startsWith(term)))
+}
+
+/** Fiche d'une page (institution, association, entreprise) : identité propre, publications, évènements, lecteur. */
+export function pageDetailView(state: DemoState, handle: string, viewerId: string | null, now: number, context: DemoPageContext = {}): PageDetailView | null {
+  const page = findDemoPage(state, handle)
   if (!page || viewerId === null || statusOf(state, viewerId, now) === null) return null
+  const { view, role } = standingOf(page, context)
+  const pagePosts = state.posts.filter((post) => post.author.kind === "page" && post.author.id === page.id)
   return {
-    page: pageView(page),
-    posts: state.posts
-      .filter((post) => post.author.kind === "page" && post.author.id === page.id)
+    page: view,
+    bannerUrl: null,
+    postCount: pagePosts.filter((post) => post.moderation === "published").length,
+    posts: pagePosts
       .filter((post) => canRead(state, post, viewerId, now))
       .sort((a, b) => b.createdAt - a.createdAt)
       .map((post) => postView(state, post, viewerId, now)),
+    morePosts: false,
     events: state.events
       .filter((event) => event.organizerPageId === page.id && event.startsAt > now && event.moderation === "published")
       .sort((a, b) => a.startsAt - b.startsAt)
       .map((event) => eventView(state, event, now)),
+    viewer: { role, following: (context.follows ?? NO_PAGE_FOLLOWS).has(pageFollowKey(viewerId, page.id)) },
   }
+}
+
+/**
+ * L'annuaire des pages fictives, dans l'ordre du moteur (confiance, puis l'ordre
+ * du jeu) : la recherche ne s'applique qu'à partir de
+ * `PAGE_DIRECTORY_QUERY_MIN_LENGTH` caractères ; le pays, la nature et la catégorie
+ * restreignent avant pagination, n'ouvrent rien.
+ */
+export function pageDirectoryEntries(
+  state: DemoState,
+  viewerId: string,
+  args: Pick<PageDirectoryRequest, "query" | "country" | "ownerKind" | "associationType" | "sector">,
+  context: DemoPageContext = {},
+): PageDirectoryEntry[] {
+  const follows = context.follows ?? NO_PAGE_FOLLOWS
+  const term = args.query.trim()
+  const searching = term.length >= PAGE_DIRECTORY_QUERY_MIN_LENGTH
+  return Object.values(state.pages)
+    .map((page) => standingOf(page, context).view)
+    .filter((view) => args.country === undefined || view.country === args.country)
+    .filter((view) => args.ownerKind === undefined || view.ownerKind === args.ownerKind)
+    .filter((view) => args.associationType === undefined || view.associationType === args.associationType)
+    .filter((view) => args.sector === undefined || view.sector === args.sector)
+    .filter((view) => !searching || matchesPage(term, view))
+    .sort((left, right) => PAGE_TRUST_RANK[right.trust] - PAGE_TRUST_RANK[left.trust])
+    .map((view) => ({ ...view, following: follows.has(pageFollowKey(viewerId, view.id)) }))
+}
+
+/** Mes pages suivies encore lisibles : les derniers ajouts au Set passent d'abord. */
+export function followedPageEntries(state: DemoState, viewerId: string, context: DemoPageContext = {}): PageDirectoryEntry[] {
+  const readable = new Map(pageDirectoryEntries(state, viewerId, { query: "" }, context)
+    .map((entry) => [pageFollowKey(viewerId, entry.id), entry] as const))
+  return [...(context.follows ?? NO_PAGE_FOLLOWS)].reverse().flatMap((key) => {
+    const entry = readable.get(key)
+    return entry ? [entry] : []
+  })
+}
+
+/** Les pages fictives d'un pays, par nature, bornées comme celles du moteur. */
+export function hubPagesView(state: DemoState, country: CountryCode, context: DemoPageContext = {}): HubPagesView {
+  const lists: { officialPages: PageView[]; associations: PageView[]; companies: PageView[] } = { officialPages: [], associations: [], companies: [] }
+  const more = { officialPages: false, associations: false, companies: false }
+  const views = Object.values(state.pages)
+    .map((page) => standingOf(page, context).view)
+    .filter((view) => view.country === country)
+    .sort((left, right) => PAGE_TRUST_RANK[right.trust] - PAGE_TRUST_RANK[left.trust])
+  for (const view of views) {
+    const kind = view.trust === "official" ? "officialPages" : view.ownerKind === "association" ? "associations" : view.ownerKind === "company" ? "companies" : null
+    if (kind === null) continue
+    if (lists[kind].length >= DEMO_HUB_PAGES_PER_KIND) more[kind] = true
+    else lists[kind].push(view)
+  }
+  return { country, ...lists, more }
 }

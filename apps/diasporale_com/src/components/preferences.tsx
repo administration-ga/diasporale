@@ -58,7 +58,7 @@ export function ThemeSwitch(props: { className?: string }) {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
   return (
-    <div role="group" aria-label={t("preferences.theme")} className={cn("inline-flex gap-1 rounded-[var(--esp-r-chrome)] bg-[var(--esp-neutral-chip)] p-1", props.className)}>
+    <div role="group" aria-label={t("preferences.theme")} className={cn("inline-flex max-w-full flex-wrap gap-1 rounded-[var(--esp-r-chrome)] bg-[var(--esp-neutral-chip)] p-1", props.className)}>
       {THEMES.map(({ id, icon: Icon }) => {
         const active = mounted && theme === id
         return (

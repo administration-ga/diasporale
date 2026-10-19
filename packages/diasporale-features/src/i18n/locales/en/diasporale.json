@@ -1,11 +1,15 @@
 {
-  "brand": { "name": "DIASPORALE" },
+  "brand": {
+    "name": "DIASPORALE"
+  },
   "meta": {
     "title": "DIASPORALE — the network of Gabonese people abroad",
     "titleTemplate": "%s · DIASPORALE",
     "description": "The closed social network of the Gabonese diaspora: your country, your community, and you always know who is posting."
   },
-  "a11y": { "skipToContent": "Skip to content" },
+  "a11y": {
+    "skipToContent": "Skip to content"
+  },
   "common": {
     "back": "Back",
     "cancel": "Cancel",
@@ -23,6 +27,8 @@
     "profile": "Profile",
     "sponsor": "Sponsor",
     "members": "Members",
+    "relations": "My connections",
+    "messages": "Messages",
     "settings": "Settings"
   },
   "footer": {
@@ -34,43 +40,34 @@
   },
   "preferences": {
     "language": "Language",
-    "locale": { "fr": "Français", "en": "English" },
+    "locale": {
+      "fr": "Français",
+      "en": "English"
+    },
     "theme": "Theme",
-    "themeOption": { "light": "Light", "dark": "Dark", "system": "System" }
+    "themeOption": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
   },
   "landing": {
-    "title": "The Gabonese diaspora, country by country.",
-    "lead": "A closed network, reserved for Gabonese people abroad. Every post carries its country, every author shows their trust level, and contact always goes through messaging.",
-    "ctaEnter": "Join DIASPORALE",
-    "ctaHow": "How to join",
-    "free": "Free for members.",
-    "boardTitle": "Open countries",
-    "boardOpen": "Open",
-    "boardFooter": "Your country isn't listed? Join anyway: you can read everything today, and your posts are reviewed by the network team before they appear.",
-    "principlesTitle": "Three rules, on every screen",
-    "principleCountryTitle": "Country first",
-    "principleCountryBody": "Every post carries its country, or the label “The whole diaspora”. Your feed starts with your country of residence.",
-    "principleTrustTitle": "Trust is visible",
-    "principleTrustBody": "Official, Verified, Public servant or Community: the badge is computed by the platform, never declared by the author.",
-    "principleContactTitle": "Contact goes through messaging",
-    "principleContactBody": "No email address or phone number on any page or listing: a “Write” button replaces them.",
-    "sampleCity": "Lyon",
-    "howTitle": "How to join",
-    "howLead": "Two doors, and never a password.",
-    "doorIdnTitle": "With your IDN digital identity",
-    "doorIdnBody": "You sign in with identite.ga, the Gabonese digital identity. Your account is declared from the start.",
-    "doorIdnNote": "With assurance level 2, you carry the Verified badge.",
-    "doorCodeTitle": "With a code sent by email or text",
-    "doorCodeBody": "A light account: you read your hub right away. You can post once a verified member sponsors you, or once your consular registration is verified.",
-    "doorCodeNote": "Your sponsor must have been verified for more than 30 days.",
-    "stepsTitle": "Then, three screens",
-    "step1": "Your country and city of residence.",
-    "step2": "Your display name and your handle, which you choose.",
-    "step3": "Your consents, one by one, none ticked in advance.",
-    "verifyNote": "Registered with a consulate? You can ask to verify your consular registration: you consent, we receive a confirmation, and your account becomes Verified.",
-    "closing": "Your country of residence is already here. So is your community."
+    "title": "Find your people,\nwherever you are.",
+    "lead": "Connect with Gabonese people around the world, share your daily life and build your own network.",
+    "eligibility": "The network for Gabonese people living abroad.",
+    "signInTitle": "Sign in to DIASPORALE",
+    "idnContinue": "Continue with IDN",
+    "idnUnavailable": "IDN sign-in will be available soon.",
+    "or": "or",
+    "signIn": "Sign in",
+    "createAccount": "Create an account",
+    "newHere": "New to DIASPORALE?",
+    "free": "Registration is free.",
+    "privacy": "Your email stays private. Sign in with a code, without a password.",
+    "boardTitle": "Your community, country by country."
   },
   "entry": {
+    "signOutIncomplete": "Full sign-out could not be confirmed. Other devices may remain signed in and some data may remain in this browser. Sign in again to retry signing out once your connection is restored.",
     "title": "Join DIASPORALE",
     "lead": "Choose your door. You will never create a password.",
     "idnTitle": "IDN digital identity",
@@ -109,7 +106,10 @@
     "title": "Get a code",
     "lead": "A one-time code, valid for 10 minutes. It works only once.",
     "kindLabel": "Receive the code by",
-    "kind": { "email": "Email", "phone": "Text" },
+    "kind": {
+      "email": "Email",
+      "phone": "Text"
+    },
     "emailLabel": "Your email address",
     "phoneLabel": "Your phone number",
     "destinationHint": "It stays private: no member can see it.",
@@ -126,7 +126,7 @@
     "step1Title": "Where do you live?",
     "step1Lead": "Your country of residence frames everything you will see. You can change it later.",
     "step2Title": "What should we call you?",
-    "step2Lead": "Your display name and handle are the same in DIASPORALE and in ANTIA.",
+    "step2Lead": "Your display name and handle are the same in DIASPORALE and in ANTSIA.",
     "step3Title": "Your choices",
     "step3Lead": "Each consent is separate and can be withdrawn at any time in your settings.",
     "countryLabel": "Country of residence",
@@ -169,15 +169,24 @@
   "consentPurpose": {
     "social_profile": {
       "title": "Social profile",
-      "body": "Required to be a member. Withdrawing it means leaving DIASPORALE."
+      "body": "Recorded when joining the shared profile. Withdrawing your profile and leaving DIASPORALE are separate actions, offered separately."
     },
-    "directory": { "title": "Member directory", "body": "Appear in the directory, at the level you choose." },
-    "notifications": { "title": "Notifications", "body": "Replies, mentions, life in your country." },
+    "directory": {
+      "title": "Member directory",
+      "body": "Appear in the directory, at the level you choose."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "body": "Replies, mentions, life in your country."
+    },
     "consular_attestation": {
       "title": "Consular attestation",
       "body": "Given at the time of verification. Withdrawing it prevents any new request."
     },
-    "talents": { "title": "Visible professional profile", "body": "Coming soon: the talent directory arrives with jobs." }
+    "talents": {
+      "title": "Visible professional profile",
+      "body": "Coming soon: the talent directory arrives with jobs."
+    }
   },
   "status": {
     "regionLabel": "Your account status",
@@ -253,7 +262,7 @@
         "step1": "Sign in, then “IDN digital identity”; choose Awa Ogooué and allow.",
         "step2": "Choose “France”, enter “Lyon”.",
         "step3": "Pick a suggested handle, then tick the social profile.",
-        "step4": "Check: declared account, France hub, derived ANTIA membership in settings."
+        "step4": "Check: declared account, France hub, derived ANTSIA membership in settings."
       },
       "r2": {
         "title": "R2 — Verify a consular registration",
@@ -291,6 +300,21 @@
     "region": "Notices"
   },
   "feed": {
+    "tagFilter": "Posts tagged #{{tag}}",
+    "clearTag": "Clear filter",
+    "tagEmptyTitle": "No posts tagged #{{tag}}",
+    "tagEmptyBody": "Try another feed scope or clear the filter. Only posts you can read are shown.",
+    "pagination": {
+      "loadMore": "Show more posts",
+      "loading": "Loading posts…",
+      "retry": "Try again",
+      "errorTitle": "Posts are unavailable.",
+      "errorBody": "Check your connection and try again. Posts already displayed remain available.",
+      "lacunar": "Some posts may be missing from this feed. You can continue browsing the next ones.",
+      "added_one": "{{count}} additional post displayed.",
+      "added_other": "{{count}} additional posts displayed.",
+      "noneAdded": "No additional posts to display on this page."
+    },
     "title": "Feed",
     "scopesLabel": "Feed scopes",
     "scope": {
@@ -365,8 +389,8 @@
     "audienceLegend": "Who can read",
     "audiencePublic": "All DIASPORALE members",
     "audienceConnections": "My connections",
-    "alsoOnRoot": "Also post on ANTIA",
-    "alsoOnRootHint": "It will also be read in ANTIA, the public network, and will stay in DIASPORALE.",
+    "alsoOnRoot": "Also post on ANTSIA",
+    "alsoOnRootHint": "It will also be read in ANTSIA, the public network, and will stay in DIASPORALE.",
     "alsoOnRootDisabled": "Only possible for a post readable by all members.",
     "publish": "Post",
     "publishing": "Posting…",
@@ -385,8 +409,17 @@
     },
     "comments_one": "{{count}} comment",
     "comments_other": "{{count}} comments",
-    "alsoOnRoot": "Also on ANTIA",
+    "alsoOnRoot": "Also on ANTSIA",
     "share": "Share",
+    "shareActions": {
+      "title": "Share this post",
+      "description": "Recipients must have access to this post to view it.",
+      "link": "Post link",
+      "copyLink": "Copy link",
+      "copied": "Link copied.",
+      "copyFailed": "Automatic copying failed. The link is selected: copy it manually.",
+      "quote": "Share to my feed"
+    },
     "shareCounted_one": "Share, already shared {{count}} time",
     "shareCounted_other": "Share, already shared {{count}} times",
     "sharedLabel": "Shared post",
@@ -397,7 +430,15 @@
       "video": "Video attached to the post",
       "scanPending": "File scan in progress…",
       "quarantined": "File held by the file guard",
-      "unavailable": "Media unavailable"
+      "unavailable": "Media unavailable",
+      "openImage": "Enlarge photo {{position}} of {{total}}",
+      "expandVideo": "Enlarge video",
+      "viewer": {
+        "title": "Post media",
+        "position": "Media {{position}} of {{total}}",
+        "previous": "Previous media",
+        "next": "Next media"
+      }
     }
   },
   "event": {
@@ -443,8 +484,6 @@
     "metaTitle": "Page",
     "see": "See the page",
     "claimable": "Claimable",
-    "claim": "Claim this page",
-    "claimSoon": "Claiming with supporting documents arrives with the association import.",
     "kind": {
       "institution": "Institution",
       "association": "Association",
@@ -502,10 +541,18 @@
   "contact": {
     "write": "Write",
     "writeTo": "Write to {{name}}",
-    "soon": "Messaging is coming soon: no contact will ever go through a displayed address or number."
+    "soon": "Messaging is coming soon: no contact will ever go through a displayed address or number.",
+    "needsRelation": "Messaging is for your connections: connect first.",
+    "call": "Call",
+    "callTo": "Call {{name}}"
   },
-  "filters": { "advanced": "More filters" },
+  "filters": {
+    "advanced": "More filters"
+  },
   "hub": {
+    "errorTitle": "Information about this country is unavailable.",
+    "errorBody": "Check your connection and reload the page to try again.",
+    "reload": "Reload the page",
     "metaTitle": "Country hub",
     "title": "The community — {{country}}",
     "open": "Open country",
@@ -536,7 +583,7 @@
       "groupes": "Groups"
     },
     "welcomeTitle": "Welcome, {{name}}.",
-    "welcomeBody": "You are also a member of ANTIA, the public network, with the same profile. What you post here stays in DIASPORALE, unless you tick “Also post on ANTIA”.",
+    "welcomeBody": "You are also a member of ANTSIA, the public network, with the same profile. What you post here stays in DIASPORALE, unless you tick “Also post on ANTSIA”.",
     "emptyPosts": "No post in the {{country}} hub yet.",
     "emptyPostsBody": "Practical information, a question, a good tip: the first post launches the hub.",
     "emptyEvents": "No event planned — {{country}}.",
@@ -555,13 +602,51 @@
     "edit": "Edit",
     "preview": "See myself as others do",
     "previewExit": "Back to my profile",
-    "previewNotice": "Preview: what a member from another country, not connected to you, sees.",
+    "previewNotice": "Limited preview of your diaspora facet for an active member in another country who is not connected to you. Actual profile visibility also depends on the reader and publication rules.",
+    "managePublication": "Manage my profile publication",
     "posts": "Posts",
+    "tabsLabel": "Profile content",
+    "photos": "Photos",
+    "albums": "Albums",
     "noPosts": "{{name}} hasn't posted anything yet.",
     "noPostsSelf": "You haven't posted anything yet.",
     "unavailableTitle": "This profile is not available.",
     "unavailableBody": "It doesn't exist, or you can't see it.",
-    "bookmarks": "My saved posts"
+    "bookmarks": "My saved posts",
+    "errorTitle": "The profile could not be displayed.",
+    "errorBody": "This profile could not be loaded. Please try again shortly.",
+    "reload": "Reload profile",
+    "previewPostsUnavailable": "Posts and albums are hidden in this preview. Their visibility depends on each reader.",
+    "images": {
+      "edit": "Edit my images",
+      "title": "Photo and cover",
+      "shared": "These images belong to your ANTSIA profile and are shared across your networks. Each reader’s permissions control their display.",
+      "readOnly": "Changing images requires an active DIASPORALE membership.",
+      "unavailable": "Your images are currently unavailable.",
+      "avatar": "Profile photo",
+      "cover": "Cover image",
+      "chooseAvatar": "Choose a profile photo",
+      "chooseCover": "Choose a cover image",
+      "requirements": "JPEG, PNG or WebP, up to 5 MiB per image.",
+      "saveAvatar": "Save photo",
+      "saveCover": "Save cover",
+      "saving": "Saving…",
+      "removeAvatar": "Remove my photo",
+      "removeCover": "Remove my cover",
+      "confirmRemove": "Remove this image from your profile across all your networks? This action does not delete the uploaded file.",
+      "cancel": "Cancel",
+      "required": "Choose a non-empty image.",
+      "updated": "Image saved.",
+      "pending": "Image saved, awaiting review before display.",
+      "blocked": "This image cannot be displayed. You can choose another one.",
+      "removed": "Image removed from your profile."
+    }
+  },
+  "albums": {
+    "metaTitle": "Photo album",
+    "unavailableTitle": "Albums unavailable",
+    "previewUnavailableBody": "Albums are not available in this preview.",
+    "unavailableBody": "Albums require an active network membership. They are not available in the demonstration."
   },
   "facet": {
     "country": "Country of residence",
@@ -586,13 +671,81 @@
     }
   },
   "settings": {
+    "contentPreferences": {
+      "title": "My feed",
+      "lead": "Find your hidden posts and muted authors. These choices are private and apply only to your DIASPORALE feed.",
+      "hiddenTab": "Hidden posts",
+      "mutedTab": "Muted authors",
+      "emptyHidden": "You have no hidden posts.",
+      "emptyMuted": "You have no muted authors.",
+      "emptyPage": "Nothing to display on this page.",
+      "unavailablePost": "Post unavailable",
+      "unknownAuthor": "Profile not displayed",
+      "noText": "Post with media",
+      "hiddenAt": "Hidden on {{date}}",
+      "mutedAt": "Muted on {{date}}",
+      "showPost": "View post",
+      "restoreHidden": "Stop hiding",
+      "restoreMuted": "Stop muting",
+      "restoring": "Restoring…",
+      "restoredHidden": "The post is no longer hidden.",
+      "restoredMuted": "The author is no longer muted.",
+      "error": "These choices could not be loaded.",
+      "retry": "Try again",
+      "next": "Next",
+      "previous": "Previous",
+      "page": "Page {{number}}",
+      "moved": "This choice has already been updated.",
+      "unavailableLead": "The details are no longer accessible. You can still undo this choice."
+    },
+    "profilePublication": {
+      "title": "Profile publication",
+      "globalScope": "This profile is shared by ANTSIA and DIASPORALE. These settings apply in both applications; the DIASPORALE directory is configured separately.",
+      "loadError": "Your personal profile could not be loaded.",
+      "reload": "Reload profile",
+      "unavailable": "Profile settings are unavailable for this session.",
+      "state": {
+        "published": "Profile publication recorded.",
+        "private": "Publication recorded, private mode enabled.",
+        "withdrawn": "Your profile is withdrawn.",
+        "unpublished": "Your profile is not published."
+      },
+      "privateLead": "Private mode removes you from searches and suggestions and closes new incoming follows and connection requests. Your known profile link, posts and existing relationships keep their usual visibility rules.",
+      "withdrawLead": "Withdrawing your profile makes the public profile unavailable and your name neutral. Your account, memberships, media, content, relationships and consents are retained. You remain a DIASPORALE member.",
+      "republishLead": "Republishing uses your retained identity and headline, as well as your privacy and directory choices. Moderation may delay profile visibility.",
+      "makePrivate": "Enable private mode",
+      "privacyOn": "Private mode enabled.",
+      "privacyOff": "Private mode disabled.",
+      "makeDiscoverable": "Disable private mode",
+      "withdraw": "Withdraw my profile",
+      "republish": "Republish my profile",
+      "working": "Saving…",
+      "saved": {
+        "privacy": "Privacy setting saved.",
+        "withdraw": "Profile withdrawal recorded.",
+        "republish": "Republication requested. Moderation may delay profile visibility."
+      },
+      "confirm": {
+        "withdraw": {
+          "title": "Withdraw the shared profile?",
+          "body": "Withdrawal applies to ANTSIA and DIASPORALE. Your public profile becomes unavailable and your name neutral; your data, content, relationships, memberships and consents are retained. You can republish from these settings.",
+          "confirm": "Confirm withdrawal"
+        },
+        "republish": {
+          "title": "Republish the shared profile?",
+          "body": "Republication is requested in ANTSIA and DIASPORALE using your retained identity and headline. Private mode and your directory choices are retained. Moderation may delay visibility.",
+          "confirm": "Confirm republication"
+        }
+      }
+    },
+    "signingOut": "Signing out…",
     "title": "Settings",
     "memberships": "My networks",
-    "membershipsLead": "Joining DIASPORALE also made you a member of ANTIA. Your contexts stay separate.",
+    "membershipsLead": "Joining DIASPORALE also made you a member of ANTSIA. Your contexts stay separate.",
     "memberSince": "Member since {{date}}",
     "sponsoredBy": "Sponsored by {{name}} (@{{handle}})",
-    "rootName": "ANTIA",
-    "rootDerived": "Membership derived from DIASPORALE: same profile, same handle. Leaving DIASPORALE doesn't remove you from ANTIA.",
+    "rootName": "ANTSIA",
+    "rootDerived": "Membership derived from DIASPORALE: same profile, same handle. Leaving DIASPORALE doesn't remove you from ANTSIA.",
     "attestationVerified": "Consular registration verified.",
     "attestationNotConfirmed": "We could not confirm your consular registration.",
     "attestationNone": "Consular registration not verified.",
@@ -602,7 +755,7 @@
     "visibilityLegend": "Who sees what",
     "saved": "Saved.",
     "directory": "Member directory",
-    "directoryLead": "Hidden by default. People contact you only through messaging, never through an address.",
+    "directoryLead": "Hidden by default. A private or withdrawn profile remains absent from the directory even when the chosen level is visible. People contact you only through messaging, never through an address.",
     "directoryNeedsConsent": "First turn on the “Member directory” consent below.",
     "directoryLevel": {
       "hidden": "Hidden",
@@ -610,14 +763,14 @@
       "network": "Visible to all members"
     },
     "consents": "Consents",
-    "consentsLead": "Each choice is time-stamped and can be withdrawn in one step.",
+    "consentsLead": "Your recorded consents and the choices available here. Each change is timestamped.",
     "consentRecorded": "Recorded on {{date}} — text of {{version}}",
     "consentGranted": "Consent given.",
     "consentRevoked": "Consent withdrawn.",
-    "leaveExplain": "Leaving DIASPORALE withdraws your social profile consent. Your ANTIA membership remains.",
+    "leaveExplain": "Leaving DIASPORALE ends this membership. Your account, shared profile and ANTSIA membership remain.",
     "leave": "Leave DIASPORALE",
     "leaveConfirmTitle": "Leave DIASPORALE?",
-    "leaveConfirmBody": "Your profile will no longer be visible in DIASPORALE. You can come back; a new sponsorship may be needed.",
+    "leaveConfirmBody": "Your DIASPORALE membership and received sponsorship end. Your shared profile and consents are retained. You can return; a new sponsorship may be needed.",
     "left": "You have left DIASPORALE.",
     "sponsorHelp": "Sponsorship",
     "sponsorHelpLead": "A member verified for more than 30 days can sponsor a pending account using its handle.",
@@ -626,18 +779,26 @@
     "handleCopied": "Handle copied.",
     "goSponsor": "Sponsor someone",
     "data": "My data",
-    "dataLead": "Download everything DIASPORALE knows about you, or erase your account.",
     "export": "Download my data",
     "exported": "Data downloaded.",
     "delete": "Erase my account",
     "deleteConfirmTitle": "Erase your account?",
     "deleteConfirmBody": "Your profile, posts, reactions, consents and sponsorships will be erased. Content that mentioned you will show “deleted account”.",
     "deleteAcknowledge": "I understand that erasure is permanent.",
-    "deleted": "Your account is erased.",
     "appearance": "Language and appearance",
     "session": "Session",
     "sessionLead": "Signs out this device and all others.",
-    "signOutEverywhere": "Sign out everywhere"
+    "signOutEverywhere": "Sign out everywhere",
+    "profileIdentity": {
+      "title": "Name and headline",
+      "lead": "These texts are shared by ANTSIA and DIASPORALE. Saving them preserves your privacy choice and whether the profile is published or withdrawn.",
+      "edit": "Edit name and headline",
+      "name": "Display name",
+      "nameHint": "A freely chosen name for your social profile. Your handle stays the same.",
+      "headline": "Headline",
+      "headlineHint": "Optional, up to {{max}} characters. Clear the field to remove the headline.",
+      "save": "Save texts"
+    }
   },
   "sponsor": {
     "title": "Sponsor",
@@ -727,14 +888,14 @@
   },
   "charte": {
     "title": "“Diaspora sand” charter",
-    "eyebrow": "Design charter · version 3.2 · 15 October 2026",
+    "eyebrow": "Design charter · version 3.3 · 17 October 2026",
     "heading": "Diaspora sand",
     "lead": "DIASPORALE's components, mounted with fictitious data, to review and accept the interface in both themes.",
     "tocLabel": "Charter contents",
     "section": {
       "color": {
         "title": "Colour",
-        "lead": "Six named colours, a single warm hue per theme, barely saturated: nothing turns beige or brown. The background is the lowest layer; every surface that rises gets lighter."
+        "lead": "Six named colours, a single warm hue per theme, barely saturated: nothing turns beige or brown. In light mode, sand cards sit on a paper background; in dark mode, lighter cards sit on the night background."
       },
       "contrast": {
         "title": "Contrast",
@@ -762,7 +923,7 @@
       },
       "cards": {
         "title": "Cards",
-        "lead": "Paper on sand in light, a raised card on night in dark: the card rises through lightness, no hairline. Every piece of content carries its country."
+        "lead": "Sand cards on a paper background in light, lighter cards on a night background in dark: surfaces are separated by lightness, without an outline. Every piece of content carries its country."
       },
       "controls": {
         "title": "Controls",
@@ -772,7 +933,7 @@
     "theme": {
       "light": "Light",
       "dark": "Dark",
-      "lightRoles": "Sand background · paper card · ink text",
+      "lightRoles": "Paper background · sand card · ink text",
       "darkRoles": "Night background · raised card · sand text",
       "text": "Main text",
       "secondary": "Secondary text, quieter",
@@ -781,11 +942,11 @@
     "swatch": {
       "sable": {
         "name": "Sand",
-        "role": "Light background, dark text"
+        "role": "Light cards, dark text"
       },
       "papier": {
         "name": "Paper",
-        "role": "Light card"
+        "role": "Light background"
       },
       "encre": {
         "name": "Ink",
@@ -947,6 +1108,64 @@
       "postMine": "My post, under review: the floating card is shown to its author only."
     }
   },
+  "messages": {
+    "title": "Messages"
+  },
+  "stories": {
+    "title": "Stories"
+  },
+  "icom": {
+    "unavailableTitle": "Messaging unavailable",
+    "unavailable": {
+      "demo": "Messaging and calls run on the live network: the demo doesn't include them.",
+      "networkMissing": "Messaging isn't open on this network yet: come back a little later."
+    }
+  },
+  "relations": {
+    "title": "My connections",
+    "lead": "Find your connections, requests and follows, and manage your personal choices.",
+    "tabsLabel": "Connections, requests, following, blocks and suggestions",
+    "acceptedTab": "My connections",
+    "receivedTab": "Received requests",
+    "sentTab": "Sent requests",
+    "followingTab": "Following",
+    "blockedTab": "Blocked people",
+    "member": "Member",
+    "loading": "Loading your connections…",
+    "errorTitle": "The list could not be refreshed",
+    "errorBody": "Try again shortly. Previously loaded items remain visible.",
+    "retry": "Try again",
+    "emptyAcceptedTitle": "You have no connections yet",
+    "emptyAcceptedBody": "Meet members in the directory and invite them to connect.",
+    "emptyReceivedTitle": "No pending requests",
+    "emptyReceivedBody": "New connection requests will appear here.",
+    "discover": "Meet members",
+    "loadMore": "See more",
+    "loadingMore": "Loading…",
+    "readOnly": "You can respond to requests once your membership allows you to publish.",
+    "accepted": "Request accepted. You are now connected.",
+    "declined": "Request declined.",
+    "unavailableTitle": "Connections are unavailable here",
+    "unavailableBody": "This list is available to active DIASPORALE members. In the demo, explore connection actions from profiles.",
+    "dismissedTab": "Hidden suggestions",
+    "dismissed": {
+      "title": "Hidden suggestions",
+      "body": "Members may be suggested again only if they still meet the current eligibility rules. This action creates no connection or follow.",
+      "neutral": "Hidden suggestion",
+      "hiddenAt": "Hidden on {{date}}",
+      "restore": "Remove hiding preference",
+      "restoreLabel": "Remove hiding preference for {{name}}",
+      "restoring": "Removing…",
+      "restored": "Hiding preference updated.",
+      "restoreFailed": "The hiding preference could not be removed.",
+      "empty": "You have no hidden suggestions.",
+      "loading": "Loading hidden suggestions…",
+      "loadMore": "Show more hidden suggestions",
+      "errorTitle": "Unable to load hidden suggestions",
+      "errorBody": "Retry to refresh your preferences.",
+      "retry": "Try again"
+    }
+  },
   "members": {
     "title": "Members",
     "lead": "Members who chose to appear in the directory. Contact goes through messaging: no contact details are shown.",
@@ -987,7 +1206,10 @@
     "showReplies_one": "See {{count}} reply",
     "showReplies_other": "See the {{count}} replies",
     "edited": "edited",
-    "someone": "A member"
+    "someone": "A member",
+    "edit": "Edit",
+    "editLabel": "Edit your comment",
+    "updated": "Comment updated."
   },
   "postMenu": {
     "open": "More actions on this post",
@@ -1063,7 +1285,10 @@
     "emptyTitle": "No saved posts.",
     "emptyBody": "Save a post from its “…” menu to find it here.",
     "open": "Open",
-    "remove": "Remove"
+    "remove": "Remove",
+    "loadMore": "Show more saved posts",
+    "loadingMore": "Loading saved posts…",
+    "retry": "Try again"
   },
   "bell": {
     "open": "Notifications",
@@ -1203,6 +1428,7 @@
     "delivery_unavailable": "The code couldn't be sent right now. Try again in a moment.",
     "feature_unavailable": "This feature isn't open yet.",
     "network_unavailable": "DIASPORALE can't be reached right now. Try again in a moment.",
-    "status_insufficient": "Your status doesn't allow this yet: ask for a sponsorship or verify your consular registration."
+    "status_insufficient": "Your status doesn't allow this yet: ask for a sponsorship or verify your consular registration.",
+    "headline_too_long": "The headline is too long (160 characters maximum)."
   }
 }

@@ -1,0 +1,12 @@
+{
+  "pageManagedServices": {
+    "filterLabel": "État des offres",
+    "all": "Tous les états",
+    "lead": "Retrouvez les offres de cette page par état. Seules les offres actives sont visibles dans son catalogue.",
+    "reset": "Effacer le filtre",
+    "emptyTitle": "Aucune offre dans cet état",
+    "emptyBody": "Choisissez un autre état ou effacez le filtre pour retrouver toutes les offres de cette page.",
+    "finishEditing": "Enregistrez ou fermez le formulaire avant de changer l’état affiché.",
+    "closeEditor": "Fermer l’édition"
+  }
+}

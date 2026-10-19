@@ -10,7 +10,7 @@ import { ModerationBanner } from "./moderation-banner"
 import { PostMediaGrid } from "./post-media"
 import { SharedPostEmbed } from "./post-share"
 import { RoutingProvider, type FeatureRoutes } from "../routing"
-import { richParts } from "./rich-text"
+import { RichText, richParts } from "./rich-text"
 import { TrustBadge } from "./trust-badge"
 
 describe("CountryTag — l'étiquette pays", () => {
@@ -202,7 +202,7 @@ describe("RichText — mentions et mots-dièse", () => {
       { kind: "text", text: "Merci " },
       { kind: "mention", handle: "ada.lovelace", text: "@Ada.Lovelace" },
       { kind: "text", text: " pour " },
-      { kind: "tag", text: "#Libreville2026" },
+      { kind: "tag", tag: "libreville2026", text: "#Libreville2026" },
       { kind: "text", text: " !" },
     ])
   })
@@ -221,7 +221,7 @@ describe("RichText — mentions et mots-dièse", () => {
   it("la casse de l'auteur est gardée, même quand la minuscule du moteur s'allonge (« İ »)", () => {
     expect(richParts("Vu à #İstanbul avec @Awa !")).toEqual([
       { kind: "text", text: "Vu à " },
-      { kind: "tag", text: "#İstanbul" },
+      { kind: "tag", tag: "i̇stanbul", text: "#İstanbul" },
       { kind: "text", text: " avec " },
       { kind: "mention", handle: "awa", text: "@Awa" },
       { kind: "text", text: " !" },
@@ -236,6 +236,29 @@ describe("RichText — mentions et mots-dièse", () => {
           .join(""),
       ).toBe(text)
     }
+  })
+
+  it("les mots-dièse sont de vrais liens clavier utilisant le jeton canonique sans changer le texte Unicode", async () => {
+    const feed = vi.fn((tag?: string) => `/fil?${new URLSearchParams({ tag: tag ?? "" }).toString()}`)
+    const routes: FeatureRoutes = {
+      profile: (handle) => `/@${handle}`, post: (id) => `/publication/${id}`, page: (handle) => `/pages/${handle}`,
+      hub: (country) => `/pays/${country}`, feed, sponsor: () => "/parrainer", settings: () => "/parametres",
+      attestation: () => "/verification", enter: () => "/entrer",
+    }
+    const { container } = renderWithI18n(
+      <RoutingProvider routes={routes} Link={({ children, ...rest }) => <a {...rest}>{children}</a>}>
+        <p><RichText text={'#ÉTÉ #İstanbul avec @Ada.Lovelace <img src="interdit">'} /></p>
+      </RoutingProvider>,
+    )
+    const summer = screen.getByRole("link", { name: "#ÉTÉ" })
+    expect(summer).toHaveAttribute("href", "/fil?tag=%C3%A9t%C3%A9")
+    expect(screen.getByRole("link", { name: "#İstanbul" })).toHaveAttribute("href", "/fil?tag=i%CC%87stanbul")
+    expect(feed).toHaveBeenCalledWith("été")
+    expect(feed).toHaveBeenCalledWith("i̇stanbul")
+    expect(screen.getByRole("link", { name: "@Ada.Lovelace" })).toHaveAttribute("href", "/@ada.lovelace")
+    expect(container.querySelector("img")).toBeNull()
+    await userEvent.setup().tab()
+    expect(summer).toHaveFocus()
   })
 })
 

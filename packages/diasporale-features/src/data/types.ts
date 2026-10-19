@@ -4,6 +4,10 @@
  * en attendant. Aucun enregistrement source, aucun identifiant interne exposé
  * au-delà de l'identifiant opaque de la ligne ; aucune coordonnée, jamais.
  */
+export { DISPLAY_NAME_MAX_LENGTH, HEADLINE_MAX_LENGTH } from "@antsia/social-domain/content"
+import { PAGE_ASSOCIATION_TYPES, PAGE_COMPANY_SECTORS } from "@antsia/social-domain/pagePresentation"
+import type { PageAssociationType, PageCompanySector } from "@antsia/social-domain/pagePresentation"
+
 import type {
   AttestationOutcome,
   ConsentPurpose,
@@ -13,6 +17,7 @@ import type {
   DiasporaFacet,
   DirectoryVisibility,
   FacetProjection,
+  FeedScope,
   HubCountersPresentation,
   MembershipStatus,
   PageOwnerKind,
@@ -24,6 +29,8 @@ import type {
   Visibility,
   WriteRateTier,
 } from "@diasporale/domain"
+
+import type { ActionErrorCode } from "./errors"
 
 export type Loadable<T> =
   | { readonly status: "loading" }
@@ -73,6 +80,8 @@ export type SharedPostView =
 
 export interface PostView {
   readonly id: string
+  /** Galerie collective événementielle ; l'éditeur des posts de page ordinaires ne s'applique pas. */
+  readonly eventGalleryId?: string
   readonly author: AuthorView
   readonly body: string
   /** Quatre photos au plus, ou une vidéo seule (règle du moteur). */
@@ -94,6 +103,43 @@ export interface PostView {
   readonly bookmarked: boolean
   /** Modifiée après sa publication : la carte le dit. */
   readonly edited: boolean
+  /** Version d'édition pour les gestes collectifs de page ; absente des anciens fournisseurs. */
+  readonly editedAt?: number | null
+}
+
+/** Curseur opaque du fil : l'instant seul ne départage pas deux publications. */
+export interface FeedCursorView {
+  readonly publishedAt: number
+  readonly postId: string
+}
+
+export interface FeedPageRequest {
+  readonly scope: FeedScope
+  readonly hubCountry?: CountryCode
+  /** Jeton canonique du moteur ; restreint les publications déjà lisibles. */
+  readonly tag?: string
+  /** Absent ou nul pour la première page ; les suivantes reprennent le curseur reçu. */
+  readonly cursor?: FeedCursorView | null
+}
+
+export interface ProfilePostsPageRequest {
+  readonly handle: string
+  readonly cursor?: FeedCursorView | null
+}
+
+export interface FeedPageView {
+  readonly items: readonly PostView[]
+  readonly nextCursor: FeedCursorView | null
+  /** Fenêtre bornée par le moteur, distincte de la fin du fil. */
+  readonly lacunar: boolean
+}
+
+/** Une page réactive : une panne après données conserve celles-ci pendant la reprise. */
+export interface FeedPageQuery {
+  readonly data: FeedPageView | undefined
+  readonly isLoading: boolean
+  readonly error: ActionErrorCode | null
+  readonly retry: () => void
 }
 
 /** Un signet (EXF-DG-12) : de quoi reconnaître la publication et l'ouvrir. */
@@ -103,6 +149,27 @@ export interface BookmarkView {
   readonly body: string
   readonly publishedAt: number
   readonly markedAt: number
+}
+
+export const BOOKMARKS_PAGE_SIZE = 50
+
+/** Curseur opaque du fournisseur : jamais converti en curseur de fil. */
+export interface BookmarksPageRequest {
+  readonly cursor?: string | null
+}
+
+export interface BookmarksPageView {
+  readonly items: readonly BookmarkView[]
+  readonly continueCursor: string
+  readonly isDone: boolean
+}
+
+export interface BookmarksPageQuery {
+  readonly data: BookmarksPageView | undefined
+  readonly isLoading: boolean
+  readonly error: ActionErrorCode | null
+  /** Une page rendue par cette tentative est fraîche ; undefined ne réautorise aucun cache. */
+  readonly retry: () => Promise<BookmarksPageView | undefined> | BookmarksPageView | undefined
 }
 
 /** Les six motifs de signalement (EXF-DG-12), ceux du moteur (`CONTENT_REPORT_REASONS`). */
@@ -150,22 +217,11 @@ export interface EventView {
   readonly moderation: ContentModerationState
 }
 
-export const ASSOCIATION_TYPES = [
-  "cultural",
-  "sports",
-  "religious",
-  "professional",
-  "solidarity",
-  "education",
-  "youth",
-  "women",
-  "student",
-  "other",
-] as const
-export type AssociationType = (typeof ASSOCIATION_TYPES)[number]
+export const ASSOCIATION_TYPES = PAGE_ASSOCIATION_TYPES
+export type AssociationType = PageAssociationType
 
-export const COMPANY_SECTORS = ["food", "services", "retail", "tech", "transport", "health", "beauty", "other"] as const
-export type CompanySector = (typeof COMPANY_SECTORS)[number]
+export const COMPANY_SECTORS = PAGE_COMPANY_SECTORS
+export type CompanySector = PageCompanySector
 
 export interface PageView {
   readonly id: string
@@ -173,22 +229,36 @@ export interface PageView {
   readonly name: string
   readonly ownerKind: PageOwnerKind
   readonly trust: PageTrustLevel
+  /** Calculé côté serveur à partir de la confiance de la page, jamais déclaré. */
   readonly badge: TrustBadge
   readonly country: CountryCode | null
   readonly city: string | null
+  /** Vide quand la page n'en a pas. */
   readonly description: string
+  /** Abonnés comptés (agrégat du moteur, état local en démonstration) — un zéro reste un zéro. */
   readonly followers: number
+  /** Revendicable par CE lecteur ; `false` quand le fournisseur ne le sait pas (annuaire). */
   readonly claimable: boolean
   readonly associationType?: AssociationType
   readonly sector?: CompanySector
+  /** Sigle de la page, quand elle en a un. */
+  readonly shortName?: string | null
+  /** Logo délivré par la garde des fichiers ; `null` : sans logo, ou retenu par la garde. */
+  readonly logoUrl?: string | null
 }
 
 export interface CountryHubView {
   readonly country: CountryCode
   readonly open: boolean
+  /** Membres, associations, entreprises : MATÉRIALISÉS par le passage nocturne, jamais comptés à la lecture. */
   readonly counters: HubCountersPresentation
   /** `materialized` : compteurs du moteur ; `demo` : jeu de démonstration (toujours signalé). */
   readonly countersSource: "materialized" | "demo"
+  /**
+   * Les pages du pays, quand le fournisseur les joint au hub (démonstration).
+   * Avec le moteur, elles se lisent par la capacité « pages » (`useHubPages`,
+   * bornées par nature) : ces listes restent vides plutôt qu'inventées.
+   */
   readonly officialPages: readonly PageView[]
   readonly associations: readonly PageView[]
   readonly companies: readonly PageView[]
@@ -220,7 +290,7 @@ export interface MembershipView {
     readonly requestedAt: number | null
   }
   /** L'adhésion dérivée au réseau racine (invariant 3) — elle existe sans geste. */
-  readonly root: { readonly network: "antia"; readonly status: MembershipStatus; readonly derivedFrom: "diasporale" }
+  readonly root: { readonly network: "antsia"; readonly status: MembershipStatus; readonly derivedFrom: "diasporale" }
   readonly canPublish: boolean
   readonly rateTier: WriteRateTier
   readonly directoryVisibility: DirectoryVisibility
@@ -230,11 +300,29 @@ export type SessionView =
   | { readonly status: "anonymous" }
   | { readonly status: "signed_in"; readonly account: AccountView; readonly membership: MembershipView | null }
 
+/** État du profil commun, réservé à la personne authentifiée, même après retrait. */
+export interface OwnProfileView {
+  readonly personId: string
+  readonly handle: string | null
+  readonly displayName: string | null
+  readonly headline: string | null
+  readonly published: boolean
+  readonly private: boolean
+}
+
+/** Une image de profil déjà jugée par la garde des fichiers du moteur. */
+export interface ProfileImageView {
+  readonly url: string | null
+  readonly withheld: "fileScanPending" | "fileQuarantined" | null
+}
+
 export interface ProfileView {
   readonly personId: string
   readonly handle: string
   readonly displayName: string
   readonly headline: string | null
+  readonly avatar: ProfileImageView | null
+  readonly cover: ProfileImageView | null
   readonly badges: readonly TrustBadge[]
   readonly facet: FacetProjection
   /** Ce qu'un membre ordinaire d'un autre pays voit de la facette (`?apercu=1`). */
@@ -242,13 +330,33 @@ export interface ProfileView {
   /** Nom de la page du poste de rattachement, quand la facette le montre. */
   readonly postName: string | null
   readonly isSelf: boolean
+  /** Champ historique : la fiche est indépendante des pages de son mur. */
   readonly posts: readonly PostView[]
+}
+
+/** Rôle VIVANT d'un signataire : `admin` publie et gère, `signatory` publie. */
+export type PageViewerRole = "admin" | "signatory"
+
+/** Le lecteur face à la page : son rôle vivant (relu à chaque lecture) et son abonnement. */
+export interface PageViewerView {
+  /** `null` : simple lecteur (une invitation en attente ne donne aucun rôle). */
+  readonly role: PageViewerRole | null
+  readonly following: boolean
 }
 
 export interface PageDetailView {
   readonly page: PageView
+  /** Bannière délivrée par la garde des fichiers ; `null` : sans bannière, ou retenue. */
+  readonly bannerUrl: string | null
+  /** Publications de la page, comptées par le moteur (un zéro reste un zéro). */
+  readonly postCount: number
+  /** La première fenêtre du mur, chaque publication repassée par la garde du fil. */
   readonly posts: readonly PostView[]
+  /** Des publications plus anciennes existent au-delà de cette première fenêtre. */
+  readonly morePosts: boolean
+  /** Le moteur n'a pas encore d'organisateur « page » : vide plutôt qu'inventé. */
   readonly events: readonly EventView[]
+  readonly viewer: PageViewerView
 }
 
 /**
@@ -292,6 +400,74 @@ export interface SuggestionView extends MemberHitView {
 }
 
 /**
+ * Les avis de MISE EN RELATION (DG-010, DG-015, DG-016) : des phrases du système,
+ * neutres — ni besoin, ni montant, ni créneau, ni nom —, que le moteur relit avec
+ * les droits du lecteur (mêmes genres que la tranche `diaspora` du moteur).
+ */
+export const SERVICE_NOTIFICATION_KINDS = [
+  "service_request_received",
+  "service_proposal_received",
+  "service_request_declined",
+  "service_proposal_accepted",
+  "service_request_cancelled",
+  "service_request_expired",
+  "service_booking_completed",
+  "service_booking_no_show",
+  "service_no_show_contested",
+  "association_membership_requested",
+  "association_membership_accepted",
+  "association_membership_declined",
+  "association_membership_removed",
+  "service_review_replied",
+] as const
+export type ServiceNotificationKind = (typeof SERVICE_NOTIFICATION_KINDS)[number]
+
+/**
+ * Les avis de la VIE COMMUNAUTAIRE (vague H : entraide, mentorat, emploi, kit d'arrivée) :
+ * des phrases du système, neutres, sans contenu ni nom ni motif, relues par le moteur avec
+ * les droits du lecteur (mêmes genres que `diaspora/communityNotifications.ts` du moteur).
+ */
+export const COMMUNITY_NOTIFICATION_KINDS = [
+  "aid_answer_received",
+  "aid_answer_retained",
+  "aid_mission_signup",
+  "mentoring_request_received",
+  "mentoring_request_accepted",
+  "mentoring_request_declined",
+  "mentoring_closed",
+  "job_application_received",
+  "job_application_shortlisted",
+  "job_application_not_selected",
+  "kit_resource_reviewed",
+] as const
+export type CommunityNotificationKind = (typeof COMMUNITY_NOTIFICATION_KINDS)[number]
+
+/** À qui parle un avis communautaire : l'auteur d'un contenu, l'équipe d'une page, le mentor, le mentoré, la personne qui candidate. */
+export const COMMUNITY_NOTICE_AUDIENCES = ["author", "team", "mentor", "mentee", "candidate"] as const
+export type CommunityNoticeAudience = (typeof COMMUNITY_NOTICE_AUDIENCES)[number]
+
+/** L'objet qu'un avis communautaire ouvre, par une route de l'application. */
+export const COMMUNITY_NOTICE_OPENS = ["aidQuestion", "aidMission", "mentoringRequest", "jobApplication", "kitResource"] as const
+export type CommunityNoticeOpens = (typeof COMMUNITY_NOTICE_OPENS)[number]
+
+/** Ce qu'un avis communautaire DÉSIGNE, relu par le moteur avec les droits du lecteur : jamais un contenu. */
+export interface CommunityNoticeView {
+  readonly audience: CommunityNoticeAudience
+  readonly opens: CommunityNoticeOpens
+  /** L'identifiant de l'objet ouvert (la question, pour une réponse retenue). */
+  readonly objectId: string
+  /** L'adresse publique de la page concernée, si elle se lit encore ; `null` sinon. */
+  readonly pageHandle: string | null
+}
+
+/**
+ * Les avis d'une CONVERSATION DE MISE EN RELATION (CC-2b du moteur) : un message reçu, un fil
+ * clos. Neutres : ni contenu, ni nom ; le fil est relu avec les droits du lecteur.
+ */
+export const CONTEXTUAL_NOTIFICATION_KINDS = ["contextual_message", "contextual_closed"] as const
+export type ContextualNotificationKind = (typeof CONTEXTUAL_NOTIFICATION_KINDS)[number]
+
+/**
  * Les avis de la cloche que DIASPORALE sait dire. Tout autre genre du moteur se
  * dit « nouvelle activité » (`other`) : jamais un libellé inventé.
  */
@@ -307,9 +483,28 @@ export const NOTIFICATION_KINDS = [
   "sponsorship_withdrawn",
   "attestation_verified",
   "attestation_not_confirmed",
+  "association_event_reminder",
+  ...SERVICE_NOTIFICATION_KINDS,
+  ...COMMUNITY_NOTIFICATION_KINDS,
+  ...CONTEXTUAL_NOTIFICATION_KINDS,
+  // P16 · G9 : une décision de modération qui me concerne, ou qui concerne une page dont je signe.
+  "moderation_decision",
   "other",
 ] as const
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number]
+
+/** À qui parle un avis de mise en relation — d'où son lien : le demandeur, l'équipe de la page, les responsables, la personne. */
+export const SERVICE_NOTICE_AUDIENCES = ["requester", "provider", "responsible", "member"] as const
+export type ServiceNoticeAudience = (typeof SERVICE_NOTICE_AUDIENCES)[number]
+
+/** Ce qu'un avis de mise en relation DÉSIGNE, relu par le moteur avec les droits du lecteur : jamais un contenu. */
+export interface ServiceNoticeView {
+  readonly audience: ServiceNoticeAudience
+  /** La demande concernée (demandeur, équipe de la page, auteur d'un avis) ; `null` pour une adhésion. */
+  readonly requestId: string | null
+  /** L'adresse publique de la page concernée, si elle se lit encore ; `null` sinon. */
+  readonly pageHandle: string | null
+}
 
 /** Ce qu'est DEVENUE une demande de relation reçue (relu à l'instant). */
 export const INVITE_OUTCOMES = ["accepted", "declined", "gone"] as const
@@ -327,12 +522,27 @@ export interface NotificationView {
   readonly inviteOutcome: InviteOutcome | null
   /** La publication dont parle l'avis (réaction, commentaire, citation) : de quoi l'ouvrir. */
   readonly postId: string | null
+  /** Lien vers l'événement de page, relu avec les droits du destinataire. */
+  readonly associationEvent?: { readonly eventId: string; readonly pageHandle: string } | null
+  /** Avis de mise en relation : sa cible relue (demande ou page) ; `null` si elle ne se lit plus. */
+  readonly serviceNotice?: ServiceNoticeView | null
+  /** Avis de la vie communautaire : l'objet qu'il ouvre, relu ; `null` s'il ne se lit plus. */
+  readonly communityNotice?: CommunityNoticeView | null
+  /**
+   * Avis de décision de modération : la page porteuse quand le dossier est celui d'une
+   * page dont je signe à la lecture (ses décisions), sinon `null` (« Mes données »).
+   * Ni contenu, ni motif, ni modérateur.
+   */
+  readonly moderationDecision?: { readonly pageHandle: string | null }
+  /** Avis d'une conversation de mise en relation : le fil, relu pour moi ; `null` s'il ne se lit plus. */
+  readonly contextualThreadId?: string | null
 }
 
 /** Les non-lues, bornées : au-delà de 99, la cloche dit « 99+ ». */
 export interface UnreadCountView {
   readonly count: number
   readonly capped: boolean
+  readonly truncated?: boolean
 }
 
 export interface SponsorshipView {

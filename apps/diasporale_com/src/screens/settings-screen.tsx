@@ -28,16 +28,21 @@ import {
 } from "@diasporale/features"
 import { useActions, useMyConsents, useOpenCountries, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { CopyIcon, DownloadIcon, LogOutIcon, Trash2Icon } from "lucide-react"
+import { CopyIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter } from "next/navigation"
-import { useId, useState, type ReactNode } from "react"
+import { useId, useLayoutEffect, useRef, useState, type ReactNode } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
 import { AppShell } from "@/components/app-shell"
+import { DataRightsSettings } from "@/components/data-rights-settings"
 import { Gate } from "@/components/gate"
+import { ProfileImagesSettings } from "@/components/profile-images-settings"
+import { ProfilePublicationSettings } from "@/components/profile-publication-settings"
+import { ContentPreferencesSettings } from "@/components/content-preferences-settings"
+import { SignOutSettings } from "@/components/sign-out-settings"
 import { LanguageSwitch, ThemeSwitch } from "@/components/preferences"
 import { routes } from "@/lib/routes"
 
@@ -48,7 +53,7 @@ export function SettingsScreen() {
       {(session) =>
         session.membership ? (
           <AppShell membership={session.membership}>
-            <Settings membership={session.membership} />
+            <Settings key={session.membership.personId} membership={session.membership} />
           </AppShell>
         ) : null
       }
@@ -78,18 +83,22 @@ function Settings(props: { membership: MembershipView }) {
     <>
       <h1 className="font-display text-3xl font-bold">{t("settings.title")}</h1>
       <MembershipSection membership={props.membership} />
+      <ContentPreferencesSettings membership={props.membership} />
+      <ProfilePublicationSettings key={props.membership.personId} membership={props.membership} />
+      <ProfileImagesSettings membership={props.membership} />
       <FacetSection membership={props.membership} />
       <DirectorySection membership={props.membership} />
       <ConsentsSection />
       <SponsorHelpSection membership={props.membership} />
-      <DataSection membership={props.membership} />
+      {/* « Mes données » (DG-026) : export, effacement, décisions et recours — ouverte au membre suspendu. */}
+      <DataRightsSettings membership={props.membership} />
       <Section id="apparence" title={t("settings.appearance")}>
         <div className="flex flex-col gap-3">
           <LanguageSwitch className="self-start" />
           <ThemeSwitch className="self-start" />
         </div>
       </Section>
-      <SignOutSection />
+      <SignOutSettings />
     </>
   )
 }
@@ -285,6 +294,11 @@ function ConsentsSection() {
   const consents = useMyConsents()
   const [leaveOpen, setLeaveOpen] = useState(false)
   const router = useRouter()
+  const active = useRef(false)
+  useLayoutEffect(() => {
+    active.current = true
+    return () => { active.current = false }
+  }, [])
   if (consents.status !== "ready") return null
   return (
     <Section id="consentements" title={t("settings.consents")} lead={t("settings.consentsLead")}>
@@ -312,6 +326,7 @@ function ConsentsSection() {
                 disabled={row.locked || row.disabled || (row.purpose === "consular_attestation" && !granted)}
                 onCheckedChange={async (checked) => {
                   const result = await actions.setConsent(row.purpose, checked)
+                  if (!active.current) return
                   if (!result.ok) toast.error(t(`errors.${result.code}`))
                   else toast.success(checked ? t("settings.consentGranted") : t("settings.consentRevoked"))
                 }}
@@ -333,7 +348,8 @@ function ConsentsSection() {
         body={t("settings.leaveConfirmBody")}
         confirm={t("settings.leave")}
         onConfirm={async () => {
-          const result = await actions.setConsent("social_profile", false)
+          const result = await actions.leaveDiasporale()
+          if (!active.current) return
           if (!result.ok) {
             toast.error(t(`errors.${result.code}`))
             return
@@ -378,82 +394,6 @@ function SponsorHelpSection(props: { membership: MembershipView }) {
   )
 }
 
-function DataSection(props: { membership: MembershipView }) {
-  const { t } = useDiasporaleT()
-  const actions = useActions()
-  const router = useRouter()
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  return (
-    <Section id="donnees" title={t("settings.data")} lead={t("settings.dataLead")}>
-      <div className="flex flex-wrap gap-3">
-        <Button
-          variant="outline"
-          onClick={async () => {
-            const result = await actions.exportMyData()
-            if (!result.ok) {
-              toast.error(t(`errors.${result.code}`))
-              return
-            }
-            const url = URL.createObjectURL(new Blob([result.value], { type: "application/json" }))
-            const anchor = document.createElement("a")
-            anchor.href = url
-            anchor.download = `diasporale-${props.membership.handle}.json`
-            anchor.click()
-            URL.revokeObjectURL(url)
-            toast.success(t("settings.exported"))
-          }}
-        >
-          <DownloadIcon aria-hidden />
-          {t("settings.export")}
-        </Button>
-        <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
-          <Trash2Icon aria-hidden />
-          {t("settings.delete")}
-        </Button>
-      </div>
-      <ConfirmSheet
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        title={t("settings.deleteConfirmTitle")}
-        body={t("settings.deleteConfirmBody")}
-        confirm={t("settings.delete")}
-        destructive
-        requireAcknowledge={t("settings.deleteAcknowledge")}
-        onConfirm={async () => {
-          const result = await actions.deleteMyAccount()
-          if (!result.ok) {
-            toast.error(t(`errors.${result.code}`))
-            return
-          }
-          toast.success(t("settings.deleted"))
-          router.push(routes.home())
-        }}
-      />
-    </Section>
-  )
-}
-
-function SignOutSection() {
-  const { t } = useDiasporaleT()
-  const actions = useActions()
-  const router = useRouter()
-  return (
-    <Section id="session" title={t("settings.session")} lead={t("settings.sessionLead")}>
-      <Button
-        variant="outline"
-        className="self-start"
-        onClick={async () => {
-          await actions.signOutEverywhere()
-          router.push(routes.home())
-        }}
-      >
-        <LogOutIcon aria-hidden />
-        {t("settings.signOutEverywhere")}
-      </Button>
-    </Section>
-  )
-}
-
 function ConfirmSheet(props: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -467,6 +407,7 @@ function ConfirmSheet(props: {
   const { t } = useDiasporaleT()
   const [acknowledged, setAcknowledged] = useState(false)
   const [busy, setBusy] = useState(false)
+  const running = useRef(false)
   const id = useId()
   return (
     <Sheet
@@ -493,10 +434,16 @@ function ConfirmSheet(props: {
             variant={props.destructive ? "destructive" : "primary"}
             disabled={busy || (props.requireAcknowledge !== undefined && !acknowledged)}
             onClick={async () => {
+              if (running.current) return
+              running.current = true
               setBusy(true)
-              await props.onConfirm()
-              setBusy(false)
-              props.onOpenChange(false)
+              try {
+                await props.onConfirm()
+                props.onOpenChange(false)
+              } finally {
+                running.current = false
+                setBusy(false)
+              }
             }}
           >
             {busy ? t("common.pleaseWait") : props.confirm}

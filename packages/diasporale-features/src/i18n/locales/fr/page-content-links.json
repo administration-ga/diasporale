@@ -1,0 +1,11 @@
+{
+  "pageContentLinks": {
+    "share": "Partager cette rubrique",
+    "shareLabel": "Partager la rubrique « {{section}} » de {{name}}",
+    "title": "Partager une rubrique",
+    "description": "Copiez le lien vers cette rubrique ou choisissez une option de partage.",
+    "link": "Lien vers la rubrique",
+    "copied": "Lien vers la rubrique copié.",
+    "shareFailed": "Le partage n’a pas abouti. Vous pouvez copier le lien vers la rubrique."
+  }
+}

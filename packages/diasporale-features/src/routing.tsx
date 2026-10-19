@@ -1,6 +1,6 @@
 "use client"
 
-import type { CountryCode } from "@diasporale/domain"
+import type { CountryCode, FeedScope } from "@diasporale/domain"
 import { createContext, useContext, type ComponentProps, type ComponentType, type ReactNode } from "react"
 
 /**
@@ -14,8 +14,28 @@ export interface FeatureRoutes {
   /** Une publication, ouverte seule (depuis la cloche, un signet, son horodatage). */
   post(postId: string): string
   page(handle: string): string
+  associationEvent?(handle: string, eventId: string): string
+  /** Avis de mise en relation (cloche) : ma demande, une demande reçue, les adhérents, mes associations. */
+  serviceRequest?(requestId: string): string
+  activityRequest?(requestId: string): string
+  associationMembers?(handle: string): string
+  myAssociations?(): string
+  /** Avis de décision de modération (cloche) : mes décisions (« Mes données »), ou celles d'une page dont je signe. */
+  myDecisions?(): string
+  pageDecisions?(handle: string): string
+  /** Avis de la vie communautaire (cloche) : une question ou une mission d'entraide, mes mentorats, les candidatures reçues, mes candidatures, une ressource du kit. */
+  mutualAidItem?(itemId: string): string
+  myMentoring?(): string
+  jobsActivity?(): string
+  /** Le recrutement d'UNE page (onglet Emplois de sa gestion) : l'avis d'une candidature reçue y mène quand la page se lit. */
+  pageJobs?(handle: string): string
+  myApplications?(): string
+  arrivalKitResource?(resourceId: string): string
+  /** Avis d'une conversation de mise en relation (cloche, CC-6) : le fil, sous la messagerie de l'application. */
+  contextualConversation?(threadId: string): string
   hub(country: CountryCode): string
-  feed(): string
+  /** Le filtre restreint le fil ; une carte peut conserver sa portée et le pays de son hub. */
+  feed(tag?: string, context?: { readonly scope: FeedScope; readonly country?: CountryCode }): string
   sponsor(): string
   settings(): string
   attestation(): string

@@ -6,7 +6,7 @@ import { cn } from "../lib/cn"
 
 /**
  * Bouton de la charte DIASPORALE — API shadcn (variant, size, asChild) pour
- * que le passage aux primitives du moteur (`@antia/ui`, PA6) ne change aucun
+ * que le passage aux primitives du moteur (`@antsia/ui`, PA6) ne change aucun
  * appel. Cible de 44 px par défaut (cahier EXT-DG-05) ; `sm` (36 px) est
  * réservé aux actions secondaires en ligne, espacées d'au moins 8 px. Rayon de
  * 6 px (charte v2) ; le contour de `outline` est un filet, jamais un trait.

@@ -2,7 +2,7 @@
  * Handle (`@prenom.nom`) — règle PROVISOIRE côté interface, miroir exact de
  * `assertHandle` du domaine social du socle (reseauPersonnel/domain.ts @ ad2e7fdc2 :
  * 3 à 30 caractères, lettres non accentuées, chiffres, point, tiret, souligné).
- * La règle qui fait foi est celle du moteur (`@antia/social-domain`, PA2) :
+ * La règle qui fait foi est celle du moteur (`@antsia/social-domain`, PA2) :
  * au câblage PD2, ce fichier importe la sienne et disparaît.
  */
 export const HANDLE_MIN_LENGTH = 3

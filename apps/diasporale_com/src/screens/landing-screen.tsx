@@ -1,225 +1,103 @@
 "use client"
 
-import { Button, CountryTag, ScopeTag, Skeleton, TrustBadges, cn, countryName, formatNumber } from "@diasporale/features"
-import { useOpenCountries, type OpenCountryView } from "@diasporale/features/data"
+import { Button, CountryTag } from "@diasporale/features"
+import { useDataSource, useOpenCountries } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { ArrowRightIcon, BadgeCheckIcon, IdCardIcon, MailIcon, MessageSquareTextIcon } from "lucide-react"
+import { IdCardIcon, LockKeyholeIcon } from "lucide-react"
 import NextLink from "next/link"
-import type { ReactNode } from "react"
 
-import { PublicShell } from "@/components/site-chrome"
-import { anchors, routes } from "@/lib/routes"
+import { LanguageSwitch } from "@/components/preferences"
+import { AppDemoChip, SiteFooter } from "@/components/site-chrome"
+import { routes } from "@/lib/routes"
+
+import { CodeForm } from "./enter-screens"
 
 /**
- * Vitrine publique (`/`). La thèse : la diaspora, pays par pays. Le « tableau
- * des pays ouverts » est la pièce maîtresse : il lit les pays ouverts et leurs
- * compteurs MATÉRIALISÉS (jamais un chiffre en dur ; en démonstration, ils
- * sont étiquetés comme tels).
+ * L'accueil est une porte vers le réseau personnel : connexion et inscription
+ * dans le premier écran. Le même formulaire sert ici et sur /entrer/code.
  */
 export function LandingScreen() {
   const { t } = useDiasporaleT()
+  const source = useDataSource()
   return (
-    <PublicShell>
-      <section aria-labelledby="vitrine-titre">
-        <div className="mx-auto grid w-full max-w-[1120px] items-start gap-10 px-4 pb-14 pt-10 md:grid-cols-[1.1fr_0.9fr] md:pt-16">
-          <div>
-            <h1 id="vitrine-titre" className="font-display text-[44px] font-bold leading-[0.95] tracking-[-0.01em] md:text-[64px]">
+    <div className="flex min-h-dvh flex-col">
+      <header className="mx-auto flex w-full max-w-[1060px] items-center justify-end gap-3 px-5 py-4">
+        <AppDemoChip />
+        <LanguageSwitch />
+      </header>
+      <main id="contenu" className="flex flex-1 items-center">
+        <div className="mx-auto grid w-full max-w-[1060px] items-center gap-5 px-5 pb-8 pt-2 min-[960px]:grid-cols-[minmax(0,1fr)_420px] min-[960px]:gap-16 min-[960px]:pb-20 min-[960px]:pt-12">
+          <section aria-labelledby="vitrine-titre" className="mx-auto w-full max-w-[480px] text-center min-[960px]:-mt-12 min-[960px]:text-left">
+            <NextLink href={routes.home()} aria-label={t("nav.home")} translate="no" className="inline-block rounded-md font-display text-[38px] font-bold leading-none tracking-[-0.025em] text-primary focus-visible:shadow-focus min-[960px]:text-[76px]">
+              {t("brand.name")}
+            </NextLink>
+            <h1 id="vitrine-titre" className="mt-3 whitespace-pre-line font-display text-[25px] font-semibold leading-[1.15] tracking-tight min-[960px]:mt-6 min-[960px]:text-[38px]">
               {t("landing.title")}
             </h1>
-            <p className="mt-5 max-w-[34rem] text-lg leading-relaxed text-muted-foreground">{t("landing.lead")}</p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild size="lg">
-                <NextLink href={routes.enter()}>
-                  {t("landing.ctaEnter")}
-                  <ArrowRightIcon aria-hidden />
-                </NextLink>
-              </Button>
-              <Button asChild size="lg" variant="ghost">
-                <a href={anchors.howToEnter}>{t("landing.ctaHow")}</a>
-              </Button>
-            </div>
-            <p className="mt-6 text-[13px] text-muted-foreground">{t("landing.free")}</p>
-          </div>
-          <OpenCountriesBoard />
-        </div>
-      </section>
-
-      <section aria-labelledby="principes-titre" className="border-y border-border bg-card">
-        <div className="mx-auto w-full max-w-[1120px] px-4 py-12">
-          <h2 id="principes-titre" className="font-display text-3xl font-bold">
-            {t("landing.principlesTitle")}
-          </h2>
-          <div className="mt-8 grid gap-8 md:grid-cols-3">
-            <Principle title={t("landing.principleCountryTitle")} body={t("landing.principleCountryBody")}>
-              <div className="flex flex-wrap gap-2">
-                <CountryTag country="FR" city={t("landing.sampleCity")} size="md" />
-                <ScopeTag size="md" />
+            <p className="mt-4 hidden max-w-[420px] text-lg leading-relaxed text-muted-foreground min-[960px]:block">{t("landing.lead")}</p>
+            <OpenCommunities />
+          </section>
+          <div className="mx-auto w-full max-w-[420px]">
+            <section aria-labelledby="connexion-titre" className="rounded-xl bg-card p-4 shadow-float sm:p-6">
+              <h2 id="connexion-titre" className="sr-only min-[960px]:not-sr-only min-[960px]:mb-4 min-[960px]:text-center min-[960px]:text-xl min-[960px]:font-semibold">{t("landing.signInTitle")}</h2>
+              {source.kind === "demo" ? (
+                <Button asChild size="lg" variant="outline" className="w-full">
+                  <NextLink href={routes.enterIdn()}>
+                    <IdCardIcon aria-hidden />
+                    {t("landing.idnContinue")}
+                  </NextLink>
+                </Button>
+              ) : (
+                <>
+                  <Button size="lg" variant="outline" className="w-full" disabled aria-describedby="idn-disponibilite">
+                    <IdCardIcon aria-hidden />
+                    {t("landing.idnContinue")}
+                  </Button>
+                  <p id="idn-disponibilite" className="mt-2 text-center text-[13px] text-muted-foreground">{t("landing.idnUnavailable")}</p>
+                </>
+              )}
+              <div className="my-4 flex items-center gap-3 text-[13px] text-muted-foreground">
+                <span className="h-px flex-1 bg-border" />
+                <span>{t("landing.or")}</span>
+                <span className="h-px flex-1 bg-border" />
               </div>
-            </Principle>
-            <Principle title={t("landing.principleTrustTitle")} body={t("landing.principleTrustBody")}>
-              <TrustBadges badges={["official", "verified", "public_agent", "community"]} size="md" />
-            </Principle>
-            <Principle title={t("landing.principleContactTitle")} body={t("landing.principleContactBody")}>
-              <span className="inline-flex h-11 items-center gap-2 rounded-md bg-primary px-4 text-[15px] font-medium text-primary-foreground">
-                <MailIcon className="size-4" aria-hidden />
-                {t("contact.write")}
-              </span>
-            </Principle>
+              <CodeForm compact />
+              <p className="mt-4 hidden items-start justify-center gap-1.5 text-[13px] leading-snug text-muted-foreground min-[960px]:flex">
+                <LockKeyholeIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                <span>{t("landing.privacy")}</span>
+              </p>
+              <div className="mt-4 border-t border-border pt-4 text-center min-[960px]:mt-5 min-[960px]:pt-5">
+                <p className="mb-3 hidden text-sm text-muted-foreground min-[960px]:block">{t("landing.newHere")}</p>
+                <Button asChild size="lg" className="w-full bg-[var(--success-fill)] text-[var(--on-fill)] hover:bg-[var(--success-fill-hover)] sm:w-auto">
+                  <NextLink href={routes.register()}>{t("landing.createAccount")}</NextLink>
+                </Button>
+              </div>
+            </section>
+            <p className="mt-4 text-center text-[13px] text-muted-foreground">{t("landing.free")} {t("landing.eligibility")}</p>
           </div>
         </div>
-      </section>
-
-      <section id={anchors.howToEnter.slice(1)} aria-labelledby="entrer-titre" className="mx-auto w-full max-w-[1120px] scroll-mt-6 px-4 py-14">
-        <h2 id="entrer-titre" className="font-display text-3xl font-bold">
-          {t("landing.howTitle")}
-        </h2>
-        <p className="mt-2 max-w-[42rem] text-muted-foreground">{t("landing.howLead")}</p>
-        <div className="mt-8 grid gap-4 md:grid-cols-2">
-          <Door
-            icon={<IdCardIcon aria-hidden />}
-            title={t("landing.doorIdnTitle")}
-            body={t("landing.doorIdnBody")}
-            note={t("landing.doorIdnNote")}
-            emphasis
-          />
-          <Door icon={<MessageSquareTextIcon aria-hidden />} title={t("landing.doorCodeTitle")} body={t("landing.doorCodeBody")} note={t("landing.doorCodeNote")} />
-        </div>
-        <h3 className="mt-12 font-display text-2xl font-bold">{t("landing.stepsTitle")}</h3>
-        <ol className="mt-5 grid gap-4 md:grid-cols-3">
-          {(["landing.step1", "landing.step2", "landing.step3"] as const).map((key, index) => (
-            <li key={key} className="flex gap-4 rounded-xl bg-card p-4 shadow-card">
-              <span aria-hidden className="font-mono text-3xl font-semibold leading-none text-tag-code">
-                {index + 1}
-              </span>
-              <p className="text-[15px] leading-snug">{t(key)}</p>
-            </li>
-          ))}
-        </ol>
-        <div className="mt-8 flex items-start gap-3 rounded-xl bg-published px-4 py-3 text-published-foreground">
-          <BadgeCheckIcon className="mt-0.5 size-5 shrink-0" aria-hidden />
-          <p className="text-[15px] leading-snug">{t("landing.verifyNote")}</p>
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-[1120px] px-4">
-        <div className="flex flex-col items-start gap-5 rounded-2xl bg-[var(--ink-900)] px-6 py-10 text-[var(--ink-0)] md:flex-row md:items-center md:justify-between md:px-10">
-          <p className="max-w-[36rem] font-display text-3xl font-bold leading-tight">{t("landing.closing")}</p>
-          <Button asChild size="lg" className="bg-[var(--ink-0)] text-[var(--ink-900)] hover:bg-[var(--ink-100)]">
-            <NextLink href={routes.enter()}>{t("landing.ctaEnter")}</NextLink>
-          </Button>
-        </div>
-      </section>
-    </PublicShell>
-  )
-}
-
-function Principle(props: { title: string; body: string; children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-3">
-      <h3 className="font-display text-xl font-bold">{props.title}</h3>
-      <p className="text-[15px] leading-relaxed text-muted-foreground">{props.body}</p>
-      <div className="mt-1">{props.children}</div>
+      </main>
+      <SiteFooter compact />
     </div>
   )
 }
 
-function Door(props: { icon: ReactNode; title: string; body: string; note: string; emphasis?: boolean }) {
-  return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-card p-5 shadow-card">
-      {/* La porte recommandée se distingue par sa pastille bleue, jamais par un contour. */}
-      <span
-        aria-hidden
-        className={cn(
-          "grid size-11 place-items-center rounded-xl [&_svg]:size-5",
-          props.emphasis ? "bg-[var(--primary-50)] text-[var(--primary-700)]" : "bg-tag text-tag-code",
-        )}
-      >
-        {props.icon}
-      </span>
-      <h3 className="font-display text-xl font-bold">{props.title}</h3>
-      <p className="text-[15px] leading-relaxed">{props.body}</p>
-      <p className="text-[13px] text-muted-foreground">{props.note}</p>
-    </div>
-  )
-}
-
-/**
- * Le tableau des pays ouverts — un panneau d'aéroport en encre : la diaspora
- * vit entre deux pays. Il ne montre QUE des données (pays ouverts, compteurs
- * matérialisés) ; un pays fermé n'y est jamais annoncé.
- */
-function OpenCountriesBoard() {
+/** Pays réellement ouverts, sans chiffre promotionnel ni contenu du réseau fermé. */
+function OpenCommunities() {
   const { t } = useDiasporaleT()
   const open = useOpenCountries()
+  if (open.status !== "ready" || open.data.length === 0) return null
   return (
-    <section
-      aria-labelledby="tableau-titre"
-      className="overflow-hidden rounded-2xl bg-[var(--ink-900)] text-[var(--ink-0)]"
-    >
-      <div className="flex items-center justify-between gap-3 border-b border-[color-mix(in_srgb,var(--ink-0)_18%,transparent)] px-5 py-3">
-        <h2 id="tableau-titre" className="font-mono text-xs font-semibold uppercase tracking-[0.12em]">
-          {t("landing.boardTitle")}
-        </h2>
-        {open.status === "ready" && open.data.some((item) => item.countersSource === "demo") ? (
-          <span className="rounded-[var(--radius-xs)] bg-demo px-1.5 py-0.5 text-[11px] font-semibold text-demo-foreground">
-            {t("demo.tag")}
-          </span>
-        ) : null}
-      </div>
-      {open.status !== "ready" ? (
-        <div className="flex flex-col gap-3 p-5">
-          <Skeleton className="h-14 w-full bg-[color-mix(in_srgb,var(--ink-0)_12%,transparent)]" />
-        </div>
-      ) : (
-        <ul className="divide-y divide-[color-mix(in_srgb,var(--ink-0)_14%,transparent)]">
-          {open.data.map((item) => (
-            <BoardRow key={item.country} item={item} />
-          ))}
-        </ul>
-      )}
-      <p className="border-t border-[color-mix(in_srgb,var(--ink-0)_18%,transparent)] px-5 py-4 text-[13px] leading-snug opacity-85">
-        {t("landing.boardFooter")}
-      </p>
+    <section aria-labelledby="pays-ouverts" className="mt-8 hidden min-[960px]:block">
+      <h2 id="pays-ouverts" className="mb-3 text-sm text-muted-foreground">{t("landing.boardTitle")}</h2>
+      <ul className="flex flex-wrap gap-2">
+        {open.data.map((item) => (
+          <li key={item.country} className="flex items-center gap-2">
+            <CountryTag country={item.country} size="md" />
+            {item.counters.dormant ? <span className="text-[13px] text-muted-foreground">{t("hub.soon")}</span> : null}
+          </li>
+        ))}
+      </ul>
     </section>
-  )
-}
-
-function BoardRow(props: { item: OpenCountryView }) {
-  const { t, locale } = useDiasporaleT()
-  const { item } = props
-  const counters = item.counters
-  const value = (presentation: (typeof counters)["associations"]) =>
-    presentation.kind === "value" ? formatNumber(presentation.value, locale) : t("hub.belowThreshold", { threshold: presentation.threshold })
-  return (
-    <li className="px-5 py-4">
-      <div className="flex items-center gap-4">
-        <span aria-hidden className="font-mono text-4xl font-semibold leading-none tracking-[-0.03em]">
-          {item.country}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-xl font-bold">{countryName(item.country, locale)}</p>
-          <p className="font-mono text-[11px] uppercase tracking-[0.1em] opacity-80">{t("landing.boardOpen")}</p>
-        </div>
-      </div>
-      {counters.dormant ? (
-        <p className="mt-3 text-[13px] opacity-85">{t("hub.soon")}</p>
-      ) : (
-        <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-[13px] sm:grid-cols-4">
-          {(
-            [
-              ["hub.counters.members", counters.members],
-              ["hub.counters.associations", counters.associations],
-              ["hub.counters.companies", counters.companies],
-              ["hub.counters.events", counters.upcomingEvents],
-            ] as const
-          ).map(([key, presentation]) => (
-            <div key={key} className="flex flex-col">
-              <dt className="opacity-75">{t(key)}</dt>
-              <dd className="font-mono font-semibold">{value(presentation)}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-    </li>
   )
 }

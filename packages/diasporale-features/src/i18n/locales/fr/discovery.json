@@ -1,0 +1,42 @@
+{
+  "discovery": {
+    "label": "Découverte du fil",
+    "roleDescription": "défilement de découverte",
+    "hint": "Flèches haut et bas, ou Page précédente et Page suivante, pour changer de publication ; Début et Fin pour aller au premier ou au dernier élément chargé ; Échap pour revenir à la liste.",
+    "view": {
+      "label": "Affichage du fil",
+      "list": "Liste",
+      "discovery": "Découverte"
+    },
+    "position": "Publication {{position}} sur {{total}}",
+    "positionMore": "Publication {{position}} sur {{total}}, d'autres suivront",
+    "counter": "{{position}}/{{total}}",
+    "counterEnd": "Fin",
+    "previous": "Précédente",
+    "next": "Suivante",
+    "slide": {
+      "roleDescription": "publication",
+      "label": "{{position}} sur {{total}}",
+      "status": "État du fil"
+    },
+    "refresh": {
+      "label": "Actualiser",
+      "pending_one": "{{count}} nouvelle publication",
+      "pending_other": "{{count}} nouvelles publications",
+      "added_one": "{{count}} nouvelle publication affichée en tête.",
+      "added_other": "{{count}} nouvelles publications affichées en tête.",
+      "upToDate": "Aucune nouvelle publication pour l'instant."
+    },
+    "item": {
+      "panel": "Publication complète",
+      "expand": "Lire toute la publication",
+      "collapse": "Réduire la publication"
+    },
+    "end": {
+      "title": "Vous avez tout vu dans ce fil.",
+      "body": "Les nouvelles publications apparaîtront avec « Actualiser ».",
+      "top": "Revenir à la première publication",
+      "list": "Revenir à la liste"
+    }
+  }
+}

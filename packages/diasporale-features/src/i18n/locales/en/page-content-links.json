@@ -1,0 +1,11 @@
+{
+  "pageContentLinks": {
+    "share": "Share this section",
+    "shareLabel": "Share the “{{section}}” section of {{name}}",
+    "title": "Share a section",
+    "description": "Copy the link to this section or choose a sharing option.",
+    "link": "Link to the section",
+    "copied": "Section link copied.",
+    "shareFailed": "Sharing was not completed. You can copy the link to the section."
+  }
+}

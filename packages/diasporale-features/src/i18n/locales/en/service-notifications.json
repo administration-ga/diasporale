@@ -1,0 +1,27 @@
+{
+  "bell": {
+    "system": {
+      "service_request_received": "You have received a new service request.",
+      "service_proposal_received": "A proposal is waiting for your service request.",
+      "service_request_declined": "Your service request was not taken up.",
+      "service_proposal_accepted": "A proposal was accepted: the appointment is confirmed.",
+      "service_request_cancelled": "A service request was cancelled.",
+      "service_request_expired": "A service request expired without an agreement.",
+      "service_booking_completed": "A service was marked as completed.",
+      "service_booking_no_show": "A no-show was recorded for an appointment.",
+      "service_no_show_contested": "The person disputed the no-show reported by your page.",
+      "association_membership_requested": "An association you manage has received a membership request.",
+      "association_membership_accepted": "Your membership request was accepted.",
+      "association_membership_declined": "Your membership request was not accepted.",
+      "association_membership_removed": "The officers of an association have ended your membership.",
+      "service_review_replied": "The page replied to your review."
+    },
+    "serviceLink": {
+      "requester": "View request",
+      "provider": "Open received request",
+      "responsible": "View membership requests",
+      "member": "View my associations"
+    },
+    "serviceLinkPage": "View page"
+  }
+}

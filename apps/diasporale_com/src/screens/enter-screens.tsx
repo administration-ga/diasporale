@@ -1,14 +1,28 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Button, Card, Checkbox, Field, FloatingNotice, Input, Label, RadioCard, RadioGroup, cn } from "@diasporale/features"
+import {
+  Button,
+  Card,
+  Checkbox,
+  Field,
+  FloatingNotice,
+  Input,
+  Label,
+  RadioCard,
+  RadioGroup,
+  cn,
+  normalizeCivilName,
+  normalizeFamilyName,
+  normalizeGivenNames,
+} from "@diasporale/features"
 import { useActions, useDataSource, useSession } from "@diasporale/features/data"
 import { DEMO_IDN_IDENTITIES, isValidDestination } from "@diasporale/features/demo"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { ArrowRightIcon, FlaskConicalIcon, IdCardIcon, KeyRoundIcon, MailIcon, PhoneIcon, ShieldCheckIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useId, useState, type ReactNode } from "react"
+import { useEffect, useId, useState, type FocusEvent, type ReactNode } from "react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -17,13 +31,13 @@ import { PublicShell } from "@/components/site-chrome"
 import { routes } from "@/lib/routes"
 
 /** Une personne déjà connectée n'a rien à faire sur l'entrée : elle va à son fil ou à l'onboarding. */
-function useLeaveEntryWhenSignedIn() {
+function useLeaveEntryWhenSignedIn(enabled = true) {
   const session = useSession()
   const router = useRouter()
   useEffect(() => {
-    if (session.status !== "ready" || session.data.status !== "signed_in") return
+    if (!enabled || session.status !== "ready" || session.data.status !== "signed_in") return
     router.replace(session.data.membership && session.data.membership.status !== "partie" ? routes.feed() : routes.welcome())
-  }, [session, router])
+  }, [enabled, session, router])
 }
 
 function EntryFrame(props: { title: string; lead: string; children: ReactNode }) {
@@ -39,25 +53,41 @@ function EntryFrame(props: { title: string; lead: string; children: ReactNode })
 }
 
 /** `/entrer` — deux portes, IDN en premier ; jamais de mot de passe (EXF-DG-01). */
-export function EnterScreen() {
+export function EnterScreen(props: { signOutIncomplete?: boolean; signUp?: boolean } = {}) {
   const { t } = useDiasporaleT()
-  useLeaveEntryWhenSignedIn()
+  const source = useDataSource()
+  useLeaveEntryWhenSignedIn(!props.signOutIncomplete)
   return (
-    <EntryFrame title={t("entry.title")} lead={t("entry.lead")}>
-      <DoorLink
+    <EntryFrame title={t(props.signUp ? "landing.createAccount" : "entry.title")} lead={t("entry.lead")}>
+      {props.signOutIncomplete ? <p role="alert" className="rounded-xl bg-muted p-4 text-sm">{t("entry.signOutIncomplete")}</p> : null}
+      {source.kind === "demo" ? <DoorLink
         href={routes.enterIdn()}
         icon={<IdCardIcon aria-hidden />}
         title={t("entry.idnTitle")}
         body={t("entry.idnBody")}
         badge={t("entry.recommended")}
         emphasis
-      />
+      /> : <IdnUnavailable />}
       <DoorLink href={routes.enterCode()} icon={<KeyRoundIcon aria-hidden />} title={t("entry.codeTitle")} body={t("entry.codeBody")} />
       <p className="flex items-start gap-2 text-[13px] text-muted-foreground">
         <ShieldCheckIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
         {t("entry.noPassword")}
       </p>
     </EntryFrame>
+  )
+}
+
+/** Le fournisseur moteur ne branche pas encore IDN ; une porte indisponible ne navigue pas. */
+function IdnUnavailable() {
+  const { t } = useDiasporaleT()
+  return (
+    <div className="flex items-start gap-4 rounded-2xl bg-card p-5 text-muted-foreground shadow-card">
+      <IdCardIcon className="mt-1 size-6 shrink-0" aria-hidden />
+      <div>
+        <p className="font-display text-xl font-bold">{t("entry.idnTitle")}</p>
+        <p className="mt-1 text-[15px] leading-relaxed">{t("landing.idnUnavailable")}</p>
+      </div>
+    </div>
   )
 }
 
@@ -101,8 +131,8 @@ function DoorLink(props: { href: string; icon: ReactNode; title: string; body: s
 
 const idnSchema = z.object({
   identity: z.string().min(1, "idn_identity_required"),
-  firstName: z.string().trim(),
-  lastName: z.string().trim(),
+  firstName: z.string().transform(normalizeGivenNames),
+  lastName: z.string().transform(normalizeFamilyName),
   loa: z.enum(["1", "2", "3"]),
   gabonese: z.boolean(),
   consent: z.boolean().refine((value) => value, "idn_consent_required"),
@@ -129,9 +159,10 @@ export function IdnScreen() {
 
   const onSubmit = form.handleSubmit(async (values) => {
     const preset = DEMO_IDN_IDENTITIES.find((item) => item.key === values.identity)
+    const names = normalizeCivilName(preset ?? values)
     const input = preset
-      ? { firstName: preset.firstName, lastName: preset.lastName, loa: preset.loa, gaboneseNationality: preset.gaboneseNationality }
-      : { firstName: values.firstName, lastName: values.lastName, loa: Number(values.loa), gaboneseNationality: values.gabonese }
+      ? { ...names, loa: preset.loa, gaboneseNationality: preset.gaboneseNationality }
+      : { ...names, loa: Number(values.loa), gaboneseNationality: values.gabonese }
     const result = await actions.signInWithIdn(input)
     if (!result.ok) {
       toast.error(t(`errors.${result.code}`))
@@ -181,10 +212,18 @@ export function IdnScreen() {
           <Card className="flex flex-col gap-4 p-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field id={`${ids}-prenom`} label={t("idn.firstName")}>
-                {(control) => <Input id={control.id} autoComplete="given-name" {...form.register("firstName")} />}
+                {(control) => (
+                  <Input id={control.id} autoComplete="given-name" {...form.register("firstName", {
+                    onBlur: (event: FocusEvent<HTMLInputElement>) => form.setValue("firstName", normalizeGivenNames(event.target.value), { shouldDirty: true, shouldValidate: true }),
+                  })} />
+                )}
               </Field>
               <Field id={`${ids}-nom`} label={t("idn.lastName")}>
-                {(control) => <Input id={control.id} autoComplete="family-name" {...form.register("lastName")} />}
+                {(control) => (
+                  <Input id={control.id} autoComplete="family-name" {...form.register("lastName", {
+                    onBlur: (event: FocusEvent<HTMLInputElement>) => form.setValue("lastName", normalizeFamilyName(event.target.value), { shouldDirty: true, shouldValidate: true }),
+                  })} />
+                )}
               </Field>
             </div>
             <Field id={`${ids}-loa`} label={t("idn.loa")} hint={t("idn.loaHint")}>
@@ -262,55 +301,76 @@ const codeSchema = z.object({ code: z.string().regex(/^\s*\d{3}\s?\d{3}\s*$/, "c
 /** `/entrer/code` — un code à usage unique, jamais de mot de passe ; en démonstration, le code s'affiche. */
 export function CodeScreen() {
   const { t } = useDiasporaleT()
+  return (
+    <EntryFrame title={t("code.title")} lead={t("code.lead")}>
+      <CodeForm />
+    </EntryFrame>
+  )
+}
+
+/** Même accès par code sur l'accueil et sur sa page dédiée : aucune seconde authentification. */
+export function CodeForm(props: { compact?: boolean } = {}) {
+  const { t } = useDiasporaleT()
   const actions = useActions()
+  const source = useDataSource()
   const router = useRouter()
   const ids = useId()
   useLeaveEntryWhenSignedIn()
   const [kind, setKind] = useState<"email" | "phone">("email")
-  const [destination, setDestination] = useState("")
-  const [destinationError, setDestinationError] = useState<string | null>(null)
   const [sent, setSent] = useState<{ demoCode: string | null } | null>(null)
-  const [sending, setSending] = useState(false)
+  const destinationForm = useForm<{ destination: string }>({
+    resolver: zodResolver(z.object({
+      destination: z.string().refine((value) => isValidDestination({ kind, value }), kind === "email" ? "email_invalid" : "phone_invalid"),
+    })),
+    defaultValues: { destination: "" },
+  })
+  const destination = useWatch({ control: destinationForm.control, name: "destination" })
+  const sending = destinationForm.formState.isSubmitting
+  const destinationError = destinationForm.formState.errors.destination?.message
   const codeForm = useForm<z.infer<typeof codeSchema>>({ resolver: zodResolver(codeSchema), defaultValues: { code: "" } })
 
-  const send = async () => {
-    if (!isValidDestination({ kind, value: destination })) {
-      setDestinationError(kind === "email" ? "email_invalid" : "phone_invalid")
-      return
+  const focusCode = codeForm.setFocus
+  useEffect(() => {
+    if (sent !== null) focusCode("code")
+  }, [sent, focusCode])
+
+  const send = destinationForm.handleSubmit(async ({ destination: value }) => {
+    try {
+      const result = await actions.requestCode({ kind, value })
+      if (!result.ok) {
+        destinationForm.setError("destination", { message: result.code }, { shouldFocus: true })
+        return
+      }
+      setSent(result.value)
+    } catch {
+      destinationForm.setError("destination", { message: "network_unavailable" }, { shouldFocus: true })
     }
-    setDestinationError(null)
-    setSending(true)
-    const result = await actions.requestCode({ kind, value: destination })
-    setSending(false)
-    if (!result.ok) {
-      setDestinationError(result.code)
-      return
-    }
-    setSent(result.value)
-  }
+  })
 
   const verify = codeForm.handleSubmit(async ({ code }) => {
-    const result = await actions.verifyCode(code)
-    if (!result.ok) {
-      codeForm.setError("code", { message: result.code })
-      return
+    try {
+      const result = await actions.verifyCode(code)
+      if (!result.ok) {
+        codeForm.setError("code", { message: result.code }, { shouldFocus: true })
+        return
+      }
+      router.push(routes.welcome())
+    } catch {
+      codeForm.setError("code", { message: "network_unavailable" }, { shouldFocus: true })
     }
-    router.push(routes.welcome())
   })
 
   const codeError = codeForm.formState.errors.code?.message
   return (
-    <EntryFrame title={t("code.title")} lead={t("code.lead")}>
+    <>
       {sent === null ? (
         <form
           noValidate
-          onSubmit={(event) => {
-            event.preventDefault()
-            void send()
-          }}
-          className="flex flex-col gap-5"
+          onSubmit={send}
+          aria-busy={sending || undefined}
+          className={cn("flex flex-col", props.compact ? "gap-3" : "gap-5")}
         >
-          <div role="group" aria-label={t("code.kindLabel")} className="inline-flex gap-1 self-start rounded-[var(--esp-r-chrome)] bg-[var(--esp-neutral-chip)] p-1">
+          {!props.compact && source.kind === "demo" ? <div role="group" aria-label={t("code.kindLabel")} className="inline-flex gap-1 self-start rounded-[var(--esp-r-chrome)] bg-[var(--esp-neutral-chip)] p-1">
             {(["email", "phone"] as const).map((option) => (
               <button
                 key={option}
@@ -318,7 +378,7 @@ export function CodeScreen() {
                 aria-pressed={kind === option}
                 onClick={() => {
                   setKind(option)
-                  setDestinationError(null)
+                  destinationForm.clearErrors()
                 }}
                 className={cn(
                   "inline-flex min-h-10 items-center gap-1.5 rounded-[var(--esp-r-chrome)] px-4 text-sm font-medium focus-visible:shadow-focus",
@@ -329,11 +389,11 @@ export function CodeScreen() {
                 {t(`code.kind.${option}`)}
               </button>
             ))}
-          </div>
+          </div> : null}
           <Field
             id={`${ids}-destination`}
             label={t(kind === "email" ? "code.emailLabel" : "code.phoneLabel")}
-            hint={t("code.destinationHint")}
+            hint={props.compact ? undefined : t("code.destinationHint")}
             error={destinationError ? t(`errors.${destinationError}`) : undefined}
           >
             {(control) => (
@@ -345,18 +405,19 @@ export function CodeScreen() {
                 inputMode={kind === "email" ? "email" : "tel"}
                 autoComplete={kind === "email" ? "email" : "tel"}
                 spellCheck={false}
-                value={destination}
-                onChange={(event) => setDestination(event.target.value)}
+                readOnly={sending}
+                className={props.compact ? "h-12 text-base" : undefined}
+                {...destinationForm.register("destination")}
               />
             )}
           </Field>
           <Button type="submit" size="lg" disabled={sending}>
-            {sending ? t("common.pleaseWait") : t("code.send")}
+            {sending ? t("common.pleaseWait") : t(props.compact ? "landing.signIn" : "code.send")}
           </Button>
         </form>
       ) : (
-        <form noValidate onSubmit={verify} className="flex flex-col gap-5">
-          <p className="text-[15px]">{t("code.sentTo", { destination })}</p>
+        <form noValidate onSubmit={verify} aria-busy={codeForm.formState.isSubmitting || undefined} className="flex flex-col gap-5">
+          <p role="status" className="break-words text-[15px]">{t("code.sentTo", { destination })}</p>
           {sent.demoCode ? (
             // Le code à recopier ne se ferme pas : la carte n'a pas de croix.
             <FloatingNotice role="note" tone="demo" icon={<FlaskConicalIcon />} heading={t("code.demoCode")}>
@@ -371,6 +432,8 @@ export function CodeScreen() {
                 aria-invalid={control.invalid || undefined}
                 inputMode="numeric"
                 autoComplete="one-time-code"
+                spellCheck={false}
+                readOnly={codeForm.formState.isSubmitting}
                 maxLength={7}
                 className="font-mono text-lg tracking-[0.3em]"
                 {...codeForm.register("code")}
@@ -381,12 +444,12 @@ export function CodeScreen() {
             <Button type="submit" size="lg" disabled={codeForm.formState.isSubmitting}>
               {codeForm.formState.isSubmitting ? t("common.pleaseWait") : t("code.verify")}
             </Button>
-            <Button variant="ghost" size="lg" onClick={() => setSent(null)}>
+            <Button variant="ghost" size="lg" disabled={codeForm.formState.isSubmitting} onClick={() => { codeForm.reset(); setSent(null) }}>
               {t("code.changeDestination")}
             </Button>
           </div>
         </form>
       )}
-    </EntryFrame>
+    </>
   )
 }

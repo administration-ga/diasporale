@@ -1,0 +1,62 @@
+{
+  "nav": {
+    "explore": "Explorer",
+    "services": "Services",
+    "communities": "Communautés",
+    "myRequests": "Mes demandes",
+    "myActivity": "Mon activité",
+    "myAssociations": "Mes associations",
+    "myData": "Mes données",
+    "personal": "Mon espace",
+    "account": {
+      "open": "Menu du compte ({{name}})",
+      "title": "Mon compte",
+      "description": "Votre profil, vos réglages et vos espaces personnels.",
+      "close": "Fermer le menu du compte"
+    },
+    "publish": {
+      "suspendedHint": "Publication indisponible pendant la suspension du compte",
+      "suspendedBody": "Vous pourrez publier de nouveau à la fin de la suspension. Les décisions et les recours se trouvent dans « Mes données ».",
+      "close": "Fermer l'explication"
+    },
+    "zone": {
+      "title": "Zone consultée : {{country}}",
+      "body": "Votre pays de résidence ne change pas : {{home}}.",
+      "back": "Revenir à mon pays"
+    },
+    "myApplications": "Mes candidatures",
+    "myMentoring": "Mes mentorats",
+    "community": {
+      "label": "Vie communautaire du pays",
+      "mutualAid": "Entraide",
+      "arrivalKit": "Kit d'arrivée",
+      "mentoring": "Mentorat",
+      "jobs": "Emploi"
+    },
+    "moderation": "Modération"
+  },
+  "explore": {
+    "title": "Explorer",
+    "lead": "Trouvez des membres, des pages et des communautés dans tout le réseau.",
+    "membersBody": "Cherchez parmi les membres qui ont choisi d'apparaître dans l'annuaire. Le contact passe par la messagerie.",
+    "membersAction": "Chercher un membre",
+    "servicesBody": "Coiffure, traduction, photographie, aide à l'installation : trouvez une compétence de la diaspora près de chez vous.",
+    "servicesAction": "Parcourir les services",
+    "countriesTitle": "Pays ouverts",
+    "countriesLead": "Chaque hub rassemble les actualités, les évènements, les associations et les entreprises d'un pays.",
+    "countriesEmptyTitle": "Aucun pays n'est encore ouvert.",
+    "countriesEmptyBody": "Un pays s'ouvre avec deux associations relais et un modérateur. Le hub de votre pays se lit déjà.",
+    "countriesErrorTitle": "La liste des pays n'est pas disponible.",
+    "countriesErrorBody": "Vérifiez votre connexion et rechargez la page pour réessayer.",
+    "reload": "Recharger la page",
+    "myCommunity": "Voir ma communauté",
+    "mutualAidBody": "Posez une question pratique ou proposez votre aide, et retrouvez les missions bénévoles des associations.",
+    "mutualAidAction": "Ouvrir l'entraide",
+    "arrivalKitBody": "Démarches, logement, santé, transports : des ressources datées, sourcées et relues, par ville.",
+    "arrivalKitAction": "Consulter le kit d'arrivée",
+    "mentoringBody": "Des membres volontaires partagent leur expérience d'études, d'emploi ou d'installation.",
+    "mentoringAction": "Trouver un mentor",
+    "jobsBody": "Les offres publiées par les entreprises et associations de la diaspora, et les talents qui ont choisi d'être visibles.",
+    "jobsAction": "Voir les offres d'emploi"
+  }
+}

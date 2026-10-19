@@ -1,0 +1,28 @@
+{
+  "eventGallery": {
+    "title": "La galerie de l’événement",
+    "lead": "Retrouvez les photos et vidéos publiées par l’équipe de l’association après la rencontre.",
+    "demo": "Démonstration : ces images sont fictives et restent dans ce navigateur. Elles ne prouvent pas le dépôt d’une vidéo réelle.",
+    "beforeEnd": "La galerie ouvrira après la fin de l’événement, le {{date}} ({{zone}}).",
+    "awaitingServer": "La fin de l’événement est atteinte sur votre appareil. La galerie attend encore son ouverture par le service.",
+    "cancelled": "La galerie est fermée pour cet événement annulé.",
+    "refresh": "Actualiser la galerie",
+    "associationAudience": "Galerie réservée aux adhérents de l’association autorisés à consulter l’événement.",
+    "networkAudience": "Galerie accessible aux membres de DIASPORALE autorisés à consulter l’événement.",
+    "add": "Ajouter des photos ou une vidéo",
+    "composeDescription": "Ajoutez jusqu’à quatre photos ou une vidéo pour « {{title}} ». La publication reste sous l’identité de l’association et l’audience de l’événement.",
+    "empty": "Aucun média accessible dans cette galerie pour le moment.",
+    "remove": "Retirer cet ajout",
+    "removeTitle": "Retirer des médias de la galerie",
+    "removeHint": "Cet ajout ne sera plus accessible dans la galerie. L’événement et les inscriptions sont conservés.",
+    "confirmRemove": "Confirmer le retrait",
+    "removed": "L’ajout a été retiré de la galerie.",
+    "noCaption": "Ajout sans légende",
+    "cancel": "Annuler",
+    "close": "Fermer"
+  },
+  "errors": {
+    "association_event_gallery_not_open": "Cette galerie n’est pas ouverte ou n’est plus accessible dans votre situation actuelle.",
+    "association_event_gallery_media_required": "Ajoutez au moins une photo ou une vidéo à la galerie."
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "bell": {
+    "system": {
+      "aid_answer_received": "Une réponse a été publiée à votre question.",
+      "aid_answer_retained": "Votre réponse a été retenue.",
+      "aid_mission_signup": "Une personne s’est inscrite à une mission de votre page.",
+      "mentoring_request_received": "Vous avez reçu une demande de mentorat.",
+      "mentoring_request_accepted": "Votre demande de mentorat a été acceptée.",
+      "mentoring_request_declined": "Votre demande de mentorat n’a pas été acceptée.",
+      "mentoring_closed": "Un mentorat a été clos.",
+      "job_application_received": "Une candidature est arrivée pour une offre de votre page.",
+      "job_application_shortlisted": "Votre candidature a été présélectionnée.",
+      "job_application_not_selected": "Votre candidature n’a pas été retenue.",
+      "kit_resource_reviewed": "Votre ressource du kit d’arrivée a été relue."
+    },
+    "communityLink": {
+      "aidQuestion": "Voir la question",
+      "aidMission": "Voir la mission",
+      "mentoringRequest": "Voir mes mentorats",
+      "jobApplicationTeam": "Voir les candidatures",
+      "jobApplicationCandidate": "Voir mes candidatures",
+      "kitResource": "Voir la ressource"
+    }
+  }
+}

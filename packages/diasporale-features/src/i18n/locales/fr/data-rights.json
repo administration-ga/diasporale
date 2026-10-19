@@ -1,0 +1,131 @@
+{
+  "settings": {
+    "dataRights": {
+      "lead": "Exportez les données de votre compte ANTSIA, commun à tous ses réseaux, demandez son effacement et consultez les décisions de modération qui vous concernent. Ces gestes restent ouverts si votre adhésion est suspendue.",
+      "unavailable": "Ces gestes ne sont pas encore disponibles ici.",
+      "loading": "Chargement…",
+      "export": {
+        "title": "Exporter mes données",
+        "lead": "Le fichier JSON réunit ce que votre compte ANTSIA conserve à votre sujet dans tous ses réseaux : profil, adhésions, consentements, publications, messages envoyés… Il ne contient que vos propres données, jamais celles d'autres personnes. Il est assemblé dans ce navigateur, puis enregistré sur votre appareil.",
+        "preparing": "Préparation du fichier…",
+        "progress": "Étape {{done}} sur {{total}}",
+        "progressLabel": "Avancement de l'export",
+        "stop": "Interrompre",
+        "last": "Dernier export préparé le {{date}}."
+      },
+      "erasure": {
+        "title": "Effacement du compte",
+        "lead": "L'effacement porte sur tout votre compte ANTSIA et sur tous ses réseaux, DIASPORALE compris.",
+        "loadError": "L'état de votre demande d'effacement n'a pas pu être lu.",
+        "scope": "La demande vise tout votre compte ANTSIA, dans tous ses réseaux, et pas seulement DIASPORALE.",
+        "grace": "Rien n'est effacé tout de suite : l'effacement commencera dans {{days}} jours, le {{date}}. D'ici là, vous pourrez annuler votre demande depuis cette page.",
+        "final": "À l'échéance, toutes vos sessions seront fermées ; l'effacement ne pourra plus être annulé et rien ne pourra être restauré.",
+        "leaveInstead": "Pour seulement quitter DIASPORALE en gardant votre compte, choisissez plutôt « Quitter DIASPORALE ».",
+        "exportFirst": "Pour garder une copie de vos données, téléchargez-les avant de confirmer.",
+        "confirm": "Demander l'effacement",
+        "requested": "Demande enregistrée : l'effacement commencera le {{date}}.",
+        "pending": "Effacement demandé le {{requested}}. Il commencera le {{due}}.",
+        "daysLeft_one": "Il vous reste {{count}} jour pour annuler.",
+        "daysLeft_other": "Il vous reste {{count}} jours pour annuler.",
+        "cancel": "Annuler ma demande d'effacement",
+        "cancelled": "Demande annulée : votre compte est conservé.",
+        "processing": "L'effacement de votre compte est en cours. Il ne peut plus être annulé ; vos sessions vont être fermées."
+      },
+      "decisions": {
+        "title": "Décisions de modération",
+        "lead": "Les décisions prises sur vos contenus ou sur votre compte, dans tous les réseaux de votre compte ANTSIA, leurs motifs et vos recours. Les personnes qui ont signalé ne sont jamais nommées.",
+        "loadError": "Les décisions n'ont pas pu être chargées.",
+        "empty": "Aucune décision de modération ne vous concerne.",
+        "emptyPage": "Aucune autre décision.",
+        "previous": "Décisions précédentes",
+        "next": "Décisions suivantes",
+        "page": "Page {{number}}",
+        "network": "Réseau : {{name}}",
+        "otherNetwork": "un autre réseau de votre compte",
+        "openedAt": "Dossier ouvert le {{date}}",
+        "ground": "Motif du signalement : {{ground}}",
+        "preReview": "Relecture avant publication",
+        "unspecified": "Motif non précisé",
+        "decisionReason": "Motif de la décision : « {{reason}} »",
+        "sanctionsLabel": "Mesures prises",
+        "sanctionUntil": "Échéance : {{date}}",
+        "sanctionReason": "Motif : « {{reason}} »",
+        "appealsLabel": "Recours",
+        "appealLine": "{{level}} : {{status}}",
+        "appealAnswer": "Réponse : « {{reason}} »",
+        "appeal": "Contester cette décision",
+        "appealReason": "Pourquoi contestez-vous cette décision ?",
+        "appealReasonHint": "Entre {{min}} et {{max}} caractères. Votre motif sera lu par l'équipe qui examine le recours.",
+        "appealSubmit": "Envoyer le recours",
+        "appealSent": "Recours envoyé : sa réponse s'affichera ici.",
+        "appealExists": "Un recours est déjà enregistré pour cette décision.",
+        "surface": {
+          "post": "Publication",
+          "comment": "Commentaire",
+          "groupMessage": "Message de groupe",
+          "event": "Évènement",
+          "page": "Page",
+          "person": "Compte",
+          "live": "Direct",
+          "story": "Statut",
+          "album": "Album",
+          "serviceReview": "Avis sur un service",
+          "serviceReviewReply": "Réponse à un avis",
+          "commerceOffer": "Offre de boutique",
+          "commercialMessage": "Message commercial",
+          "contextualMessage": "Message d'une mise en relation",
+          "commerceJob": "Offre d'emploi de boutique",
+          "diasporaAidQuestion": "Question d'entraide",
+          "diasporaAidAnswer": "Réponse d'entraide",
+          "diasporaAidMission": "Mission bénévole",
+          "diasporaMentorProfile": "Profil de mentor",
+          "diasporaMentoringRequest": "Demande de mentorat",
+          "diasporaKitResource": "Ressource du kit d'arrivée",
+          "diasporaJobOffer": "Offre d'emploi de la diaspora",
+          "diasporaTalentProfile": "Profil de talent",
+          "diasporaJobApplication": "Candidature à une offre d'emploi"
+        },
+        "status": {
+          "open": "En attente d'examen",
+          "reviewing": "En cours d'examen",
+          "dismissed": "Classé sans suite",
+          "actioned": "Mesure prise"
+        },
+        "sanction": {
+          "warning": "Avertissement",
+          "removal": "Retrait du contenu",
+          "mute": "Mise en sourdine",
+          "suspension": "Suspension",
+          "exclusion": "Exclusion"
+        },
+        "sanctionStatus": {
+          "active": "Mesure en vigueur",
+          "expired": "Mesure terminée",
+          "revoked": "Mesure levée"
+        },
+        "appealLevel": {
+          "network": "Recours auprès de l'administration du réseau",
+          "platform": "Recours auprès de l'équipe de la plateforme ANTSIA"
+        },
+        "appealHint": {
+          "network": "Votre recours sera examiné par l'administration du réseau, par une autre personne que celle qui a décidé.",
+          "platform": "Votre recours sera examiné par l'équipe de la plateforme ANTSIA, par une autre personne que celle qui a décidé."
+        },
+        "appealStatus": {
+          "open": "en cours d'examen",
+          "upheld": "décision maintenue",
+          "overturned": "décision annulée"
+        }
+      }
+    }
+  },
+  "errors": {
+    "erasure_not_cancellable": "Le délai d'annulation est passé : l'effacement ne peut plus être annulé.",
+    "export_unavailable": "L'export est momentanément indisponible. Réessayez plus tard.",
+    "export_expired": "Cet export n'est plus disponible : demandez-en un nouveau.",
+    "export_interrupted": "L'assemblage du fichier s'est interrompu ; aucun fichier n'a été enregistré. Réessayez.",
+    "export_cancelled": "Export interrompu : aucun fichier n'a été enregistré.",
+    "export_download_failed": "Ce navigateur n'a pas pu enregistrer le fichier.",
+    "appeal_reason_length": "Le motif du recours doit compter entre {{min}} et {{max}} caractères."
+  }
+}
