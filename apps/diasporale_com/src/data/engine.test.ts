@@ -286,8 +286,7 @@ describe("écritures de la source « moteur »", () => {
     const { convex, calls } = fakeConvex(NETWORK)
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
     expect(await actions.signInWithIdn({ firstName: "A", lastName: "B", loa: 2, gaboneseNationality: true })).toEqual({ ok: false, code: "feature_unavailable" })
-    expect(await actions.exportMyData()).toEqual({ ok: false, code: "feature_unavailable" })
-    expect(await actions.deleteMyAccount()).toEqual({ ok: false, code: "feature_unavailable" })
+    // Export et effacement sont servis depuis DG-026 : voir `engine-data-rights.test.tsx`.
     expect(await actions.react("post-1", null)).toEqual({ ok: true, value: null })
     expect(calls).toEqual([])
   })

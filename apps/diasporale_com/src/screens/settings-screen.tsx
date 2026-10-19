@@ -28,7 +28,7 @@ import {
 } from "@diasporale/features"
 import { useActions, useMyConsents, useOpenCountries, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { CopyIcon, DownloadIcon, Trash2Icon } from "lucide-react"
+import { CopyIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter } from "next/navigation"
 import { useId, useLayoutEffect, useRef, useState, type ReactNode } from "react"
@@ -37,9 +37,11 @@ import { toast } from "sonner"
 import { z } from "zod"
 
 import { AppShell } from "@/components/app-shell"
+import { DataRightsSettings } from "@/components/data-rights-settings"
 import { Gate } from "@/components/gate"
 import { ProfileImagesSettings } from "@/components/profile-images-settings"
 import { ProfilePublicationSettings } from "@/components/profile-publication-settings"
+import { ContentPreferencesSettings } from "@/components/content-preferences-settings"
 import { SignOutSettings } from "@/components/sign-out-settings"
 import { LanguageSwitch, ThemeSwitch } from "@/components/preferences"
 import { routes } from "@/lib/routes"
@@ -81,13 +83,15 @@ function Settings(props: { membership: MembershipView }) {
     <>
       <h1 className="font-display text-3xl font-bold">{t("settings.title")}</h1>
       <MembershipSection membership={props.membership} />
+      <ContentPreferencesSettings membership={props.membership} />
       <ProfilePublicationSettings key={props.membership.personId} membership={props.membership} />
       <ProfileImagesSettings membership={props.membership} />
       <FacetSection membership={props.membership} />
       <DirectorySection membership={props.membership} />
       <ConsentsSection />
       <SponsorHelpSection membership={props.membership} />
-      <DataSection membership={props.membership} />
+      {/* « Mes données » (DG-026) : export, effacement, décisions et recours — ouverte au membre suspendu. */}
+      <DataRightsSettings membership={props.membership} />
       <Section id="apparence" title={t("settings.appearance")}>
         <div className="flex flex-col gap-3">
           <LanguageSwitch className="self-start" />
@@ -386,61 +390,6 @@ function SponsorHelpSection(props: { membership: MembershipView }) {
           <NextLink href={routes.sponsor()}>{t("settings.goSponsor")}</NextLink>
         </Button>
       ) : null}
-    </Section>
-  )
-}
-
-function DataSection(props: { membership: MembershipView }) {
-  const { t } = useDiasporaleT()
-  const actions = useActions()
-  const router = useRouter()
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  return (
-    <Section id="donnees" title={t("settings.data")} lead={t("settings.dataLead")}>
-      <div className="flex flex-wrap gap-3">
-        <Button
-          variant="outline"
-          onClick={async () => {
-            const result = await actions.exportMyData()
-            if (!result.ok) {
-              toast.error(t(`errors.${result.code}`))
-              return
-            }
-            const url = URL.createObjectURL(new Blob([result.value], { type: "application/json" }))
-            const anchor = document.createElement("a")
-            anchor.href = url
-            anchor.download = `diasporale-${props.membership.handle}.json`
-            anchor.click()
-            URL.revokeObjectURL(url)
-            toast.success(t("settings.exported"))
-          }}
-        >
-          <DownloadIcon aria-hidden />
-          {t("settings.export")}
-        </Button>
-        <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
-          <Trash2Icon aria-hidden />
-          {t("settings.delete")}
-        </Button>
-      </div>
-      <ConfirmSheet
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        title={t("settings.deleteConfirmTitle")}
-        body={t("settings.deleteConfirmBody")}
-        confirm={t("settings.delete")}
-        destructive
-        requireAcknowledge={t("settings.deleteAcknowledge")}
-        onConfirm={async () => {
-          const result = await actions.deleteMyAccount()
-          if (!result.ok) {
-            toast.error(t(`errors.${result.code}`))
-            return
-          }
-          toast.success(t("settings.deleted"))
-          router.push(routes.home())
-        }}
-      />
     </Section>
   )
 }

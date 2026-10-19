@@ -4,23 +4,19 @@ import { useRingRelation } from "@antsia/social-features/iappel"
 import type { Id } from "@convex/_generated/dataModel"
 import type { FacetProjection } from "@diasporale/domain"
 import {
-  Avatar,
   Button,
   Card,
   ContactButton,
   CountryTag,
   EmptyState,
-  EventCard,
   FolderTabsNav,
-  PostCard,
   Skeleton,
-  TrustBadge,
   TrustBadges,
   formatDate,
 } from "@diasporale/features"
-import { type ActionResult, useActions, usePage, useProfile, useRelation, type MembershipView } from "@diasporale/features/data"
+import { type ActionResult, useActions, useProfile, useRelation, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { BanIcon, BookmarkIcon, ClockIcon, EyeIcon, FlagIcon, HandHeartIcon, ImageIcon, LandmarkIcon, NewspaperIcon, PencilIcon, PhoneIcon, ShieldOffIcon, UserCheckIcon, UserPlusIcon, UserRoundXIcon, UsersIcon } from "lucide-react"
+import { BanIcon, BookmarkIcon, ClockIcon, EyeIcon, HandHeartIcon, ImageIcon, LandmarkIcon, NewspaperIcon, PencilIcon, PhoneIcon, ShieldOffIcon, UserCheckIcon, UserPlusIcon, UserRoundXIcon, UsersIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useSearchParams } from "next/navigation"
 import { type ReactNode, useId, useRef, useState } from "react"
@@ -409,92 +405,5 @@ function FacetDetails(props: { facet: FacetProjection; postName: string | null; 
         </div>
       ))}
     </dl>
-  )
-}
-
-/** `/pages/[handle]` — page d'institution, d'association ou d'entreprise (EXF-DG-20 à 23). */
-export function PageScreen(props: { handle: string }) {
-  return (
-    <Gate require="member">
-      {(session) =>
-        session.membership ? (
-          <AppShell membership={session.membership}>
-            <PageDetail handle={props.handle} membership={session.membership} />
-          </AppShell>
-        ) : null
-      }
-    </Gate>
-  )
-}
-
-function PageDetail(props: { handle: string; membership: MembershipView }) {
-  const { t } = useDiasporaleT()
-  const detail = usePage(props.handle)
-  const actions = useActions()
-  const now = Date.now()
-  if (detail.status !== "ready") return <Skeleton className="h-72 w-full rounded-xl" />
-  if (detail.data === null) {
-    return <EmptyState icon={<UserRoundXIcon />} title={t("page.unavailableTitle")} description={t("page.unavailableBody")} />
-  }
-  const { page, posts, events } = detail.data
-  return (
-    <>
-      <Card className="flex flex-col gap-4 p-5">
-        <div className="flex items-start gap-4">
-          <Avatar id={page.id} name={page.name} size="xl" shape={page.ownerKind === "association" ? "round" : "square"} />
-          <div className="min-w-0 flex-1">
-            <h1 className="font-display text-3xl font-bold leading-tight">{page.name}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <TrustBadge badge={page.badge} size="md" />
-              {page.country ? <CountryTag country={page.country} city={page.city ?? undefined} size="md" /> : null}
-            </div>
-          </div>
-        </div>
-        <p className="text-[15px] leading-relaxed">{page.description}</p>
-        <div className="flex flex-wrap items-center gap-3">
-          <ContactButton recipientName={page.name} />
-          {page.claimable ? (
-            <Button variant="outline" disabled title={t("page.claimSoon")}>
-              <FlagIcon aria-hidden />
-              {t("page.claim")}
-            </Button>
-          ) : null}
-        </div>
-        {page.trust === "official" ? <p className="text-[13px] text-muted-foreground">{t("page.officialNote")}</p> : null}
-      </Card>
-
-      {events.length > 0 ? (
-        <section aria-labelledby="page-evenements" className="flex flex-col gap-3">
-          <h2 id="page-evenements" className="font-display text-xl font-bold">
-            {t("page.events")}
-          </h2>
-          {events.map((event) => (
-            <EventCard key={event.id} event={event} now={now} />
-          ))}
-        </section>
-      ) : null}
-
-      <section aria-labelledby="page-publications" className="flex flex-col gap-4">
-        <h2 id="page-publications" className="font-display text-xl font-bold">
-          {t("page.posts")}
-        </h2>
-        {posts.length === 0 ? (
-          <EmptyState icon={<NewspaperIcon />} title={t("page.noPosts")} />
-        ) : (
-          posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              now={now}
-              canReact={props.membership.canPublish}
-              onReact={async (kind) => {
-                const result = await actions.react(post.id, kind)
-                if (!result.ok) toast.error(t(`errors.${result.code}`))
-              }}
-            />
-          ))
-        )}
-      </section>
-    </>
   )
 }

@@ -63,7 +63,7 @@ import { contrastLevel, contrastRatio, type ContrastLevel } from "@/lib/contrast
 import { routes } from "@/lib/routes"
 
 /**
- * `/charte` — la charte « Sable de la diaspora », version 2 (15/10/2026) : chaque
+ * `/charte` — la charte « Sable de la diaspora », version 3.3 (17/10/2026) : chaque
  * composant de `@diasporale/features` monté avec des données d'EXEMPLE (fictives),
  * pour la relecture `web-design-guidelines` et la vérification réelle (320 px,
  * 375 px, 1 280 px, clair et sombre). Les contrastes sont MESURÉS sur la page,
@@ -644,11 +644,11 @@ function ThemeMock(props: { variant: "light" | "dark" }) {
   const light = props.variant === "light"
   return (
     <figure className="flex flex-col gap-3">
-      <div className={cn("rounded-2xl p-4 sm:p-5", light ? "bg-[var(--esp-neutral-100)]" : "bg-[var(--esp-night-bg)]")}>
+      <div className={cn("rounded-2xl p-4 sm:p-5", light ? "bg-[var(--esp-neutral-0)]" : "bg-[var(--esp-night-bg)]")}>
         <div
           className={cn(
             "flex flex-col gap-2 rounded-xl p-4",
-            light ? "bg-[var(--esp-neutral-0)] text-[var(--esp-neutral-900)] shadow-[var(--esp-shadow)]" : "bg-[var(--esp-night-card)] text-[var(--esp-neutral-200)]",
+            light ? "bg-[var(--esp-neutral-100)] text-[var(--esp-neutral-900)] shadow-[var(--esp-shadow)]" : "bg-[var(--esp-night-card)] text-[var(--esp-neutral-200)]",
           )}
         >
           <p className="text-[15px] font-semibold">{t("charte.theme.text")}</p>

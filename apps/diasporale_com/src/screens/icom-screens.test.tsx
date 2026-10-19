@@ -14,6 +14,8 @@ import { routes } from "@/lib/routes"
 import { MessagesScreen, StoriesScreen } from "./icom-screens"
 
 const mocks = vi.hoisted(() => ({
+  // CC-6 : l'injection contextuelle rendue par `useContextualMessages` (sonde, aucune connexion).
+  contextual: { renderList: () => null, renderConversation: () => null },
   membership: null as MembershipView | null,
   network: null as IcomNetwork | null,
   icom: { status: "off", reason: "demo" } as IcomState,
@@ -51,6 +53,7 @@ vi.mock("@antsia/social-features/messagerie", () => ({
     mocks.messages(props)
     return <div role="group" aria-label="Messagerie du moteur" />
   },
+  useContextualMessages: () => mocks.contextual,
 }))
 vi.mock("@/components/icom", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/components/icom")>()),
@@ -214,6 +217,7 @@ describe("Les statuts en pages — lecture et création distinctes", () => {
     render(messagesTree())
 
     expect(screen.getByRole("group", { name: "Messagerie du moteur" })).toBeInTheDocument()
-    expect(mocks.messages).toHaveBeenLastCalledWith({ compose: "personne" })
+    // CC-6 : la messagerie reçoit aussi nos conversations de mise en relation.
+    expect(mocks.messages).toHaveBeenLastCalledWith({ compose: "personne", contextual: mocks.contextual })
   })
 })

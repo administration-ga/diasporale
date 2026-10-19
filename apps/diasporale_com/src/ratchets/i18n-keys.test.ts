@@ -23,6 +23,7 @@ import { DEMO_IDN_IDENTITIES } from "@diasporale/features/demo"
 import { SUPPORTED_LOCALES } from "@diasporale/features/i18n"
 import { describe, expect, it } from "vitest"
 
+import { LOT_FAMILIES } from "./i18n-families"
 import { productSources, readLocale } from "./sources"
 
 /**
@@ -103,6 +104,8 @@ const FAMILIES: string[] = [
     ...range(4).flatMap((section) => [`legal.${kind}.section${section}.title`, `legal.${kind}.section${section}.body`]),
   ]),
   ...[...ERROR_CODES].map((errorCode) => `errors.${errorCode}`),
+  // Les familles des chantiers du plan global (`./i18n-families/<chantier>.ts`).
+  ...LOT_FAMILIES,
 ]
 
 describe("cliquet i18n — clés", () => {

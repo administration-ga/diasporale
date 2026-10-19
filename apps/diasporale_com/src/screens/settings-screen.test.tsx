@@ -15,16 +15,20 @@ const mocks = vi.hoisted(() => ({
   consent: vi.fn(),
   push: vi.fn(),
   publication: vi.fn(),
+  dataRights: vi.fn(),
+  replace: vi.fn(),
+  session: { status: "loading" } as unknown,
   success: vi.fn(),
   error: vi.fn(),
 }))
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }))
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push, replace: mocks.replace }) }))
 vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error } }))
 vi.mock("@diasporale/features/data", async (original) => ({
   ...(await original<typeof import("@diasporale/features/data")>()),
   useActions: () => ({ leaveDiasporale: mocks.leave, setConsent: mocks.consent }),
   useMyConsents: () => ({ status: "ready", data: [] }),
   useOpenCountries: () => ({ status: "ready", data: [] }),
+  useSession: () => mocks.session,
 }))
 vi.mock("@/components/gate", () => ({
   Gate: (props: { children: (session: { membership: MembershipView | null }) => ReactNode }) => props.children({ membership: mocks.membership }),
@@ -38,6 +42,14 @@ vi.mock("@/components/profile-publication-settings", () => ({
   },
 }))
 vi.mock("@/components/sign-out-settings", () => ({ SignOutSettings: () => null }))
+// Sections branchées sur leur propre capacité, éprouvées par leurs tests : ici, seulement leur montage.
+vi.mock("@/components/content-preferences-settings", () => ({ ContentPreferencesSettings: () => null }))
+vi.mock("@/components/data-rights-settings", () => ({
+  DataRightsSettings: (props: { membership: MembershipView }) => {
+    mocks.dataRights(props.membership)
+    return <section id="mes-donnees" aria-label="Mes données" />
+  },
+}))
 vi.mock("@/components/preferences", () => ({ LanguageSwitch: () => null, ThemeSwitch: () => null }))
 
 const t = getFixedT("fr")
@@ -112,5 +124,29 @@ describe("Réglages — profil commun et départ distinct", () => {
     expect(mocks.success).not.toHaveBeenCalled()
     expect(mocks.error).not.toHaveBeenCalled()
     expect(mocks.publication).toHaveBeenLastCalledWith(mocks.membership)
+  })
+})
+
+describe("Réglages — « Mes données » (DG-026)", () => {
+  const suspended: MembershipView = { ...membership, status: "suspendue", canPublish: false, root: { ...membership.root, status: "suspendue" } }
+
+  it("monte la section des droits pour la personne affichée, à la place de l'ancien export immédiat", () => {
+    render(tree())
+    expect(mocks.dataRights).toHaveBeenLastCalledWith(membership)
+    expect(screen.getByRole("region", { name: "Mes données" })).toHaveAttribute("id", "mes-donnees")
+    expect(screen.queryByRole("button", { name: t("settings.export") })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: t("settings.delete") })).not.toBeInTheDocument()
+  })
+
+  it("la garde de Réglages admet un membre suspendu, sans le renvoyer ailleurs, et la section reste montée", async () => {
+    const { Gate } = await vi.importActual<typeof import("@/components/gate")>("@/components/gate")
+    mocks.session = { status: "ready", data: { status: "signed_in", account: {}, membership: suspended } }
+    render(<Gate require="member">{(session) => <p data-testid="admis">{session.membership?.personId}</p>}</Gate>)
+    expect(screen.getByTestId("admis")).toHaveTextContent(suspended.personId)
+    expect(mocks.replace).not.toHaveBeenCalled()
+    cleanup()
+    mocks.membership = suspended
+    render(tree())
+    expect(mocks.dataRights).toHaveBeenLastCalledWith(suspended)
   })
 })

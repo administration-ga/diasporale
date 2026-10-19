@@ -9,6 +9,7 @@ import { MessageCircleOffIcon } from "lucide-react"
 import { Suspense, type ReactNode } from "react"
 
 import { AppShell } from "@/components/app-shell"
+import { useDiasporaleContextualMessages } from "@/components/contextual-conversations"
 import { Gate, GateSkeleton } from "@/components/gate"
 import { IcomIsland, useEngineNetwork, useIcomState, type IcomOffReason } from "@/components/icom"
 import type { MessagesRouteTarget } from "@/lib/messages-route"
@@ -27,11 +28,17 @@ export function MessagesScreen(props: { route: MessagesRouteTarget }) {
     <IcomPage titleKey="messages.title">
       <main id="contenu" className="min-h-dvh bg-background">
         <Suspense fallback={null}>
-          <MessagesRoute {...props.route} />
+          <ContextualMessagesRoute route={props.route} />
         </Suspense>
       </main>
     </IcomPage>
   )
+}
+
+/** CC-6 : la messagerie du moteur avec nos conversations de mise en relation (filtre « Mises en relation », conversation en page). */
+function ContextualMessagesRoute(props: { route: MessagesRouteTarget }) {
+  const contextual = useDiasporaleContextualMessages()
+  return <MessagesRoute {...props.route} contextual={contextual} />
 }
 
 /** `/actus` — le lecteur plein écran des statuts ; sur `…/nouvelle`, le composeur ouvert. */

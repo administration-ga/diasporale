@@ -16,4 +16,6 @@ export const engineRoutes: EngineRoutes = {
   page: routes.page,
   settings: routes.settings,
   conference: routes.conference,
+  associationEvent: routes.associationEvent,
+  agenda: routes.agenda,
 }

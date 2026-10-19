@@ -8,19 +8,36 @@ import type { Locale } from "@diasporale/features/i18n"
 import { ThemeProvider } from "next-themes"
 import NextLink from "next/link"
 import { useState, type ReactNode } from "react"
-import { Toaster } from "sonner"
 
 import { EngineDataProviders } from "@/data/engine-providers"
 import { publicEnv } from "@/lib/env"
 import { routes } from "@/lib/routes"
 
 import { DemoFloatingCard } from "./site-chrome"
+import { ToastRegion } from "./toast-region"
 
 /** La table de routes, telle que les surfaces de `@diasporale/features` la consomment. */
 const featureRoutes: FeatureRoutes = {
   profile: routes.profile,
   post: routes.post,
   page: routes.page,
+  associationEvent: routes.associationEvent,
+  // Liens profonds des avis de mise en relation (cloche) : chaque route relit les droits à l'ouverture.
+  serviceRequest: routes.serviceRequest,
+  activityRequest: routes.activityRequest,
+  associationMembers: routes.associationMembers,
+  myAssociations: routes.myAssociations,
+  // Avis de décision de modération : « Mes données », ou l'onglet des décisions de la page (droits relus).
+  myDecisions: routes.settingsData,
+  pageDecisions: routes.pageDecisions,
+  // Avis de la vie communautaire (vague H) : chaque route relit les droits à l'ouverture.
+  mutualAidItem: routes.mutualAidItem,
+  myMentoring: routes.myMentoring,
+  jobsActivity: () => routes.myActivity("emplois"),
+  pageJobs: (handle) => routes.pageManage(handle, "emplois"),
+  myApplications: routes.myApplications,
+  arrivalKitResource: routes.arrivalKitResource,
+  contextualConversation: routes.contextualConversation,
   hub: routes.hub,
   feed: (tag, context) => routes.feed(context?.scope, tag, context?.country),
   sponsor: routes.sponsor,
@@ -60,11 +77,13 @@ function DataProviders(props: { children: ReactNode }) {
  * Couches (charte §4) : barres 40 < feuilles 50 < pile des avis 55 < menus 60.
  * Un avis passager reste lisible au-dessus d'une feuille, et un menu ouvert
  * passe devant une carte flottante (sonner se pose sinon à 999999999).
+ * La pile vit dans sa propre région, exemptée de l'inertage des modales
+ * (`toast-region.tsx`) : un avis émis pendant une visionneuse reste annoncé.
  */
 function FloatingStack() {
   const { t } = useDiasporaleT()
   return (
-    <Toaster
+    <ToastRegion
       className="!z-55"
       containerAriaLabel={t("notice.region")}
       position="bottom-right"

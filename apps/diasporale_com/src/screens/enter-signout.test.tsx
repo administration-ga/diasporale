@@ -21,6 +21,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => mocks.router }))
 vi.mock("@diasporale/features/data", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@diasporale/features/data")>()),
   useSession: () => mocks.session,
+  useDataSource: () => ({ kind: "demo" }),
 }))
 vi.mock("@/components/site-chrome", () => ({
   PublicShell: (props: { children: ReactNode }) => <main>{props.children}</main>,

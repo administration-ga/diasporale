@@ -36,6 +36,8 @@ const ENGINE_CODES: Readonly<Partial<Record<EngineErrorCode, ActionErrorCode>>> 
   policyRefused: "unknown",
   consentRequired: "consent_social_profile_required",
   profileRequired: "not_member",
+  // Un geste réservé aux signataires vivants d'une page (gestion, publication au nom de la page, DG-008).
+  pageRoleRequired: "page_role_required",
 }
 
 /** Les règles du domaine du moteur que DIASPORALE sait dire à l'écran. */
@@ -55,6 +57,23 @@ const ENGINE_RULES: Readonly<Record<string, ActionErrorCode>> = {
   ...MEDIA_RULE_CODES,
   POST_NOT_SHAREABLE: "share_not_allowed",
   POST_SHARE_WITH_MEDIA: "share_with_media",
+  // Pages (DG-008) : identité, signataires, revendications — levées par les seules fonctions des pages.
+  PAGE_HANDLE_LENGTH: "page_handle_length",
+  PAGE_HANDLE_CHARSET: "page_handle_charset",
+  PAGE_NAME_LENGTH: "page_name_invalid",
+  PAGE_SHORT_NAME_TOO_LONG: "page_short_name_too_long",
+  PAGE_DESCRIPTION_TOO_LONG: "page_description_too_long",
+  PAGE_OWNER_KIND_RESERVED: "page_kind_reserved",
+  PAGE_COUNTRY_REQUIRED: "page_post_country_required",
+  PAGE_SIGNATORIES_FULL: "page_signatories_full",
+  PAGE_LAST_ADMIN: "page_last_admin",
+  PAGE_SIGNATORY_IDENTITY_REQUIRED: "page_signatory_identity_required",
+  PAGE_NOT_CLAIMABLE: "page_not_claimable",
+  PAGE_ALREADY_VERIFIED: "page_already_verified",
+  PAGE_ALREADY_CLAIMED: "page_already_claimed",
+  PAGE_CLAIM_PENDING: "page_claim_pending",
+  PAGE_CLAIM_EVIDENCE_COUNT: "page_claim_evidence_count",
+  PAGE_CLAIM_NOTE_TOO_LONG: "page_claim_note_too_long",
 }
 
 /** Le code FERMÉ d'une erreur levée par une fonction du moteur. */

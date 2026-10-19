@@ -35,7 +35,10 @@ function cursorKey(cursor: FeedCursorView | null | undefined) {
   return cursor ? `${cursor.publishedAt}:${cursor.postId}` : "first"
 }
 
-vi.mock("@diasporale/features/data", () => ({
+// Les constantes et règles réelles du port restent exportées (les gestes du mur des pages
+// en lisent au chargement) ; seules la source et ses lectures sont remplacées.
+vi.mock("@diasporale/features/data", async (original) => ({
+  ...(await original<typeof import("@diasporale/features/data")>()),
   useDataSource: () => ({ kind: mocks.kind }),
   useActions: () => ({ react: mocks.react }),
   useFeedPage: (args: { scope: FeedScope; hubCountry?: string; tag?: string; cursor?: FeedCursorView | null }) => {

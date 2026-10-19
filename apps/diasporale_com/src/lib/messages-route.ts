@@ -1,5 +1,5 @@
-// Dupliqué de ANTSIA/apps/antsia_ga/src/lib/messages-route.ts @ f1eed7f — adaptations : aucune (copie textuelle) ; en-tête de provenance.
-import { COMPOSE_GROUPE_LEAF, COMPOSE_LEAF, CONVERSATION_ROUTE_KINDS } from "@antsia/social-features/features/messagerie/messagerie-routes"
+// Dupliqué de ANTSIA/apps/antsia_ga/src/lib/messages-route.ts @ f1eed7f — adaptations : accepte aussi le segment contextuel `mise-en-relation/<fil>` (CC-6 : DIASPORALE injecte sa source contextuelle dans `MessagesRoute`) ; en-tête de provenance.
+import { COMPOSE_GROUPE_LEAF, COMPOSE_LEAF, CONTEXTUAL_ROUTE_KIND, CONVERSATION_ROUTE_KINDS } from "@antsia/social-features/features/messagerie/messagerie-routes"
 
 /** Ce que l'aiguillage de la messagerie (`MessagesRoute`) reçoit d'une adresse. */
 export type MessagesRouteTarget = { kind?: string; id?: string; compose?: "personne" | "groupe" }
@@ -20,6 +20,7 @@ export function parseMessagesSegments(segments: readonly string[]): MessagesRout
     return null
   }
   const kind = decodeURIComponent(first)
-  if (!(CONVERSATION_ROUTE_KINDS as readonly string[]).includes(kind)) return null
+  // CC-6 : une conversation de mise en relation, servie parce que l'écran injecte sa source contextuelle.
+  if (kind !== CONTEXTUAL_ROUTE_KIND && !(CONVERSATION_ROUTE_KINDS as readonly string[]).includes(kind)) return null
   return { kind, id: decodeURIComponent(second) }
 }
