@@ -16,6 +16,7 @@ import { routes } from "@/lib/routes"
 
 import { AccountLocale } from "./account-locale"
 import { AccountTheme } from "./account-theme"
+import { DemoAccountBootstrap } from "./demo-account-bootstrap"
 import { DemoFloatingCard } from "./site-chrome"
 import { ToastRegion } from "./toast-region"
 
@@ -124,6 +125,8 @@ export function Providers(props: { locale: Locale; children: ReactNode }) {
                 {props.children}
                 <FloatingStack />
                 <DemoFloatingCard />
+                {/* Développement local : prépare le compte de démonstration choisi à la porte. */}
+                <DemoAccountBootstrap />
               </RoutingProvider>
             </AccountLocale>
           </AccountTheme>

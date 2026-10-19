@@ -72,6 +72,7 @@ import type { JobsCapability } from "./jobs-port"
 import type { ModerationDeskCapability } from "./moderation-desk-port"
 import type { PilotMetricsCapability } from "./pilot-metrics-port"
 import type { ConversationsCapability } from "./conversations-port"
+import type { DemoAccountsCapability } from "./demo-accounts-port"
 import type { PageDecisionsCapability } from "./page-decisions-port"
 
 export type ActionResult<T = null> =
@@ -333,6 +334,8 @@ export interface DiasporaleDataSource {
   readonly pageDecisions?: PageDecisionsCapability
   /** Le fil de mise en relation d'un objet, lu et ouvert depuis l'objet (CC-6, `conversations-port.ts`). */
   readonly conversations?: ConversationsCapability
+  /** Comptes de démonstration par acteur, DÉVELOPPEMENT LOCAL du moteur seulement (`demo-accounts-port.ts`). */
+  readonly demoAccounts?: DemoAccountsCapability
   useSession(): Loadable<SessionView>
   useOpenCountries(): Loadable<readonly OpenCountryView[]>
   useCountryHub(country: CountryCode): Loadable<CountryHubView>

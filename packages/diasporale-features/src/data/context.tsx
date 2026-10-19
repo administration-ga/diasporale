@@ -71,3 +71,4 @@ export const useModerationDesk = () => useDataSource().moderationDesk ?? null
 export const usePilotMetrics = () => useDataSource().pilotMetrics ?? null
 export const usePageDecisions = () => useDataSource().pageDecisions ?? null
 export const useConversations = () => useDataSource().conversations ?? null
+export const useDemoAccounts = () => useDataSource().demoAccounts ?? null
