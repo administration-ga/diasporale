@@ -118,6 +118,20 @@ function fakeSource(initial: readonly PostView[]) {
   }
 }
 
+/** Une source dont la lecture du fil tombe : refus d'accès ou panne. */
+function failingSource(error: "suspended" | "network_unavailable") {
+  const retry = vi.fn()
+  const source = {
+    kind: "demo",
+    useSession: () => session,
+    useComments: () => ({ status: "ready", data: [] }),
+    useReplies: () => ({ status: "ready", data: [] }),
+    useFeedPage: (): FeedPageQuery => ({ data: undefined, isLoading: false, error, retry }),
+    actions: { react: vi.fn(async () => ({ ok: true as const, value: null })) },
+  } as unknown as DiasporaleDataSource
+  return { source, retry }
+}
+
 function Harness(props: { source: DiasporaleDataSource; onExit?: (id: string | null) => void; locale?: "fr" | "en"; tag?: string; hubCountry?: "CA" }) {
   return (
     <I18nProvider locale={props.locale ?? "fr"}>
@@ -475,6 +489,25 @@ describe("FeedDiscovery — même source que la liste, actualisation et retour",
   it("un fil vide montre l'état vide de la liste", () => {
     render(<Harness source={fakeSource([]).source} />)
     expect(screen.getByText("Fil vide de recette")).toBeInTheDocument()
+  })
+
+  it("un refus d'accès (suspension) se dit tel quel, sans « Réessayer » ni message de connexion", () => {
+    const { source, retry } = failingSource("suspended")
+    render(<Harness source={source} />)
+    const alert = screen.getByRole("alert")
+    expect(alert).toHaveTextContent(t("feed.pagination.deniedTitle"))
+    expect(alert).toHaveTextContent(t("errors.suspended").replace(/\s+/g, " "))
+    expect(screen.queryByText(t("feed.pagination.errorBody"))).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: t("feed.pagination.retry") })).not.toBeInTheDocument()
+    expect(retry).not.toHaveBeenCalled()
+  })
+
+  it("une panne garde son message et sa reprise", () => {
+    const { source, retry } = failingSource("network_unavailable")
+    render(<Harness source={source} />)
+    expect(screen.getByRole("alert")).toHaveTextContent(t("feed.pagination.errorTitle"))
+    fireEvent.click(screen.getByRole("button", { name: t("feed.pagination.retry") }))
+    expect(retry).toHaveBeenCalled()
   })
 
   it("une touche dans la feuille des commentaires (rendue ailleurs) ne change pas de publication ni ne quitte le mode", async () => {

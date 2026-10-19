@@ -12,6 +12,7 @@ import {
 import type { CountryCode, FeedScope } from "@diasporale/domain"
 import { Button, Card, PostCard, PostMediaGrid, RoutingProvider, Skeleton, formatDate, useRouting } from "@diasporale/features"
 import {
+  ACCESS_REFUSAL_CODES,
   useActions,
   useDataSource,
   useFeedPage,
@@ -371,7 +372,13 @@ function SubscribedPostPage(props: SubscribedPageProps & { page: FeedPageQuery; 
 
   return (
     <div className="flex flex-col gap-4" aria-busy={page.isLoading}>
-      {page.error !== null ? (
+      {page.error !== null && ACCESS_REFUSAL_CODES.has(page.error) ? (
+        // Un refus d'accès (suspension, adhésion…) n'est pas une panne : il se dit, sans reprise.
+        <Card role="alert" className="flex flex-col gap-1 p-4">
+          <h2 className="font-semibold">{t("feed.pagination.deniedTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t(`errors.${page.error}`)}</p>
+        </Card>
+      ) : page.error !== null ? (
         <Card role="alert" className="flex flex-col items-start gap-3 p-4">
           <div>
             <h2 className="font-semibold">{t("feed.pagination.errorTitle")}</h2>

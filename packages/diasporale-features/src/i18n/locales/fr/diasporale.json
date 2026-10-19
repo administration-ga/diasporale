@@ -309,6 +309,7 @@
       "retry": "Réessayer",
       "errorTitle": "Les publications ne sont pas disponibles.",
       "errorBody": "Vérifiez votre connexion et réessayez. Les publications déjà affichées restent accessibles.",
+      "deniedTitle": "Ces publications ne vous sont pas accessibles.",
       "lacunar": "Certaines publications peuvent manquer dans ce fil. Vous pouvez continuer à parcourir les suivantes.",
       "added_one": "{{count}} publication supplémentaire affichée.",
       "added_other": "{{count}} publications supplémentaires affichées.",
