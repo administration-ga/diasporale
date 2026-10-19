@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "diasporale-com",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "../ANTSIA", "dev:diasporale"],
+      "port": 3031
+    }
+  ]
+}

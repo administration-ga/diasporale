@@ -1,9 +1,11 @@
 @import "tailwindcss";
-/* Charte de base du moteur (polices, famille shadcn, rayons, base), puis le thème
-   DIASPORALE (contrat réaccordé à la palette Sable), puis les rôles et la couche
+/* Charte de base du moteur (polices, famille shadcn, rayons, base), puis les deux
+   thèmes au choix du membre — Sable, la charte DIASPORALE (par défaut), et Gaboma,
+   les couleurs du réseau ANTSIA sur la même structure —, puis les rôles et la couche
    propres à DIASPORALE. L'ordre compte : même spécificité, le dernier l'emporte. */
 @import "@antsia/ui/styles.css";
 @import "@antsia/ui/themes/diasporale.css";
+@import "@antsia/ui/themes/diasporale-gaboma.css";
 @import "@diasporale/features/styles/fonts.css";
 @import "@diasporale/features/styles/extras.css";
 @import "@diasporale/features/styles/tailwind-theme.css";

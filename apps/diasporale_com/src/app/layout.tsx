@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next"
 import type { ReactNode } from "react"
 
+import { AppearanceBootScript } from "@/components/appearance-boot-script"
 import { Providers } from "@/components/providers"
 import { getAppT } from "@/i18n/server"
+import { DEFAULT_CHARTE } from "@/lib/appearance"
 import { anchors } from "@/lib/routes"
 
 import "./globals.css"
@@ -25,13 +27,19 @@ export const viewport: Viewport = {
 
 /**
  * Racine de diasporale.com. La charte est posée sur <html> (`data-charte`,
- * convention du moteur) ; `next-themes` y pose la classe `dark` ; les portails
- * (feuilles, menus, notifications) héritent donc des jetons.
+ * convention du moteur) : Sable par défaut ; le script d'amorçage y pose, avant le
+ * premier affichage, le thème et le mode (classe `dark`) choisis sur cet appareil,
+ * que le fournisseur d'apparence tient ensuite. Les portails (feuilles, menus,
+ * notifications) héritent donc des jetons.
  */
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const { locale, t } = await getAppT()
   return (
-    <html lang={locale} data-charte="diasporale" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang={locale} data-charte={DEFAULT_CHARTE} data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        {/* Thème et mode sombre de l'appareil posés avant le premier affichage. */}
+        <AppearanceBootScript />
+      </head>
       <body className="min-h-dvh">
         <a
           href={anchors.content}

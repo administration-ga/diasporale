@@ -44,6 +44,7 @@ import { ProfilePublicationSettings } from "@/components/profile-publication-set
 import { ContentPreferencesSettings } from "@/components/content-preferences-settings"
 import { SignOutSettings } from "@/components/sign-out-settings"
 import { LanguageSwitch, ThemeSwitch } from "@/components/preferences"
+import { ThemePicker } from "@/components/theme-picker"
 import { routes } from "@/lib/routes"
 
 /** `/parametres` — profil, facette, confidentialité, consentements, « Mes données » (EXF-DG-44 à 46). */
@@ -96,6 +97,8 @@ function Settings(props: { membership: MembershipView }) {
         <div className="flex flex-col gap-3">
           <LanguageSwitch className="self-start" />
           <ThemeSwitch className="self-start" />
+          {/* Le thème au choix du membre : Sable (par défaut) ou Gaboma. */}
+          <ThemePicker className="mt-1" />
         </div>
       </Section>
       <SignOutSettings />
