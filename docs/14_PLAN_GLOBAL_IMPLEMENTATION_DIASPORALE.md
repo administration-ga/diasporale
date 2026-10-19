@@ -418,6 +418,8 @@ DG-022a, la décision d’architecture de chiffrement, est obligatoire avant le 
 
 Comptes de recette consentis : lecteur en attente, membre déclaré, membre vérifié, professionnel, administrateur d’association, modérateur pays, membre d’un autre pays, membre bloqué, suspendu racine et utilisateur extérieur au réseau. Séparer données de démonstration et données du moteur. Ne jamais utiliser des dossiers consulaires réels comme fixtures.
 
+> **Comptes de démonstration locaux (19/10) :** la porte du développement local en ouvre 17, chacun par un acteur fictif. Ils couvrent le lecteur en attente (`leger`), le membre déclaré, le membre vérifié et le professionnel (`entreprise`). S’y ajoutent l’administrateur d’association, le modérateur (équipe sans périmètre de pays), les autres pays (`belgique`, `canada`) et le suspendu dans DIASPORALE. Ils ne couvrent pas le membre bloqué, le suspendu racine ni l’utilisateur extérieur au réseau. Voir [les comptes de démonstration](34_COMPTES_DE_DEMONSTRATION.md).
+
 ### 6.2 Scénarios d’acceptation
 
 | Test | Étant donné / action | Résultat observable |
