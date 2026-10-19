@@ -15,7 +15,7 @@ const t = getFixedT("fr")
 
 const mocks = vi.hoisted(() => ({
   session: { status: "ready", data: { status: "anonymous" } } as Loadable<SessionView>,
-  demoAccounts: null as { equip: ReturnType<typeof vi.fn> } | null,
+  demoAccounts: null as { equip: ReturnType<typeof vi.fn>; welcomeOutsider: ReturnType<typeof vi.fn> } | null,
   join: vi.fn(),
   becomeMentor: vi.fn(),
   saveTalentProfile: vi.fn(),
@@ -68,9 +68,14 @@ function mount() {
   render(<I18nProvider locale="fr"><DemoAccountBootstrap /></I18nProvider>)
 }
 
+/** La capacité des comptes de démonstration, avec l'équipement donné. */
+function demoAccounts(equipped: unknown = equipment()) {
+  return { equip: vi.fn().mockResolvedValue(equipped), welcomeOutsider: vi.fn().mockResolvedValue({ ok: true, value: null }) }
+}
+
 beforeEach(() => {
   mocks.session = signedIn(null)
-  mocks.demoAccounts = { equip: vi.fn().mockResolvedValue(equipment()) }
+  mocks.demoAccounts = demoAccounts()
   mocks.join.mockResolvedValue({ ok: true, value: { country: "FR" } })
   for (const gesture of [mocks.becomeMentor, mocks.saveTalentProfile, mocks.createServiceOffer, mocks.createJobOffer, mocks.createMission]) gesture.mockResolvedValue({ ok: true, value: {} })
 })
@@ -105,7 +110,7 @@ describe("Amorçage d'un compte de démonstration", () => {
 
   it("publie le profil de la mentore avec son consentement", async () => {
     window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "mentor")
-    mocks.demoAccounts = { equip: vi.fn().mockResolvedValue(equipment({ pageId: null, pageCreated: false })) }
+    mocks.demoAccounts = demoAccounts(equipment({ pageId: null, pageCreated: false }))
     mount()
 
     await waitFor(() => expect(mocks.router.replace).toHaveBeenCalled())
@@ -127,12 +132,53 @@ describe("Amorçage d'un compte de démonstration", () => {
 
   it("ne joue pas les gestes d'une page qui existait déjà", async () => {
     window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "association")
-    mocks.demoAccounts = { equip: vi.fn().mockResolvedValue(equipment({ pageId: "pages_lyon", pageCreated: false })) }
+    mocks.demoAccounts = demoAccounts(equipment({ pageId: "pages_lyon", pageCreated: false }))
     mount()
 
     await waitFor(() => expect(mocks.router.replace).toHaveBeenCalled())
     expect(mocks.join).toHaveBeenCalledTimes(1)
     expect(mocks.createMission).not.toHaveBeenCalled()
+  })
+
+  it("l'extérieur au réseau : l'accueil d'ANTSIA seulement, jamais join, puis l'accueil de DIASPORALE", async () => {
+    window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "exterieur")
+    mocks.demoAccounts = demoAccounts(equipment({ status: null, role: null, pageId: null, pageCreated: false }))
+    mount()
+
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledExactlyOnceWith(routes.welcome()))
+    expect(mocks.demoAccounts?.welcomeOutsider).toHaveBeenCalledExactlyOnceWith({ handle: "demo.exterieur", displayName: "Brice MOUNDOUNGA" })
+    expect(mocks.join).not.toHaveBeenCalled()
+    expect(mocks.demoAccounts?.equip).toHaveBeenCalledExactlyOnceWith("exterieur")
+    expect(mocks.toast.success).toHaveBeenCalledWith(t("demoAccounts.ready", { name: "Brice MOUNDOUNGA" }), { id: "avis" })
+    expect(window.sessionStorage.getItem(DEMO_ACCOUNT_KEY)).toBeNull()
+  })
+
+  it("l'accueil d'ANTSIA refusé : avis d'échec, aucun équipement, l'acteur oublié", async () => {
+    window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "exterieur")
+    mocks.demoAccounts = demoAccounts()
+    mocks.demoAccounts.welcomeOutsider.mockResolvedValue({ ok: false, code: "handle_unavailable" })
+    mount()
+
+    await waitFor(() => expect(mocks.toast.error).toHaveBeenCalledWith(t("demoAccounts.equipFailed", { name: "Brice MOUNDOUNGA" }), { id: "avis" }))
+    expect(mocks.demoAccounts.equip).not.toHaveBeenCalled()
+    expect(mocks.join).not.toHaveBeenCalled()
+    expect(mocks.router.replace).not.toHaveBeenCalled()
+    expect(window.sessionStorage.getItem(DEMO_ACCOUNT_KEY)).toBeNull()
+  })
+
+  it.each([
+    ["bloque", "Yannick MBADINGA", "verifiee"],
+    ["suspendu-racine", "Christelle IVANGA", "suspendue"],
+  ] as const)("%s : le vrai accueil puis l'équipement, comme tout membre, et le fil", async (actor, name, status) => {
+    window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, actor)
+    mocks.demoAccounts = demoAccounts(equipment({ status, pageId: null, pageCreated: false }))
+    mount()
+
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledExactlyOnceWith(routes.feed()))
+    expect(mocks.join).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ handle: `demo.${actor}`, displayName: name, facet: { countryOfResidence: "FR", city: null } }))
+    expect(mocks.demoAccounts?.welcomeOutsider).not.toHaveBeenCalled()
+    expect(mocks.demoAccounts?.equip).toHaveBeenCalledExactlyOnceWith(actor)
+    expect(mocks.toast.success).toHaveBeenCalledWith(t("demoAccounts.ready", { name }), { id: "avis" })
   })
 
   it("laisse l'accueil au nouvel arrivant", async () => {
@@ -147,7 +193,7 @@ describe("Amorçage d'un compte de démonstration", () => {
 
   it("dit l'échec de la préparation, sans quitter l'accueil, et oublie l'acteur", async () => {
     window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "verifie")
-    mocks.demoAccounts = { equip: vi.fn().mockResolvedValue({ ok: false, code: "feature_unavailable" }) }
+    mocks.demoAccounts = demoAccounts({ ok: false, code: "feature_unavailable" })
     mount()
 
     await waitFor(() => expect(mocks.toast.error).toHaveBeenCalledWith(t("demoAccounts.equipFailed", { name: "Patrice MBOUMBA" }), { id: "avis" }))

@@ -4,13 +4,14 @@
  * tranche `convex/modules/diaspora/demoAccounts` d'ANTSIA, sous la double garde
  * des outils de développement : ailleurs, le catalogue est vide et l'équipement
  * refusé. Le code à usage unique se relit par `devTools.latestOtp`, comme
- * l'écran de connexion le fait déjà en développement local.
+ * l'écran de connexion le fait déjà en développement local. L'accueil d'ANTSIA de
+ * l'utilisateur extérieur passe par les mutations de l'écran d'accueil, comme `join`.
  */
 import { api } from "@convex/_generated/api"
 import type { DemoAccountEntry, DemoAccountsCapability, Loadable } from "@diasporale/features/data"
 import { useMemo } from "react"
 
-import { attemptAction, failed, LOADING, ready, useLoaded, type EngineSourceDeps } from "./engine-kit"
+import { attemptAction, failed, LOADING, ready, Refusal, useLoaded, type EngineSourceDeps } from "./engine-kit"
 
 /** Le code enregistré par l'envoi se relit aussitôt ; quelques essais couvrent le délai du backend local. */
 const CODE_READS = 8
@@ -42,6 +43,16 @@ export function createEngineDemoAccounts(deps: EngineSourceDeps): DemoAccountsCa
       }
       return null
     },
+    welcomeOutsider: ({ handle, displayName }) =>
+      attemptAction(async () => {
+        const person = await deps.convex.query(api.modules.people.persons.getMyPerson, {})
+        if (!person) throw new Refusal("not_signed_in")
+        // Une seule fois : un profil déjà publié ne se republie pas.
+        if (person.published) return null
+        await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "social_profile", origin: "onboarding" })
+        await deps.convex.mutation(api.modules.people.profile.publishMyProfile, { handle, displayName })
+        return null
+      }),
     equip: (actor) =>
       attemptAction(async () => {
         const equipped = await deps.convex.mutation(api.modules.diaspora.demoAccounts.equipMyDemoAccount, { actor })

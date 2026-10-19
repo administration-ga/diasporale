@@ -4,7 +4,8 @@
  * LA liste des acteurs, lue à la fois par la tranche `convex/modules/diaspora`
  * du moteur (catalogue et équipement, double garde des outils de développement)
  * et par l'application (panneau de la porte, accueil automatique). Un acteur par
- * type de membre, de page et de rôle, sur une adresse réservée
+ * type de membre, de page, de rôle et d'accès restreint (suspension, blocage,
+ * hors réseau), sur une adresse réservée
  * (`<acteur>@demo.diasporale.test` : le domaine `.test` n'est jamais routable).
  *
  * Ce module ne décrit QUE des données fictives : aucun nom réel, aucune
@@ -39,11 +40,14 @@ export const DIASPORALE_DEMO_ACTORS = [
   "moderateur",
   "administrateur",
   "suspendu",
+  "suspendu-racine",
+  "bloque",
+  "exterieur",
 ] as const
 export type DiasporaleDemoActor = (typeof DIASPORALE_DEMO_ACTORS)[number]
 
-/** Les groupes du panneau : membres par statut, pages par nature, rôles et services. */
-export const DIASPORALE_DEMO_GROUPS = ["members", "pages", "roles"] as const
+/** Les groupes du panneau : membres par statut, pages par nature, rôles et services, accès restreints. */
+export const DIASPORALE_DEMO_GROUPS = ["members", "pages", "roles", "access"] as const
 export type DiasporaleDemoGroup = (typeof DIASPORALE_DEMO_GROUPS)[number]
 
 /** Les rôles de réseau qu'un acteur peut porter dans `diasporale`. */
@@ -65,8 +69,14 @@ export interface DiasporaleDemoGrounds {
   readonly sponsored: boolean
   /** Attestation consulaire fictive (lien d'identité, jamais de donnée consulaire). */
   readonly consularAttestation: boolean
-  /** Sanction fictive en cours (adhésion suspendue). */
+  /** Sanction fictive en cours dans DIASPORALE seulement (adhésion suspendue). */
   readonly suspended: boolean
+  /**
+   * Suspension fictive à la RACINE (ANTSIA), par le chemin de la console
+   * (« suspendre partout ») : elle vaut dans tous les réseaux, DIASPORALE compris,
+   * sans toucher au statut propre de l'adhésion DIASPORALE.
+   */
+  readonly suspendedAtRoot: boolean
 }
 
 export const DIASPORALE_DEMO_PAGE_KINDS = ["association", "company", "media", "community", "institution"] as const
@@ -101,7 +111,11 @@ export interface DiasporaleDemoActorSpec {
   /** `null` : le compte s'arrête à l'accueil, sans profil (acteur « nouveau »). */
   readonly profile: DiasporaleDemoProfile | null
   readonly grounds: DiasporaleDemoGrounds
-  /** `null` pour l'acteur « nouveau », qui n'entre pas dans le réseau. */
+  /**
+   * Le statut EFFECTIF dans DIASPORALE, celui que lit l'application (une suspension
+   * de la racine vaut partout) ; `null` si le compte n'entre pas dans le réseau
+   * (« nouveau », « exterieur »).
+   */
   readonly expectedStatus: MembershipStatus | null
   /** Statut antidaté au-delà du délai de parrainage : peut parrainer dès l'équipement. */
   readonly canSponsor: boolean
@@ -110,14 +124,27 @@ export interface DiasporaleDemoActorSpec {
   readonly moderationTeam: boolean
   readonly page: DiasporaleDemoPage | null
   readonly gestures: readonly DiasporaleDemoGesture[]
+  /**
+   * L'acteur qui bloque celui-ci par le vrai blocage personnel du moteur, posé dès
+   * que les deux comptes existent, quel que soit l'ordre d'équipement ; ou `null`.
+   */
+  readonly blockedBy: DiasporaleDemoActor | null
+  /**
+   * Utilisateur extérieur au réseau : un compte ANTSIA (profil publié, adhésion à la
+   * racine) SANS adhésion DIASPORALE. L'amorçage ne rejoue pas `join`, l'équipement
+   * le traite sans adhésion.
+   */
+  readonly outsider: boolean
 }
 
-const NONE: DiasporaleDemoGrounds = { idn: null, sponsored: false, consularAttestation: false, suspended: false }
+const NONE: DiasporaleDemoGrounds = { idn: null, sponsored: false, consularAttestation: false, suspended: false, suspendedAtRoot: false }
 const ATTESTED: DiasporaleDemoGrounds = { ...NONE, consularAttestation: true }
 const IDN_2: DiasporaleDemoGrounds = { ...NONE, idn: { loa: 2, gaboneseNationality: true } }
 
-function spec(input: Omit<DiasporaleDemoActorSpec, "canSponsor" | "role" | "moderationTeam" | "page" | "gestures"> & Partial<DiasporaleDemoActorSpec>): DiasporaleDemoActorSpec {
-  return { canSponsor: false, role: "member", moderationTeam: false, page: null, gestures: [], ...input }
+function spec(
+  input: Omit<DiasporaleDemoActorSpec, "canSponsor" | "role" | "moderationTeam" | "page" | "gestures" | "blockedBy" | "outsider"> & Partial<DiasporaleDemoActorSpec>,
+): DiasporaleDemoActorSpec {
+  return { canSponsor: false, role: "member", moderationTeam: false, page: null, gestures: [], blockedBy: null, outsider: false, ...input }
 }
 
 export const DIASPORALE_DEMO_ACTOR_SPECS: Readonly<Record<DiasporaleDemoActor, DiasporaleDemoActorSpec>> = {
@@ -205,9 +232,24 @@ export const DIASPORALE_DEMO_ACTOR_SPECS: Readonly<Record<DiasporaleDemoActor, D
     grounds: { ...IDN_2, consularAttestation: true }, expectedStatus: "verifiee", role: "network_admin",
   }),
   suspendu: spec({
-    actor: "suspendu", group: "roles", country: "FR",
+    actor: "suspendu", group: "access", country: "FR",
     profile: { handle: "demo.suspendu", givenNames: "Marc", familyName: "OKOUMA", headline: "Membre suspendu (démonstration)" },
     grounds: { ...ATTESTED, suspended: true }, expectedStatus: "suspendue",
+  }),
+  "suspendu-racine": spec({
+    actor: "suspendu-racine", group: "access", country: "FR",
+    profile: { handle: "demo.suspendu-racine", givenNames: "Christelle", familyName: "IVANGA", headline: "Compte suspendu sur ANTSIA (démonstration)" },
+    grounds: { ...ATTESTED, suspendedAtRoot: true }, expectedStatus: "suspendue",
+  }),
+  bloque: spec({
+    actor: "bloque", group: "access", country: "FR",
+    profile: { handle: "demo.bloque", givenNames: "Yannick", familyName: "MBADINGA", headline: "Membre bloqué par un autre membre (démonstration)" },
+    grounds: ATTESTED, expectedStatus: "verifiee", blockedBy: "verifie",
+  }),
+  exterieur: spec({
+    actor: "exterieur", group: "access", country: "FR",
+    profile: { handle: "demo.exterieur", givenNames: "Brice", familyName: "MOUNDOUNGA", headline: "Membre d'ANTSIA, hors de DIASPORALE (démonstration)" },
+    grounds: NONE, expectedStatus: null, outsider: true,
   }),
 }
 

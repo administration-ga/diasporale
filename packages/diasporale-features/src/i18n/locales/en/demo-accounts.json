@@ -8,9 +8,11 @@
     "groups": {
       "members": "Members, status by status",
       "pages": "Pages",
-      "roles": "Roles and services"
+      "roles": "Roles and services",
+      "access": "Restricted access"
     },
     "newcomer": "New account",
+    "outsider": "Not a member",
     "signingIn": "Signing in…",
     "preparing": "Preparing the demo account…",
     "ready": "Demo account ready: {{name}}.",
@@ -83,7 +85,19 @@
       },
       "suspendu": {
         "title": "Suspended member",
-        "description": "Membership suspended: can no longer post."
+        "description": "Suspended in DIASPORALE only: can no longer post."
+      },
+      "suspendu-racine": {
+        "title": "Root suspension",
+        "description": "Suspended on ANTSIA: the suspension applies everywhere, DIASPORALE included."
+      },
+      "bloque": {
+        "title": "Blocked member",
+        "description": "Blocked by the “Verified member” account: no link left between them, either way."
+      },
+      "exterieur": {
+        "title": "Outside the network",
+        "description": "ANTSIA account with no DIASPORALE membership: lands on the welcome page."
       }
     }
   }
