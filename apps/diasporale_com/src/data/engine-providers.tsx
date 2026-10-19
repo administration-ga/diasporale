@@ -10,9 +10,10 @@ import type { RefreshableCrossDomainAuthClient } from "@antsia/api/cross-domain-
 import { EngineConvexProvider } from "@antsia/api/next-provider"
 import { api } from "@convex/_generated/api"
 import { DataSourceProvider } from "@diasporale/features/data"
+import { DEFAULT_LOCALE, isSupportedLocale } from "@diasporale/features/i18n"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { useConvex } from "convex/react"
-import { type ReactNode, useState } from "react"
+import { type ReactNode, useEffect, useRef, useState } from "react"
 
 import { EngineIcom } from "@/components/icom"
 import { authClient } from "@/lib/auth-client"
@@ -23,7 +24,21 @@ import { createEngineDataSource } from "./engine-source"
 /** La source « moteur », créée une fois, sous le client Convex du moteur. */
 function EngineSource(props: { children: ReactNode }) {
   const convex = useConvex()
-  const [source] = useState(() => createEngineDataSource({ convex, authClient }))
+  // La langue affichée, tenue à jour à chaque rendu : la source, créée une fois, la relit à
+  // chaque demande de code. L'objet `i18n` de react-i18next est une copie figée par langue :
+  // il ne peut pas servir de lecteur.
+  const { locale } = useDiasporaleT()
+  const displayed = useRef(locale)
+  useEffect(() => {
+    displayed.current = locale
+  }, [locale])
+  const [source] = useState(() =>
+    createEngineDataSource({
+      convex,
+      authClient,
+      locale: () => (isSupportedLocale(displayed.current) ? displayed.current : DEFAULT_LOCALE),
+    }),
+  )
   return <DataSourceProvider source={source}>{props.children}</DataSourceProvider>
 }
 
