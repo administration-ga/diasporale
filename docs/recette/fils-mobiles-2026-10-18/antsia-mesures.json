@@ -1,0 +1,11 @@
+{
+  "background": "rgb(255, 255, 255)",
+  "cardBackground": "rgb(247, 246, 242)",
+  "cardElement": "article.parentElement",
+  "cardToken": "#f7f6f2",
+  "pageWidth": 375,
+  "viewport": {
+    "height": 667,
+    "width": 375
+  }
+}

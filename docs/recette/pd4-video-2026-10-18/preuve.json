@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-18",
+  "scope": "local-browser-read-only",
+  "postId": "kn795ekrtd65evydvry3973ff58gh306",
+  "reader": "pending-test-member",
+  "postScope": "France",
+  "media": {
+    "kind": "video",
+    "durationSeconds": 14.92,
+    "width": 1290,
+    "height": 2796,
+    "readyState": 4,
+    "error": null
+  },
+  "backendReportedBy": "ANTSIA owner, exact-row bounded read without mutation",
+  "backend": {
+    "status": "published",
+    "mediaCount": 1,
+    "mimeType": "video/mp4",
+    "sizeBytes": 22869119,
+    "durationMs": 14920
+  },
+  "observations": {
+    "gridProgressSeconds": 2.448724,
+    "gridPauseSeconds": 2.461224,
+    "viewerProgressSeconds": 7.696354,
+    "viewerPauseSeconds": 7.708344,
+    "gridPausedWhenExpanded": true,
+    "viewerAutoplay": false,
+    "tabAndShiftTabRemainInDialog": true,
+    "escapeRestoresExpandButton": true,
+    "closeWhilePlayingRemovesViewerVideo": true,
+    "gridStillPausedAfterClose": true,
+    "normalReloadOnExactPost": true,
+    "afterReloadGridProgressSeconds": 7.198946,
+    "afterReloadGridPauseSeconds": 7.210683,
+    "afterReloadViewerProgressSeconds": 5.093152,
+    "afterReloadViewerPauseSeconds": 5.10617
+  },
+  "screen": {
+    "width": 1100,
+    "height": 690,
+    "theme": "light",
+    "horizontalOverflow": false,
+    "globalViewportChanged": false
+  },
+  "final": {
+    "route": "/fil",
+    "dialogs": 0,
+    "videos": 1,
+    "videoPaused": true,
+    "videoTime": 0,
+    "consoleWarnings": 0,
+    "consoleErrors": 0
+  },
+  "photoInventory": {
+    "bound": 30,
+    "paginationUsed": false,
+    "imageCount": 0,
+    "videoCount": 1,
+    "recipePostsWithoutMedia": [
+      "kn77h24efya8fdx6kfxyqse2r98gfcj7",
+      "kn7cnjtv0y03mv8gk7aff9nzw18ge6j3",
+      "kn70c993rhxcr392ec7bdhej8s8gfqnb"
+    ]
+  },
+  "limits": [
+    "No upload or publication by this session",
+    "Creation attribution unknown",
+    "Audio track not tested",
+    "Video responsive and dark variants not tested",
+    "Browser network cache not cleared",
+    "Two-photo gallery not validated"
+  ],
+  "capture": "visionneuse-pause-5s.jpg"
+}

@@ -1,6 +1,6 @@
 # PD4 — Visionneuse, commentaires et identité sociale
 
-État : implémentation vérifiée localement, recette Chrome partielle au 17/10/2026. Plan établi avant modification des sources. Base DIASPORALE `9f7d4bd`, moteur ANTSIA `eae3a3e` (PA8). Livraison locale uniquement.
+État : implémentation vérifiée localement, recette Chrome partielle au 18/10/2026 ; lecture d’une vidéo existante désormais validée, galerie de deux photos encore ouverte. Plan établi avant modification des sources. Base DIASPORALE `9f7d4bd`, moteur ANTSIA `eae3a3e` (PA8). Livraison locale uniquement.
 
 ## Résultat attendu
 
@@ -26,7 +26,7 @@
 
 ## Vérification et recette
 
-- Réserver un créneau commun : un seul travail lourd et un seul serveur Next ; suspendre ANTSIA 3030 pour DIASPORALE 3031 puis restituer la baseline au propriétaire. Backend local conservé. Mesurer le disque ; aucune nouvelle suppression de cache autorisée ici.
+- Réserver un créneau commun : un seul travail lourd ; le mandat humain actualisé autorise les deux Next 3030/3031 simultanément, avec mémoire bornée et backend local 3210 conservé. Préserver les serveurs de leurs propriétaires. Mesurer le disque ; aucune nouvelle suppression de cache autorisée ici.
 - Cas automatisés significatifs : médias seuls/multiples/vidéo, retenue avec URL incohérente et mise à jour pendant lecture, clavier et fermeture ; édition auteur/réponse, refus, conservation du brouillon, limite, double clic, retrait des droits et ancien lecteur ; mise à jour d’identité publiée/retirée conservant tous les choix.
 - Vérification commune obligatoire avant commit : `bun run --cwd ../ANTSIA verify` (codegen par son lanceur Node supporté), source gelée et résultat consigné. Pas d’allongement des délais de tests.
 - Chrome réel : photos et vidéo réellement disponibles, navigation/Échap/focus ; commentaire et réponse édités, annulation et rechargement ; identité puis retrait/enregistrement sans republication implicite. 320/375/1280 px, clair/sombre, console. Distinguer les cas effectivement joués des seuls tests automatisés.
@@ -111,9 +111,9 @@ ANTSIA a ensuite relayé une nouvelle demande humaine reçue dans le chat d’ac
 
 ## Recette restant à terminer
 
-1. Médias multiples et vidéo : deux mires PNG et une vidéo de 2 s sans son ont été préparées hors sources, puis copiées dans `.next/pd4-recette-fixtures` ignoré lors de la recette initiale. L’outil Chrome `upload_file` refuse leur périmètre d’accès, même dans le workspace ; **aucun fichier n’a été envoyé et aucune autre voie d’envoi n’a été utilisée pour contourner ce refus**. La photo seule et le partage cité sont maintenant recettés réellement. Les 23 tests du lecteur sont verts ; la série d’images et la vidéo restent à jouer après résolution légitime de l’accès aux fichiers ou sélection manuelle par l’utilisateur dans une session auteur accessible.
-2. Le Mac est déverrouillé et la session auteur est maintenant accessible dans le Chrome visible. Aucune nouvelle authentification nécessaire ni réalisée. Relire les deux aperçus et l’état des dépôts après la sélection humaine avant de publier ; conserver la session de lecture distincte. La sélection des fichiers refusés reste à la main de l’utilisateur.
-3. Rendre explicitement Chrome aux chats coordonnés. Conserver les deux applications 3030/3031 et le backend 3210 selon le mandat humain actualisé ; aucun contrôle lourd concurrent pendant l’envoi et la recette des fichiers. ANTSIA coordonnera le nouveau contrôle commun des sources visuelles modifiées.
+1. Les deux mires PNG et la vidéo préparée de 2 s sans son restent des fichiers de recette non envoyés par cette session. L’outil Chrome `upload_file` a refusé leur périmètre ; aucun autre mécanisme n’a contourné ce refus. La photo seule et son partage cité sont recettés. La **lecture d’une autre vidéo existante, de 14,92 s**, est maintenant validée dans la section du 18/10 ci-dessous ; cet essai n’établit ni son auteur de publication ni la réussite de notre parcours d’envoi.
+2. Les trois cartes de recette photos encore présentes dans les 30 cartes du fil France ont chacune zéro image. Aucun composeur auteur n’est corrélé durablement. ANTSIA centralise une demande de publication manuelle de **deux photos sans texte**, puis de son lien ; le membre lecteur en attente conservé pourra alors éprouver la galerie. Aucun nouvel envoi automatisé, suppression, changement de session ou nouvelle publication textuelle.
+3. Conserver les deux applications 3030/3031 et le backend 3210 selon le mandat humain actualisé. Aucun changement global du viewport pour préserver la fenêtre mobile de l’autre propriétaire. Les preuves de tests restent liées à leur instantané ; aucun nouveau contrôle lourd pour cette recette en lecture seule.
 
 ## Contrôle commun final après corrections visuelles
 
@@ -126,10 +126,60 @@ Le propriétaire accueil a terminé le passage officiel final, session **85261**
 
 Le résultat automatisé n’ajoute aucune preuve de recette des deux photos ou de la vidéo. Le dernier post reste sans média et la capture du composeur humain est toujours attendue. Aucun changement de code applicatif, nouvel envoi, suppression, push ni déploiement effectué par cette reprise.
 
+## Reprise du 18/10 : contexte Chrome et défaut reproductible
+
+La capture annoncée dans le nouveau message n’est jointe dans aucun des deux chats. DevTools a été réinitialisé et ne présente qu’un onglet vide. L’extension du Chrome habituel est, elle, de nouveau accessible : son onglet DIASPORALE affiche d’abord un refus de connexion. Les ports 3210 et 3030 sont déjà actifs ; le propriétaire rétablit 3031. Aucun serveur supplémentaire lancé par cette reprise, aucun cache supprimé ni environnement modifié.
+
+Après rechargement normal de cette erreur réseau, le Chrome habituel retrouve `@pd4.lecture`, membre en attente : lecture disponible, Publier désactivé, aucun composeur ni aperçu. Cette session est conservée. Le propriétaire ANTSIA termine et libère son bref contrôle mobile natif avant toute autre manipulation. Une nouvelle fenêtre privée Chrome est alors ouverte ; connexion normale du compte fictif auteur par le code local affiché dans son formulaire, lu transitoirement sans sortie ni conservation. Le fil confirme `@relations.recette`, vérifié, avec Publier actif. Aucun fichier choisi ni publication envoyée pendant cette préparation.
+
+ANTSIA possède désormais le diagnostic et le correctif de `composer.tsx` ainsi que ses nouveaux tests ; la session DIASPORALE conserve la recette Chrome. Un cas distinct des essais historiques est effectivement reproduit : après le départ d’une publication de texte, le formulaire accepte encore un ajout de photos pendant l’attente de réponse. Les aperçus apparaissent, mais le contenu déjà envoyé ne comprend pas ces photos ; le succès efface ensuite les pièces ajoutées trop tard. Le test échoue avant correction et passe après. Cela ne prouve pas la cause des anciens posts sans média.
+
+Le correctif servi prend un verrou synchrone avant la validation, gèle les contrôles pendant la soumission et ignore un événement de fichier ou de retrait tardif. Les sept tests du vrai composeur vérifient les deux dépôts terminant dans le désordre, l’ordre et les descriptions transmis, la fermeture/réouverture, le refus sans publication textuelle de repli, le fichier tardif et le double envoi bloqués, la vidéo seule, la reprise après refus avec les mêmes dépôts et clé, et la libération du verrou après validation refusée. Aucun contournement de la garde des fichiers et aucun changement d’audience ou du contrat serveur. Commit local **`9317ec5`**, exactement `composer.tsx`, `composer.test.tsx` et [la preuve ciblée docs/12](12_CORRECTION_COURSE_COMPOSEUR_MEDIAS.md), sans les sources étrangères d’accueil ou de charte.
+
+Les trois chats Gabon autorisés ont réservé un créneau CPU exclusif pour un passage officiel commun après les contrôles ciblés. La fenêtre auteur reste sans composeur ni fichier pendant ce passage. Le résultat final, la préparation du composeur sans texte et la future recette réelle seront consignés après leurs observations respectives. Le résultat précédent à 7 179 tests demeure celui de son instantané antérieur.
+
+### Passage officiel du 18/10
+
+`verify` officiel ANTSIA, session **53670**, terminé avec **code 0** : **7 186 tests** (6 919 Vitest et 267 Bun), dix typages des espaces de travail, dix tâches de tests et neuf tâches de lint, sans erreur et avec **94 avertissements préexistants**. Journal et résumé relus localement : `/tmp/antsia-diasporale-media-verify-20261018.log` et `/tmp/antsia-diasporale-media-verify-20261018-summary.json`.
+
+Les inventaires `/tmp/antsia-diasporale-media-20261018-source-before.json` et `-after.json` contiennent **1 581 fichiers identiques**. Une première comparaison locale aux sources après le passage confirme zéro dérive. Empreinte compacte rapportée dans le résumé : `a85d56b7e759a20422e290a2439b7d784e123580b2b4ffbddcbc88b3e91f439a` ; SHA-256 des octets du fichier JSON après : `0e532ce204fded4bebc9dc51b7b2a064cb374b5d3f57b31fcf2d7a175b0ef487`. Les deux calculs sont distincts.
+
+Le CPU a été rendu explicitement aux trois chats après la prolongation convenue. Aucun second passage lancé ici. Une correction distincte de session ANTSIA a ensuite modifié ses deux fichiers `session-bridge.tsx`/`session-bridge.test.tsx` ; une configuration `.claude/launch.json` est également apparue dans ce dépôt voisin. Le passage à 7 186 tests valide son instantané et le correctif DIASPORALE, sans constituer une vérification intégrale de ces changements ANTSIA ultérieurs. Les sources applicatives DIASPORALE restent inchangées.
+
+### Préparation native réellement observée et blocage restant
+
+Le contrôle natif ne conserve pas une corrélation stable avec la fenêtre privée : des lectures successives reviennent sur le Chrome habituel Asted, compte en attente, sans sélectionner ni publier. La cause du changement de fenêtre n’est pas établie. La page DevTools distincte, dont l’auteur et le composeur sont lisibles, n’est pas présentée comme physiquement visible pour l’utilisateur.
+
+Une dernière préparation privée a rencontré un incident distinct : après validation normale du code, `/bienvenue` a d’abord refusé la connexion, puis affiché un `ChunkLoadError` sur `app/layout.js`. Le propriétaire de Next confirme un redémarrage automatique de son processus après franchissement du seuil mémoire pendant la compilation, sans suppression ni relance manuelle. Nouveau processus prêt ; `/bienvenue`, `/fil` et le module JavaScript redeviennent accessibles. Cette panne n’établit pas la cause des anciens posts sans média.
+
+Après reprise normale vers `/fil` puis **un seul rechargement manuel**, le lien de navigation Profil confirme `@relations.recette` dans la fenêtre privée native. Le composeur ouvert y montre effectivement **0 / 2000 caractères**, aucune pièce jointe, **France** par défaut, tous les membres cochés et partage ANTSIA décoché. Avant de choisir la portée diaspora et de capturer l’écran, la lecture suivante du contrôle App retourne à la fenêtre **normale Asted**, `/fil`, `@pd4.lecture` en attente, Publier désactivé. La garde de contexte arrête le geste : aucune portée modifiée, aucun fichier choisi, aucun clic sur Publier et aucune capture du composeur final obtenue.
+
+Toutes les recréations, navigations et actions Chrome sont alors arrêtées. ANTSIA centralise l’unique demande humaine de remise au premier plan de la fenêtre auteur, avant toute nouvelle sélection. **À ce stade de la préparation, les deux photos et la vidéo restent non validées** ; la lecture vidéo acquise ensuite est décrite ci-dessous. Cortex est toujours absent à la vérification du 18/10 ; aucune réparation ni écriture mémoire tentée.
+
+Après confirmation humaine de remise au premier plan, la reprise se limite strictement à la lecture. L’arbre natif renvoie cette fois un nouvel onglet normal Asted (`chrome://newtab/`), sans composeur ; l’inventaire indique Chrome présent, une nouvelle surface d’extension et aucun onglet DIASPORALE. La capture native suivante, sans clic ni activation, montre ANTSIA `/fil` sur 3030 avec le compte fictif `@recette.f3`, également sans composeur. ANTSIA confirme qu’un redémarrage de Chrome et une nouvelle fenêtre ANTSIA sont survenus ; la cause du redémarrage reste inconnue. Ces observations ne prouvent pas que la fenêtre déclarée par l’utilisateur est fermée, mais elles ne permettent toujours pas de la corréler. Capture de diagnostic uniquement : `/tmp/diasporale-native-surface-20261018.jpg`. Aucune donnée de compte personnel issue du nouvel onglet n’est reprise dans cette preuve. Aucun fichier, nouvelle fenêtre, nouvelle connexion, navigation ou publication pendant cette reprise en lecture seule.
+
+## Vidéo existante : recette native du 18/10 achevée
+
+Une nouvelle publication existante a été signalée par le propriétaire mobile : [publication locale `kn795ekrtd65evydvry3973ff58gh306`](http://localhost:3031/publication/kn795ekrtd65evydvry3973ff58gh306), auteur affiché « Relations Recette », texte « test », portée France. Aucun envoi ni clic Publier effectué par cette session. Elle ne doit pas être attribuée à notre mire silencieuse de 2 s.
+
+L’ancienne extension Chrome étant explicitement indisponible, la nouvelle surface a été sélectionnée selon la procédure de reprise ; l’onglet exact `969036313` affiche `/fil`, `@pd4.lecture`, membre en attente, Publier et Réagir désactivés. Les observations et gestes suivants restent dans cet onglet corrélé, sans modifier les sessions ou l’autre fenêtre ANTSIA.
+
+- ANTSIA a lu en local la seule ligne correspondante, sans mutation : `published`, un média `video/mp4`, 22 869 119 octets, 1 290 × 2 796 pixels et durée déclarée 14 920 ms, référence de stockage présente. Aucune URL de stockage, clé ou donnée de session conservée dans cette preuve.
+- Chrome décode la vidéo aux mêmes dimensions, durée 14,92 s, `readyState = 4`, erreur nulle. Au départ elle est pausée à 0, sans autoplay. Lecture native du fil : 0 → 2,448 s ; pause à 2,461 s.
+- Agrandissement : focus initial « Fermer », compteur « Média 1 sur 1 », nouvelle vidéo pausée à 0. Lecture 0 → 7,696 s, pause à 7,708 s. Tab et Maj+Tab restent dans le dialogue ; Échap ferme et restitue le focus exact « Agrandir la vidéo ».
+- Second cycle avec la grille en lecture : l’agrandissement la met en pause à 2,522 s ; la visionneuse reste initialement pausée à 0. Après lecture à 2,272 s, Échap retire la vidéo de la visionneuse ; seule la grille pausée demeure, focus rendu au déclencheur. Aucune instance vidéo en lecture ne subsiste après fermeture ; la piste audio elle-même n’a pas été éprouvée.
+- Lien de la publication ouvert normalement, puis un rechargement normal unique : même compte lecteur, même publication et vidéo redécodée, pausée à 0, durée/dimensions conservées. Nouvelle lecture dans la carte 0 → 7,198 s, pause à 7,210 s ; nouvelle lecture agrandie 0 → 5,093 s, pause à 5,106 s, capture inspectée. Cela valide la persistance après rechargement, sans prétendre avoir vidé le cache réseau du navigateur.
+- Taille réellement contrôlée pour cette vidéo : **1 100 × 690 px, thème clair**, aucun débordement horizontal. Aucun viewport global modifié ; les essais mobiles de la photo seule restent distincts. Console de cet onglet : aucun avertissement ni erreur relevé lors de ces lectures.
+- Retour au fil : zéro dialogue, une seule vidéo pausée à 0. Inventaire borné aux **30 cartes déjà chargées** : la vidéo ci-dessus est le seul média ; les trois cartes `kn77h24efya8fdx6kfxyqse2r98gfcj7`, `kn7cnjtv0y03mv8gk7aff9nzw18ge6j3` et `kn70c993rhxcr392ec7bdhej8s8gfqnb` ont zéro image/vidéo. Aucune pagination supplémentaire. Cela n’est pas un inventaire global de tous les médias du réseau.
+
+Preuves propres à cette session : [capture de la pause à 5 s](recette/pd4-video-2026-10-18/visionneuse-pause-5s.jpg), [relevé borné](recette/pd4-video-2026-10-18/preuve.json). La lecture vidéo est acquise ; l’envoi initial, la piste audio, les variantes d’écran de cette vidéo et la galerie des deux photos restent distincts. PD4 reste ouvert. Les sources applicatives n’ont pas été changées par cette recette ; les 7 186 tests restent la preuve de l’instantané officiel décrit plus haut.
+
 ## Machine, coordination et mémoire
 
 Les deux seuls caches DIASPORALE autorisés ont été retirés après serveur arrêté et lsof vide. Espace 189 612 → 862 376 Kio mesuré à ce passage, très fluctuant ; ce delta n’est pas attribué intégralement à ces caches. Le chat ANTSIA a ensuite retiré son Turbopack recréé sous un accord humain reçu dans son chat. Les nettoyages privés Gabon/SETRAG sont des opérations distinctes de leur propriétaire. Aucun autre nettoyage effectué par cette tranche.
 
 ANTSIA possède ses cinq chemins de contrat/hook/tests/docs ; le chat accueil possède ses écrans/routes et autres traductions. Le contrôle commun inclut leurs sources gelées ; chaque commit garde sa propriété. Pas de push, fusion ni déploiement.
+
+Diagnostic des processus : lire uniquement PID, PPID et nom de commande pour le backend local. Une lecture de sa ligne complète a affiché accidentellement un paramètre secret ; incident signalé à l’utilisateur et à la coordination, sans recopier sa valeur dans les preuves, les documents ou les messages. Aucun changement de clé, session ou environnement effectué. Éviter toute nouvelle sortie des arguments complets du backend.
 
 Cortex indisponible : Git du vault d’abord incomplet puis chemin disparu, confirmé par les chats et relu localement. Aucune réparation, recréation, suppression de verrou ni écriture mémoire effectuée. Ce document garde le bilan de reprise jusqu’au retour du vault.

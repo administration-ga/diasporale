@@ -1,7 +1,7 @@
 ---
 title: "DIASPORALE.COM — Charte graphique « Sable de la diaspora »"
-version: "3.2"
-date: "2026-10-15"
+version: "3.3"
+date: "2026-10-17"
 statut: "Charte de travail v3 — arbitrage A7 (famille Consulaire / Sable) ; refonte demandée par le propriétaire le 15/10/2026 : épurée, contraste renforcé, couches du sombre renforcées (le fond reste le plus sombre), rayons resserrés, sans drapeau, avis en cartes flottantes ; v3 : palette confort (une teinte par thème, chroma basse, texte sans éblouissement, focus plein) ; v3.1 : avatars, teintes de statut, aplats ; v3.2 : bleu Gabon légèrement foncé (`#0167A8`, décision du propriétaire), sable posé, sélection sans contour"
 projet: "DIASPORALE"
 jetons: "ANTSIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diasporale-features/src/styles/extras.css (rôles propres) — [data-charte=\"diasporale\"]"
@@ -44,6 +44,12 @@ jetons: "ANTSIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diasp
 > contour** : la pilule choisie passe à l'encre inversée, le curseur d'un sélecteur est la
 > surface la plus claire de sa piste, l'option choisie prend une teinte qui se lève au-dessus de la
 > carte en sombre au lieu d'un bleu nuit qui creusait (§4).
+>
+> **Version 3.3 (17/10/2026, correction du propriétaire sur capture du fil).** En clair,
+> le fond et les cartes étaient inversés par rapport au résultat attendu : le **papier
+> `#FDFDFB` porte désormais la page**, les **cartes prennent le sable `#F1EFEB`**.
+> Les surfaces du moteur et d’iCom suivent ces mêmes rôles. Les couleurs d’action,
+> les sélections et la hiérarchie du thème sombre restent celles de la v3.2.
 
 ## 1. Le sujet, et la seule tâche de l'identité
 
@@ -65,8 +71,8 @@ Six couleurs nommées portent toute l'interface. Le reste dérive de rampes rég
 
 | Nom | Hex | Rôle |
 |---|---|---|
-| **Sable** | `#F1EFEB` | fond de page : le sable de la famille, posé en v3 puis d'un cran en v3.2 (le papier s'en détache à 1,13:1) |
-| **Papier** | `#FDFDFB` | cartes posées sur le sable (adouci en v3 : jamais de blanc pur) |
+| **Sable** | `#F1EFEB` | cartes et panneaux, posés sur le papier depuis la v3.3 (contraste de surface 1,13:1) |
+| **Papier** | `#FDFDFB` | fond de page et navigation (adouci en v3 : jamais de blanc pur) |
 | **Encre** | `#25211E` | texte (15,68:1 sur le papier : fort sans dureté) ; fond du tampon « Officiel » |
 | **Bleu Gabon** | `#0167A8` | action, lien, focus : barreau 500 du contrat, teinte H 246,6 ; légèrement foncé en v3.2 (`#0072B9` avant), 5,21:1 sur le sable |
 | **Grès** | `#595550` | texte secondaire, icônes au repos (6,44:1 sur le sable, 7,26:1 sur le papier) |
@@ -86,9 +92,9 @@ de clarté (OKLCH), sans changer sa teinte.
 En v2, le creux, la puce et le filet étaient trois fois plus saturés que le fond (beige) ;
 la v3 les aligne sur la même teinte.
 
-**Élévation par la clarté.** Dans les deux thèmes, le fond est la couche la plus basse et
-chaque surface qui monte s'éclaircit : papier sur sable en clair, carte relevée sur la nuit en
-sombre. Sans filet, chaque marche se lit par la clarté. Échelle sombre (v3.2, une seule teinte
+**Hiérarchie des surfaces (v3.3).** En clair, les cartes sable sont plus sombres que le
+fond papier ; en sombre, la carte reste plus claire que le fond nuit. Sans filet, chaque
+marche se lit par la différence de clarté. Échelle sombre (v3.2, une seule teinte
 OKLCH h 75, requantifiée : la carte virait au rouge), du plus sombre au plus clair : fond
 `#151311` < carte `#24221F` (1,17:1 sur le fond) < aplats `#2B2926` (survol, petites étiquettes,
 squelettes : ils éclaircissent au lieu de creuser) < puce, piste des pilules et carte flottante
@@ -146,7 +152,7 @@ noms du contrat (`--font-sans`, `--font-display`, `--font-mono`) qui y renvoient
   pilules (onglets, filtres, sélecteurs de langue et de thème) et l'interrupteur restent en
   pilule (`--esp-r-chrome: 999px`), sans changement.
 - **Relief : presque rien (v2)**. Aucun filet autour d'une carte, aucun liseré, aucun contour
-  épais. Une carte se détache par la clarté (papier sur sable, encre sur nuit) et un souffle
+  épais. Une carte se détache par la clarté (sable sur papier en clair, carte éclaircie sur nuit en sombre) et un souffle
   d'ombre teinté d'encre (`0 1px 2px` à 5 %). Ce qui passe DEVANT la page (carte flottante,
   barre basse) prend un souffle de plus (`0 4px 14px -4px` à 8 %). Les seuls traits restants
   sont fonctionnels : contour de champ (3:1, WCAG 1.4.11) et filets de séparation internes.
@@ -248,10 +254,18 @@ Le squelette se duplique avec le code (cahier §15). Seuls les jetons changent.
   centrée au bureau). La portée (étiquette pays ou diaspora) et la case « Publier aussi
   sur ANTSIA » y sont visibles avant l'envoi.
 - **Téléphone (< 960 px)** :
-  - en-tête collant (mot-symbole, sélecteur de pays, cloche, avatar) ;
-  - barre basse flottante en pilule, sable translucide en clair, opaque en sombre :
-    Fil · Pays · Créer · Messages · Menu ;
-  - feuille Menu.
+  - en-tête collant (mot-symbole, cloche, action « Publier » ronde de 44 px, avatar qui
+    ouvre la feuille du compte) ;
+  - barre basse flottante en pilule, sable translucide en clair, opaque en sombre, à cinq
+    destinations (plan global, DG-005, 18/10/2026) : Fil · Explorer · Services ·
+    Communautés · Messages (Messages seulement quand iCom est servi ; la démonstration
+    garde quatre onglets sans trou) ;
+  - feuille du compte : Profil, Réglages, Mes demandes, Mon activité, Relations,
+    Enregistrements, Parrainer, Mes données.
+- **Bureau, depuis le 18/10/2026** : le rail porte le pays de résidence, les cinq
+  destinations, le groupe « Mon espace », le bouton Publier, puis la carte de l'avatar qui
+  ouvre le menu du compte (flèches, Échap, focus rendu au déclencheur). Publier n'est pas un
+  bouton flottant : la pile des cartes flottantes occupe déjà le bas de l'écran.
 - **Format téléphone unique** (A6) : 440 × 956, plancher 375. Il sert à la carte iCom
   détachée et aux cartes flottantes.
 - **Mot-symbole** : « DIASPORALE » en Plex Condensed 700, interlettrage +0,04 em.

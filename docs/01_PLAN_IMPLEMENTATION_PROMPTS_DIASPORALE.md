@@ -2,7 +2,7 @@
 title: "DIASPORALE.COM — Plan d'implémentation en prompts"
 version: "1.0"
 date: "2026-10-14"
-maj: "2026-10-17"
+maj: "2026-10-18"
 statut: "Plan d'exécution — prompts Claude Code (Opus), à exécuter après ANTSIA PA0–PA7"
 projet: "DIASPORALE"
 reference: "NTSAGUI/DIASPORALE/PI/2026/001"
@@ -16,7 +16,23 @@ dependances:
 
 ## État d'avancement (tenu par la session de construction)
 
-État mis à jour le **17/10/2026** ; PD4 reste en cours.
+État mis à jour le **18/10/2026** ; PD4 reste en cours.
+
+> **Suite pagination de l’agenda du 18/10** : [pages natives organisés/participations, événements à venir/historique](30_PAGINATION_AGENDA_PERSONNEL_DG023.md) raccordées au panneau commun et à `/agenda`, sans limite globale de deux cents sur ce nouveau parcours. Ancien aperçu borné conservé ; lecteur attendu, droits vivants, pages vides continuables, reprise et fournisseurs moteur/démo. Contrôles et commit applicatif toujours différés ; DG-023/PD7 restent ouverts.
+
+> **Plan global et relais Claude du 18/10** : la vague pages/associations/services possède ses premières sources raccordées ; Codex reprend les avis et réponses DG-016 après les demandes/rendez-vous laissés par Claude. Les contrôles et recettes de cette vague sont différés sur instruction du propriétaire. État détaillé et limites : [docs/18 — Exécution](18_EXECUTION_VAGUE_G.md), [docs/19 — Avis de services](19_REPRISE_CLAUDE_AVIS_SERVICES_DG016.md). Les anciens résultats ci-dessous ne couvrent pas ces ajouts.
+
+> **Suite associative du 18/10** : groupe privé thématique et événements sous identité d'association raccordés, entrée et inscriptions volontaires ; contrôles toujours différés. Le [rapport DG-010](21_GROUPES_EVENEMENTS_ASSOCIATIONS_DG010.md) précise les limites V1 et les recettes restant à jouer. PD5/PD7 restent ouverts.
+
+> **Suite capacité et liste d'attente du 18/10** : [DG-023](22_CAPACITES_LISTES_ATTENTE_EVENEMENTS_DG023.md) raccorde une capacité facultative, la file FIFO, les états personnels et l'attribution des places libérées. Scénarios écrits sans exécution ; PD7 et les extensions événementielles restent ouverts.
+
+> **Suite clôture et rappels du 18/10** : [dates limites et rappels personnels J-1](24_DATES_LIMITES_RAPPELS_EVENEMENTS_DG023.md) raccordés aux événements associatifs, fournisseurs et interface. Jobs durables par participation, opt-in et droits relus ; les contrôles, le codegen commun et les preuves de réception restent différés. Aucun cron global ajouté.
+
+> **Suite présences QR du 18/10** : [billets personnels temporaires et accueil par les responsables](27_PRESENCES_QR_EVENEMENTS_DG023.md) raccordés au détail associatif ; aperçu avant confirmation, relevé paginé et correction versionnée, fournisseurs moteur/démo. Contrôles/codegen/recettes toujours différés ; PD7 reste ouvert.
+
+> **Suite galerie du 18/10** : [galerie après événement](28_GALERIE_APRES_EVENEMENTS_DG023.md) raccordée au détail associatif, au composeur et à la visionneuse existants. Publication collective par les responsables après la fin, audience actuelle de l'événement, pagination et retrait ; fournisseurs moteur/démo. Sources sans contrôles ; iCal, convergence d'agenda et preuves de délivrance restent ouverts.
+
+> **Suite calendrier du 18/10** : [export iCal et agenda personnel](29_EXPORT_ICAL_AGENDA_ASSOCIATIF_DG023.md) raccordés en sources. `/agenda` réutilise le panneau du moteur avec inscriptions associatives explicites, états confirmé/attente/annulé et droits actuels ; export ponctuel sans inscription ni abonnement. Contrôles et imports dans les calendriers tiers restent différés ; DG-023/PD7 ne sont pas clôturés.
 
 > Session de construction ouverte le 14/10/2026 (Opus 5.5, effort maximal). Le moteur ANTSIA
 > se construit en parallèle : tant qu'il n'existe pas, DIASPORALE avance sur ce qui n'en
@@ -48,7 +64,7 @@ PD4 reste ouvert pour les autres écarts de parité.
 Tranche suivante du **17/10/2026**, sources vérifiées et recette Chrome partielle : visionneuse des médias,
 édition des commentaires/réponses et textes du profil sans republication incidente.
 Commits locaux DIASPORALE `8a44990` et moteur ANTSIA `0693832` ; plan, preuves et reprise dans [`docs/10`](10_VISIONNEUSE_COMMENTAIRES_IDENTITE_PD4.md).
-Sources raccordées dans l’application réelle ; passage commun final après corrections visuelles : code 0, 7 179 tests, dix typages des espaces et neuf contrôles de qualité sans erreur (94 avertissements conservés), 1 580 sources identiques avant/après, sans dérive à la relecture locale. Commentaire/réponse édités et persistants, profil retiré édité sans republication implicite confirmés dans Chrome. Après déverrouillage, photo seule et partage cité réellement lus à 320/375/1 280 px, clair/sombre, Échap et restitution du focus validés. Republication explicite relue et confirmée, identité d’origine conservée. Plusieurs images et vidéo restent non validées : les aperçus annoncés ne sont plus présents dans le Chrome piloté et le dernier post contient zéro média au stockage. Une capture du composeur vu par l’utilisateur est attendue pour résoudre le décalage avant une nouvelle sélection. Preuve actualisée : `docs/10`. PD4 reste ouvert.
+Sources raccordées dans l’application réelle ; correctif du 18/10 `9317ec5` : ajout tardif de fichiers et modifications bloqués pendant la soumission. Dernier passage officiel commun : code 0, **7 186 tests**, dont sept nouveaux cas du vrai composeur, dix typages des espaces et neuf contrôles de qualité sans erreur (94 avertissements conservés), 1 581 sources identiques avant/après. La correction de session ANTSIA ultérieure est distincte de cet instantané. Commentaire/réponse édités et persistants, profil retiré édité sans republication implicite confirmés dans Chrome. Photo seule et partage cité réellement lus à 320/375/1 280 px, clair/sombre, Échap et restitution du focus validés ; republication explicite relue et identité d’origine conservée. Vidéo existante de 14,92 s réellement lue le 18/10 dans le Chrome corrélé du membre en attente : progression, pause, agrandissement sans autoplay, clavier/Échap/focus et persistance après rechargement validés à 1 100 × 690 px clair. Aucun nouvel envoi ni attribution de création ; audio et autres formats d’écran non éprouvés pour cette vidéo. Les deux photos restent non validées : les trois cartes de recette présentes ont zéro image ; ANTSIA centralise une publication manuelle de deux photos sans texte et son lien, sans réutiliser la fenêtre auteur instable. Preuves et limites : `docs/10` et `docs/12`. PD4 reste ouvert.
 
 Vérifications des étapes closes :
 - **a)** 197 cas `bun test`, couverture lignes et fonctions 100 % imposée par
@@ -624,6 +640,8 @@ conversation, messagerie et appels, directs d'évènements.
 **Contexte.** Le moteur fournit `events` (agenda hérité), `groupThreads` et messagerie
 (PA3), `calls` LiveKit (PA3, après l'audit iAppel demandé par ANTSIA PA1), `live` (direct
 hérité). Specs F03, F08, F13 ; écrans E03–E05, E14, E24.
+
+**Précision d'exécution du 18/10.** Pour les événements associatifs DG-023, le rappel J-1 ci-dessous utilise un job durable individuel après opt-in, plutôt qu'un balayage cron global ; J-1 vaut 24 heures réelles. Le [rapport de tranche](24_DATES_LIMITES_RAPPELS_EVENEMENTS_DG023.md) décrit les garde-fous et les contrôles encore différés. Le prompt historique ne constitue pas une preuve d'achèvement.
 
 > 1. Évènements communautaires : extension `eventRegistrations` (capacité, date limite, liste
 >    d'attente, inscription, QR de présence, galerie), `organizerKind ∈ {person, association,
