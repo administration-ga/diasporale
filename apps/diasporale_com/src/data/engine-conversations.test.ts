@@ -1,5 +1,6 @@
 import type { Id } from "@convex/_generated/dataModel"
 import type { ConvexReactClient } from "convex/react"
+import { ConvexError } from "convex/values"
 import { describe, expect, it, vi } from "vitest"
 
 import { createEngineConversations, toEngineContext, toObjectConversationView } from "./engine-conversations"
@@ -43,6 +44,21 @@ describe("conversations de mise en relation — adaptateur moteur", () => {
     mutation.mockClear()
     expect(await capability.open({ kind: "diasporaMentoring", id: "" })).toEqual({ ok: false, code: "not_found" })
     expect(mutation).not.toHaveBeenCalled()
+  })
+
+  // Recette à deux comptes du 19/10 : « Écrire » sur un réseau sans politique ouverte disait
+  // « Une erreur est survenue. Réessayez », alors que le moteur refuse par une règle fermée.
+  it.each([
+    ["CONTEXT_NOT_OPEN", "context_not_open"],
+    ["CONTEXT_CLOSED", "context_closed"],
+    ["CONTEXT_UNAVAILABLE", "context_unavailable"],
+  ])("un refus explicite d'ouverture (%s) se dit par son code fermé", async (rule, code) => {
+    const mutation = vi.fn(async () => {
+      throw new ConvexError({ code: "invalidArgument", rule, params: {} })
+    })
+    const query = vi.fn(async () => ({ _id: "reseau-diasporale" }))
+    const capability = createEngineConversations({ convex: { query, mutation } as unknown as ConvexReactClient } as EngineSourceDeps)
+    expect(await capability.open({ kind: "diasporaJobApplication", id: "candidature-1" })).toEqual({ ok: false, code })
   })
 })
 

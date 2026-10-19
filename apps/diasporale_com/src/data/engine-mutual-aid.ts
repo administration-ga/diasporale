@@ -187,12 +187,20 @@ function readableNetwork(member: EngineMember): Id<"networks"> | null {
   return member.networkId.value
 }
 
-/** Une lecture du moteur, vue par l'écran : le refus du lecteur d'abord, puis celui du serveur. */
-function settle<Dto, View>(member: EngineMember, loaded: Loaded<Dto>, view: View | undefined): Loadable<View> {
+/**
+ * Une lecture du moteur, vue par l'écran : le refus du lecteur d'abord, puis celui du serveur.
+ * MÉMORISÉE : même réponse, même objet. Le paginateur des listes compare la référence ; un
+ * objet neuf à chaque rendu le faisait boucler sans fin (« Maximum update depth exceeded »
+ * sur /entraide, recette à deux comptes du 19/10).
+ */
+function useSettled<Dto, View>(member: EngineMember, loaded: Loaded<Dto>, view: View | undefined): Loadable<View> {
   const blocked = memberReadError(member)
-  if (blocked) return failed(blocked)
-  if (loaded.state === "error") return failed(loaded.code)
-  return view === undefined ? LOADING : ready(view)
+  const code = loaded.state === "error" ? loaded.code : null
+  return useMemo(() => {
+    if (blocked) return failed<View>(blocked)
+    if (code !== null) return failed<View>(code)
+    return view === undefined ? LOADING : ready(view)
+  }, [blocked, code, view])
 }
 
 export function createEngineMutualAid(deps: EngineSourceDeps): MutualAidCapability {
@@ -215,7 +223,7 @@ export function createEngineMutualAid(deps: EngineSourceDeps): MutualAidCapabili
       )
       const value = loaded.state === "ready" ? loaded.value : undefined
       const view = useMemo(() => (value ? windowOf(value, toAidQuestionCard) : undefined), [value])
-      return settle(member, loaded, view)
+      return useSettled(member, loaded, view)
     },
 
     useMyQuestions({ cursor }) {
@@ -224,7 +232,7 @@ export function createEngineMutualAid(deps: EngineSourceDeps): MutualAidCapabili
       const loaded = useLoaded(AID.myQuestions, networkId ? { networkId, paginationOpts: { cursor, numItems: MUTUAL_AID_PAGE_SIZE } } : "skip")
       const value = loaded.state === "ready" ? loaded.value : undefined
       const view = useMemo(() => (value ? windowOf(value, toAidQuestionCard) : undefined), [value])
-      return settle(member, loaded, view)
+      return useSettled(member, loaded, view)
     },
 
     useItem(itemId) {
@@ -234,7 +242,7 @@ export function createEngineMutualAid(deps: EngineSourceDeps): MutualAidCapabili
       const value = loaded.state === "ready" ? loaded.value : undefined
       // `null` : introuvable ou illisible pour ce lecteur — une réponse, pas un chargement.
       const view = useMemo(() => (value === undefined ? undefined : value === null ? null : toAidItem(value)), [value])
-      return settle(member, loaded, view)
+      return useSettled(member, loaded, view)
     },
 
     useAnswers({ questionId, cursor }) {
@@ -246,7 +254,7 @@ export function createEngineMutualAid(deps: EngineSourceDeps): MutualAidCapabili
       )
       const value = loaded.state === "ready" ? loaded.value : undefined
       const view = useMemo(() => (value ? windowOf(value, toAidAnswer) : undefined), [value])
-      return settle(member, loaded, view)
+      return useSettled(member, loaded, view)
     },
 
     useMissions({ country, city, from, cursor }) {
@@ -258,7 +266,7 @@ export function createEngineMutualAid(deps: EngineSourceDeps): MutualAidCapabili
       )
       const value = loaded.state === "ready" ? loaded.value : undefined
       const view = useMemo(() => (value ? windowOf(value, toAidMissionCard) : undefined), [value])
-      return settle(member, loaded, view)
+      return useSettled(member, loaded, view)
     },
 
     useMySignups({ cursor }) {
@@ -267,7 +275,7 @@ export function createEngineMutualAid(deps: EngineSourceDeps): MutualAidCapabili
       const loaded = useLoaded(AID.mySignups, networkId ? { networkId, paginationOpts: { cursor, numItems: MUTUAL_AID_PAGE_SIZE } } : "skip")
       const value = loaded.state === "ready" ? loaded.value : undefined
       const view = useMemo(() => (value ? windowOf(value, toAidMissionCard) : undefined), [value])
-      return settle(member, loaded, view)
+      return useSettled(member, loaded, view)
     },
 
     useMissionPages() {
@@ -276,7 +284,7 @@ export function createEngineMutualAid(deps: EngineSourceDeps): MutualAidCapabili
       const loaded = useLoaded(AID.missionPages, networkId ? { networkId } : "skip")
       const value = loaded.state === "ready" ? loaded.value : undefined
       const view = useMemo((): readonly AidMissionPageOption[] | undefined => (value ? value.map(toAidMissionPage) : undefined), [value])
-      return settle(member, loaded, view)
+      return useSettled(member, loaded, view)
     },
 
     usePageMissions({ pageId, cursor }) {
@@ -288,7 +296,7 @@ export function createEngineMutualAid(deps: EngineSourceDeps): MutualAidCapabili
       )
       const value = loaded.state === "ready" ? loaded.value : undefined
       const view = useMemo(() => (value ? windowOf(value, toAidMissionCard) : undefined), [value])
-      return settle(member, loaded, view)
+      return useSettled(member, loaded, view)
     },
 
     useVolunteers({ missionId, cursor }) {
@@ -300,7 +308,7 @@ export function createEngineMutualAid(deps: EngineSourceDeps): MutualAidCapabili
       )
       const value = loaded.state === "ready" ? loaded.value : undefined
       const view = useMemo(() => (value ? windowOf(value, toAidVolunteer) : undefined), [value])
-      return settle(member, loaded, view)
+      return useSettled(member, loaded, view)
     },
 
     askQuestion: (input) => write(async (networkId) => {

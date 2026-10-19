@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import type { EngineAuthClient } from "@antsia/api/auth-client"
+import type { Loadable } from "@diasporale/features/data"
 import { cleanup, renderHook } from "@testing-library/react"
 import type { ConvexReactClient } from "convex/react"
 import { getFunctionName } from "convex/server"
@@ -134,6 +135,36 @@ describe("entraide — lectures du moteur", () => {
     expect(calls(Q.questions)).toContainEqual({ networkId: NETWORK, country: "BE", city: "Liège", status: "resolved", paginationOpts: { cursor: "opaque-next", numItems: 20 } })
     const mine = renderHook(() => aid.useMyQuestions({ cursor: null })).result.current
     expect(mine).toMatchObject({ status: "ready", data: { continueCursor: null, isDone: true, items: [{ id: "question-1", isMine: true }] } })
+  })
+
+  it("même réponse, même objet : chaque lecture garde sa référence d'un rendu à l'autre, refus compris", () => {
+    // Le paginateur des listes compare la référence : un objet neuf à chaque rendu le faisait
+    // boucler sans fin sur /entraide (recette à deux comptes du 19/10).
+    const { aid } = capability()
+    const reads: ReadonlyArray<() => Loadable<unknown>> = [
+      () => aid.useQuestions({ country: "FR", status: "open", cursor: null }),
+      () => aid.useMyQuestions({ cursor: null }),
+      () => aid.useItem("question-1"),
+      () => aid.useAnswers({ questionId: "question-1", cursor: null }),
+      () => aid.useMissions({ country: "FR", from: 0, cursor: null }),
+      () => aid.useMySignups({ cursor: null }),
+      () => aid.useMissionPages(),
+      () => aid.usePageMissions({ pageId: "page-1", cursor: null }),
+      () => aid.useVolunteers({ missionId: "mission-1", cursor: null }),
+    ]
+    for (const read of reads) {
+      const { result, rerender } = renderHook(read)
+      const first = result.current
+      expect(first.status).toBe("ready")
+      rerender()
+      expect(result.current).toBe(first)
+    }
+    mocks.results.set(Q.questions, new ConvexError({ code: "invalidArgument", appRule: "aid_country_is_home", appParams: {} }))
+    const refused = renderHook(() => aid.useQuestions({ country: "FR", status: "open", cursor: null }))
+    const first = refused.result.current
+    expect(first).toEqual({ status: "error", code: "aid_country_is_home" })
+    refused.rerender()
+    expect(refused.result.current).toBe(first)
   })
 
   it("n'interroge rien tant que l'adhésion du lecteur n'est pas connue, ni sans identifiant", () => {

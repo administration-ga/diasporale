@@ -18,6 +18,7 @@ import { SERVICE_REQUEST_ERROR_CODES } from "./service-requests-port"
 import { SERVICE_REVIEW_ERROR_CODES } from "./service-reviews-port"
 import { SERVICE_ERROR_CODES } from "./services-port"
 import { CONTENT_REPORT_ERROR_CODES } from "./content-reports-port"
+import { CONVERSATION_ERROR_CODES } from "./conversations-port"
 import { MUTUAL_AID_ERROR_CODES } from "./mutual-aid-port"
 import { ARRIVAL_KIT_ERROR_CODES } from "./arrival-kit-port"
 import { MENTORING_ERROR_CODES } from "./mentoring-port"
@@ -118,6 +119,7 @@ export const ACTION_ERROR_CODES = [
   ...JOB_ERROR_CODES,
   ...MODERATION_DESK_ERROR_CODES,
   ...PILOT_METRICS_ERROR_CODES,
+  ...CONVERSATION_ERROR_CODES,
 ] as const
 
 export type ActionErrorCode = (typeof ACTION_ERROR_CODES)[number]
