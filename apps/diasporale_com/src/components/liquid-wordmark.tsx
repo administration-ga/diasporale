@@ -225,11 +225,24 @@ export function LiquidWordmark(props: { text: string; areaRef: RefObject<HTMLEle
     if (introRef.current === null) introRef.current = claimIntro()
     if (!introRef.current) return
     wrapper.dataset.liquid = "intro"
-    // Filet de sécurité : sans première image à temps, le texte réel revient.
-    const fallback = window.setTimeout(() => {
-      if (wrapper.dataset.liquid === "intro") wrapper.dataset.liquid = "off"
-    }, INTRO_GRACE_MS)
-    return () => window.clearTimeout(fallback)
+    // Filet de sécurité : sans première image à temps, le texte réel revient. Seul compte le
+    // temps des images réellement affichées : un onglet ouvert en arrière-plan n'en calcule
+    // aucune, et son assemblage doit encore partir du vide quand on y revient.
+    let frame = 0
+    let last = 0
+    let waited = 0
+    const watch = (now: number) => {
+      if (wrapper.dataset.liquid !== "intro") return
+      waited += last ? Math.min(now - last, 100) : 0
+      last = now
+      if (waited >= INTRO_GRACE_MS) {
+        wrapper.dataset.liquid = "off"
+        return
+      }
+      frame = requestAnimationFrame(watch)
+    }
+    frame = requestAnimationFrame(watch)
+    return () => cancelAnimationFrame(frame)
   }, [])
 
   useEffect(() => {
