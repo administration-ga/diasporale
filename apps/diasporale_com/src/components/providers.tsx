@@ -14,6 +14,7 @@ import { APPEARANCE } from "@/lib/appearance"
 import { publicEnv } from "@/lib/env"
 import { routes } from "@/lib/routes"
 
+import { AccountLocale } from "./account-locale"
 import { AccountTheme } from "./account-theme"
 import { DemoFloatingCard } from "./site-chrome"
 import { ToastRegion } from "./toast-region"
@@ -109,7 +110,8 @@ function FloatingStack() {
  * Sombre et thème au choix du membre (Sable par défaut, ou Gaboma), mémorisés sur
  * l'appareil sous le préfixe du réseau, posés sur `<html>` avant l'affichage par le
  * script d'amorçage de la mise en page, puis tenus ici. En session, le thème est aussi
- * celui du compte (`AccountTheme`, sous la source de données qui le lit et l'écrit).
+ * celui du compte (`AccountTheme`, sous la source de données qui le lit et l'écrit), et
+ * la langue aussi (`AccountLocale`).
  */
 export function Providers(props: { locale: Locale; children: ReactNode }) {
   return (
@@ -117,11 +119,13 @@ export function Providers(props: { locale: Locale; children: ReactNode }) {
       <I18nProvider locale={props.locale}>
         <DataProviders>
           <AccountTheme>
-            <RoutingProvider routes={featureRoutes} Link={AppLink}>
-              {props.children}
-              <FloatingStack />
-              <DemoFloatingCard />
-            </RoutingProvider>
+            <AccountLocale>
+              <RoutingProvider routes={featureRoutes} Link={AppLink}>
+                {props.children}
+                <FloatingStack />
+                <DemoFloatingCard />
+              </RoutingProvider>
+            </AccountLocale>
           </AccountTheme>
         </DataProviders>
       </I18nProvider>

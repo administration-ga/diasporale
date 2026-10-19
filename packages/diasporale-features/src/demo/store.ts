@@ -800,6 +800,18 @@ export class DemoStore {
     return OK
   }
 
+  /** La langue du compte fictif (`fr`, `en`), enregistrée pour la personne en session. */
+  async saveAccountLocale(locale: string): Promise<ActionResult> {
+    await this.pause()
+    const personId = this.state.session.personId
+    const person = personId ? this.state.persons[personId] : undefined
+    if (!personId || !person) return fail("not_signed_in")
+    if (locale !== "fr" && locale !== "en") return fail("feature_unavailable")
+    if (person.locale === locale) return OK
+    this.commit({ ...this.state, persons: { ...this.state.persons, [personId]: { ...person, locale } } })
+    return OK
+  }
+
   async hidePost(postId: string): Promise<ActionResult> {
     await this.pause()
     const viewer = this.viewer()

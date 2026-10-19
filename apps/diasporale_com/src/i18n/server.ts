@@ -6,12 +6,18 @@ import {
   isSupportedLocale,
   type Locale,
 } from "@diasporale/features/i18n"
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 
-/** Langue de la requête : le cookie posé par le sélecteur de langue, sinon le français. */
+import { localeFromAcceptLanguage } from "./accept-language"
+
+/**
+ * Langue de la requête : le cookie posé par le sélecteur de langue (ou par la langue du
+ * compte) ; à défaut, à la première visite, la langue du navigateur ; sinon le français.
+ */
 export async function getRequestLocale(): Promise<Locale> {
   const value = (await cookies()).get(LOCALE_COOKIE)?.value
-  return isSupportedLocale(value) ? value : DEFAULT_LOCALE
+  if (isSupportedLocale(value)) return value
+  return localeFromAcceptLanguage((await headers()).get("accept-language")) ?? DEFAULT_LOCALE
 }
 
 /**
