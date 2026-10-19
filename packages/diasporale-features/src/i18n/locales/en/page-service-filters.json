@@ -1,0 +1,9 @@
+{
+  "pageServiceFilters": {
+    "lead": "Narrow down the services offered by this page. Services available both on site and remotely appear in both modes.",
+    "allCategories": "All categories",
+    "reset": "Clear filters",
+    "emptyTitle": "No services match these filters",
+    "emptyBody": "Try another category or delivery mode, or clear the filters to see all active services from this page."
+  }
+}

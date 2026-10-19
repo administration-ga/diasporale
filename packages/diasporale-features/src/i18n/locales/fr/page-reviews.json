@@ -1,0 +1,12 @@
+{
+  "pageReviews": {
+    "tab": "Avis",
+    "title": "Avis sur les services de la page",
+    "lead": "Ces avis concernent des services de cette page et sont liés à un rendez-vous. La preuve affichée précise ce qui a été confirmé.",
+    "manageLead": "Consultez les avis publiés sur les services de votre page et répondez au nom de l’organisation.",
+    "empty": "Aucun avis publié et accessible pour cette page.",
+    "openOffer": "Voir le service « {{title}} »",
+    "unavailableTitle": "Avis de la page indisponibles",
+    "unavailableBody": "Les avis sur les services de cette page ne sont pas disponibles ici pour le moment."
+  }
+}

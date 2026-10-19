@@ -1,0 +1,13 @@
+{
+  "pageDirectoryCategories": {
+    "associationLabel": "Association type",
+    "sectorLabel": "Business sector",
+    "allAssociations": "All association types",
+    "allSectors": "All sectors",
+    "reset": "Reset filters",
+    "emptyTitle": "No pages in this category",
+    "emptyBody": "Try another category or broaden the other filters.",
+    "similarAssociations": "View associations of this type",
+    "similarCompanies": "View businesses in this sector"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "eventCalendar": {
+    "download": "Télécharger iCal",
+    "exportHint": "Téléchargez une copie ponctuelle pour votre calendrier. Ce geste ne crée aucune inscription ni abonnement. Un fichier déjà importé ne se met pas à jour automatiquement.",
+    "waitlistExport": "Votre demande est en attente. Le fichier indique un état provisoire et ne confirme aucune place.",
+    "cancelledExport": "Le fichier indique l’annulation de cet événement. Les copies déjà importées ne sont pas modifiées automatiquement.",
+    "demoFile": "Ce fichier de démonstration décrit un événement fictif de ce navigateur.",
+    "prepared": "Le fichier iCal a été préparé pour le téléchargement.",
+    "downloadFailed": "Le fichier n’a pas pu être préparé. Réessayez depuis l’événement encore accessible.",
+    "agendaTitle": "Mon agenda",
+    "agendaLead": "Consultez vos événements personnels et vos inscriptions aux événements des associations.",
+    "demoAgenda": "Cette démonstration montre uniquement vos inscriptions associatives fictives dans ce navigateur.",
+    "paginationHint": "Parcourez chaque liste avec « Afficher plus ». Les événements sont répartis selon leur début à l’ouverture de cet agenda ; ceux déjà commencés peuvent être encore en cours.",
+    "upcoming": "À venir",
+    "history": "Événements commencés",
+    "emptyUpcoming": "Aucune inscription associative accessible à venir dans cette liste.",
+    "emptyHistory": "Aucune inscription associative accessible à un événement déjà commencé dans cette liste.",
+    "loaded_one": "{{count}} événement chargé dans cette liste.",
+    "loaded_other": "{{count}} événements chargés dans cette liste.",
+    "truncated": "D’autres événements peuvent manquer dans cette liste. Consultez aussi les pages des associations concernées.",
+    "empty": "Aucune inscription associative accessible dans votre agenda pour le moment.",
+    "confirmed": "Votre place est confirmée.",
+    "waitlisted": "Demande en attente : aucune place confirmée.",
+    "cancelled": "Événement annulé"
+  }
+}

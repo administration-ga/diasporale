@@ -1,0 +1,28 @@
+{
+  "eventGallery": {
+    "title": "Event gallery",
+    "lead": "Find photos and videos published by the association team after the gathering.",
+    "demo": "Demonstration: these images are fictitious and stay in this browser. They do not prove a real video upload.",
+    "beforeEnd": "The gallery will open after the event ends, on {{date}} ({{zone}}).",
+    "awaitingServer": "Your device shows that the event has ended. The gallery is still waiting for the service to open it.",
+    "cancelled": "The gallery is closed for this cancelled event.",
+    "refresh": "Refresh the gallery",
+    "associationAudience": "Gallery for association members currently allowed to view the event.",
+    "networkAudience": "Gallery for DIASPORALE members currently allowed to view the event.",
+    "add": "Add photos or a video",
+    "composeDescription": "Add up to four photos or one video for “{{title}}”. The publication keeps the association’s identity and the event audience.",
+    "empty": "No accessible media in this gallery yet.",
+    "remove": "Remove this addition",
+    "removeTitle": "Remove gallery media",
+    "removeHint": "This addition will no longer be accessible in the gallery. The event and registrations are kept.",
+    "confirmRemove": "Confirm removal",
+    "removed": "The addition was removed from the gallery.",
+    "noCaption": "Addition without a caption",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "errors": {
+    "association_event_gallery_not_open": "This gallery is not open or is no longer accessible with your current status.",
+    "association_event_gallery_media_required": "Add at least one photo or video to the gallery."
+  }
+}

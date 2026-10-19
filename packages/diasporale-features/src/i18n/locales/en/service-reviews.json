@@ -1,0 +1,94 @@
+{
+  "serviceReviews": {
+    "list": {
+      "title": "Reviews of this service",
+      "lead": "Reviews relate to an appointment. The evidence label states what was confirmed.",
+      "empty": "No published reviews for this service."
+    },
+    "mine": {
+      "title": "My review",
+      "lead": "You can share your experience after the appointment ends, with your explicit consent.",
+      "write": "Write a review",
+      "edit": "Edit my review"
+    },
+    "proof": {
+      "bookingConfirmed": "Confirmed appointment — completion is not attested.",
+      "completionDeclared": "Completion reported by the provider — without independent verification."
+    },
+    "moderation": {
+      "published": "Published in DIASPORALE",
+      "pending": "Awaiting moderation. This content is not published yet.",
+      "removed": "This content was removed by moderation."
+    },
+    "rating": "Rating: {{rating}} out of 5",
+    "authorUnavailable": "Member unavailable",
+    "withdrawn": "You withdrew this review. It cannot be republished.",
+    "working": "Saving…",
+    "cancel": "Cancel",
+    "close": "Close",
+    "form": {
+      "title": "Share my experience",
+      "editTitle": "Edit my review",
+      "description": "Your review can be read by network members after moderation. Do not include contact details or exact addresses.",
+      "rating": "Your rating",
+      "chooseRating": "Choose a rating",
+      "ratingChoice": "{{rating}} out of 5",
+      "body": "Your experience",
+      "hint": "Describe the service. Do not publish phone numbers, email addresses or home addresses.",
+      "consent": "I agree to publish this review and my social name in DIASPORALE after moderation.",
+      "save": "Save changes",
+      "publish": "Submit my review",
+      "saved": "Your review was saved. Its moderation status is shown in your request."
+    },
+    "withdraw": {
+      "cta": "Withdraw my review",
+      "title": "Withdraw this content",
+      "description": "This content will no longer be visible. Withdrawal is final for this review or reply.",
+      "confirm": "Confirm withdrawal"
+    },
+    "reply": {
+      "title": "Provider reply",
+      "description": "You are replying on behalf of the page. Your reply is moderated separately from the review.",
+      "cta": "Reply to this review",
+      "edit": "Edit the reply",
+      "body": "Your reply",
+      "save": "Submit reply",
+      "saved": "Your reply was saved. Its moderation status is displayed separately.",
+      "withdraw": "Withdraw reply",
+      "withdrawn": "The reply was withdrawn."
+    },
+    "report": {
+      "cta": "Report this review",
+      "reply": "Report the reply",
+      "title": "Report content",
+      "description": "Your report goes to moderation. It does not automatically remove the content for other members.",
+      "reason": "Reason for reporting",
+      "spam": "Spam",
+      "harassment": "Harassment or abuse",
+      "fraud": "Fraud or fake review",
+      "other": "Other reason",
+      "send": "Send report",
+      "saved": "Your report was sent to moderation."
+    }
+  },
+  "errors": {
+    "review_rating_invalid": "Choose an integer rating between 1 and 5.",
+    "review_body_too_short": "Your review must contain at least 10 characters.",
+    "review_body_too_long": "Your review cannot exceed 2,000 characters.",
+    "review_reply_too_short": "Your reply must contain at least 2 characters.",
+    "review_reply_too_long": "Your reply cannot exceed 1,000 characters.",
+    "review_contact_forbidden": "Remove contact details from this text.",
+    "review_address_forbidden": "Remove the exact address from this text.",
+    "review_consent_required": "Your consent is required to publish this review.",
+    "review_booking_required": "A confirmed appointment is required to write a review.",
+    "review_booking_not_finished": "You can write a review after the appointment ends.",
+    "review_booking_ineligible": "This appointment is not eligible for a review.",
+    "review_own_page": "You cannot review a service provided by your own page.",
+    "review_not_requester": "Only the person who requested this service can review it.",
+    "review_already_exists": "A review already exists for this service. Find it in your request.",
+    "review_version_changed": "This content has changed. Close the form and read its current version.",
+    "review_withdrawn": "This content was withdrawn and cannot be republished.",
+    "review_reply_unavailable": "You can no longer reply to this review.",
+    "review_not_published": "This review is not published."
+  }
+}

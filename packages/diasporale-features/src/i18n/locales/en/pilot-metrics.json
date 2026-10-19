@@ -1,0 +1,145 @@
+{
+  "pilotMetrics": {
+    "nav": "Pilot measurement",
+    "meta": {
+      "title": "Pilot measurement"
+    },
+    "title": "Pilot measurement",
+    "lead": "Counts aggregated by day and by country, recomputed by a nightly run, to follow the pilot’s usefulness without observing anyone.",
+    "privacyBadge": "Pilot measurements, with no private content",
+    "loading": "Loading the measurement…",
+    "unavailableTitle": "Measurement unavailable",
+    "unavailableBody": "This data provider does not serve the pilot measurement. No figure is shown in its place.",
+    "restrictedTitle": "Reserved for network managers",
+    "restrictedBody": "This dashboard is open to DIASPORALE administrators and moderators. It only contains aggregated counts.",
+    "errorTitle": "The measurement could not be loaded",
+    "notMeasuredTitle": "No measurement run yet",
+    "notMeasuredBody": "Counts are recomputed every night. They will appear here after the first run.",
+    "fictionalTitle": "Fictional demo data",
+    "fictionalBody": "These counts are invented to explore the screen. They describe no real activity.",
+    "filters": {
+      "title": "Scope and period",
+      "country": "Country",
+      "countryHint": "The whole network, or one of its open countries.",
+      "period": "Period",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days"
+    },
+    "scope": {
+      "network": "Whole network"
+    },
+    "summary": {
+      "scope": "Scope: {{scope}}",
+      "window": "UTC days from {{start}} to {{end}}",
+      "computedAt": "Last run: {{date}}",
+      "partial_one": "Partial measurement: {{count}} day measured out of {{days}}.",
+      "partial_other": "Partial measurement: {{count}} days measured out of {{days}}."
+    },
+    "table": {
+      "indicator": "Indicator",
+      "value": "Value"
+    },
+    "group": {
+      "services": "Services and requests",
+      "associations": "Associations",
+      "events": "Page events",
+      "reviews": "Reviews"
+    },
+    "indicator": {
+      "offers_active": {
+        "label": "Active offers",
+        "hint": "Offers published in the catalogue by readable pages, taken at the last run."
+      },
+      "requests_sent": {
+        "label": "Requests sent",
+        "hint": "Requests created during the period."
+      },
+      "requests_answered": {
+        "label": "Requests answered",
+        "hint": "A proposal or a refusal from the page, to date."
+      },
+      "requests_confirmed": {
+        "label": "Requests confirmed",
+        "hint": "An agreed appointment, even if cancelled later."
+      },
+      "requests_completed": {
+        "label": "Services completed",
+        "hint": "Completion declared by the page."
+      },
+      "requests_cancelled": {
+        "label": "Requests cancelled",
+        "hint": "Cancelled by the person or by the page."
+      },
+      "requests_expired": {
+        "label": "Requests expired",
+        "hint": "Deadline reached without agreement."
+      },
+      "memberships_requested": {
+        "label": "Memberships requested",
+        "hint": "First requests to join an association."
+      },
+      "memberships_accepted": {
+        "label": "Memberships accepted",
+        "hint": "Accepted to date, even if left later."
+      },
+      "event_registrations": {
+        "label": "Event registrations",
+        "hint": "Confirmed places at page events of the period."
+      },
+      "event_attendances": {
+        "label": "Event attendance",
+        "hint": "Attendance checked among these places."
+      },
+      "reviews_published": {
+        "label": "Reviews published",
+        "hint": "Reviews written during the period and published to date."
+      }
+    },
+    "base": {
+      "requests_sent": "out of {{value}} requests sent",
+      "requests_confirmed": "out of {{value}} confirmed requests",
+      "memberships_requested": "out of {{value}} memberships requested",
+      "event_registrations": "out of {{value}} confirmed places"
+    },
+    "baseBelow": {
+      "requests_sent": "out of fewer than {{threshold}} requests sent",
+      "requests_confirmed": "out of fewer than {{threshold}} confirmed requests",
+      "memberships_requested": "out of fewer than {{threshold}} memberships requested",
+      "event_registrations": "out of fewer than {{threshold}} confirmed places"
+    },
+    "ratioDetail": "{{base}} · {{rate}}",
+    "rate": {
+      "value": "rate: {{rate}}%",
+      "withheld": "rate not published (part below the threshold)",
+      "complement": "rate not published (gap with the base below the threshold)"
+    },
+    "value": {
+      "belowThreshold": "fewer than {{threshold}}",
+      "masked": "hidden"
+    },
+    "duration": {
+      "median": "First response time, median",
+      "p75": "First response time, third quartile",
+      "hint": "From sending to the page’s first proposal or refusal, grouped into hour classes.",
+      "sample": "out of {{value}} answered requests",
+      "sampleBelow": "out of fewer than {{threshold}} answered requests"
+    },
+    "hours": {
+      "atMost": "{{hours}} h or less",
+      "above": "more than {{hours}} h",
+      "withheld": "not published"
+    },
+    "notes": {
+      "title": "What this measurement does not do",
+      "noContent": "No request, search, message or review text enters these counts.",
+      "noPeople": "No person identifier is kept in the aggregates and no individual journey is tracked.",
+      "threshold": "A count below {{threshold}} is shown as “fewer than {{threshold}}”. A rate is only published when its part and its gap with the base reach that threshold.",
+      "cohorts": "A request, membership or review counts on the day it was created, with its state at the last run. A place counts on the day of its event.",
+      "notMeasured": "Searches without results and drop-offs are not measured."
+    }
+  },
+  "errors": {
+    "pilot_metrics_window_invalid": "This period is not offered. Choose 7, 30 or 90 days.",
+    "pilot_metrics_country_invalid": "This country is not recognised for the pilot measurement."
+  }
+}

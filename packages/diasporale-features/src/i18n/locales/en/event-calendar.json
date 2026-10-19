@@ -1,0 +1,26 @@
+{
+  "eventCalendar": {
+    "download": "Download iCal",
+    "exportHint": "Download a one-off copy for your calendar. This does not create a registration or subscription. A file already imported does not update automatically.",
+    "waitlistExport": "Your request is waiting. The file marks it as tentative and does not confirm a place.",
+    "cancelledExport": "The file marks this event as cancelled. Copies already imported are not changed automatically.",
+    "demoFile": "This demonstration file describes a fictitious event in this browser.",
+    "prepared": "The iCal file was prepared for download.",
+    "downloadFailed": "The file could not be prepared. Try again from the event while it remains accessible.",
+    "agendaTitle": "My agenda",
+    "agendaLead": "View your personal events and your registrations for association events.",
+    "demoAgenda": "This demonstration shows only your fictitious association registrations in this browser.",
+    "paginationHint": "Browse each list with “Show more”. Events are split by their start time when this agenda was opened; events that have started may still be in progress.",
+    "upcoming": "Upcoming",
+    "history": "Events that have started",
+    "emptyUpcoming": "No accessible upcoming association registration in this list.",
+    "emptyHistory": "No accessible association registration for an event that has started in this list.",
+    "loaded_one": "{{count}} event loaded in this list.",
+    "loaded_other": "{{count}} events loaded in this list.",
+    "truncated": "Other events may be missing from this list. Also check the relevant association pages.",
+    "empty": "No accessible association registration in your agenda yet.",
+    "confirmed": "Your place is confirmed.",
+    "waitlisted": "Waiting request: no confirmed place.",
+    "cancelled": "Event cancelled"
+  }
+}

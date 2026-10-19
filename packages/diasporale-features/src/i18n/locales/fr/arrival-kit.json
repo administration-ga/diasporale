@@ -1,0 +1,243 @@
+{
+  "arrivalKit": {
+    "meta": {
+      "home": "Kit d'arrivée",
+      "resource": "Ressource du kit d'arrivée"
+    },
+    "home": {
+      "title": "Kit d'arrivée",
+      "lead": "Démarches, logement, santé, banque, transports : des ressources pratiques proposées par des membres, datées, sourcées et relues par une autre personne avant d'être publiées.",
+      "trustNote": "Une ressource communautaire ne remplace pas l'information officielle : vérifiez toujours auprès de la source citée."
+    },
+    "unavailable": {
+      "title": "Le kit d'arrivée n'est pas encore disponible ici.",
+      "body": "Ce fournisseur de données ne sert pas encore cette rubrique : rien n'est inventé à sa place."
+    },
+    "zone": {
+      "label": "Zone consultée",
+      "country": "Pays",
+      "city": "Ville (facultatif)",
+      "cityHint": "Saisissez une ville, sans géolocalisation. Vide : tout le pays.",
+      "submit": "Afficher"
+    },
+    "tabs": {
+      "label": "Vues du kit d'arrivée",
+      "resources": "Ressources",
+      "mine": "Mes propositions",
+      "review": "À relire"
+    },
+    "filter": {
+      "category": "Rubrique",
+      "anyCategory": "Toutes les rubriques"
+    },
+    "category": {
+      "procedures": "Démarches",
+      "housing": "Logement",
+      "health": "Santé",
+      "banking": "Banque",
+      "transport": "Transports",
+      "employment": "Emploi",
+      "schooling": "Scolarité",
+      "culture_associations": "Culture et vie associative",
+      "emergency": "Urgence"
+    },
+    "status": {
+      "draft": "Brouillon",
+      "submitted": "Soumise à la relecture",
+      "published": "Publiée",
+      "needs_review": "À revoir",
+      "archived": "Retirée"
+    },
+    "statusNote": {
+      "draft": "Brouillon : seules les personnes qui la gèrent la voient. Soumettez-la à la relecture pour la publier.",
+      "submitted": "Soumise : une autre personne habilitée doit la relire avant sa publication.",
+      "published": "Publiée : elle se lit dans le kit d'arrivée.",
+      "needs_review": "À revoir : mettez-la à jour avec une vérification récente de la source.",
+      "archived": "Retirée : elle ne se lit plus dans le kit et ne peut plus être modifiée."
+    },
+    "reviewCause": {
+      "age": "Sa source a été vérifiée il y a plus de douze mois.",
+      "flags": "Plusieurs membres l'ont signalée comme périmée.",
+      "reviewer": "Une relecture a demandé sa mise à jour."
+    },
+    "outdatedReason": {
+      "link_broken": "Le lien de la source ne fonctionne plus",
+      "information_changed": "L'information a changé",
+      "service_closed": "Le service n'existe plus",
+      "other": "Autre raison"
+    },
+    "feedback": {
+      "proposedSubmitted": "Ressource soumise à la relecture.",
+      "proposedDraft": "Brouillon enregistré.",
+      "savedSubmitted": "Nouvelle version soumise à la relecture.",
+      "savedDraft": "Nouvelle version enregistrée en brouillon.",
+      "submitted": "Brouillon soumis à la relecture.",
+      "withdrawn": "Ressource retirée du kit.",
+      "published": "Ressource publiée dans le kit.",
+      "returned": "Ressource renvoyée à son auteur.",
+      "marked": "Ressource marquée « à revoir ».",
+      "flagged": "Merci : votre signalement est enregistré."
+    },
+    "list": {
+      "countryTitle": "Ressources pour {{country}}",
+      "cityTitle": "À {{city}}",
+      "nationalTitle": "Dans tout le pays ({{country}})",
+      "emptyTitle": "Aucune ressource relue pour cette zone",
+      "emptyBody": "Les ressources apparaissent ici après la relecture d'une autre personne ; elles sont datées et citent leur source.",
+      "emptyCategory": "Essayez une autre rubrique.",
+      "emptyAction": "Proposer une ressource"
+    },
+    "card": {
+      "wholeCountry": "Tout le pays",
+      "verifiedOn": "Vérifiée le {{date}}",
+      "official": "Ressource officielle",
+      "community": "Ressource communautaire",
+      "byPage": "Portée par",
+      "submittedOn": "Soumise le {{date}}",
+      "flags_one": "{{count}} signalement « périmée » sur cette version",
+      "flags_other": "{{count}} signalements « périmée » sur cette version",
+      "reason": "Motif : {{reason}}",
+      "moderationPending": "En relecture par la modération : le kit ne la montre pas encore aux autres membres.",
+      "moderationRemoved": "Refusée par la modération : le kit ne la montre plus, et elle ne peut plus être modifiée."
+    },
+    "propose": {
+      "open": "Proposer une ressource",
+      "title": "Proposer une ressource",
+      "description": "Une autre personne habilitée la relira avant qu'elle n'apparaisse dans le kit.",
+      "statusInsufficient": "Pour proposer une ressource, votre adhésion à DIASPORALE doit d'abord être déclarée.",
+      "carrier": "Proposer au nom de",
+      "carrierSelf": "Moi-même (ressource communautaire)",
+      "carrierHint": "Une ressource ne se dit officielle que portée par une page au badge Officiel."
+    },
+    "form": {
+      "title": "Titre",
+      "titleHint": "Entre {{min}} et {{max}} caractères.",
+      "summary": "Résumé",
+      "summaryHint": "Une ou deux phrases, entre {{min}} et {{max}} caractères.",
+      "body": "Contenu",
+      "bodyHint": "Les étapes, les pièces demandées, les délais. Aucun numéro, adresse e-mail ni lien : la source a son propre champ.",
+      "category": "Rubrique",
+      "country": "Pays",
+      "city": "Ville (facultatif)",
+      "cityHint": "Vide : la ressource vaut pour tout le pays.",
+      "sourceName": "Nom de la source",
+      "sourceNameHint": "Le site ou le service qui publie cette information.",
+      "sourceUrl": "Adresse de la source",
+      "sourceUrlHint": "Adresse complète, commençant par https://. Les paramètres de suivi (utm_…) sont retirés.",
+      "verifiedOn": "Date de dernière vérification",
+      "verifiedOnHint": "Le jour où vous avez vérifié l'information auprès de la source ; elle vaut douze mois.",
+      "saveDraft": "Enregistrer le brouillon",
+      "submit": "Soumettre à la relecture",
+      "editTitle": "Modifier la ressource",
+      "editDescription": "Une nouvelle version, relue avant de revenir dans le kit.",
+      "editNotice": "La nouvelle version quitte le kit public jusqu'à sa relecture, et ses signalements repartent de zéro."
+    },
+    "detail": {
+      "back": "Retour au kit d'arrivée",
+      "retry": "Réessayer",
+      "unavailableTitle": "Cette ressource n'est pas disponible.",
+      "unavailableBody": "Elle n'existe pas, a été retirée ou n'est pas encore relue.",
+      "zoneCity": "{{city}}, {{country}}",
+      "zoneCountry": "Tout le pays : {{country}}",
+      "needsReviewTitle": "À revoir",
+      "needsReviewBody": "Cette information peut être dépassée : vérifiez-la auprès de la source avant de vous en servir.",
+      "reason": "Motif : {{reason}}",
+      "content": "Contenu",
+      "source": "Source",
+      "newTab": "(s'ouvre dans un nouvel onglet)",
+      "sourceAddress": "Adresse : {{url}}",
+      "sourceDemo": "Source fictive de démonstration : aucun lien n'est proposé.",
+      "sourceNoLink": "Aucun lien sûr n'est disponible pour cette source.",
+      "sourceAdvice": "La source fait foi : vérifiez toujours l'information auprès d'elle.",
+      "dates": "Dates",
+      "verifiedOn": "Vérifiée auprès de la source le",
+      "reviewDue": "À revoir à partir du",
+      "revisedOn": "Version du",
+      "reviewedOn": "Relue le",
+      "createdOn": "Proposée le",
+      "notReviewed": "Pas encore relue",
+      "people": "Qui la porte et qui l'a relue",
+      "author": "Proposée par",
+      "reviewer": "Relue par",
+      "neutralPerson": "Membre de DIASPORALE",
+      "officialNote": "Ressource portée par une page au badge Officiel.",
+      "communityNote": "Ressource communautaire relue par une autre personne : elle ne remplace pas l'information officielle."
+    },
+    "actions": {
+      "title": "Agir sur cette ressource",
+      "flagged": "Vous avez signalé cette version comme périmée.",
+      "pleaseWait": "Un instant…",
+      "publish": "Publier",
+      "return": "Renvoyer à l'auteur",
+      "markForReview": "Marquer « à revoir »",
+      "edit": "Modifier",
+      "submit": "Soumettre à la relecture",
+      "withdraw": "Retirer la ressource",
+      "flag": "Signaler une information périmée",
+      "close": "Fermer",
+      "cancel": "Annuler",
+      "confirm": "Confirmer",
+      "flagTitle": "Signaler une information périmée",
+      "flagDescription": "Votre signalement vaut pour cette version ; dès {{threshold}} signalements de personnes différentes, la ressource se lit « à revoir ».",
+      "flagReason": "Ce qui est périmé",
+      "flagSend": "Envoyer le signalement",
+      "returnTitle": "Renvoyer la ressource à son auteur",
+      "returnDescription": "Elle redevient un brouillon ; son auteur lit votre motif, sans votre nom.",
+      "markTitle": "Marquer la ressource « à revoir »",
+      "markDescription": "Elle reste lue avec un avertissement jusqu'à sa mise à jour ; son auteur lit votre motif.",
+      "reason": "Motif (obligatoire)",
+      "reasonHint": "Entre {{min}} et {{max}} caractères, sans coordonnée.",
+      "withdrawTitle": "Retirer cette ressource ?",
+      "withdrawBody": "Elle quittera le kit d'arrivée et ne pourra plus être modifiée ni republiée.",
+      "withdrawConfirm": "Retirer"
+    },
+    "queue": {
+      "title": "À relire ({{country}})",
+      "lead": "Relisez une ressource que vous n'avez pas écrite : vérifiez sa source et sa date, puis publiez-la ou renvoyez-la avec un motif.",
+      "empty": "Aucune ressource n'attend de relecture dans ce pays.",
+      "label": "File de relecture"
+    },
+    "mine": {
+      "title": "Mes propositions",
+      "lead": "Les ressources que vous avez proposées, dans tous leurs états.",
+      "empty": "Vous n'avez encore proposé aucune ressource.",
+      "emptyBody": "Une ressource utile aux nouveaux arrivants ? Proposez-la : une autre personne la relira avant sa publication."
+    }
+  },
+  "errors": {
+    "arrival_kit_title_too_short": "Le titre est trop court.",
+    "arrival_kit_title_too_long": "Le titre est trop long.",
+    "arrival_kit_summary_too_short": "Le résumé est trop court : une ou deux phrases.",
+    "arrival_kit_summary_too_long": "Le résumé est trop long : une ou deux phrases suffisent.",
+    "arrival_kit_body_too_short": "Le contenu est trop court : précisez les étapes, les pièces ou les délais.",
+    "arrival_kit_body_too_long": "Le contenu est trop long.",
+    "arrival_kit_contact_details_forbidden": "Pas de numéro de téléphone, d'adresse e-mail ni de lien dans le texte : l'adresse de la source a son propre champ.",
+    "arrival_kit_category_invalid": "Choisissez une rubrique de la liste.",
+    "arrival_kit_country_required": "Choisissez un pays.",
+    "arrival_kit_country_unknown": "Ce pays n'est pas reconnu.",
+    "arrival_kit_country_is_home": "Le kit d'arrivée concerne les pays de la diaspora, pas le Gabon.",
+    "arrival_kit_city_too_long": "Le nom de la ville est trop long.",
+    "arrival_kit_city_invalid": "Saisissez un nom de ville, sans numéro ni adresse.",
+    "arrival_kit_source_name_too_short": "Indiquez le nom de la source.",
+    "arrival_kit_source_name_too_long": "Le nom de la source est trop long.",
+    "arrival_kit_source_url_required": "Indiquez l'adresse de la source.",
+    "arrival_kit_source_url_invalid": "Cette adresse n'est pas valide : indiquez l'adresse complète d'un site public.",
+    "arrival_kit_source_url_not_https": "L'adresse de la source doit commencer par https://.",
+    "arrival_kit_verified_at_invalid": "Indiquez une date de vérification valide.",
+    "arrival_kit_verified_at_in_future": "La date de vérification ne peut pas être dans le futur.",
+    "arrival_kit_verified_at_too_old": "Cette vérification date de plus de douze mois : vérifiez de nouveau l'information auprès de la source.",
+    "arrival_kit_reason_too_short": "Précisez le motif.",
+    "arrival_kit_reason_too_long": "Le motif est trop long.",
+    "arrival_kit_outdated_reason_invalid": "Choisissez un motif de la liste.",
+    "arrival_kit_transition_invalid": "Ce geste n'est pas possible dans l'état actuel de la ressource.",
+    "arrival_kit_archived": "Cette ressource a été retirée : elle ne peut plus être modifiée.",
+    "arrival_kit_version_conflict": "La ressource a changé entre-temps : rechargez-la avant de recommencer.",
+    "arrival_kit_reviewer_not_eligible": "La relecture est réservée aux membres vérifiés et aux responsables de page.",
+    "arrival_kit_review_own_resource": "Vous ne pouvez pas relire une ressource que vous avez écrite ou que porte votre page.",
+    "arrival_kit_not_flaggable": "Seule une ressource publiée peut être signalée.",
+    "arrival_kit_flag_own_resource": "Vous ne pouvez pas signaler votre propre ressource : modifiez-la.",
+    "arrival_kit_already_flagged": "Vous avez déjà signalé cette version.",
+    "arrival_kit_resource_limit_reached": "Vous avez atteint le nombre maximal de ressources en cours : retirez-en une avant d'en proposer une autre.",
+    "arrival_kit_page_kind_not_allowed": "Seules les pages d'institution, d'association ou de communauté peuvent porter une ressource du kit."
+  }
+}

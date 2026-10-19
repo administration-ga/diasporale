@@ -1,0 +1,44 @@
+{
+  "contentReports": {
+    "action": {
+      "diasporaAidQuestion": "Signaler la question",
+      "diasporaAidAnswer": "Signaler la réponse",
+      "diasporaAidMission": "Signaler la mission",
+      "diasporaMentorProfile": "Signaler ce profil de mentor",
+      "diasporaMentoringRequest": "Signaler la demande",
+      "diasporaKitResource": "Signaler un abus",
+      "diasporaJobOffer": "Signaler l'offre",
+      "diasporaTalentProfile": "Signaler le profil",
+      "diasporaJobApplication": "Signaler la candidature"
+    },
+    "title": {
+      "diasporaAidQuestion": "Signaler cette question",
+      "diasporaAidAnswer": "Signaler cette réponse",
+      "diasporaAidMission": "Signaler cette mission bénévole",
+      "diasporaMentorProfile": "Signaler ce profil de mentor",
+      "diasporaMentoringRequest": "Signaler cette demande de mentorat",
+      "diasporaKitResource": "Signaler un abus ou une fausse information",
+      "diasporaJobOffer": "Signaler cette offre d'emploi",
+      "diasporaTalentProfile": "Signaler ce profil de talent",
+      "diasporaJobApplication": "Signaler cette candidature"
+    },
+    "description": "Choisissez un motif. Le contenu est aussitôt masqué pour vous et l'équipe de modération du réseau l'examine. Son auteur ne sait pas qui l'a signalé.",
+    "descriptionDemo": "Choisissez un motif. Le contenu est aussitôt masqué pour vous, dans ce navigateur.",
+    "demoNotice": "Démonstration : rien n'est transmis. Le contenu est seulement masqué pour vous, dans ce navigateur.",
+    "reasonLegend": "Motif du signalement",
+    "kitHint": "Une information simplement dépassée se signale à part, comme information périmée. Ce signalement-ci vise un abus ou une fausse information.",
+    "confirm": "Confirmer le signalement",
+    "sent": "Signalement envoyé : le contenu est masqué pour vous.",
+    "sentDemo": "Démonstration : signalement noté dans ce navigateur, rien n'est transmis. Le contenu est masqué pour vous.",
+    "already": "Vous aviez déjà signalé ce contenu : il reste masqué pour vous.",
+    "masked": {
+      "title": "Contenu signalé",
+      "body": "Vous avez signalé ce contenu : il est masqué pour vous pendant que l'équipe de modération l'examine.",
+      "bodyDemo": "Démonstration : vous avez signalé ce contenu, il est masqué pour vous dans ce navigateur. Rien n'a été transmis."
+    }
+  },
+  "errors": {
+    "content_report_target_invalid": "Ce contenu ne peut pas être signalé ici.",
+    "content_report_unavailable": "Le signalement n'est pas possible pour le moment (restriction en cours ou limite atteinte). Réessayez plus tard."
+  }
+}

@@ -1,0 +1,323 @@
+{
+  "mutualAid": {
+    "meta": {
+      "home": "Mutual aid",
+      "item": "Mutual aid: question or volunteer mission"
+    },
+    "title": "Mutual aid",
+    "lead": "Ask a practical question about life in your host country, answer other members and join the associations' volunteer missions. Answers stay here, with no contact details: private contact goes through messages.",
+    "tabsLabel": "Mutual aid sections",
+    "tab": {
+      "questions": "Questions",
+      "missions": "Volunteer missions"
+    },
+    "unavailable": {
+      "title": "Mutual aid is not available here yet",
+      "body": "This section is not served by this data provider yet."
+    },
+    "filter": {
+      "label": "Mutual aid location",
+      "country": "Country",
+      "city": "City (optional)",
+      "cityHint": "Type the city: no geolocation is used.",
+      "apply": "Show",
+      "wholeCountry": "Whole country"
+    },
+    "theme": {
+      "housing": "Housing",
+      "procedures": "Paperwork",
+      "health": "Health",
+      "employment": "Work",
+      "schooling": "Schooling",
+      "transport": "Transport",
+      "daily_life": "Daily life"
+    },
+    "questionStatus": {
+      "open": "Open",
+      "resolved": "Resolved",
+      "closed": "Closed",
+      "withdrawn": "Withdrawn"
+    },
+    "missionStatus": {
+      "open": "Open",
+      "full": "Full",
+      "closed": "Sign-ups closed",
+      "cancelled": "Cancelled"
+    },
+    "moderation": {
+      "pending": "Under review",
+      "removed": "Removed by moderation"
+    },
+    "place": {
+      "cityCountry": "{{city}}, {{country}}",
+      "withArea": "{{place}} ({{area}})"
+    },
+    "person": {
+      "neutral": "Member without a published profile"
+    },
+    "edited": "edited",
+    "noContactReminder": "No phone number, email address, link or exact address: answers stay here, then go through messages if needed.",
+    "privateContact": "To continue privately, use messages from the person's profile. No contact details are shown here.",
+    "backToList": "Back to mutual aid",
+    "askedBy": "Asked by",
+    "askedOn": "on {{date}}",
+    "questions": {
+      "title": "Questions",
+      "ask": "Ask a question",
+      "askTitle": "Ask a question",
+      "askDescription": "Your question is read by DIASPORALE members. They see your published profile, never your contact details.",
+      "viewLabel": "Show",
+      "view": {
+        "open": "Open questions",
+        "resolved": "Resolved questions",
+        "closed": "Closed questions",
+        "mine": "My questions"
+      },
+      "empty": {
+        "open": {
+          "title": "No open question here",
+          "body": "Nobody is waiting for an answer in this place right now. Ask the first question, or widen to the whole country."
+        },
+        "resolved": {
+          "title": "No resolved question here",
+          "body": "A question is resolved when its author picks an answer."
+        },
+        "closed": {
+          "title": "No closed question here",
+          "body": "A closed question no longer receives answers."
+        },
+        "mine": {
+          "title": "You have not asked any question",
+          "body": "Your questions appear here, whatever their country."
+        }
+      },
+      "answerCount_one": "{{count}} answer",
+      "answerCount_other": "{{count}} answers",
+      "hasAccepted": "Answer picked"
+    },
+    "question": {
+      "edit": "Edit",
+      "editTitle": "Edit my question",
+      "editDescription": "The question's country does not change; the city stays optional.",
+      "close": "Close the question",
+      "closeConfirm": {
+        "title": "Close the question?",
+        "body": "Nobody will be able to answer it any more. The picked answer, if any, stays visible.",
+        "confirm": "Close"
+      },
+      "withdraw": "Withdraw the question",
+      "withdrawConfirm": {
+        "title": "Withdraw the question?",
+        "body": "Nobody will be able to read it any more, answers included. This cannot be undone.",
+        "confirm": "Withdraw"
+      }
+    },
+    "questionForm": {
+      "title": "Your question",
+      "titleHint": "One clear sentence, {{max}} characters at most.",
+      "detail": "Details (optional)",
+      "detailHint": "Useful context, {{max}} characters at most.",
+      "theme": "Topic",
+      "country": "Country concerned",
+      "city": "City (optional)",
+      "cityHint": "Type the city, or leave it empty for the whole country.",
+      "publish": "Publish the question",
+      "save": "Save"
+    },
+    "answers": {
+      "title_one": "Answer ({{count}})",
+      "title_other": "Answers ({{count}})",
+      "accepted": "Picked answer",
+      "answeredOn": "on {{date}}",
+      "emptyTitle": "No answer yet",
+      "emptyBody": "Share what you know: a simple answer already helps.",
+      "yourAnswer": "Your answer",
+      "writeLabel": "Answer the question",
+      "hint": "{{max}} characters at most, no contact details.",
+      "submit": "Publish my answer",
+      "editLabel": "Edit my answer",
+      "saveEdit": "Save",
+      "edit": "Edit",
+      "accept": "Pick this answer",
+      "unaccept": "Unpick",
+      "withdraw": "Withdraw",
+      "withdrawConfirm": {
+        "title": "Withdraw your answer?",
+        "body": "It will no longer be shown. If it was the picked answer, the question becomes open again.",
+        "confirm": "Withdraw"
+      },
+      "closed": "This question is closed: it no longer receives answers.",
+      "cannotAnswer": "To answer, your DIASPORALE membership must be declared or verified."
+    },
+    "missions": {
+      "title": "Volunteer missions",
+      "lead": "Missions offered by DIASPORALE associations. Signing up shows your published name to the association's team, with your consent.",
+      "propose": "Offer a mission",
+      "proposeTitle": "Offer a volunteer mission",
+      "proposeDescription": "The mission is published on behalf of the association you manage.",
+      "viewLabel": "Show",
+      "view": {
+        "upcoming": "Upcoming missions",
+        "mine": "My sign-ups",
+        "team": "My associations' missions"
+      },
+      "pageLabel": "Association",
+      "empty": {
+        "upcoming": {
+          "title": "No open mission here",
+          "body": "Associations have no open mission in this place right now. Widen to the whole country, or come back soon."
+        },
+        "mine": {
+          "title": "No sign-up",
+          "body": "The missions you sign up for appear here."
+        },
+        "team": {
+          "title": "No mission for this association",
+          "body": "Offer a first mission: it will appear here with its volunteers."
+        }
+      }
+    },
+    "mission": {
+      "by": "Offered by",
+      "byPage": "Offered by {{page}}",
+      "when": "When",
+      "where": "Where",
+      "placesLabel": "Places",
+      "places_one": "{{taken}} of {{count}} place taken",
+      "places_other": "{{taken}} of {{count}} places taken",
+      "remaining_one": "{{count}} place left.",
+      "remaining_other": "{{count}} places left.",
+      "inZone": "{{when}} ({{zone}} time)",
+      "yourTime": "Your time: {{when}} ({{zone}})",
+      "past": "Past",
+      "signedUp": "Sign-up confirmed",
+      "cancelled": "This mission is cancelled.",
+      "cancelledWithReason": "This mission is cancelled. Reason: {{reason}}",
+      "cancelSheet": {
+        "title": "Cancel this mission?",
+        "description": "Volunteers will see the cancellation and its reason. This cannot be undone.",
+        "reason": "Reason (optional)",
+        "reasonHint": "{{max}} characters at most, no contact details.",
+        "keep": "Keep the mission",
+        "confirm": "Confirm cancellation"
+      }
+    },
+    "missionForm": {
+      "page": "On behalf of the association",
+      "pageHint": "Only associations you sign for are listed here.",
+      "title": "Mission title",
+      "description": "What volunteers will do",
+      "descriptionHint": "The tasks and what to bring, {{max}} characters at most.",
+      "country": "Country",
+      "city": "City",
+      "cityHint": "Type the city: no geolocation is used.",
+      "area": "Approximate place (optional)",
+      "areaHint": "A neighbourhood or a landmark: never an exact address.",
+      "timeZone": "Time zone",
+      "startDate": "Start date",
+      "startTime": "Start time",
+      "endDate": "End date (optional)",
+      "endTime": "End time (optional)",
+      "scheduleHint": "A start date and time; an end for a period of three months at most. Times are in the chosen time zone.",
+      "places": "Number of places",
+      "placesHint": "From {{min}} to {{max}} volunteers.",
+      "placesChangeHint": "Places never go below the number of volunteers signed up.",
+      "publish": "Publish the mission",
+      "save": "Save"
+    },
+    "signup": {
+      "title": "Take part",
+      "consent": "I agree that the {{page}} team sees my published name to organise this mission.",
+      "submit": "Sign me up",
+      "registered": "Your sign-up is confirmed. The {{page}} team sees your published name.",
+      "withdraw": "Withdraw",
+      "withdrawConfirm": {
+        "title": "Withdraw from the mission?",
+        "body": "Your place will be freed. You can sign up again while a place is left.",
+        "confirm": "Withdraw"
+      },
+      "privacy": "No contact details are shared: the team will write to you through messages."
+    },
+    "team": {
+      "title": "Manage the mission",
+      "edit": "Edit",
+      "editTitle": "Edit the mission",
+      "editDescription": "Volunteers keep their place; a rescheduled mission must start in the future.",
+      "close": "Close sign-ups",
+      "closeConfirm": {
+        "title": "Close sign-ups?",
+        "body": "Volunteers stay signed up; nobody else will be able to join.",
+        "confirm": "Close"
+      },
+      "cancel": "Cancel the mission"
+    },
+    "volunteers": {
+      "title": "Signed-up volunteers",
+      "lead": "This list is reserved for the association's team. Each volunteer agreed to show their published name here; to reach them, use messages.",
+      "emptyTitle": "No volunteer yet",
+      "emptyBody": "Sign-ups will appear here in order of arrival.",
+      "since": "signed up on {{date}}"
+    },
+    "item": {
+      "unavailableTitle": "This mutual aid item is not available",
+      "unavailableBody": "It may have been withdrawn, or it cannot be read from your account."
+    },
+    "feedback": {
+      "answered": "Your answer is published.",
+      "questionSaved": "Your question is saved.",
+      "accepted": "Answer picked.",
+      "unaccepted": "The answer is no longer picked.",
+      "answerWithdrawn": "Your answer is withdrawn.",
+      "closed": "The question is closed.",
+      "withdrawn": "The question is withdrawn.",
+      "signedUp": "Your sign-up is confirmed.",
+      "signupWithdrawn": "Your sign-up is withdrawn.",
+      "missionClosed": "Sign-ups are closed.",
+      "missionSaved": "The mission is saved.",
+      "missionCancelled": "The mission is cancelled."
+    }
+  },
+  "errors": {
+    "aid_title_too_short": "The title is too short: say a little more.",
+    "aid_title_too_long": "The title is too long.",
+    "aid_detail_too_long": "The details are too long.",
+    "aid_contact_forbidden": "No phone number, email address or link: contact goes through messages.",
+    "aid_address_forbidden": "No exact address: give an approximate place.",
+    "aid_theme_invalid": "Choose a topic from the list.",
+    "aid_country_required": "Choose a country.",
+    "aid_country_unknown": "This country is not recognised.",
+    "aid_country_is_home": "DIASPORALE mutual aid is about countries of residence, outside Gabon.",
+    "aid_city_required": "Enter the city.",
+    "aid_city_invalid": "This city name cannot be read.",
+    "aid_city_too_long": "The city name is too long.",
+    "aid_answer_too_short": "The answer is too short.",
+    "aid_answer_too_long": "The answer is too long.",
+    "aid_answers_limit_reached": "This question has received the maximum number of answers.",
+    "aid_not_author": "Only the author of the question can do this.",
+    "aid_version_conflict": "The content changed in the meantime: reload the page, then try again.",
+    "aid_question_closed": "This question is closed.",
+    "aid_question_withdrawn": "This question has been withdrawn.",
+    "aid_question_not_resolved": "No answer is picked for this question.",
+    "aid_answer_withdrawn": "This answer has been withdrawn.",
+    "aid_answer_locked": "The picked answer can no longer be edited; you can withdraw it.",
+    "aid_answer_unavailable": "This answer is no longer available.",
+    "aid_page_kind_not_allowed": "A volunteer mission is offered on behalf of an association page.",
+    "aid_mission_description_too_short": "Describe the mission a little more.",
+    "aid_mission_description_too_long": "The description is too long.",
+    "aid_mission_area_too_long": "The approximate place is too long.",
+    "aid_mission_schedule_invalid": "The schedule is not valid: check the dates and times.",
+    "aid_mission_start_past": "The mission must start in the future.",
+    "aid_mission_too_far": "The mission must start within the coming year.",
+    "aid_time_zone_invalid": "Choose a time zone from the list.",
+    "aid_mission_places_invalid": "The number of places is not valid.",
+    "aid_mission_places_below_signups": "Places cannot go below the number of volunteers signed up.",
+    "aid_mission_closed": "Sign-ups for this mission are closed.",
+    "aid_mission_cancelled": "This mission is cancelled.",
+    "aid_mission_started": "The mission has started: sign-ups and withdrawals are closed.",
+    "aid_mission_full": "This mission is full.",
+    "aid_signup_consent_required": "Tick the box to agree that the team sees your published name.",
+    "aid_signup_exists": "Your sign-up for this mission is already confirmed.",
+    "aid_signup_missing": "There is no sign-up to withdraw for this mission.",
+    "aid_reason_too_long": "The reason is too long."
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "pageServices": {
+    "title": "Services offered",
+    "emptyTitle": "No active services offered",
+    "emptyBody": "This page currently offers no active services on DIASPORALE.",
+    "request": "Request a service",
+    "manage": "Manage services",
+    "inbox": "Received requests"
+  },
+  "pageServiceManagement": {
+    "tabServices": "Services",
+    "tabRequests": "Received requests",
+    "backToRequests": "Back to this page’s requests",
+    "notProviderTitle": "Services are reserved for associations and companies",
+    "notProviderBody": "Only association or company pages can offer services and receive service requests.",
+    "servicesLead": "Create and manage this page's service offers. Only active offers are visible to members.",
+    "requestsLead": "View service requests addressed to this page and respond on its behalf."
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "pagePinning": {
+    "section": "Pinned announcement",
+    "loading": "Reading the pinned announcement…",
+    "errorTitle": "The pinned announcement could not be read",
+    "errorBody": "Publications remain available below. Read the announcement again before changing the pin.",
+    "retry": "Try again",
+    "pin": "Pin",
+    "unpin": "Remove pin",
+    "pinTitle": "Pin this publication?",
+    "unpinTitle": "Remove this publication’s pin?",
+    "pinDescription": "This publication will appear at the top of the page wall for people who can read it.",
+    "unpinDescription": "The publication will remain on the page wall. Only its pin will be removed.",
+    "replaceWarning": "An announcement is already pinned. This publication will replace it at the top of the wall; the previous announcement will remain published.",
+    "audienceKept": "The publication’s audience stays the same. This action does not republish it or send a notification.",
+    "confirmPin": "Confirm pin",
+    "confirmUnpin": "Confirm removal",
+    "saved": "Pin saved",
+    "changedSinceOpening": "The pin has changed since this window opened. Close this window and reopen it to confirm from the new reading.",
+    "readRequired": "The current pin must be available before you can confirm. Your choice is kept in this window."
+  },
+  "errors": {
+    "page_pin_changed": "The pin has changed in the meantime. Close this window and reopen it to read the current version before confirming."
+  }
+}

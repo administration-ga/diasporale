@@ -1,0 +1,24 @@
+{
+  "pagePostEditing": {
+    "open": "Modifier le texte",
+    "title": "Modifier le texte de {{name}}",
+    "description": "Vous modifiez une publication au nom de {{name}}. Ses médias, son audience et sa portée restent inchangés.",
+    "body": "Texte de la publication",
+    "textHint": "{{max}} caractères maximum. Cette publication doit conserver un texte.",
+    "mediaHint": "{{max}} caractères maximum. Vous pouvez laisser le texte vide : les photos ou la vidéo restent jointes, y compris si leur analyse est en cours.",
+    "save": "Envoyer la modification",
+    "sent": "Modification envoyée. Elle reste soumise à la modération de la page.",
+    "draftKept": "Votre brouillon reste dans ce formulaire. Il n’a pas été remplacé par le texte reçu.",
+    "replaceWarning": "Charger le texte actuel remplacera entièrement votre brouillon dans ce formulaire. Copiez les passages à conserver avant de continuer.",
+    "replaceDraft": "Remplacer mon brouillon par le texte actuel",
+    "waitForUpdate": "Attendre l’actualisation de la publication : le texte actuel n’est pas encore reçu. Vous pouvez aussi fermer puis rouvrir cette fenêtre."
+  },
+  "pagePostManagement": {
+    "tab": "Publications",
+    "title": "Publications de la page",
+    "lead": "Publiez, modifiez et retirez les actualités au nom de la page. Les droits de l’équipe sont relus à chaque action."
+  },
+  "errors": {
+    "page_post_changed": "Cette publication a changé depuis son ouverture. Aucune modification de votre brouillon n’a été envoyée."
+  }
+}

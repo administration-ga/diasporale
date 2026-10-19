@@ -1,0 +1,20 @@
+{
+  "pageDecisions": {
+    "tab": "Decisions",
+    "title": "Moderation decisions",
+    "lead": "Decisions that removed content carried by this page (volunteer mission, job offer, arrival kit resource, reply to a review, event), their reasons and the page's appeals. People who reported are never named. Any signatory of the page can appeal.",
+    "empty": "No decision has removed content from this page.",
+    "emptyPage": "No other decision.",
+    "loadError": "The page's decisions could not be loaded.",
+    "lost": "You no longer sign for this page: its decisions are no longer available to you.",
+    "unavailableTitle": "Decisions unavailable",
+    "unavailableBody": "This version does not serve page moderation decisions yet."
+  },
+  "bell": {
+    "system": {
+      "moderation_decision": "A moderation decision has been made."
+    },
+    "openMyDecisions": "See my decisions",
+    "openPageDecisions": "See the page's decisions"
+  }
+}

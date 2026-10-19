@@ -1,0 +1,243 @@
+{
+  "arrivalKit": {
+    "meta": {
+      "home": "Arrival kit",
+      "resource": "Arrival kit resource"
+    },
+    "home": {
+      "title": "Arrival kit",
+      "lead": "Procedures, housing, health, banking, transport: practical resources proposed by members, dated, sourced and reviewed by someone else before they are published.",
+      "trustNote": "A community resource does not replace official information: always check with the cited source."
+    },
+    "unavailable": {
+      "title": "The arrival kit is not available here yet.",
+      "body": "This data provider does not serve this section yet: nothing is made up in its place."
+    },
+    "zone": {
+      "label": "Area shown",
+      "country": "Country",
+      "city": "City (optional)",
+      "cityHint": "Type a city, no location tracking. Empty: the whole country.",
+      "submit": "Show"
+    },
+    "tabs": {
+      "label": "Arrival kit views",
+      "resources": "Resources",
+      "mine": "My proposals",
+      "review": "To review"
+    },
+    "filter": {
+      "category": "Section",
+      "anyCategory": "All sections"
+    },
+    "category": {
+      "procedures": "Procedures",
+      "housing": "Housing",
+      "health": "Health",
+      "banking": "Banking",
+      "transport": "Transport",
+      "employment": "Employment",
+      "schooling": "Schooling",
+      "culture_associations": "Culture and community life",
+      "emergency": "Emergency"
+    },
+    "status": {
+      "draft": "Draft",
+      "submitted": "Awaiting review",
+      "published": "Published",
+      "needs_review": "Needs review",
+      "archived": "Withdrawn"
+    },
+    "statusNote": {
+      "draft": "Draft: only the people managing it can see it. Submit it for review to publish it.",
+      "submitted": "Submitted: another authorised person must review it before it is published.",
+      "published": "Published: it appears in the arrival kit.",
+      "needs_review": "Needs review: update it with a recent check of the source.",
+      "archived": "Withdrawn: it no longer appears in the kit and can no longer be edited."
+    },
+    "reviewCause": {
+      "age": "Its source was checked more than twelve months ago.",
+      "flags": "Several members reported it as outdated.",
+      "reviewer": "A reviewer asked for it to be updated."
+    },
+    "outdatedReason": {
+      "link_broken": "The source link no longer works",
+      "information_changed": "The information has changed",
+      "service_closed": "The service no longer exists",
+      "other": "Another reason"
+    },
+    "feedback": {
+      "proposedSubmitted": "Resource submitted for review.",
+      "proposedDraft": "Draft saved.",
+      "savedSubmitted": "New version submitted for review.",
+      "savedDraft": "New version saved as a draft.",
+      "submitted": "Draft submitted for review.",
+      "withdrawn": "Resource withdrawn from the kit.",
+      "published": "Resource published in the kit.",
+      "returned": "Resource sent back to its author.",
+      "marked": "Resource marked as needing review.",
+      "flagged": "Thank you: your report has been recorded."
+    },
+    "list": {
+      "countryTitle": "Resources for {{country}}",
+      "cityTitle": "In {{city}}",
+      "nationalTitle": "Across the country ({{country}})",
+      "emptyTitle": "No reviewed resource for this area",
+      "emptyBody": "Resources appear here once someone else has reviewed them; they are dated and cite their source.",
+      "emptyCategory": "Try another section.",
+      "emptyAction": "Propose a resource"
+    },
+    "card": {
+      "wholeCountry": "Whole country",
+      "verifiedOn": "Checked on {{date}}",
+      "official": "Official resource",
+      "community": "Community resource",
+      "byPage": "Carried by",
+      "submittedOn": "Submitted on {{date}}",
+      "flags_one": "{{count}} “outdated” report on this version",
+      "flags_other": "{{count}} “outdated” reports on this version",
+      "reason": "Reason: {{reason}}",
+      "moderationPending": "Under moderation review: the kit does not show it to other members yet.",
+      "moderationRemoved": "Rejected by moderation: the kit no longer shows it, and it can no longer be edited."
+    },
+    "propose": {
+      "open": "Propose a resource",
+      "title": "Propose a resource",
+      "description": "Another authorised person will review it before it appears in the kit.",
+      "statusInsufficient": "To propose a resource, your DIASPORALE membership must first be declared.",
+      "carrier": "Propose on behalf of",
+      "carrierSelf": "Myself (community resource)",
+      "carrierHint": "A resource is only shown as official when it is carried by a page with the Official badge."
+    },
+    "form": {
+      "title": "Title",
+      "titleHint": "Between {{min}} and {{max}} characters.",
+      "summary": "Summary",
+      "summaryHint": "One or two sentences, between {{min}} and {{max}} characters.",
+      "body": "Content",
+      "bodyHint": "Steps, required documents, timelines. No phone number, email address or link: the source has its own field.",
+      "category": "Section",
+      "country": "Country",
+      "city": "City (optional)",
+      "cityHint": "Empty: the resource applies to the whole country.",
+      "sourceName": "Source name",
+      "sourceNameHint": "The website or service that publishes this information.",
+      "sourceUrl": "Source address",
+      "sourceUrlHint": "Full address, starting with https://. Tracking parameters (utm_…) are removed.",
+      "verifiedOn": "Last checked on",
+      "verifiedOnHint": "The day you checked the information with the source; it stays valid for twelve months.",
+      "saveDraft": "Save draft",
+      "submit": "Submit for review",
+      "editTitle": "Edit the resource",
+      "editDescription": "A new version, reviewed before it returns to the kit.",
+      "editNotice": "The new version leaves the public kit until it is reviewed, and its reports start again from zero."
+    },
+    "detail": {
+      "back": "Back to the arrival kit",
+      "retry": "Try again",
+      "unavailableTitle": "This resource is not available.",
+      "unavailableBody": "It does not exist, was withdrawn, or has not been reviewed yet.",
+      "zoneCity": "{{city}}, {{country}}",
+      "zoneCountry": "Whole country: {{country}}",
+      "needsReviewTitle": "Needs review",
+      "needsReviewBody": "This information may be out of date: check it with the source before relying on it.",
+      "reason": "Reason: {{reason}}",
+      "content": "Content",
+      "source": "Source",
+      "newTab": "(opens in a new tab)",
+      "sourceAddress": "Address: {{url}}",
+      "sourceDemo": "Fictional demo source: no link is offered.",
+      "sourceNoLink": "No safe link is available for this source.",
+      "sourceAdvice": "The source is the reference: always check the information with it.",
+      "dates": "Dates",
+      "verifiedOn": "Checked with the source on",
+      "reviewDue": "To be reviewed from",
+      "revisedOn": "Version of",
+      "reviewedOn": "Reviewed on",
+      "createdOn": "Proposed on",
+      "notReviewed": "Not reviewed yet",
+      "people": "Who carries it and who reviewed it",
+      "author": "Proposed by",
+      "reviewer": "Reviewed by",
+      "neutralPerson": "DIASPORALE member",
+      "officialNote": "Resource carried by a page with the Official badge.",
+      "communityNote": "Community resource reviewed by someone else: it does not replace official information."
+    },
+    "actions": {
+      "title": "Act on this resource",
+      "flagged": "You reported this version as outdated.",
+      "pleaseWait": "One moment…",
+      "publish": "Publish",
+      "return": "Send back to the author",
+      "markForReview": "Mark as needing review",
+      "edit": "Edit",
+      "submit": "Submit for review",
+      "withdraw": "Withdraw the resource",
+      "flag": "Report outdated information",
+      "close": "Close",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "flagTitle": "Report outdated information",
+      "flagDescription": "Your report applies to this version; from {{threshold}} reports by different people, the resource is shown as needing review.",
+      "flagReason": "What is outdated",
+      "flagSend": "Send the report",
+      "returnTitle": "Send the resource back to its author",
+      "returnDescription": "It becomes a draft again; its author reads your reason, without your name.",
+      "markTitle": "Mark the resource as needing review",
+      "markDescription": "It stays visible with a warning until it is updated; its author reads your reason.",
+      "reason": "Reason (required)",
+      "reasonHint": "Between {{min}} and {{max}} characters, without contact details.",
+      "withdrawTitle": "Withdraw this resource?",
+      "withdrawBody": "It will leave the arrival kit and can no longer be edited or republished.",
+      "withdrawConfirm": "Withdraw"
+    },
+    "queue": {
+      "title": "To review ({{country}})",
+      "lead": "Review a resource you did not write: check its source and date, then publish it or send it back with a reason.",
+      "empty": "No resource is awaiting review in this country.",
+      "label": "Review queue"
+    },
+    "mine": {
+      "title": "My proposals",
+      "lead": "The resources you proposed, in every state.",
+      "empty": "You have not proposed any resource yet.",
+      "emptyBody": "A resource useful to newcomers? Propose it: someone else will review it before it is published."
+    }
+  },
+  "errors": {
+    "arrival_kit_title_too_short": "The title is too short.",
+    "arrival_kit_title_too_long": "The title is too long.",
+    "arrival_kit_summary_too_short": "The summary is too short: one or two sentences.",
+    "arrival_kit_summary_too_long": "The summary is too long: one or two sentences are enough.",
+    "arrival_kit_body_too_short": "The content is too short: give the steps, documents or timelines.",
+    "arrival_kit_body_too_long": "The content is too long.",
+    "arrival_kit_contact_details_forbidden": "No phone number, email address or link in the text: the source address has its own field.",
+    "arrival_kit_category_invalid": "Choose a section from the list.",
+    "arrival_kit_country_required": "Choose a country.",
+    "arrival_kit_country_unknown": "This country is not recognised.",
+    "arrival_kit_country_is_home": "The arrival kit covers diaspora countries, not Gabon.",
+    "arrival_kit_city_too_long": "The city name is too long.",
+    "arrival_kit_city_invalid": "Enter a city name, without a number or an address.",
+    "arrival_kit_source_name_too_short": "Enter the name of the source.",
+    "arrival_kit_source_name_too_long": "The source name is too long.",
+    "arrival_kit_source_url_required": "Enter the source address.",
+    "arrival_kit_source_url_invalid": "This address is not valid: enter the full address of a public website.",
+    "arrival_kit_source_url_not_https": "The source address must start with https://.",
+    "arrival_kit_verified_at_invalid": "Enter a valid verification date.",
+    "arrival_kit_verified_at_in_future": "The verification date cannot be in the future.",
+    "arrival_kit_verified_at_too_old": "This check is more than twelve months old: check the information with the source again.",
+    "arrival_kit_reason_too_short": "Explain the reason.",
+    "arrival_kit_reason_too_long": "The reason is too long.",
+    "arrival_kit_outdated_reason_invalid": "Choose a reason from the list.",
+    "arrival_kit_transition_invalid": "This action is not possible in the resource's current state.",
+    "arrival_kit_archived": "This resource has been withdrawn: it can no longer be edited.",
+    "arrival_kit_version_conflict": "The resource changed in the meantime: reload it before trying again.",
+    "arrival_kit_reviewer_not_eligible": "Reviewing is open to verified members and page managers.",
+    "arrival_kit_review_own_resource": "You cannot review a resource you wrote or that your page carries.",
+    "arrival_kit_not_flaggable": "Only a published resource can be reported.",
+    "arrival_kit_flag_own_resource": "You cannot report your own resource: edit it instead.",
+    "arrival_kit_already_flagged": "You have already reported this version.",
+    "arrival_kit_resource_limit_reached": "You have reached the maximum number of resources in progress: withdraw one before proposing another.",
+    "arrival_kit_page_kind_not_allowed": "Only institution, association or community pages can carry an arrival kit resource."
+  }
+}

@@ -1,0 +1,297 @@
+{
+  "mentoring": {
+    "meta": {
+      "search": "Mentorat",
+      "profile": "Un mentor",
+      "mine": "Mes mentorats"
+    },
+    "unavailableTitle": "Mentorat indisponible",
+    "unavailableBody": "Le mentorat n’est pas disponible pour le moment. Réessayez plus tard.",
+    "volunteer": "Le mentorat est bénévole : aucun tarif, aucun paiement. Aucune coordonnée n’est affichée : une fois votre demande acceptée, vous échangez par la messagerie.",
+    "card": {
+      "languages": "Langues : {{languages}}",
+      "full": "Complet pour le moment",
+      "open": "Voir le profil de {{name}}"
+    },
+    "status": {
+      "sent": "En attente de réponse",
+      "accepted": "Mentorat en cours",
+      "declined": "Déclinée par le mentor",
+      "cancelled": "Retirée",
+      "expired": "Expirée sans réponse",
+      "closed": "Mentorat clos"
+    },
+    "state": {
+      "active": "Actif",
+      "paused": "En pause",
+      "retired": "Retiré"
+    },
+    "closedBy": {
+      "mentee": "Clos par la personne accompagnée.",
+      "mentor": "Clos par le mentor.",
+      "system": "Clos automatiquement."
+    },
+    "time": {
+      "inZone": "{{slot}} ({{zone}})",
+      "yours": "Soit {{slot}} à votre heure ({{zone}})"
+    },
+    "list": {
+      "retry": "Réessayer",
+      "loadMore": "Afficher plus",
+      "loadingMore": "Chargement…"
+    },
+    "sheet": {
+      "close": "Fermer",
+      "back": "Retour",
+      "working": "Envoi…"
+    },
+    "slot": {
+      "zoneHint": "Heures dans votre fuseau : {{zone}}.",
+      "date": "Date",
+      "start": "De",
+      "end": "À",
+      "cta": "Proposer un créneau",
+      "update": "Changer le créneau",
+      "title": "Proposer un créneau",
+      "description": "{{name}} verra ce créneau dans sa demande ; vous en reparlez par la messagerie.",
+      "confirm": "Proposer ce créneau",
+      "done": "Créneau proposé."
+    },
+    "accept": {
+      "cta": "Accepter",
+      "title": "Accepter cette demande",
+      "description": "Vous accompagnez {{name}} bénévolement. Retenez un créneau souhaité, ou proposez-en un plus tard.",
+      "choice": "Créneau retenu",
+      "noSlot": "Sans créneau pour l’instant",
+      "confirm": "Accepter la demande",
+      "done": "Demande acceptée."
+    },
+    "decline": {
+      "cta": "Décliner",
+      "title": "Décliner cette demande",
+      "description": "{{name}} saura que vous ne pouvez pas l’accompagner.",
+      "confirm": "Décliner la demande",
+      "done": "Demande déclinée."
+    },
+    "cancel": {
+      "cta": "Retirer ma demande",
+      "title": "Retirer ma demande",
+      "description": "Le mentor ne pourra plus y répondre.",
+      "confirm": "Retirer la demande",
+      "done": "Demande retirée."
+    },
+    "close": {
+      "cta": "Clore le mentorat",
+      "title": "Clore ce mentorat",
+      "description": "Le mentorat avec {{name}} prend fin ; la place du mentor se libère.",
+      "confirm": "Clore le mentorat",
+      "done": "Mentorat clos."
+    },
+    "reason": {
+      "label": "Motif (facultatif)",
+      "hint": "Sans numéro de téléphone, adresse e-mail ni adresse exacte."
+    },
+    "retire": {
+      "title": "Retirer mon profil de mentor",
+      "description": "Vous ne serez plus proposé comme mentor. Vos demandes en attente seront déclinées et vos mentorats en cours clos. Vous pourrez redevenir mentor à tout moment.",
+      "confirm": "Retirer mon profil",
+      "done": "Profil de mentor retiré."
+    },
+    "next": {
+      "deadline": "Réponse attendue avant le {{date}}",
+      "slot": "Créneau proposé : {{slot}} ({{zone}})",
+      "accepted": "Mentorat en cours : échangez par la messagerie.",
+      "updated": "Mise à jour le {{date}}"
+    },
+    "party": {
+      "unknown": "Membre au profil retiré"
+    },
+    "requestCard": {
+      "withMentor": "Avec {{name}} · {{domain}}",
+      "fromMentee": "De {{name}} · {{domain}}",
+      "show": "Voir le détail",
+      "hide": "Masquer le détail"
+    },
+    "detail": {
+      "notFound": "Cette demande n’est plus disponible.",
+      "message": "Message",
+      "wishedSlots": "Créneaux souhaités",
+      "noWishedSlots": "Aucun créneau souhaité : à convenir par la messagerie.",
+      "slot": "Créneau proposé par le mentor",
+      "contact": "Échangez par la messagerie : aucune coordonnée n’est partagée ici.",
+      "reason": "Motif"
+    },
+    "moderation": {
+      "profileRemoved": "Votre profil de mentor a été retiré par la modération : les membres ne le voient plus et il ne peut plus être modifié.",
+      "requestRemoved": "Retirée par la modération : le mentor ne voit plus cette demande."
+    },
+    "mine": {
+      "title": "Mes mentorats",
+      "lead": "Vos demandes de mentorat et, si vous êtes mentor, celles que vous recevez.",
+      "tabsLabel": "Rubriques de mes mentorats",
+      "tabRequests": "Mes demandes",
+      "tabProfile": "Mon profil de mentor",
+      "sentTitle": "Demandes envoyées",
+      "sentEmptyTitle": "Aucune demande envoyée",
+      "sentEmptyBody": "Trouvez un mentor bénévole dans votre pays et demandez-lui un mentorat.",
+      "browse": "Trouver un mentor",
+      "receivedTitle": "Demandes reçues",
+      "filterLabel": "Afficher les demandes reçues",
+      "filterSent": "En attente",
+      "filterAccepted": "En cours",
+      "filterAll": "Toutes",
+      "receivedEmptyTitle": "Aucune demande ici",
+      "receivedEmptyBody": "Les demandes que vous recevez comme mentor apparaîtront ici."
+    },
+    "search": {
+      "title": "Mentorat",
+      "lead": "Des membres de la diaspora vous aident, bénévolement, à vous installer : logement, études, emploi, famille et démarches.",
+      "myMentoring": "Mes mentorats",
+      "label": "Chercher un mentor",
+      "country": "Pays",
+      "domain": "Domaine d’aide",
+      "anyDomain": "Tous les domaines",
+      "submit": "Chercher",
+      "results": "Mentors : {{country}}",
+      "resultsLabel": "Mentors trouvés",
+      "emptyTitle": "Aucun mentor pour le moment",
+      "emptyBody": "Aucun mentor actif ici pour l’instant ({{country}}). Revenez bientôt, ou devenez mentor vous-même.",
+      "emptyDomain": "Aucun mentor actif dans ce domaine ({{country}}). Essayez tous les domaines."
+    },
+    "become": {
+      "cta": "Devenir mentor",
+      "title": "Devenir mentor",
+      "description": "Proposez votre aide, bénévolement, aux membres qui arrivent dans votre pays. Vous choisissez vos domaines, vos langues et le nombre de personnes que vous accompagnez ; vous pouvez faire une pause ou vous retirer à tout moment.",
+      "again": "Vous avez retiré votre profil de mentor. Vous pouvez redevenir mentor à tout moment, par un nouvel accord.",
+      "statusInsufficient": "Votre adhésion doit être déclarée pour devenir mentor."
+    },
+    "form": {
+      "domains": "Domaines d’aide",
+      "domainsHint": "Un domaine au moins.",
+      "presentation": "Présentation",
+      "presentationHint": "De {{min}} à {{max}} caractères, sans numéro de téléphone, adresse e-mail ni adresse exacte.",
+      "languages": "Langues",
+      "languagesHint": "Jusqu’à {{max}} langues.",
+      "country": "Pays où vous aidez",
+      "countryHint": "Le pays de votre mentorat est visible des membres.",
+      "city": "Ville (facultative)",
+      "cityHint": "Montrée selon la visibilité de la ville de votre profil diaspora.",
+      "availability": "Disponibilité",
+      "availabilityHint": "Par exemple : le soir en semaine.",
+      "capacity": "Personnes accompagnées en même temps",
+      "capacityHint": "Au-delà, vous ne recevez plus de demande nouvelle.",
+      "reminder": "Le mentorat est bénévole : aucun tarif. Ne donnez aucune coordonnée ici ; le contact passe par la messagerie.",
+      "consent": "Je choisis d’apparaître comme mentor auprès des membres du réseau, avec mon nom publié, mes domaines et mon pays. Je peux me retirer à tout moment.",
+      "create": "Devenir mentor",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "created": "Vous êtes mentor, merci !",
+      "saved": "Profil de mentor enregistré."
+    },
+    "panel": {
+      "title": "Mon profil de mentor",
+      "capacity_one": "{{count}} personne accompagnée sur {{max}}",
+      "capacity_other": "{{count}} personnes accompagnées sur {{max}}",
+      "pending_one": "{{count}} demande en attente de votre réponse",
+      "pending_other": "{{count}} demandes en attente de votre réponse",
+      "pausedNote": "Profil en pause : vous n’apparaissez plus dans la recherche et ne recevez plus de demande nouvelle.",
+      "domains": "Domaines",
+      "languages": "Langues",
+      "place": "Lieu",
+      "cityCountry": "{{city}}, {{country}}",
+      "availability": "Disponibilité",
+      "presentation": "Présentation",
+      "cityVisibility": "Votre ville se montre selon la visibilité de la ville de votre profil diaspora (paramètres).",
+      "edit": "Modifier",
+      "closeEdit": "Fermer la modification",
+      "pause": "Mettre en pause",
+      "resume": "Reprendre",
+      "retire": "Retirer mon profil",
+      "viewPublic": "Voir mon profil public",
+      "paused": "Profil de mentor en pause.",
+      "resumed": "Profil de mentor repris."
+    },
+    "profile": {
+      "back": "Retour au mentorat",
+      "notFoundTitle": "Mentor introuvable",
+      "notFoundBody": "Ce profil n’existe pas, est en pause ou ne vous est pas accessible.",
+      "title": "{{name}}, mentor bénévole",
+      "presentation": "Présentation",
+      "availability": "Disponibilité",
+      "requestTitle": "Demander un mentorat",
+      "self": "C’est votre profil de mentor, tel que les membres le voient.",
+      "alreadyRequested": "Vous avez déjà une demande ouverte auprès de ce mentor.",
+      "followRequests": "Suivre mes demandes",
+      "full": "Ce mentor accompagne déjà le nombre de personnes qu’il a choisi. Revenez plus tard."
+    },
+    "request": {
+      "cta": "Demander un mentorat",
+      "statusInsufficient": "Votre adhésion doit être déclarée pour demander un mentorat.",
+      "title": "Demander un mentorat à {{name}}",
+      "description": "Votre demande attend une réponse quatorze jours au plus. Une fois acceptée, vous échangez par la messagerie.",
+      "domain": "Domaine",
+      "goal": "Votre objectif",
+      "goalHint": "En une phrase, de {{min}} à {{max}} caractères.",
+      "message": "Votre message",
+      "messageHint": "Expliquez votre situation en {{min}} caractères au moins, sans numéro de téléphone, adresse e-mail ni adresse exacte.",
+      "slots": "Créneaux souhaités (facultatifs, trois au plus)",
+      "slotsHint": "Heures dans votre fuseau : {{zone}}.",
+      "slot": "Créneau {{index}}",
+      "removeSlot": "Retirer le créneau {{index}}",
+      "addSlot": "Ajouter un créneau",
+      "reminder": "Aucune coordonnée ici : une fois votre demande acceptée, vous échangez par la messagerie. Le mentorat est bénévole.",
+      "consent": "J’accepte que {{name}} voie mon nom publié, mon objectif et mon message.",
+      "submit": "Envoyer la demande",
+      "sending": "Envoi…",
+      "sent": "Demande envoyée",
+      "sentBody": "{{name}} reçoit votre demande et vous répondra ici, dans « Mes mentorats »."
+    }
+  },
+  "errors": {
+    "mentor_consent_required": "Cochez la case pour confirmer que vous choisissez d’être mentor.",
+    "mentor_domains_required": "Choisissez au moins un domaine d’aide.",
+    "mentor_domain_invalid": "Choisissez un domaine dans la liste proposée.",
+    "mentor_presentation_too_short": "Votre présentation est trop courte.",
+    "mentor_presentation_too_long": "Votre présentation est trop longue.",
+    "mentor_languages_required": "Choisissez au moins une langue.",
+    "mentor_language_invalid": "Choisissez une langue dans la liste proposée.",
+    "mentor_languages_too_many": "Vous avez choisi trop de langues.",
+    "mentor_country_invalid": "Choisissez un pays de résidence de la diaspora.",
+    "mentor_city_invalid": "Indiquez une ville sur une ligne, sans adresse.",
+    "mentor_availability_too_short": "Indiquez votre disponibilité.",
+    "mentor_availability_too_long": "Votre disponibilité est trop longue.",
+    "mentor_capacity_invalid": "Choisissez entre une et dix personnes accompagnées.",
+    "mentor_capacity_below_active": "Vous accompagnez déjà plus de personnes : clôturez d’abord un mentorat.",
+    "mentor_profile_exists": "Vous êtes déjà mentor : modifiez votre profil depuis « Mes mentorats ».",
+    "mentor_profile_retired": "Votre profil de mentor est retiré : redevenez mentor pour le modifier.",
+    "mentor_profile_version_changed": "Votre profil a changé entre-temps. Rechargez la page.",
+    "mentoring_contact_forbidden": "Retirez le numéro de téléphone ou l’adresse e-mail : le contact passe par la messagerie.",
+    "mentoring_address_forbidden": "Retirez l’adresse exacte : indiquez seulement une ville ou un quartier.",
+    "mentoring_consent_required": "Cochez la case pour accepter que le mentor voie votre nom et votre message.",
+    "mentoring_domain_not_offered": "Ce mentor n’aide pas dans ce domaine.",
+    "mentoring_goal_too_short": "Décrivez votre objectif en quelques mots.",
+    "mentoring_goal_too_long": "Votre objectif est trop long : une phrase suffit.",
+    "mentoring_message_too_short": "Votre message est trop court.",
+    "mentoring_message_too_long": "Votre message est trop long.",
+    "mentoring_slots_too_many": "Trois créneaux au plus.",
+    "mentoring_slot_invalid": "Ce créneau n’est pas valable : vérifiez son début et sa fin.",
+    "mentoring_slot_past": "Ce créneau est déjà passé.",
+    "mentoring_slot_too_far": "Ce créneau est trop lointain.",
+    "mentoring_time_invalid": "Date ou heure invalide.",
+    "mentoring_time_nonexistent": "Cette heure n’existe pas ce jour-là (passage à l’heure d’été).",
+    "mentoring_time_ambiguous": "Cette heure existe deux fois ce jour-là (retour à l’heure d’hiver) : choisissez-en une autre.",
+    "mentoring_time_zone_invalid": "Fuseau horaire inconnu.",
+    "mentoring_self_request": "Vous ne pouvez pas être votre propre mentor.",
+    "mentoring_pair_open": "Vous avez déjà une demande ouverte auprès de ce mentor.",
+    "mentoring_mentee_limit": "Vous avez déjà plusieurs demandes en attente : attendez une réponse ou retirez-en une.",
+    "mentoring_mentor_full": "Ce mentor n’accepte pas de demande nouvelle pour le moment.",
+    "mentoring_idempotency_conflict": "Cette demande a changé depuis son premier envoi. Vérifiez-la, puis envoyez-la de nouveau.",
+    "mentoring_request_expired": "Cette demande a expiré sans réponse.",
+    "mentoring_request_closed": "Cette demande est close.",
+    "mentoring_request_not_open": "Ce geste n’est plus possible pour cette demande.",
+    "mentoring_action_forbidden": "Ce geste ne vous revient pas.",
+    "mentoring_capacity_reached": "Vous accompagnez déjà le nombre de personnes choisi : clôturez un mentorat ou relevez votre plafond.",
+    "mentoring_slot_version_changed": "Le créneau a changé entre-temps. Rechargez la demande.",
+    "mentoring_reason_too_long": "Le motif est trop long."
+  }
+}

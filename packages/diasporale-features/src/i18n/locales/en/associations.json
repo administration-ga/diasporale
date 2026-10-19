@@ -1,0 +1,147 @@
+{
+  "associations": {
+    "entry": {
+      "title": "Membership",
+      "lead": "Following the page gives you its news. Joining means asking to become a member of the association: its officers accept your request or not.",
+      "unavailable": "Association membership is not available here yet.",
+      "request": "Become a member",
+      "memberSince": "You have been a member since {{date}}.",
+      "role": "Your role: {{role}}",
+      "pending": "Request sent on {{date}}. The association's officers will answer it.",
+      "yourMessage": "Your note: {{message}}",
+      "previousRejected": "Your previous request was not accepted.",
+      "removed": "The officers removed you from this association.",
+      "readmissionAllowed": "They allow you to submit a new request.",
+      "left": "You left this association.",
+      "notManaged": "This association has no team on DIASPORALE yet: no request can be handled for now.",
+      "rejoinBlocked": "A new request is only possible with the agreement of the association's officers.",
+      "tooSoon": "You can submit a new request from {{date}}.",
+      "statusInsufficient": "To ask to join, your DIASPORALE membership must first be declared.",
+      "manage": "Manage members",
+      "myAssociations": "My associations"
+    },
+    "requestSheet": {
+      "title": "Become a member",
+      "description": "Your request goes to the association's officers. They see your published profile and your note, never your contact details.",
+      "message": "A note for the officers (optional)",
+      "messageHint": "{{max}} characters at most.",
+      "free": "Joining on DIASPORALE is free. Any membership fee is settled directly with the association and never opens paid access to the network.",
+      "submit": "Send my request"
+    },
+    "cancelRequest": "Cancel my request",
+    "leave": "Leave the association",
+    "leaveConfirm": {
+      "title": "Leave the association?",
+      "body": "You will no longer be one of its members. A new request will remain possible.",
+      "confirm": "Leave"
+    },
+    "reason": "Reason: {{reason}}",
+    "role": {
+      "member": "Member",
+      "animator": "Coordinator"
+    },
+    "status": {
+      "requested": "Request pending",
+      "accepted": "Membership accepted",
+      "rejected": "Request not accepted",
+      "cancelled": "Request cancelled",
+      "left": "Membership left",
+      "removed": "Removed"
+    },
+    "feedback": {
+      "requested": "Your request has been sent to the officers.",
+      "cancelled": "Your request is cancelled.",
+      "left": "You left the association.",
+      "accepted": "Request accepted.",
+      "rejected": "Request declined.",
+      "removed": "Member removed.",
+      "roleChanged": "Role updated.",
+      "readmissionAllowed": "New request allowed."
+    },
+    "list": {
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {{number}}",
+      "emptyPage": "Nothing more on this page."
+    },
+    "unavailable": {
+      "title": "Associations are not available here.",
+      "body": "This data provider does not serve association membership yet."
+    },
+    "members": {
+      "metaTitle": "Association members",
+      "title": "Members and requests",
+      "backToPage": "Back to the association's page",
+      "lead": "Only the association's officers can see this list. It is not a legal register of members.",
+      "roleNote": {
+        "admin": "As a page administrator, you handle requests and manage members.",
+        "signatory": "As a page signatory, you handle requests. Removing a member, naming a coordinator or allowing a new request is up to an administrator."
+      },
+      "tabsLabel": "Association lists",
+      "tab": {
+        "requested": "Requests",
+        "accepted": "Members",
+        "removed": "Removed"
+      },
+      "empty": {
+        "requested": "No pending request.",
+        "accepted": "No member yet. Every membership starts with a person's own request: nobody is enrolled automatically.",
+        "removed": "No removal."
+      },
+      "notFoundTitle": "This list is not available.",
+      "notFoundBody": "It does not exist, or you are not an officer of this association.",
+      "unknownPerson": "Unpublished profile",
+      "requestedAt": "Requested on {{date}}",
+      "memberSince": "Member since {{date}}",
+      "removedAt": "Removed on {{date}}",
+      "role": "Role: {{role}}",
+      "message": "Their note: {{message}}",
+      "readmissionAllowed": "New request allowed.",
+      "accept": "Accept",
+      "reject": "Decline",
+      "makeAnimator": "Name coordinator",
+      "makeMember": "Back to member",
+      "remove": "Remove",
+      "allowReadmission": "Allow a new request"
+    },
+    "rejectSheet": {
+      "title": "Decline the request from {{name}}?",
+      "description": "The person will see that the request was not accepted, with your reason if you give one. They can ask again in {{days}} days.",
+      "reason": "Reason (optional)",
+      "reasonHint": "{{max}} characters at most.",
+      "confirm": "Decline the request"
+    },
+    "removeSheet": {
+      "title": "Remove {{name}} from the association?",
+      "description": "The person will leave the member list and will read your reason. They can only ask again with an administrator's agreement.",
+      "reason": "Reason (required)",
+      "reasonHint": "Between {{min}} and {{max}} characters.",
+      "confirm": "Remove"
+    },
+    "mine": {
+      "metaTitle": "My associations",
+      "title": "My associations",
+      "lead": "Your memberships and your requests. Following a page remains a separate gesture: it gives you its news without making you a member.",
+      "since": "Since {{date}}",
+      "emptyTitle": "You have not asked to join any association yet.",
+      "emptyBody": "Find an association from your country hub, then ask to join it from its page.",
+      "emptyAction": "See my country hub"
+    }
+  },
+  "errors": {
+    "association_not_managed": "This association has no team on DIASPORALE yet: no request can be handled for now.",
+    "association_request_pending": "Your request is already pending.",
+    "association_already_member": "You are already a member of this association.",
+    "association_rejoin_blocked": "After a removal, a new request is only possible with the officers' agreement.",
+    "association_request_too_soon": "Your previous request was not accepted: a new request will be possible a little later.",
+    "association_not_pending": "This request is no longer pending.",
+    "association_not_member": "This membership is not (or no longer) active.",
+    "association_not_removed": "This person is not removed from the association.",
+    "association_version_conflict": "The list changed in the meantime: review it before deciding.",
+    "association_admin_required": "This action is up to a page administrator.",
+    "association_self_removal": "You cannot remove yourself: use “Leave the association”.",
+    "association_message_too_long": "Your note is too long.",
+    "association_reason_required": "A removal needs a reason: please be more specific.",
+    "association_reason_too_long": "The reason is too long."
+  }
+}

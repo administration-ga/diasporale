@@ -1,14 +1,16 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest"
 
-import en from "./locales/en/diasporale.json"
-import fr from "./locales/fr/diasporale.json"
+import { DIASPORALE_LOCALES, LOCALE_PARTS, mergeLocaleParts } from "./resources"
 
 /**
  * Cliquet i18n — les deux locales disent la même chose : mêmes clés, mêmes
  * variables, mêmes paires de pluriel. Le français suit la typographie
- * française (espaces insécables), l'anglais la sienne.
+ * française (espaces insécables), l'anglais la sienne. Les textes sont relus
+ * APRÈS fusion du fichier principal et des fragments de chantier.
  */
+const fr = DIASPORALE_LOCALES.fr as Tree
+const en = DIASPORALE_LOCALES.en as Tree
 
 type Tree = { readonly [key: string]: string | Tree }
 
@@ -26,6 +28,19 @@ const variables = (text: string) => [...text.matchAll(/\{\{\s*(\w+)\s*\}\}/g)].m
 
 const FR = flatten(fr)
 const EN = flatten(en)
+
+describe("fragments de locale", () => {
+  it("existent sous le même nom dans chaque langue", () => {
+    expect(Object.keys(LOCALE_PARTS.en).sort()).toEqual(Object.keys(LOCALE_PARTS.fr).sort())
+  })
+
+  it("refusent une phrase posée deux fois ou un groupe remplacé par une phrase", () => {
+    expect(() => mergeLocaleParts({ a: { nav: { feed: "Fil" } }, b: { nav: { feed: "Autre" } } })).toThrow(/nav\.feed/)
+    expect(() => mergeLocaleParts({ a: { nav: { feed: "Fil" } }, b: { nav: "Navigation" } })).toThrow(/nav/)
+    expect(() => mergeLocaleParts({ a: { nav: "Navigation" }, b: { nav: { feed: "Fil" } } })).toThrow(/nav/)
+    expect(mergeLocaleParts({ a: { nav: { feed: "Fil" } }, b: { nav: { explore: "Explorer" } } })).toEqual({ nav: { feed: "Fil", explore: "Explorer" } })
+  })
+})
 
 describe("locales fr / en", () => {
   it("portent exactement les mêmes clés", () => {

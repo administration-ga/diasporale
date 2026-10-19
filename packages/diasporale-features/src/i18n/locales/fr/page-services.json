@@ -1,0 +1,19 @@
+{
+  "pageServices": {
+    "title": "Services proposés",
+    "emptyTitle": "Aucun service actif proposé",
+    "emptyBody": "Cette page ne propose actuellement aucun service actif dans DIASPORALE.",
+    "request": "Demander un service",
+    "manage": "Gérer les services",
+    "inbox": "Demandes reçues"
+  },
+  "pageServiceManagement": {
+    "tabServices": "Services",
+    "tabRequests": "Demandes reçues",
+    "backToRequests": "Retour aux demandes de la page",
+    "notProviderTitle": "Services réservés aux associations et aux entreprises",
+    "notProviderBody": "Seules les pages d'association ou d'entreprise peuvent proposer des services et recevoir des demandes de prestation.",
+    "servicesLead": "Créez et gérez les offres de service de cette page. Seules les offres actives sont visibles par les membres.",
+    "requestsLead": "Consultez les demandes de prestation adressées à cette page et répondez au nom de celle-ci."
+  }
+}

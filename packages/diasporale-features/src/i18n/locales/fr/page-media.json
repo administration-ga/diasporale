@@ -1,0 +1,15 @@
+{
+  "pageMedia": {
+    "section": "Contenus de la page",
+    "contentLabel": "Choisir les contenus de la page",
+    "publications": "Publications",
+    "photos": "Photos",
+    "videos": "Vidéos",
+    "openPublication": "Voir la publication",
+    "publishedAt": "Publication du {{date}}",
+    "emptyPhotosTitle": "Aucune photo accessible",
+    "emptyPhotosBody": "Les photos publiées par cette page apparaîtront ici, selon leur audience.",
+    "emptyVideosTitle": "Aucune vidéo accessible",
+    "emptyVideosBody": "Les vidéos publiées par cette page apparaîtront ici, selon leur audience."
+  }
+}

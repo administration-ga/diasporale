@@ -1,0 +1,306 @@
+{
+  "moderationDesk": {
+    "meta": {
+      "title": "Modération"
+    },
+    "title": "Modération",
+    "lead": "La file des signalements de DIASPORALE, par pays et par nature de contenu. Chaque décision est motivée, inscrite au journal des décisions du moteur et peut faire l'objet d'un recours.",
+    "loading": "Chargement du guichet de modération…",
+    "demoNotice": "Démonstration : les dossiers, recours et équipes sont fictifs. Vos décisions restent dans ce navigateur et n'ont aucun effet sur les publications ni sur les personnes.",
+    "unavailable": {
+      "title": "La modération n'est pas disponible ici",
+      "body": "Cet espace est réservé aux équipes de modération habilitées du réseau. Si vous pensez devoir y accéder, adressez-vous à l'administration du réseau."
+    },
+    "tabsLabel": "Onglets de la modération",
+    "tab": {
+      "file": "File",
+      "appeals": "Recours",
+      "team": "Équipe"
+    },
+    "capacity": {
+      "role": {
+        "network_admin": "Vous administrez le réseau : vous lisez toute la file, examinez les recours et composez les équipes.",
+        "network_moderator": "Vous modérez le réseau : vous lisez toute la file accessible et tranchez ses dossiers.",
+        "team_member": "Vous modérez au sein d'une équipe : vous lisez la file de vos équipes et tranchez leurs dossiers."
+      },
+      "teams": "Vos équipes : {{names}}.",
+      "noTeam": "Vous ne faites partie d'aucune équipe.",
+      "decisions": "Une personne partie à un dossier (auteur, déclarant, signataire de la page visée, ancien décideur) ne le tranche pas."
+    },
+    "filters": {
+      "label": "Filtres de la file",
+      "source": "Origine",
+      "sourceOption": {
+        "reports": "Signalements",
+        "pre_review": "Relecture préalable"
+      },
+      "status": "État du dossier",
+      "statusOption": {
+        "open": "Ouverts",
+        "reviewing": "En cours d'examen"
+      },
+      "zone": "Pays du contenu",
+      "zoneAll": "Tous les pays",
+      "zoneNone": "Sans pays (portée diaspora, comptes, messages)",
+      "zoneOpen": "Pays ouverts",
+      "zoneOther": "Autres pays",
+      "surface": "Nature du contenu",
+      "surfaceAll": "Toutes les natures",
+      "team": "Équipe",
+      "teamAll": "Toute la file accessible",
+      "teamScoped": "{{name}} ({{surface}})",
+      "countryNote": "Le pays est celui du contenu signalé (publication locale, page, évènement, zone d'une offre), jamais celui d'une personne. Le moteur ne rattache pas encore une équipe à un pays : ce filtre ne délimite aucune compétence."
+    },
+    "zone": {
+      "none": "Sans pays"
+    },
+    "surface": {
+      "post": "Publication",
+      "comment": "Commentaire",
+      "groupMessage": "Message de groupe",
+      "event": "Évènement",
+      "page": "Page",
+      "person": "Compte",
+      "live": "Direct",
+      "story": "Statut",
+      "album": "Album",
+      "serviceReview": "Avis sur une prestation",
+      "serviceReviewReply": "Réponse d'une page à un avis",
+      "commerceOffer": "Offre de boutique",
+      "commercialMessage": "Message commercial",
+      "contextualMessage": "Message d'une mise en relation",
+      "commerceJob": "Offre d'emploi",
+      "diasporaAidQuestion": "Question d'entraide",
+      "diasporaAidAnswer": "Réponse d'entraide",
+      "diasporaAidMission": "Mission bénévole",
+      "diasporaMentorProfile": "Profil de mentor",
+      "diasporaMentoringRequest": "Demande de mentorat",
+      "diasporaKitResource": "Ressource du kit d'arrivée",
+      "diasporaJobOffer": "Offre d'emploi de la diaspora",
+      "diasporaTalentProfile": "Profil de talent",
+      "diasporaJobApplication": "Candidature à une offre d'emploi"
+    },
+    "ground": {
+      "harassment": "Harcèlement",
+      "hate": "Haine ou discrimination",
+      "violence": "Violence ou menace",
+      "sexual_content": "Contenu sexuel",
+      "misinformation": "Fausse information",
+      "spam": "Contenu indésirable",
+      "fraud": "Fraude ou tromperie",
+      "other": "Autre motif",
+      "pre_review": "Relecture préalable",
+      "unspecified": "Motif non précisé"
+    },
+    "level": {
+      "team": "Équipe",
+      "network": "Réseau",
+      "platform": "Plateforme",
+      "teamNamed": "Équipe : {{name}}"
+    },
+    "party": {
+      "title": "Vous ne tranchez pas ce dossier",
+      "author": "Vous êtes l'auteur du contenu visé.",
+      "reporter": "Vous avez signalé ce contenu.",
+      "page": "Vous signez pour la page dont relève ce contenu.",
+      "decider": "Vous avez pris la décision contestée.",
+      "handOver": "Un autre membre de l'équipe doit le trancher."
+    },
+    "sanction": {
+      "warning": "Avertissement",
+      "removal": "Retrait du contenu",
+      "mute": "Mise en sourdine",
+      "suspension": "Suspension",
+      "exclusion": "Exclusion"
+    },
+    "queue": {
+      "title": "File des dossiers",
+      "lead": "Les dossiers ouverts de votre compétence, le plus ancien d'abord.",
+      "emptyTitle": "Aucun dossier ouvert",
+      "emptyBody": "Votre file est vide pour le moment.",
+      "emptyFilteredTitle": "Aucun dossier ne correspond",
+      "emptyFilteredBody": "Essayez un autre pays ou une autre nature : un contenu de portée diaspora est rangé « sans pays ».",
+      "emptyPendingTitle": "Aucun contenu en relecture",
+      "emptyPendingBody": "Les pages, évènements et contenus retenus avant publication apparaissent ici."
+    },
+    "case": {
+      "open": "Examiner le dossier",
+      "view": "Voir le dossier",
+      "title": "Dossier : {{surface}}",
+      "description": "Le contenu visé tel que le moteur le projette, les décisions antérieures et votre décision.",
+      "closed": "Ce dossier n'est plus ouvert : il a déjà été tranché, ou il n'est plus de votre compétence.",
+      "reviewing": "En cours d'examen",
+      "groundLine": "Motif : {{ground}}",
+      "openedLine": "Ouvert le {{date}}",
+      "fact": {
+        "surface": "Nature",
+        "country": "Pays",
+        "ground": "Motif",
+        "opened": "Ouvert le",
+        "level": "Niveau",
+        "status": "État"
+      }
+    },
+    "preview": {
+      "title": "Aperçu",
+      "bounded": "Seul le contenu visé est montré : ni son auteur, ni le déclarant, ni coordonnée, ni pièce privée.",
+      "loading": "Chargement de l'aperçu…",
+      "gone": "L'aperçu n'est plus disponible : le dossier a été tranché ou n'est plus de votre compétence.",
+      "error": "L'aperçu n'a pas pu être chargé. Réessayez dans un instant.",
+      "unavailable": "Le contenu n'est plus disponible (retiré, effacé ou hors de portée).",
+      "empty": "Ce contenu ne porte aucun texte ni média."
+    },
+    "history": {
+      "title": "Décisions antérieures sur ce contenu",
+      "empty": "Aucune décision antérieure accessible sur ce contenu.",
+      "more": "D'autres décisions antérieures existent ; seules les plus récentes sont montrées.",
+      "status": {
+        "dismissed": "Classé sans suite",
+        "actioned": "Mesure prise"
+      },
+      "origin": {
+        "reader": "signalement",
+        "pre_review": "relecture préalable"
+      },
+      "reason": "Motif : {{reason}}",
+      "measures": "Mesures : {{list}}"
+    },
+    "decision": {
+      "title": "Votre décision",
+      "outcomeLegend": "Issue",
+      "outcome": {
+        "dismissed": "Classer sans suite",
+        "actioned": "Prendre une mesure"
+      },
+      "outcomeHint": {
+        "dismissed": "Le signalement n'est pas fondé : rien ne change pour le contenu ni pour la personne.",
+        "actioned": "Vous choisissez une à une les mesures à appliquer."
+      },
+      "measuresLead": "Choisissez au moins une mesure : rien n'est appliqué par défaut.",
+      "removal": "Retirer le contenu visé",
+      "personMeasure": "Mesure visant la personne",
+      "personNone": "Aucune",
+      "personHint": "Une suspension ou une exclusion vaut dans tout le réseau et à la racine ANTSIA.",
+      "noAuthor": "Aucune personne n'est visée par ce contenu : seul son retrait s'applique.",
+      "duration": "Durée",
+      "durationChoose": "Choisir une durée",
+      "days_one": "{{count}} jour",
+      "days_other": "{{count}} jours",
+      "measureFor_one": "{{measure}} pendant {{count}} jour",
+      "measureFor_other": "{{measure}} pendant {{count}} jours",
+      "reason": "Motif de la décision",
+      "reasonHint": "Obligatoire, de {{min}} à {{max}} caractères. La personne concernée le lira : n'y écrivez ni coordonnée ni donnée privée.",
+      "submit": "Enregistrer la décision",
+      "done": {
+        "dismissed": "Dossier classé sans suite : il a quitté la file.",
+        "actioned": "Décision enregistrée : le dossier a quitté la file."
+      }
+    },
+    "confirm": {
+      "title": "Confirmer une mesure lourde",
+      "measures": "Mesures : {{list}}.",
+      "everywhere": "Une suspension ou une exclusion s'applique dans tout le réseau et à la racine ANTSIA, jusqu'à son terme ou à l'issue d'un recours.",
+      "appeal": "La décision est motivée par votre texte et peut faire l'objet d'un recours.",
+      "decide": "Confirmer la décision",
+      "back": "Revenir à la décision",
+      "reject": "Confirmer le refus",
+      "rejectBody": "Refuser retire ce contenu ({{surface}}) : il ne sera pas publié.",
+      "overturn": "Annuler la décision contestée",
+      "overturnBody": "Annuler la décision lève ses mesures et rétablit le contenu s'il avait été retiré."
+    },
+    "pending": {
+      "open": "Examiner le contenu",
+      "title": "Relecture : {{surface}}",
+      "description": "Un contenu retenu avant publication : approuvez-le ou refusez-le, motif à l'appui.",
+      "since": "En relecture depuis",
+      "sinceLine": "En relecture depuis le {{date}}",
+      "decisionTitle": "Votre décision",
+      "outcomeLegend": "Issue",
+      "approve": "Approuver",
+      "approveHint": "Le contenu est publié dans son audience.",
+      "reject": "Refuser",
+      "rejectHint": "Le contenu n'est pas publié ; son auteur, s'il y en a un, est prévenu.",
+      "submit": "Enregistrer la décision",
+      "doneApproved": "Contenu approuvé : il a quitté la relecture.",
+      "doneRejected": "Contenu refusé : il a quitté la relecture."
+    },
+    "appeals": {
+      "title": "Recours à examiner",
+      "lead": "Les recours formés contre une décision d'équipe, le plus ancien d'abord. Ni l'ancien décideur ni la personne qui conteste ne les examinent.",
+      "restricted": "L'examen des recours est réservé à l'administration du réseau.",
+      "emptyTitle": "Aucun recours à examiner",
+      "emptyFilteredTitle": "Aucun recours ne correspond",
+      "emptyBody": "Un recours apparaît ici quand une personne conteste une décision d'équipe.",
+      "decidedAt": "Décision du",
+      "decisionReason": "Motif de la décision",
+      "noReason": "Aucun motif enregistré.",
+      "measures": "Mesures",
+      "noMeasure": "Aucune mesure",
+      "measureUntil": "{{measure}} jusqu'au {{date}}",
+      "appealReason": "Motif du recours",
+      "filedAt": "Recours formé le",
+      "open": "Examiner le recours",
+      "sheetTitle": "Recours : {{surface}}",
+      "sheetDescription": "La décision contestée, le motif du recours, puis votre examen motivé.",
+      "decisionTitle": "Votre examen",
+      "outcomeLegend": "Issue",
+      "uphold": "Maintenir la décision",
+      "upholdHint": "La décision et ses mesures restent en vigueur ; la personne peut encore saisir l'équipe de la plateforme.",
+      "overturn": "Annuler la décision",
+      "overturnHint": "Les mesures sont levées et le contenu est rétabli s'il avait été retiré.",
+      "submit": "Enregistrer l'examen",
+      "doneUpheld": "Décision maintenue : le recours a quitté la file.",
+      "doneOverturned": "Décision annulée : le recours a quitté la file."
+    },
+    "team": {
+      "title": "Équipes de modération",
+      "lead": "Les équipes qui traitent la file du réseau et leurs responsables.",
+      "countryNote": "Le moteur ne rattache pas encore une équipe à un pays : le nom d'une équipe peut l'indiquer, il ne délimite aucune compétence.",
+      "mine": "Vos équipes",
+      "noTeam": "Vous ne faites partie d'aucune équipe.",
+      "noTeamNetworkWide": "Vous ne faites partie d'aucune équipe : votre rôle réseau vous ouvre toute la file accessible.",
+      "scopeAll": "Toutes les natures de contenu",
+      "scopeOne": "Nature traitée : {{surface}}",
+      "readOnly": "La composition des équipes est tenue par l'administration du réseau.",
+      "picker": "Équipe à composer",
+      "noneYet": "Aucune équipe n'existe encore : créez la première ci-dessous.",
+      "roster": "Membres de l'équipe {{name}}",
+      "rosterEmpty": "Cette équipe n'a encore aucun membre actif.",
+      "rosterMore": "D'autres membres existent ; seuls les premiers sont montrés.",
+      "me": "(vous)",
+      "neutralName": "Membre au profil non publié",
+      "outsideNetwork": "N'est plus membre actif du réseau.",
+      "remove": "Retirer",
+      "removeTitle": "Retirer {{name}} de l'équipe",
+      "removeBody": "Cette personne ne lira plus la file de l'équipe {{team}}. Le retrait est motivé et inscrit au journal des décisions du moteur.",
+      "removeConfirm": "Retirer de l'équipe",
+      "removed": "{{name}} ne fait plus partie de l'équipe.",
+      "addTitle": "Ajouter un membre à l'équipe {{name}}",
+      "handle": "Identifiant public du membre",
+      "handleHint": "Par exemple prenom.nom : seule une personne membre active du réseau peut être ajoutée.",
+      "search": "Chercher le membre",
+      "addConfirm": "Ajouter à l'équipe",
+      "added": "{{name}} fait désormais partie de l'équipe.",
+      "createTitle": "Créer une équipe",
+      "createLead": "Une équipe traite toutes les natures de contenu ou une seule ; sa création est motivée.",
+      "name": "Nom de l'équipe",
+      "nameHint": "De {{nameMin}} à {{nameMax}} caractères, par exemple « France ».",
+      "scope": "Nature de contenu traitée",
+      "create": "Créer l'équipe",
+      "created": "Équipe « {{name}} » créée."
+    }
+  },
+  "errors": {
+    "moderation_desk_reason_length": "Le motif doit compter entre {{min}} et {{max}} caractères.",
+    "moderation_desk_outcome_required": "Choisissez une issue.",
+    "moderation_desk_measure_required": "Choisissez au moins une mesure.",
+    "moderation_desk_duration_required": "Choisissez une durée pour cette mesure.",
+    "moderation_desk_measure_refused": "Cette mesure ne s'applique pas à ce dossier (aucune personne visée, ou durée refusée).",
+    "moderation_desk_conflict": "Le dossier a changé entre-temps : il a sans doute déjà été tranché. Relisez la file.",
+    "moderation_desk_limit": "Le moteur refuse ce geste pour l'instant (limite atteinte ou restriction en cours).",
+    "moderation_desk_party": "Vous êtes partie à ce dossier : un autre membre de l'équipe doit le trancher.",
+    "moderation_desk_team_name_length": "Le nom de l'équipe doit compter entre {{nameMin}} et {{nameMax}} caractères.",
+    "moderation_desk_handle_required": "Saisissez l'identifiant public du membre.",
+    "moderation_desk_member_unknown": "Aucun membre actif du réseau ne porte cet identifiant."
+  }
+}

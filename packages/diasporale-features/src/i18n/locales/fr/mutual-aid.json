@@ -1,0 +1,323 @@
+{
+  "mutualAid": {
+    "meta": {
+      "home": "Entraide",
+      "item": "Entraide : question ou mission bénévole"
+    },
+    "title": "Entraide",
+    "lead": "Posez une question pratique sur la vie dans votre pays d'accueil, répondez à celles des autres et rejoignez les missions bénévoles des associations. On se répond ici, sans coordonnée : le contact privé passe par la messagerie.",
+    "tabsLabel": "Rubriques de l'entraide",
+    "tab": {
+      "questions": "Questions",
+      "missions": "Missions bénévoles"
+    },
+    "unavailable": {
+      "title": "L'entraide n'est pas encore disponible ici",
+      "body": "Cette rubrique n'est pas encore servie par ce fournisseur de données."
+    },
+    "filter": {
+      "label": "Lieu de l'entraide",
+      "country": "Pays",
+      "city": "Ville (facultatif)",
+      "cityHint": "Saisissez la ville : aucune géolocalisation n'est utilisée.",
+      "apply": "Afficher",
+      "wholeCountry": "Tout le pays"
+    },
+    "theme": {
+      "housing": "Logement",
+      "procedures": "Démarches",
+      "health": "Santé",
+      "employment": "Emploi",
+      "schooling": "Scolarité",
+      "transport": "Transports",
+      "daily_life": "Vie quotidienne"
+    },
+    "questionStatus": {
+      "open": "Ouverte",
+      "resolved": "Résolue",
+      "closed": "Close",
+      "withdrawn": "Retirée"
+    },
+    "missionStatus": {
+      "open": "Ouverte",
+      "full": "Complète",
+      "closed": "Inscriptions closes",
+      "cancelled": "Annulée"
+    },
+    "moderation": {
+      "pending": "En relecture",
+      "removed": "Retirée par la modération"
+    },
+    "place": {
+      "cityCountry": "{{city}}, {{country}}",
+      "withArea": "{{place}} ({{area}})"
+    },
+    "person": {
+      "neutral": "Membre sans profil publié"
+    },
+    "edited": "modifiée",
+    "noContactReminder": "Pas de téléphone, d'adresse e-mail, de lien ni d'adresse exacte : on se répond ici, puis par la messagerie si besoin.",
+    "privateContact": "Pour poursuivre en privé, passez par la messagerie depuis le profil de la personne. Aucune coordonnée n'est affichée ici.",
+    "backToList": "Retour à l'entraide",
+    "askedBy": "Question de",
+    "askedOn": "le {{date}}",
+    "questions": {
+      "title": "Questions",
+      "ask": "Poser une question",
+      "askTitle": "Poser une question",
+      "askDescription": "Votre question est lue par les membres de DIASPORALE. Ils voient votre profil publié, jamais vos coordonnées.",
+      "viewLabel": "Afficher",
+      "view": {
+        "open": "Questions ouvertes",
+        "resolved": "Questions résolues",
+        "closed": "Questions closes",
+        "mine": "Mes questions"
+      },
+      "empty": {
+        "open": {
+          "title": "Aucune question ouverte ici",
+          "body": "Personne n'attend de réponse dans ce lieu pour l'instant. Posez la première question, ou élargissez à tout le pays."
+        },
+        "resolved": {
+          "title": "Aucune question résolue ici",
+          "body": "Une question devient résolue quand son auteur retient une réponse."
+        },
+        "closed": {
+          "title": "Aucune question close ici",
+          "body": "Une question close ne reçoit plus de réponse."
+        },
+        "mine": {
+          "title": "Vous n'avez posé aucune question",
+          "body": "Vos questions apparaissent ici, quel que soit leur pays."
+        }
+      },
+      "answerCount_one": "{{count}} réponse",
+      "answerCount_other": "{{count}} réponses",
+      "hasAccepted": "Réponse retenue"
+    },
+    "question": {
+      "edit": "Modifier",
+      "editTitle": "Modifier ma question",
+      "editDescription": "Le pays de la question ne change pas ; la ville reste facultative.",
+      "close": "Clore la question",
+      "closeConfirm": {
+        "title": "Clore la question ?",
+        "body": "Plus personne ne pourra y répondre. La réponse retenue, s'il y en a une, reste affichée.",
+        "confirm": "Clore"
+      },
+      "withdraw": "Retirer la question",
+      "withdrawConfirm": {
+        "title": "Retirer la question ?",
+        "body": "Elle ne sera plus lisible par personne, réponses comprises. Ce retrait est définitif.",
+        "confirm": "Retirer"
+      }
+    },
+    "questionForm": {
+      "title": "Votre question",
+      "titleHint": "Une phrase claire, {{max}} caractères au plus.",
+      "detail": "Précisions (facultatif)",
+      "detailHint": "Le contexte utile, {{max}} caractères au plus.",
+      "theme": "Thème",
+      "country": "Pays concerné",
+      "city": "Ville (facultatif)",
+      "cityHint": "Saisissez la ville, ou laissez vide pour tout le pays.",
+      "publish": "Publier la question",
+      "save": "Enregistrer"
+    },
+    "answers": {
+      "title_one": "Réponse ({{count}})",
+      "title_other": "Réponses ({{count}})",
+      "accepted": "Réponse retenue",
+      "answeredOn": "le {{date}}",
+      "emptyTitle": "Pas encore de réponse",
+      "emptyBody": "Partagez ce que vous savez : une réponse simple aide déjà.",
+      "yourAnswer": "Votre réponse",
+      "writeLabel": "Répondre à la question",
+      "hint": "{{max}} caractères au plus, sans coordonnée.",
+      "submit": "Publier ma réponse",
+      "editLabel": "Modifier ma réponse",
+      "saveEdit": "Enregistrer",
+      "edit": "Modifier",
+      "accept": "Retenir cette réponse",
+      "unaccept": "Ne plus retenir",
+      "withdraw": "Retirer",
+      "withdrawConfirm": {
+        "title": "Retirer votre réponse ?",
+        "body": "Elle ne sera plus affichée. Si c'était la réponse retenue, la question redevient ouverte.",
+        "confirm": "Retirer"
+      },
+      "closed": "Cette question est close : elle ne reçoit plus de réponse.",
+      "cannotAnswer": "Pour répondre, votre adhésion à DIASPORALE doit être déclarée ou vérifiée."
+    },
+    "missions": {
+      "title": "Missions bénévoles",
+      "lead": "Des missions proposées par les associations de DIASPORALE. S'inscrire montre votre nom publié à l'équipe de l'association, avec votre accord.",
+      "propose": "Proposer une mission",
+      "proposeTitle": "Proposer une mission bénévole",
+      "proposeDescription": "La mission est publiée au nom de l'association que vous gérez.",
+      "viewLabel": "Afficher",
+      "view": {
+        "upcoming": "Missions à venir",
+        "mine": "Mes inscriptions",
+        "team": "Missions de mes associations"
+      },
+      "pageLabel": "Association",
+      "empty": {
+        "upcoming": {
+          "title": "Aucune mission ouverte ici",
+          "body": "Les associations n'ont pas de mission ouverte dans ce lieu pour l'instant. Élargissez à tout le pays, ou revenez bientôt."
+        },
+        "mine": {
+          "title": "Aucune inscription",
+          "body": "Les missions auxquelles vous vous inscrivez apparaissent ici."
+        },
+        "team": {
+          "title": "Aucune mission pour cette association",
+          "body": "Proposez une première mission : elle apparaîtra ici avec ses inscrits."
+        }
+      }
+    },
+    "mission": {
+      "by": "Proposée par",
+      "byPage": "Proposée par {{page}}",
+      "when": "Quand",
+      "where": "Où",
+      "placesLabel": "Places",
+      "places_one": "{{taken}} sur {{count}} place prise",
+      "places_other": "{{taken}} sur {{count}} places prises",
+      "remaining_one": "Il reste {{count}} place.",
+      "remaining_other": "Il reste {{count}} places.",
+      "inZone": "{{when}} (heure de {{zone}})",
+      "yourTime": "Chez vous : {{when}} ({{zone}})",
+      "past": "Passée",
+      "signedUp": "Inscription confirmée",
+      "cancelled": "Cette mission est annulée.",
+      "cancelledWithReason": "Cette mission est annulée. Motif : {{reason}}",
+      "cancelSheet": {
+        "title": "Annuler cette mission ?",
+        "description": "Les inscrits verront l'annulation et son motif. Ce geste est définitif.",
+        "reason": "Motif (facultatif)",
+        "reasonHint": "{{max}} caractères au plus, sans coordonnée.",
+        "keep": "Garder la mission",
+        "confirm": "Confirmer l'annulation"
+      }
+    },
+    "missionForm": {
+      "page": "Au nom de l'association",
+      "pageHint": "Seules les associations dont vous êtes signataire figurent ici.",
+      "title": "Titre de la mission",
+      "description": "Ce que feront les bénévoles",
+      "descriptionHint": "Les tâches, ce qu'il faut apporter, {{max}} caractères au plus.",
+      "country": "Pays",
+      "city": "Ville",
+      "cityHint": "Saisissez la ville : aucune géolocalisation n'est utilisée.",
+      "area": "Lieu approximatif (facultatif)",
+      "areaHint": "Un quartier, un repère : jamais une adresse exacte.",
+      "timeZone": "Fuseau horaire",
+      "startDate": "Date de début",
+      "startTime": "Heure de début",
+      "endDate": "Date de fin (facultatif)",
+      "endTime": "Heure de fin (facultatif)",
+      "scheduleHint": "Une date et une heure de début ; une fin pour une période de trois mois au plus. Les heures sont celles du fuseau choisi.",
+      "places": "Nombre de places",
+      "placesHint": "De {{min}} à {{max}} bénévoles.",
+      "placesChangeHint": "Les places ne descendent jamais sous le nombre d'inscrits.",
+      "publish": "Publier la mission",
+      "save": "Enregistrer"
+    },
+    "signup": {
+      "title": "Participer",
+      "consent": "J'accepte que l'équipe de {{page}} voie mon nom publié pour organiser cette mission.",
+      "submit": "M'inscrire",
+      "registered": "Votre inscription est confirmée. L'équipe de {{page}} voit votre nom publié.",
+      "withdraw": "Me retirer",
+      "withdrawConfirm": {
+        "title": "Vous retirer de la mission ?",
+        "body": "Votre place sera libérée. Vous pourrez vous réinscrire tant qu'une place reste libre.",
+        "confirm": "Me retirer"
+      },
+      "privacy": "Aucune coordonnée n'est partagée : l'équipe vous écrira par la messagerie."
+    },
+    "team": {
+      "title": "Gérer la mission",
+      "edit": "Modifier",
+      "editTitle": "Modifier la mission",
+      "editDescription": "Les inscrits gardent leur place ; une mission replanifiée doit commencer dans le futur.",
+      "close": "Clore les inscriptions",
+      "closeConfirm": {
+        "title": "Clore les inscriptions ?",
+        "body": "Les inscrits restent inscrits ; plus personne ne pourra s'ajouter.",
+        "confirm": "Clore"
+      },
+      "cancel": "Annuler la mission"
+    },
+    "volunteers": {
+      "title": "Bénévoles inscrits",
+      "lead": "Liste réservée à l'équipe de l'association. Chaque bénévole a accepté d'y montrer son nom publié ; pour le joindre, passez par la messagerie.",
+      "emptyTitle": "Aucun bénévole pour l'instant",
+      "emptyBody": "Les inscriptions apparaîtront ici dans leur ordre d'arrivée.",
+      "since": "inscription le {{date}}"
+    },
+    "item": {
+      "unavailableTitle": "Cette entraide n'est pas disponible",
+      "unavailableBody": "Elle a peut-être été retirée, ou n'est pas lisible depuis votre compte."
+    },
+    "feedback": {
+      "answered": "Votre réponse est publiée.",
+      "questionSaved": "Votre question est enregistrée.",
+      "accepted": "Réponse retenue.",
+      "unaccepted": "La réponse n'est plus retenue.",
+      "answerWithdrawn": "Votre réponse est retirée.",
+      "closed": "La question est close.",
+      "withdrawn": "La question est retirée.",
+      "signedUp": "Votre inscription est confirmée.",
+      "signupWithdrawn": "Votre inscription est retirée.",
+      "missionClosed": "Les inscriptions sont closes.",
+      "missionSaved": "La mission est enregistrée.",
+      "missionCancelled": "La mission est annulée."
+    }
+  },
+  "errors": {
+    "aid_title_too_short": "Le titre est trop court : précisez votre demande.",
+    "aid_title_too_long": "Le titre est trop long.",
+    "aid_detail_too_long": "Les précisions sont trop longues.",
+    "aid_contact_forbidden": "Pas de téléphone, d'adresse e-mail ni de lien : le contact passe par la messagerie.",
+    "aid_address_forbidden": "Pas d'adresse exacte : indiquez un lieu approximatif.",
+    "aid_theme_invalid": "Choisissez un thème dans la liste.",
+    "aid_country_required": "Choisissez un pays.",
+    "aid_country_unknown": "Ce pays n'est pas reconnu.",
+    "aid_country_is_home": "L'entraide de DIASPORALE concerne les pays de résidence, hors du Gabon.",
+    "aid_city_required": "Indiquez la ville.",
+    "aid_city_invalid": "Ce nom de ville n'est pas lisible.",
+    "aid_city_too_long": "Le nom de la ville est trop long.",
+    "aid_answer_too_short": "La réponse est trop courte.",
+    "aid_answer_too_long": "La réponse est trop longue.",
+    "aid_answers_limit_reached": "Cette question a reçu le nombre maximal de réponses.",
+    "aid_not_author": "Seul l'auteur de la question peut faire ce geste.",
+    "aid_version_conflict": "Le contenu a changé entre-temps : rechargez la page, puis recommencez.",
+    "aid_question_closed": "Cette question est close.",
+    "aid_question_withdrawn": "Cette question a été retirée.",
+    "aid_question_not_resolved": "Aucune réponse n'est retenue pour cette question.",
+    "aid_answer_withdrawn": "Cette réponse a été retirée.",
+    "aid_answer_locked": "La réponse retenue ne se modifie plus ; vous pouvez la retirer.",
+    "aid_answer_unavailable": "Cette réponse n'est plus disponible.",
+    "aid_page_kind_not_allowed": "Une mission bénévole se propose au nom d'une page d'association.",
+    "aid_mission_description_too_short": "Décrivez un peu plus la mission.",
+    "aid_mission_description_too_long": "La description est trop longue.",
+    "aid_mission_area_too_long": "Le lieu approximatif est trop long.",
+    "aid_mission_schedule_invalid": "L'horaire n'est pas valable : vérifiez les dates et les heures.",
+    "aid_mission_start_past": "La mission doit commencer dans le futur.",
+    "aid_mission_too_far": "La mission doit commencer dans l'année qui vient.",
+    "aid_time_zone_invalid": "Choisissez un fuseau horaire dans la liste.",
+    "aid_mission_places_invalid": "Le nombre de places n'est pas valable.",
+    "aid_mission_places_below_signups": "Les places ne peuvent pas descendre sous le nombre d'inscrits.",
+    "aid_mission_closed": "Les inscriptions à cette mission sont closes.",
+    "aid_mission_cancelled": "Cette mission est annulée.",
+    "aid_mission_started": "La mission a commencé : les inscriptions et les retraits sont fermés.",
+    "aid_mission_full": "Cette mission est complète.",
+    "aid_signup_consent_required": "Cochez la case pour accepter que l'équipe voie votre nom publié.",
+    "aid_signup_exists": "Votre inscription à cette mission est déjà confirmée.",
+    "aid_signup_missing": "Aucune inscription à retirer pour cette mission.",
+    "aid_reason_too_long": "Le motif est trop long."
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "postWhy": {
+    "menu": "Pourquoi cette publication ?",
+    "title": "Pourquoi cette publication ?",
+    "lead": "Ce qui la fait apparaître dans votre fil, d’après la publication elle-même.",
+    "reach": {
+      "local": "Elle est publiée pour le hub {{country}}.",
+      "diaspora": "Elle s’adresse à toute la diaspora, quel que soit le pays.",
+      "diasporaOrigin": "Elle s’adresse à toute la diaspora ; elle vient du hub {{country}}."
+    },
+    "audience": {
+      "public": "Tous les membres de DIASPORALE peuvent la lire.",
+      "connections": "Son auteur la réserve à ses relations, dont vous faites partie.",
+      "group": "Elle est publiée dans un groupe dont vous êtes membre.",
+      "page": "Elle est publiée sur le mur d’une page."
+    },
+    "root": "Son auteur l’a aussi rendue lisible dans ANTSIA.",
+    "order": "Le fil range les publications par date, de la plus récente à la plus ancienne. Il ne tient compte ni de vos clics ni de votre temps de lecture.",
+    "controls": "Depuis le menu d’une publication, vous pouvez la masquer ou mettre son auteur en sourdine ; vos choix se retrouvent dans les réglages du fil."
+  }
+}

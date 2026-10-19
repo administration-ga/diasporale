@@ -52,36 +52,19 @@
     }
   },
   "landing": {
-    "title": "The Gabonese diaspora, country by country.",
-    "lead": "A closed network, reserved for Gabonese people abroad. Every post carries its country, every author shows their trust level, and contact always goes through messaging.",
-    "ctaEnter": "Join DIASPORALE",
-    "ctaHow": "How to join",
-    "free": "Free for members.",
-    "boardTitle": "Open countries",
-    "boardOpen": "Open",
-    "boardFooter": "Your country isn't listed? Join anyway: you can read everything today, and your posts are reviewed by the network team before they appear.",
-    "principlesTitle": "Three rules, on every screen",
-    "principleCountryTitle": "Country first",
-    "principleCountryBody": "Every post carries its country, or the label “The whole diaspora”. Your feed starts with your country of residence.",
-    "principleTrustTitle": "Trust is visible",
-    "principleTrustBody": "Official, Verified, Public servant or Community: the badge is computed by the platform, never declared by the author.",
-    "principleContactTitle": "Contact goes through messaging",
-    "principleContactBody": "No email address or phone number on any page or listing: a “Write” button replaces them.",
-    "sampleCity": "Lyon",
-    "howTitle": "How to join",
-    "howLead": "Two doors, and never a password.",
-    "doorIdnTitle": "With your IDN digital identity",
-    "doorIdnBody": "You sign in with identite.ga, the Gabonese digital identity. Your account is declared from the start.",
-    "doorIdnNote": "With assurance level 2, you carry the Verified badge.",
-    "doorCodeTitle": "With a code sent by email or text",
-    "doorCodeBody": "A light account: you read your hub right away. You can post once a verified member sponsors you, or once your consular registration is verified.",
-    "doorCodeNote": "Your sponsor must have been verified for more than 30 days.",
-    "stepsTitle": "Then, three screens",
-    "step1": "Your country and city of residence.",
-    "step2": "Your display name and your handle, which you choose.",
-    "step3": "Your consents, one by one, none ticked in advance.",
-    "verifyNote": "Registered with a consulate? You can ask to verify your consular registration: you consent, we receive a confirmation, and your account becomes Verified.",
-    "closing": "Your country of residence is already here. So is your community."
+    "title": "Find your people,\nwherever you are.",
+    "lead": "Connect with Gabonese people around the world, share your daily life and build your own network.",
+    "eligibility": "The network for Gabonese people living abroad.",
+    "signInTitle": "Sign in to DIASPORALE",
+    "idnContinue": "Continue with IDN",
+    "idnUnavailable": "IDN sign-in will be available soon.",
+    "or": "or",
+    "signIn": "Sign in",
+    "createAccount": "Create an account",
+    "newHere": "New to DIASPORALE?",
+    "free": "Registration is free.",
+    "privacy": "Your email stays private. Sign in with a code, without a password.",
+    "boardTitle": "Your community, country by country."
   },
   "entry": {
     "signOutIncomplete": "Full sign-out could not be confirmed. Other devices may remain signed in and some data may remain in this browser. Sign in again to retry signing out once your connection is restored.",
@@ -428,6 +411,15 @@
     "comments_other": "{{count}} comments",
     "alsoOnRoot": "Also on ANTSIA",
     "share": "Share",
+    "shareActions": {
+      "title": "Share this post",
+      "description": "Recipients must have access to this post to view it.",
+      "link": "Post link",
+      "copyLink": "Copy link",
+      "copied": "Link copied.",
+      "copyFailed": "Automatic copying failed. The link is selected: copy it manually.",
+      "quote": "Share to my feed"
+    },
     "shareCounted_one": "Share, already shared {{count}} time",
     "shareCounted_other": "Share, already shared {{count}} times",
     "sharedLabel": "Shared post",
@@ -492,8 +484,6 @@
     "metaTitle": "Page",
     "see": "See the page",
     "claimable": "Claimable",
-    "claim": "Claim this page",
-    "claimSoon": "Claiming with supporting documents arrives with the association import.",
     "kind": {
       "institution": "Institution",
       "association": "Association",
@@ -681,6 +671,33 @@
     }
   },
   "settings": {
+    "contentPreferences": {
+      "title": "My feed",
+      "lead": "Find your hidden posts and muted authors. These choices are private and apply only to your DIASPORALE feed.",
+      "hiddenTab": "Hidden posts",
+      "mutedTab": "Muted authors",
+      "emptyHidden": "You have no hidden posts.",
+      "emptyMuted": "You have no muted authors.",
+      "emptyPage": "Nothing to display on this page.",
+      "unavailablePost": "Post unavailable",
+      "unknownAuthor": "Profile not displayed",
+      "noText": "Post with media",
+      "hiddenAt": "Hidden on {{date}}",
+      "mutedAt": "Muted on {{date}}",
+      "showPost": "View post",
+      "restoreHidden": "Stop hiding",
+      "restoreMuted": "Stop muting",
+      "restoring": "Restoring…",
+      "restoredHidden": "The post is no longer hidden.",
+      "restoredMuted": "The author is no longer muted.",
+      "error": "These choices could not be loaded.",
+      "retry": "Try again",
+      "next": "Next",
+      "previous": "Previous",
+      "page": "Page {{number}}",
+      "moved": "This choice has already been updated.",
+      "unavailableLead": "The details are no longer accessible. You can still undo this choice."
+    },
     "profilePublication": {
       "title": "Profile publication",
       "globalScope": "This profile is shared by ANTSIA and DIASPORALE. These settings apply in both applications; the DIASPORALE directory is configured separately.",
@@ -762,14 +779,12 @@
     "handleCopied": "Handle copied.",
     "goSponsor": "Sponsor someone",
     "data": "My data",
-    "dataLead": "Download everything DIASPORALE knows about you, or erase your account.",
     "export": "Download my data",
     "exported": "Data downloaded.",
     "delete": "Erase my account",
     "deleteConfirmTitle": "Erase your account?",
     "deleteConfirmBody": "Your profile, posts, reactions, consents and sponsorships will be erased. Content that mentioned you will show “deleted account”.",
     "deleteAcknowledge": "I understand that erasure is permanent.",
-    "deleted": "Your account is erased.",
     "appearance": "Language and appearance",
     "session": "Session",
     "sessionLead": "Signs out this device and all others.",
@@ -873,14 +888,14 @@
   },
   "charte": {
     "title": "“Diaspora sand” charter",
-    "eyebrow": "Design charter · version 3.2 · 15 October 2026",
+    "eyebrow": "Design charter · version 3.3 · 17 October 2026",
     "heading": "Diaspora sand",
     "lead": "DIASPORALE's components, mounted with fictitious data, to review and accept the interface in both themes.",
     "tocLabel": "Charter contents",
     "section": {
       "color": {
         "title": "Colour",
-        "lead": "Six named colours, a single warm hue per theme, barely saturated: nothing turns beige or brown. The background is the lowest layer; every surface that rises gets lighter."
+        "lead": "Six named colours, a single warm hue per theme, barely saturated: nothing turns beige or brown. In light mode, sand cards sit on a paper background; in dark mode, lighter cards sit on the night background."
       },
       "contrast": {
         "title": "Contrast",
@@ -908,7 +923,7 @@
       },
       "cards": {
         "title": "Cards",
-        "lead": "Paper on sand in light, a raised card on night in dark: the card rises through lightness, no hairline. Every piece of content carries its country."
+        "lead": "Sand cards on a paper background in light, lighter cards on a night background in dark: surfaces are separated by lightness, without an outline. Every piece of content carries its country."
       },
       "controls": {
         "title": "Controls",
@@ -918,7 +933,7 @@
     "theme": {
       "light": "Light",
       "dark": "Dark",
-      "lightRoles": "Sand background · paper card · ink text",
+      "lightRoles": "Paper background · sand card · ink text",
       "darkRoles": "Night background · raised card · sand text",
       "text": "Main text",
       "secondary": "Secondary text, quieter",
@@ -927,11 +942,11 @@
     "swatch": {
       "sable": {
         "name": "Sand",
-        "role": "Light background, dark text"
+        "role": "Light cards, dark text"
       },
       "papier": {
         "name": "Paper",
-        "role": "Light card"
+        "role": "Light background"
       },
       "encre": {
         "name": "Ink",

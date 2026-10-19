@@ -1,0 +1,9 @@
+{
+  "pageServiceFilters": {
+    "lead": "Affinez les services proposés par cette page. Une offre disponible dans les deux modes apparaît avec chacun des filtres.",
+    "allCategories": "Toutes les catégories",
+    "reset": "Effacer les filtres",
+    "emptyTitle": "Aucun service ne correspond à ces filtres",
+    "emptyBody": "Essayez une autre catégorie ou un autre mode de prestation, ou effacez les filtres pour retrouver tous les services actifs de cette page."
+  }
+}

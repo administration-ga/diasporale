@@ -1,0 +1,15 @@
+{
+  "pageMedia": {
+    "section": "Page content",
+    "contentLabel": "Choose page content",
+    "publications": "Publications",
+    "photos": "Photos",
+    "videos": "Videos",
+    "openPublication": "View publication",
+    "publishedAt": "Published on {{date}}",
+    "emptyPhotosTitle": "No accessible photos",
+    "emptyPhotosBody": "Photos published by this page will appear here according to their audience.",
+    "emptyVideosTitle": "No accessible videos",
+    "emptyVideosBody": "Videos published by this page will appear here according to their audience."
+  }
+}

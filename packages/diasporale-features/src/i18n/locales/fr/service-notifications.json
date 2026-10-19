@@ -1,0 +1,27 @@
+{
+  "bell": {
+    "system": {
+      "service_request_received": "Vous avez reçu une nouvelle demande de service.",
+      "service_proposal_received": "Une proposition vous attend pour votre demande de service.",
+      "service_request_declined": "Votre demande de service n’a pas été retenue.",
+      "service_proposal_accepted": "Une proposition a été acceptée : le rendez-vous est confirmé.",
+      "service_request_cancelled": "Une demande de service a été annulée.",
+      "service_request_expired": "Une demande de service est arrivée à échéance sans accord.",
+      "service_booking_completed": "Une prestation a été déclarée réalisée.",
+      "service_booking_no_show": "Une absence a été déclarée pour un rendez-vous.",
+      "service_no_show_contested": "La personne a contesté l’absence constatée par votre page.",
+      "association_membership_requested": "Une association que vous gérez a reçu une demande d’adhésion.",
+      "association_membership_accepted": "Votre demande d’adhésion a été acceptée.",
+      "association_membership_declined": "Votre demande d’adhésion n’a pas été retenue.",
+      "association_membership_removed": "Les responsables d’une association ont mis fin à votre adhésion.",
+      "service_review_replied": "La page a répondu à votre avis."
+    },
+    "serviceLink": {
+      "requester": "Voir la demande",
+      "provider": "Ouvrir la demande reçue",
+      "responsible": "Voir les demandes d’adhésion",
+      "member": "Voir mes associations"
+    },
+    "serviceLinkPage": "Voir la page"
+  }
+}

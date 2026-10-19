@@ -1,0 +1,13 @@
+{
+  "pageDirectoryCategories": {
+    "associationLabel": "Type d’association",
+    "sectorLabel": "Secteur d’activité",
+    "allAssociations": "Tous les types d’association",
+    "allSectors": "Tous les secteurs",
+    "reset": "Réinitialiser les filtres",
+    "emptyTitle": "Aucune page dans cette catégorie",
+    "emptyBody": "Essayez une autre catégorie ou élargissez les autres filtres.",
+    "similarAssociations": "Voir les associations de ce type",
+    "similarCompanies": "Voir les entreprises de ce secteur"
+  }
+}

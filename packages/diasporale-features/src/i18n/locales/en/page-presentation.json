@@ -1,0 +1,25 @@
+{
+  "pagePresentation": {
+    "fields": {
+      "city": "City",
+      "cityHint": "Optional, up to {{max}} characters. Enter a city only, without an address or contact details.",
+      "associationType": "Association type",
+      "sector": "Business sector",
+      "categoryHint": "Optional. Choose the organisation’s main activity.",
+      "categoryPlaceholder": "Not provided"
+    },
+    "about": {
+      "title": "About",
+      "edit": "Edit presentation",
+      "country": "Country",
+      "notProvided": "Not provided",
+      "noDescription": "This page does not have a presentation yet."
+    }
+  },
+  "errors": {
+    "page_city_invalid": "Enter a city on a single line, without an address or contact details.",
+    "page_city_too_long": "The city name is limited to 120 characters.",
+    "page_association_type_invalid": "Choose a valid type for this association.",
+    "page_sector_invalid": "Choose a valid sector for this business."
+  }
+}

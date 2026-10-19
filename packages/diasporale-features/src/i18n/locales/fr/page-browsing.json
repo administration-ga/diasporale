@@ -1,0 +1,20 @@
+{
+  "pageBrowsing": {
+    "title": "Pages de la diaspora",
+    "lead": "Retrouvez les associations et les entreprises de la diaspora, leurs actualités et leurs services.",
+    "views": "Découvrir et suivre des pages",
+    "browse": "Découvrir les pages",
+    "kindLabel": "Nature des pages",
+    "allKinds": "Toutes les pages",
+    "associations": "Associations",
+    "companies": "Entreprises",
+    "followedTitle": "Pages suivies",
+    "followedLead": "Les pages auxquelles vous êtes abonné, de la plus récemment suivie à la plus ancienne. Suivre une page ne vous donne aucun rôle pour la gérer.",
+    "followedEmptyTitle": "Vous ne suivez encore aucune page",
+    "followedEmptyBody": "Découvrez une association ou une entreprise, puis choisissez « Suivre » sur sa fiche pour retrouver son actualité.",
+    "followingShortcut": "Retrouver mes pages suivies",
+    "backToDirectory": "Retour à l’annuaire",
+    "unfollow": "Ne plus suivre",
+    "unfollowLabel": "Ne plus suivre {{name}}"
+  }
+}

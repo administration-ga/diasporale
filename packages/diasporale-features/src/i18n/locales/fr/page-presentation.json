@@ -1,0 +1,25 @@
+{
+  "pagePresentation": {
+    "fields": {
+      "city": "Ville",
+      "cityHint": "Facultatif, {{max}} caractères maximum. Indiquez uniquement une ville, sans adresse ni coordonnées.",
+      "associationType": "Type d’association",
+      "sector": "Secteur d’activité",
+      "categoryHint": "Facultatif. Choisissez l’activité principale de l’organisation.",
+      "categoryPlaceholder": "Non renseigné"
+    },
+    "about": {
+      "title": "À propos",
+      "edit": "Modifier la présentation",
+      "country": "Pays",
+      "notProvided": "Non renseigné",
+      "noDescription": "Cette page n’a pas encore de présentation."
+    }
+  },
+  "errors": {
+    "page_city_invalid": "Indiquez une ville sur une seule ligne, sans adresse ni coordonnées.",
+    "page_city_too_long": "Le nom de la ville est limité à 120 caractères.",
+    "page_association_type_invalid": "Choisissez un type valide pour cette association.",
+    "page_sector_invalid": "Choisissez un secteur valide pour cette entreprise."
+  }
+}

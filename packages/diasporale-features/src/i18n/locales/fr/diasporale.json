@@ -52,36 +52,19 @@
     }
   },
   "landing": {
-    "title": "La diaspora gabonaise, pays par pays.",
-    "lead": "Un réseau fermé, réservé aux Gabonais de l'étranger. Chaque contenu porte son pays, chaque auteur montre sa confiance, et le contact passe toujours par la messagerie.",
-    "ctaEnter": "Entrer dans DIASPORALE",
-    "ctaHow": "Comment on entre",
-    "free": "Gratuit pour les membres.",
-    "boardTitle": "Pays ouverts",
-    "boardOpen": "Ouvert",
-    "boardFooter": "Votre pays n'est pas dans la liste ? Entrez quand même : vous lisez dès aujourd'hui, et vos publications sont relues par l'équipe du réseau avant d'apparaître.",
-    "principlesTitle": "Trois règles, sur chaque écran",
-    "principleCountryTitle": "Le pays d'abord",
-    "principleCountryBody": "Tout contenu porte son pays, ou la mention « Toute la diaspora ». Votre fil commence par votre pays de résidence.",
-    "principleTrustTitle": "La confiance se voit",
-    "principleTrustBody": "Officiel, Vérifié, Agent public ou Communauté : le badge est calculé par la plateforme, jamais déclaré par l'auteur.",
-    "principleContactTitle": "Le contact passe par la messagerie",
-    "principleContactBody": "Aucune adresse, aucun numéro de téléphone sur une page ou une annonce : un bouton « Écrire » les remplace.",
-    "sampleCity": "Lyon",
-    "howTitle": "Comment on entre",
-    "howLead": "Deux portes, et jamais de mot de passe.",
-    "doorIdnTitle": "Avec votre identité numérique IDN",
-    "doorIdnBody": "Vous vous connectez avec identite.ga, l'identité numérique gabonaise. Votre compte est déclaré dès l'entrée.",
-    "doorIdnNote": "Avec un niveau de garantie 2, vous portez le badge Vérifié.",
-    "doorCodeTitle": "Avec un code reçu par e-mail ou SMS",
-    "doorCodeBody": "Un compte léger : vous lisez votre hub tout de suite. Vous publiez après le parrainage d'un membre vérifié, ou après la vérification de votre inscription consulaire.",
-    "doorCodeNote": "Le parrain doit être vérifié depuis plus de 30 jours.",
-    "stepsTitle": "Ensuite, trois écrans",
-    "step1": "Votre pays et votre ville de résidence.",
-    "step2": "Votre nom affiché et votre identifiant, que vous choisissez.",
-    "step3": "Vos consentements, un par un, aucun coché d'avance.",
-    "verifyNote": "Une inscription au consulat ? Vous pourrez demander la vérification de votre inscription consulaire : vous consentez, nous recevons une confirmation, et votre compte devient Vérifié.",
-    "closing": "Votre pays de résidence est déjà là. Votre communauté aussi."
+    "title": "Retrouvez les vôtres,\noù que vous soyez.",
+    "lead": "Échangez avec les Gabonais du monde, partagez votre quotidien et créez votre propre réseau.",
+    "eligibility": "Le réseau des Gabonais de l’étranger.",
+    "signInTitle": "Se connecter à DIASPORALE",
+    "idnContinue": "Continuer avec IDN",
+    "idnUnavailable": "La connexion IDN sera disponible prochainement.",
+    "or": "ou",
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte",
+    "newHere": "Nouveau sur DIASPORALE ?",
+    "free": "L’inscription est gratuite.",
+    "privacy": "Votre e-mail reste privé. Connexion par code, sans mot de passe.",
+    "boardTitle": "Votre communauté, pays par pays."
   },
   "entry": {
     "signOutIncomplete": "La déconnexion complète n’a pas pu être confirmée. D’autres appareils peuvent rester connectés et des données de ce navigateur peuvent subsister. Reconnectez-vous pour réessayer la déconnexion dès que la connexion est rétablie.",
@@ -428,6 +411,15 @@
     "comments_other": "{{count}} commentaires",
     "alsoOnRoot": "Aussi dans ANTSIA",
     "share": "Partager",
+    "shareActions": {
+      "title": "Partager la publication",
+      "description": "Les destinataires doivent avoir accès à cette publication pour la consulter.",
+      "link": "Lien de la publication",
+      "copyLink": "Copier le lien",
+      "copied": "Lien copié.",
+      "copyFailed": "La copie automatique a échoué. Le lien est sélectionné : copiez-le manuellement.",
+      "quote": "Partager dans mon fil"
+    },
     "shareCounted_one": "Partager, déjà partagée {{count}} fois",
     "shareCounted_other": "Partager, déjà partagée {{count}} fois",
     "sharedLabel": "Publication partagée",
@@ -492,8 +484,6 @@
     "metaTitle": "Page",
     "see": "Voir la page",
     "claimable": "Revendicable",
-    "claim": "Revendiquer cette page",
-    "claimSoon": "La revendication avec justificatifs arrive avec l'import des associations.",
     "kind": {
       "institution": "Institution",
       "association": "Association",
@@ -681,6 +671,33 @@
     }
   },
   "settings": {
+    "contentPreferences": {
+      "title": "Mon fil",
+      "lead": "Retrouvez les publications masquées et les auteurs mis en sourdine. Ces choix sont privés et concernent uniquement votre fil DIASPORALE.",
+      "hiddenTab": "Publications masquées",
+      "mutedTab": "Auteurs en sourdine",
+      "emptyHidden": "Vous n’avez aucune publication masquée.",
+      "emptyMuted": "Vous n’avez aucun auteur en sourdine.",
+      "emptyPage": "Rien à afficher sur cette page.",
+      "unavailablePost": "Publication indisponible",
+      "unknownAuthor": "Profil non affiché",
+      "noText": "Publication avec média",
+      "hiddenAt": "Masquée le {{date}}",
+      "mutedAt": "Mis en sourdine le {{date}}",
+      "showPost": "Voir la publication",
+      "restoreHidden": "Ne plus masquer",
+      "restoreMuted": "Ne plus mettre en sourdine",
+      "restoring": "Rétablissement…",
+      "restoredHidden": "Le masquage est annulé.",
+      "restoredMuted": "La mise en sourdine est annulée.",
+      "error": "Impossible de charger ces choix.",
+      "retry": "Réessayer",
+      "next": "Suivant",
+      "previous": "Précédent",
+      "page": "Page {{number}}",
+      "moved": "Ce choix a déjà été mis à jour.",
+      "unavailableLead": "Les détails ne sont plus accessibles. Vous pouvez quand même annuler ce choix."
+    },
     "profilePublication": {
       "title": "Publication du profil",
       "globalScope": "Ce profil est commun à ANTSIA et DIASPORALE. Ces réglages s’appliquent dans les deux applications ; l’annuaire DIASPORALE se règle séparément.",
@@ -762,14 +779,12 @@
     "handleCopied": "Identifiant copié.",
     "goSponsor": "Parrainer quelqu'un",
     "data": "Mes données",
-    "dataLead": "Téléchargez tout ce que DIASPORALE sait de vous, ou effacez votre compte.",
     "export": "Télécharger mes données",
     "exported": "Données téléchargées.",
     "delete": "Effacer mon compte",
     "deleteConfirmTitle": "Effacer votre compte ?",
     "deleteConfirmBody": "Votre profil, vos publications, vos réactions, vos consentements et vos parrainages seront effacés. Les contenus qui vous citaient afficheront « compte supprimé ».",
     "deleteAcknowledge": "Je comprends que l'effacement est définitif.",
-    "deleted": "Votre compte est effacé.",
     "appearance": "Langue et apparence",
     "session": "Session",
     "sessionLead": "Déconnecte cet appareil et tous les autres.",
@@ -873,14 +888,14 @@
   },
   "charte": {
     "title": "Charte « Sable de la diaspora »",
-    "eyebrow": "Charte graphique · version 3.2 · 15 octobre 2026",
+    "eyebrow": "Charte graphique · version 3.3 · 17 octobre 2026",
     "heading": "Sable de la diaspora",
     "lead": "Les composants de DIASPORALE, montés avec des données fictives, pour relire et recetter l'interface dans les deux thèmes.",
     "tocLabel": "Sommaire de la charte",
     "section": {
       "color": {
         "title": "Couleur",
-        "lead": "Six couleurs nommées, une seule teinte chaude par thème, presque sans saturation : rien ne vire au beige ni au brun. Le fond est la couche la plus basse, chaque surface qui monte s'éclaircit."
+        "lead": "Six couleurs nommées, une seule teinte chaude par thème, presque sans saturation : rien ne vire au beige ni au brun. En clair, le fond papier porte les cartes sable ; en sombre, les cartes s'éclaircissent sur le fond nuit."
       },
       "contrast": {
         "title": "Contraste",
@@ -908,7 +923,7 @@
       },
       "cards": {
         "title": "Cartes",
-        "lead": "Papier sur sable en clair, carte relevée sur la nuit en sombre : la carte se lève par la clarté, sans filet. Chaque contenu porte son pays."
+        "lead": "Cartes sable sur fond papier en clair, cartes éclaircies sur fond nuit en sombre : les surfaces se distinguent par la clarté, sans filet. Chaque contenu porte son pays."
       },
       "controls": {
         "title": "Commandes",
@@ -918,7 +933,7 @@
     "theme": {
       "light": "Clair",
       "dark": "Sombre",
-      "lightRoles": "Fond sable · carte papier · texte encre",
+      "lightRoles": "Fond papier · carte sable · texte encre",
       "darkRoles": "Fond nuit · carte relevée · texte sable",
       "text": "Le texte principal",
       "secondary": "Le texte secondaire, plus discret",
@@ -927,11 +942,11 @@
     "swatch": {
       "sable": {
         "name": "Sable",
-        "role": "Fond clair, texte sombre"
+        "role": "Cartes claires, texte sombre"
       },
       "papier": {
         "name": "Papier",
-        "role": "Carte claire"
+        "role": "Fond clair"
       },
       "encre": {
         "name": "Encre",

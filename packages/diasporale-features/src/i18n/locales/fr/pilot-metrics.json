@@ -1,0 +1,145 @@
+{
+  "pilotMetrics": {
+    "nav": "Mesure du pilote",
+    "meta": {
+      "title": "Mesure du pilote"
+    },
+    "title": "Mesure du pilote",
+    "lead": "Des comptes agrégés par jour et par pays, recalculés par un passage nocturne, pour suivre l’utilité du pilote sans observer personne.",
+    "privacyBadge": "Mesures du pilote, sans contenu privé",
+    "loading": "Chargement de la mesure…",
+    "unavailableTitle": "Mesure indisponible",
+    "unavailableBody": "Ce fournisseur de données ne sert pas la mesure du pilote. Aucun chiffre n’est affiché à sa place.",
+    "restrictedTitle": "Réservé aux responsables du réseau",
+    "restrictedBody": "Ce tableau est ouvert aux administrateurs et aux modérateurs de DIASPORALE. Il ne contient que des comptes agrégés.",
+    "errorTitle": "La mesure n’a pas pu être chargée",
+    "notMeasuredTitle": "Aucun passage de mesure pour l’instant",
+    "notMeasuredBody": "Les comptes sont recalculés chaque nuit. Ils apparaîtront ici après le premier passage.",
+    "fictionalTitle": "Données fictives de démonstration",
+    "fictionalBody": "Ces comptes sont inventés pour découvrir l’écran. Ils ne décrivent aucune activité réelle.",
+    "filters": {
+      "title": "Portée et période",
+      "country": "Pays",
+      "countryHint": "Tout le réseau, ou l’un de ses pays ouverts.",
+      "period": "Période",
+      "days_one": "{{count}} jour",
+      "days_other": "{{count}} jours"
+    },
+    "scope": {
+      "network": "Tout le réseau"
+    },
+    "summary": {
+      "scope": "Portée : {{scope}}",
+      "window": "Jours UTC du {{start}} au {{end}}",
+      "computedAt": "Dernier passage : {{date}}",
+      "partial_one": "Mesure partielle : {{count}} jour mesuré sur {{days}}.",
+      "partial_other": "Mesure partielle : {{count}} jours mesurés sur {{days}}."
+    },
+    "table": {
+      "indicator": "Indicateur",
+      "value": "Valeur"
+    },
+    "group": {
+      "services": "Services et demandes",
+      "associations": "Associations",
+      "events": "Évènements de page",
+      "reviews": "Avis"
+    },
+    "indicator": {
+      "offers_active": {
+        "label": "Offres actives",
+        "hint": "Offres publiées au catalogue par des pages lisibles, relevées au dernier passage."
+      },
+      "requests_sent": {
+        "label": "Demandes envoyées",
+        "hint": "Demandes créées pendant la période."
+      },
+      "requests_answered": {
+        "label": "Demandes répondues",
+        "hint": "Une proposition ou un refus de la page, à ce jour."
+      },
+      "requests_confirmed": {
+        "label": "Demandes confirmées",
+        "hint": "Un rendez-vous convenu, même annulé ensuite."
+      },
+      "requests_completed": {
+        "label": "Prestations réalisées",
+        "hint": "Réalisation déclarée par la page."
+      },
+      "requests_cancelled": {
+        "label": "Demandes annulées",
+        "hint": "Annulées par la personne ou par la page."
+      },
+      "requests_expired": {
+        "label": "Demandes expirées",
+        "hint": "Échéance atteinte sans accord."
+      },
+      "memberships_requested": {
+        "label": "Adhésions demandées",
+        "hint": "Premières demandes d’adhésion à une association."
+      },
+      "memberships_accepted": {
+        "label": "Adhésions acceptées",
+        "hint": "Acceptées à ce jour, même quittées ensuite."
+      },
+      "event_registrations": {
+        "label": "Inscriptions aux évènements",
+        "hint": "Places confirmées aux évènements de page de la période."
+      },
+      "event_attendances": {
+        "label": "Présences aux évènements",
+        "hint": "Présences pointées parmi ces places."
+      },
+      "reviews_published": {
+        "label": "Avis publiés",
+        "hint": "Avis rédigés pendant la période et publiés à ce jour."
+      }
+    },
+    "base": {
+      "requests_sent": "sur {{value}} demandes envoyées",
+      "requests_confirmed": "sur {{value}} demandes confirmées",
+      "memberships_requested": "sur {{value}} adhésions demandées",
+      "event_registrations": "sur {{value}} places confirmées"
+    },
+    "baseBelow": {
+      "requests_sent": "sur moins de {{threshold}} demandes envoyées",
+      "requests_confirmed": "sur moins de {{threshold}} demandes confirmées",
+      "memberships_requested": "sur moins de {{threshold}} adhésions demandées",
+      "event_registrations": "sur moins de {{threshold}} places confirmées"
+    },
+    "ratioDetail": "{{base}} · {{rate}}",
+    "rate": {
+      "value": "taux : {{rate}} %",
+      "withheld": "taux non publié (part inférieure au seuil)",
+      "complement": "taux non publié (écart avec la base inférieur au seuil)"
+    },
+    "value": {
+      "belowThreshold": "moins de {{threshold}}",
+      "masked": "masqué"
+    },
+    "duration": {
+      "median": "Délai de première réponse, médiane",
+      "p75": "Délai de première réponse, 75e centile",
+      "hint": "De l’envoi à la première proposition ou au refus de la page, rangé par classe d’heures.",
+      "sample": "sur {{value}} demandes répondues",
+      "sampleBelow": "sur moins de {{threshold}} demandes répondues"
+    },
+    "hours": {
+      "atMost": "{{hours}} h au plus",
+      "above": "plus de {{hours}} h",
+      "withheld": "non publié"
+    },
+    "notes": {
+      "title": "Ce que cette mesure ne fait pas",
+      "noContent": "Aucun texte de demande, de recherche, de message ni d’avis n’entre dans ces comptes.",
+      "noPeople": "Aucun identifiant de personne n’est conservé dans les agrégats et aucun parcours individuel n’est suivi.",
+      "threshold": "Un compte inférieur à {{threshold}} s’affiche « moins de {{threshold}} ». Un taux n’est publié que si sa part et son écart avec la base atteignent ce seuil.",
+      "cohorts": "Une demande, une adhésion ou un avis compte le jour de sa création, avec son état au dernier passage. Une place compte le jour de son évènement.",
+      "notMeasured": "Les recherches sans résultat et les abandons ne sont pas mesurés."
+    }
+  },
+  "errors": {
+    "pilot_metrics_window_invalid": "Cette période n’est pas proposée. Choisissez 7, 30 ou 90 jours.",
+    "pilot_metrics_country_invalid": "Ce pays n’est pas reconnu pour la mesure du pilote."
+  }
+}

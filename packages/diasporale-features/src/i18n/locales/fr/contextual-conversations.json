@@ -1,0 +1,19 @@
+{
+  "bell": {
+    "system": {
+      "contextual_message": "Nouveau message dans une mise en relation.",
+      "contextual_closed": "Une mise en relation est close : sa conversation reste lisible."
+    },
+    "openConversation": "Ouvrir la conversation"
+  },
+  "conversationEntry": {
+    "open": "Ouvrir la conversation",
+    "write": "Écrire",
+    "review": "Revoir la conversation",
+    "unread": "Nouveau message",
+    "opening": "Ouverture de la conversation…"
+  },
+  "contextualRules": {
+    "context_address_forbidden": "Pas d'adresse exacte ici : indiquez plutôt un quartier ou un lieu public."
+  }
+}

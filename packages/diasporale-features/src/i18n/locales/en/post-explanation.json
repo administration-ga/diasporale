@@ -1,0 +1,21 @@
+{
+  "postWhy": {
+    "menu": "Why am I seeing this?",
+    "title": "Why this post?",
+    "lead": "What brings it to your feed, based on the post itself.",
+    "reach": {
+      "local": "It is published for the {{country}} hub.",
+      "diaspora": "It is addressed to the whole diaspora, whatever the country.",
+      "diasporaOrigin": "It is addressed to the whole diaspora; it comes from the {{country}} hub."
+    },
+    "audience": {
+      "public": "All DIASPORALE members can read it.",
+      "connections": "Its author keeps it for their connections, and you are one of them.",
+      "group": "It is posted in a group you belong to.",
+      "page": "It is posted on a page’s wall."
+    },
+    "root": "Its author also made it readable in ANTSIA.",
+    "order": "The feed sorts posts by date, newest first. It takes neither your clicks nor your reading time into account.",
+    "controls": "From a post’s menu, you can hide it or mute its author; your choices are listed in your feed settings."
+  }
+}

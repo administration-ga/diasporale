@@ -1,0 +1,15 @@
+{
+  "pageSharing": {
+    "open": "Partager",
+    "openPage": "Partager la page {{name}}",
+    "title": "Partager la page",
+    "description": "Copiez son lien ou choisissez une option de partage.",
+    "accessNotice": "L’accès à cette page exige une adhésion à DIASPORALE. Partager son lien ne la rend pas publique et n’accorde aucun droit d’accès.",
+    "link": "Lien de la page",
+    "copyLink": "Copier le lien",
+    "copied": "Lien de la page copié.",
+    "copyFailed": "La copie automatique est indisponible. Le lien est sélectionné : copiez-le manuellement.",
+    "nativeShare": "Autres options de partage",
+    "shareFailed": "Le partage n’a pas abouti. Vous pouvez copier le lien de la page."
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "page": {
+    "follow": "Suivre",
+    "unfollow": "Ne plus suivre",
+    "followed": "Vous suivez {{name}}.",
+    "unfollowed": "Vous ne suivez plus {{name}}.",
+    "followNeedsStatus": "Suivre une page s'ouvre avec une adhésion déclarée ; vous lisez déjà tout.",
+    "followers_one": "{{count}} abonné",
+    "followers_other": "{{count}} abonnés",
+    "postCount_one": "{{count}} publication",
+    "postCount_other": "{{count}} publications",
+    "errorTitle": "Cette page n'a pas pu être affichée.",
+    "retry": "Réessayer",
+    "morePosts": "Seules les publications les plus récentes de la page sont affichées ici.",
+    "kind": {
+      "media": "Média",
+      "community": "Communauté"
+    },
+    "directory": {
+      "title": "Les pages du réseau",
+      "lead": "Associations, entreprises, médias et institutions présents dans DIASPORALE.",
+      "searchLabel": "Chercher une page",
+      "searchPlaceholder": "Nom, sigle ou adresse d'une page",
+      "searchHint": "La recherche commence à {{min}} caractères ; sans recherche, les pages officielles et vérifiées viennent d'abord.",
+      "countryLabel": "Pays des pages",
+      "allCountries": "Tous les pays",
+      "chooseCountry": "Choisir un pays",
+      "chooseCountryTitle": "Les pages d'un pays",
+      "chooseCountryDescription": "Montrer seulement les pages déclarées dans ce pays.",
+      "resultsLabel": "Pages trouvées",
+      "count_one": "{{count}} page affichée.",
+      "count_other": "{{count}} pages affichées.",
+      "errorTitle": "L'annuaire des pages n'a pas pu être chargé.",
+      "retry": "Réessayer",
+      "emptyTitle": "Aucune page pour l'instant.",
+      "emptyBody": "Les pages créées par les associations, les entreprises et les institutions apparaîtront ici.",
+      "noMatchTitle": "Aucune page ne correspond à « {{query}} ».",
+      "noMatchBody": "Vérifiez l'orthographe, ou cherchez dans tous les pays.",
+      "loadMore": "Afficher plus",
+      "loadingMore": "Chargement…",
+      "unavailable": "L'annuaire des pages n'est pas disponible ici.",
+      "following": "Suivie"
+    }
+  },
+  "hub": {
+    "pagesError": "Les pages de ce pays n'ont pas pu être chargées.",
+    "pagesRetry": "Réessayer",
+    "morePages": "Toutes les pages dans l'annuaire",
+    "pagesElsewhere": "D'autres pages de ce pays se trouvent dans l'annuaire des pages."
+  }
+}

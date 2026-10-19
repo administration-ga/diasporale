@@ -1,0 +1,306 @@
+{
+  "moderationDesk": {
+    "meta": {
+      "title": "Moderation"
+    },
+    "title": "Moderation",
+    "lead": "The DIASPORALE report queue, by country and by content type. Every decision is reasoned, recorded in the engine's decision log and open to appeal.",
+    "loading": "Loading the moderation desk…",
+    "demoNotice": "Demonstration: cases, appeals and teams are fictitious. Your decisions stay in this browser and have no effect on posts or people.",
+    "unavailable": {
+      "title": "Moderation is not available here",
+      "body": "This space is reserved for the network's authorised moderation teams. If you think you should have access, contact the network administration."
+    },
+    "tabsLabel": "Moderation tabs",
+    "tab": {
+      "file": "Queue",
+      "appeals": "Appeals",
+      "team": "Team"
+    },
+    "capacity": {
+      "role": {
+        "network_admin": "You administer the network: you read the whole queue, review appeals and compose teams.",
+        "network_moderator": "You moderate the network: you read the whole accessible queue and decide its cases.",
+        "team_member": "You moderate within a team: you read your teams' queue and decide their cases."
+      },
+      "teams": "Your teams: {{names}}.",
+      "noTeam": "You are not part of any team.",
+      "decisions": "A party to a case (author, reporter, signatory of the page concerned, previous decision-maker) does not decide it."
+    },
+    "filters": {
+      "label": "Queue filters",
+      "source": "Origin",
+      "sourceOption": {
+        "reports": "Reports",
+        "pre_review": "Pre-publication review"
+      },
+      "status": "Case status",
+      "statusOption": {
+        "open": "Open",
+        "reviewing": "Under review"
+      },
+      "zone": "Content country",
+      "zoneAll": "All countries",
+      "zoneNone": "No country (diaspora reach, accounts, messages)",
+      "zoneOpen": "Open countries",
+      "zoneOther": "Other countries",
+      "surface": "Content type",
+      "surfaceAll": "All types",
+      "team": "Team",
+      "teamAll": "Whole accessible queue",
+      "teamScoped": "{{name}} ({{surface}})",
+      "countryNote": "The country is that of the reported content (local post, page, event, offer area), never that of a person. The engine does not yet attach a team to a country: this filter defines no remit."
+    },
+    "zone": {
+      "none": "No country"
+    },
+    "surface": {
+      "post": "Post",
+      "comment": "Comment",
+      "groupMessage": "Group message",
+      "event": "Event",
+      "page": "Page",
+      "person": "Account",
+      "live": "Live",
+      "story": "Story",
+      "album": "Album",
+      "serviceReview": "Service review",
+      "serviceReviewReply": "Page reply to a review",
+      "commerceOffer": "Shop offer",
+      "commercialMessage": "Business message",
+      "contextualMessage": "Message in a connection",
+      "commerceJob": "Job offer",
+      "diasporaAidQuestion": "Mutual-aid question",
+      "diasporaAidAnswer": "Mutual-aid answer",
+      "diasporaAidMission": "Volunteer mission",
+      "diasporaMentorProfile": "Mentor profile",
+      "diasporaMentoringRequest": "Mentoring request",
+      "diasporaKitResource": "Arrival kit resource",
+      "diasporaJobOffer": "Diaspora job offer",
+      "diasporaTalentProfile": "Talent profile",
+      "diasporaJobApplication": "Job application"
+    },
+    "ground": {
+      "harassment": "Harassment",
+      "hate": "Hate or discrimination",
+      "violence": "Violence or threat",
+      "sexual_content": "Sexual content",
+      "misinformation": "False information",
+      "spam": "Spam",
+      "fraud": "Fraud or deception",
+      "other": "Other reason",
+      "pre_review": "Pre-publication review",
+      "unspecified": "Unspecified reason"
+    },
+    "level": {
+      "team": "Team",
+      "network": "Network",
+      "platform": "Platform",
+      "teamNamed": "Team: {{name}}"
+    },
+    "party": {
+      "title": "You do not decide this case",
+      "author": "You are the author of the content concerned.",
+      "reporter": "You reported this content.",
+      "page": "You sign for the page this content belongs to.",
+      "decider": "You took the contested decision.",
+      "handOver": "Another team member must decide it."
+    },
+    "sanction": {
+      "warning": "Warning",
+      "removal": "Content removal",
+      "mute": "Mute",
+      "suspension": "Suspension",
+      "exclusion": "Exclusion"
+    },
+    "queue": {
+      "title": "Case queue",
+      "lead": "Open cases within your remit, oldest first.",
+      "emptyTitle": "No open case",
+      "emptyBody": "Your queue is empty for now.",
+      "emptyFilteredTitle": "No case matches",
+      "emptyFilteredBody": "Try another country or type: diaspora-wide content is filed under “no country”.",
+      "emptyPendingTitle": "No content under review",
+      "emptyPendingBody": "Pages, events and content held before publication appear here."
+    },
+    "case": {
+      "open": "Review the case",
+      "view": "View the case",
+      "title": "Case: {{surface}}",
+      "description": "The content concerned as the engine projects it, previous decisions and your decision.",
+      "closed": "This case is no longer open: it has already been decided, or it is no longer within your remit.",
+      "reviewing": "Under review",
+      "groundLine": "Reason: {{ground}}",
+      "openedLine": "Opened on {{date}}",
+      "fact": {
+        "surface": "Type",
+        "country": "Country",
+        "ground": "Reason",
+        "opened": "Opened on",
+        "level": "Level",
+        "status": "Status"
+      }
+    },
+    "preview": {
+      "title": "Preview",
+      "bounded": "Only the content concerned is shown: not its author, the reporter, contact details or private documents.",
+      "loading": "Loading the preview…",
+      "gone": "The preview is no longer available: the case has been decided or is no longer within your remit.",
+      "error": "The preview could not be loaded. Try again in a moment.",
+      "unavailable": "The content is no longer available (removed, erased or out of reach).",
+      "empty": "This content has no text or media."
+    },
+    "history": {
+      "title": "Previous decisions on this content",
+      "empty": "No previous decision accessible on this content.",
+      "more": "Other previous decisions exist; only the most recent are shown.",
+      "status": {
+        "dismissed": "Dismissed",
+        "actioned": "Action taken"
+      },
+      "origin": {
+        "reader": "report",
+        "pre_review": "pre-publication review"
+      },
+      "reason": "Reason: {{reason}}",
+      "measures": "Measures: {{list}}"
+    },
+    "decision": {
+      "title": "Your decision",
+      "outcomeLegend": "Outcome",
+      "outcome": {
+        "dismissed": "Dismiss",
+        "actioned": "Take action"
+      },
+      "outcomeHint": {
+        "dismissed": "The report is unfounded: nothing changes for the content or the person.",
+        "actioned": "You choose each measure to apply."
+      },
+      "measuresLead": "Choose at least one measure: nothing is applied by default.",
+      "removal": "Remove the content concerned",
+      "personMeasure": "Measure on the person",
+      "personNone": "None",
+      "personHint": "A suspension or an exclusion applies across the network and at the ANTSIA root.",
+      "noAuthor": "No person is targeted by this content: only its removal applies.",
+      "duration": "Duration",
+      "durationChoose": "Choose a duration",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "measureFor_one": "{{measure}} for {{count}} day",
+      "measureFor_other": "{{measure}} for {{count}} days",
+      "reason": "Reason for the decision",
+      "reasonHint": "Required, {{min}} to {{max}} characters. The person concerned will read it: do not include contact details or private data.",
+      "submit": "Save the decision",
+      "done": {
+        "dismissed": "Case dismissed: it has left the queue.",
+        "actioned": "Decision saved: the case has left the queue."
+      }
+    },
+    "confirm": {
+      "title": "Confirm a heavy measure",
+      "measures": "Measures: {{list}}.",
+      "everywhere": "A suspension or an exclusion applies across the network and at the ANTSIA root, until it ends or an appeal succeeds.",
+      "appeal": "The decision is reasoned by your text and is open to appeal.",
+      "decide": "Confirm the decision",
+      "back": "Back to the decision",
+      "reject": "Confirm the rejection",
+      "rejectBody": "Rejecting removes this content ({{surface}}): it will not be published.",
+      "overturn": "Overturn the contested decision",
+      "overturnBody": "Overturning the decision lifts its measures and restores the content if it had been removed."
+    },
+    "pending": {
+      "open": "Review the content",
+      "title": "Review: {{surface}}",
+      "description": "Content held before publication: approve or reject it, with a reason.",
+      "since": "Under review since",
+      "sinceLine": "Under review since {{date}}",
+      "decisionTitle": "Your decision",
+      "outcomeLegend": "Outcome",
+      "approve": "Approve",
+      "approveHint": "The content is published to its audience.",
+      "reject": "Reject",
+      "rejectHint": "The content is not published; its author, if any, is notified.",
+      "submit": "Save the decision",
+      "doneApproved": "Content approved: it has left the review.",
+      "doneRejected": "Content rejected: it has left the review."
+    },
+    "appeals": {
+      "title": "Appeals to review",
+      "lead": "Appeals against a team decision, oldest first. Neither the previous decision-maker nor the person appealing reviews them.",
+      "restricted": "Reviewing appeals is reserved for the network administration.",
+      "emptyTitle": "No appeal to review",
+      "emptyFilteredTitle": "No appeal matches",
+      "emptyBody": "An appeal appears here when a person contests a team decision.",
+      "decidedAt": "Decided on",
+      "decisionReason": "Reason for the decision",
+      "noReason": "No reason recorded.",
+      "measures": "Measures",
+      "noMeasure": "No measure",
+      "measureUntil": "{{measure}} until {{date}}",
+      "appealReason": "Reason for the appeal",
+      "filedAt": "Appeal filed on",
+      "open": "Review the appeal",
+      "sheetTitle": "Appeal: {{surface}}",
+      "sheetDescription": "The contested decision, the reason for the appeal, then your reasoned review.",
+      "decisionTitle": "Your review",
+      "outcomeLegend": "Outcome",
+      "uphold": "Uphold the decision",
+      "upholdHint": "The decision and its measures stay in force; the person can still turn to the platform team.",
+      "overturn": "Overturn the decision",
+      "overturnHint": "The measures are lifted and the content is restored if it had been removed.",
+      "submit": "Save the review",
+      "doneUpheld": "Decision upheld: the appeal has left the queue.",
+      "doneOverturned": "Decision overturned: the appeal has left the queue."
+    },
+    "team": {
+      "title": "Moderation teams",
+      "lead": "The teams handling the network queue and the people in charge.",
+      "countryNote": "The engine does not yet attach a team to a country: a team name may say so, it defines no remit.",
+      "mine": "Your teams",
+      "noTeam": "You are not part of any team.",
+      "noTeamNetworkWide": "You are not part of any team: your network role opens the whole accessible queue to you.",
+      "scopeAll": "All content types",
+      "scopeOne": "Content type handled: {{surface}}",
+      "readOnly": "Team composition is managed by the network administration.",
+      "picker": "Team to compose",
+      "noneYet": "No team exists yet: create the first one below.",
+      "roster": "Members of the {{name}} team",
+      "rosterEmpty": "This team has no active member yet.",
+      "rosterMore": "Other members exist; only the first ones are shown.",
+      "me": "(you)",
+      "neutralName": "Member with an unpublished profile",
+      "outsideNetwork": "No longer an active network member.",
+      "remove": "Remove",
+      "removeTitle": "Remove {{name}} from the team",
+      "removeBody": "This person will no longer read the {{team}} team queue. The removal is reasoned and recorded in the engine's decision log.",
+      "removeConfirm": "Remove from the team",
+      "removed": "{{name}} is no longer part of the team.",
+      "addTitle": "Add a member to the {{name}} team",
+      "handle": "Member's public handle",
+      "handleHint": "For example firstname.lastname: only an active network member can be added.",
+      "search": "Find the member",
+      "addConfirm": "Add to the team",
+      "added": "{{name}} is now part of the team.",
+      "createTitle": "Create a team",
+      "createLead": "A team handles every content type or a single one; creating it requires a reason.",
+      "name": "Team name",
+      "nameHint": "{{nameMin}} to {{nameMax}} characters, for example “France”.",
+      "scope": "Content type handled",
+      "create": "Create the team",
+      "created": "Team “{{name}}” created."
+    }
+  },
+  "errors": {
+    "moderation_desk_reason_length": "The reason must be between {{min}} and {{max}} characters.",
+    "moderation_desk_outcome_required": "Choose an outcome.",
+    "moderation_desk_measure_required": "Choose at least one measure.",
+    "moderation_desk_duration_required": "Choose a duration for this measure.",
+    "moderation_desk_measure_refused": "This measure does not apply to this case (no person targeted, or duration refused).",
+    "moderation_desk_conflict": "The case changed in the meantime: it has probably been decided already. Reread the queue.",
+    "moderation_desk_limit": "The engine refuses this action for now (limit reached or restriction in progress).",
+    "moderation_desk_party": "You are a party to this case: another team member must decide it.",
+    "moderation_desk_team_name_length": "The team name must be between {{nameMin}} and {{nameMax}} characters.",
+    "moderation_desk_handle_required": "Enter the member's public handle.",
+    "moderation_desk_member_unknown": "No active network member has this handle."
+  }
+}

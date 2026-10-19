@@ -1,0 +1,219 @@
+{
+  "services": {
+    "meta": {
+      "catalog": "Services",
+      "offer": "Offre de service",
+      "activity": "Mon activité"
+    },
+    "catalog": {
+      "title": "Services de la diaspora",
+      "lead": "Des prestations proposées par les entreprises et les associations du réseau. DIASPORALE met en relation : aucun paiement ne passe par la plateforme.",
+      "offerYourServices": "Vous proposez des services ? Gérez vos offres dans Mon activité"
+    },
+    "search": {
+      "label": "Rechercher un service",
+      "query": "Rechercher",
+      "queryPlaceholder": "Coiffure, traduction, photo…",
+      "city": "Ville",
+      "cityHint": "Saisissez la ville : aucune localisation n'est demandée.",
+      "country": "Pays",
+      "anyCountry": "Tous les pays",
+      "category": "Catégorie",
+      "anyCategory": "Toutes les catégories",
+      "delivery": "Mode de prestation",
+      "budget": "Budget maximal",
+      "budgetHint": "Les offres au-dessus sont écartées ; celles sur devis ou dans une autre devise restent affichées, signalées.",
+      "currency": "Devise du budget",
+      "submit": "Rechercher",
+      "reset": "Effacer les filtres"
+    },
+    "deliveryFilter": {
+      "any": "Tous",
+      "onsite": "Présentiel",
+      "remote": "À distance"
+    },
+    "results": {
+      "title": "Offres",
+      "label": "Offres trouvées",
+      "budgetRule": "Budget appliqué : les offres au-dessus sont écartées ; celles « sur devis » ou dans une autre devise restent affichées, signalées, car leur prix ne se compare pas.",
+      "emptyTitle": "Aucune offre ne correspond",
+      "emptyBody": "Seules les offres actives des entreprises et des associations du réseau apparaissent.",
+      "emptyFilters": "Essayez sans la ville, sans le mode ou dans un autre pays : un service à distance est rangé au pays du professionnel.",
+      "emptyBudget": "Avec un budget, les offres au-dessus sont écartées.",
+      "unavailableTitle": "Le catalogue des services n'est pas disponible ici",
+      "unavailableBody": "Cette version de DIASPORALE ne sert pas encore les services : rien n'est inventé à leur place.",
+      "retry": "Réessayer",
+      "loadMore": "Afficher plus",
+      "loadingMore": "Chargement…"
+    },
+    "category": {
+      "beauty": "Coiffure et beauté",
+      "digital_creation": "Création numérique",
+      "photography": "Photographie",
+      "translation": "Traduction",
+      "settling_in": "Aide à l'installation"
+    },
+    "delivery": {
+      "onsite": "Présentiel",
+      "remote": "À distance",
+      "both": "Présentiel ou à distance"
+    },
+    "card": {
+      "by": "Proposé par {{name}}",
+      "zone": "{{city}}, {{country}}",
+      "duration": "Durée indicative : {{duration}}"
+    },
+    "price": {
+      "fixed": "Prix : {{price}}",
+      "from": "À partir de {{price}}",
+      "quote": "Sur devis",
+      "free": "Gratuit"
+    },
+    "budgetFit": {
+      "within": "Dans votre budget",
+      "quote": "Sur devis : prix non comparé à votre budget",
+      "other_currency": "Autre devise : prix non comparé à votre budget"
+    },
+    "duration": {
+      "minutes": "{{minutes}} min",
+      "hours": "{{hours}} h",
+      "hoursMinutes": "{{hours}} h {{minutes}}"
+    },
+    "offer": {
+      "back": "Tous les services",
+      "unavailableTitle": "Cette offre n'est pas disponible",
+      "unavailableBody": "Elle a pu être mise en pause ou retirée par le professionnel, ou elle n'existe pas.",
+      "provider": "Proposé par",
+      "badgeNote": "Le badge dit qui est la page ; il ne garantit pas la qualité de la prestation.",
+      "zone": "Zone de service",
+      "delivery": "Mode de prestation",
+      "languages": "Langues",
+      "duration": "Durée indicative",
+      "durationUnknown": "Non précisée",
+      "price": "Tarif annoncé par le professionnel",
+      "updated": "Mise à jour",
+      "description": "La prestation",
+      "noPayment": "Aucun paiement sur DIASPORALE : le professionnel facture lui-même sa prestation, aux conditions qu'il vous propose.",
+      "manageNote": "Vous gérez cette offre au nom de la page.",
+      "manage": "Gérer les services de la page",
+      "statusNote": {
+        "draft": "Brouillon : les membres ne voient pas encore cette offre.",
+        "paused": "En pause : les membres ne la voient plus et ne peuvent pas la demander.",
+        "withdrawn": "Retirée : elle n'est plus visible ni demandable, et ne peut pas être republiée."
+      }
+    },
+    "status": {
+      "draft": "Brouillon",
+      "active": "Active",
+      "paused": "En pause",
+      "withdrawn": "Retirée"
+    },
+    "activity": {
+      "title": "Mon activité",
+      "lead": "Les offres et les demandes des pages que vous gérez, et vos pages.",
+      "tabsLabel": "Sections de Mon activité",
+      "tab": {
+        "offres": "Offres",
+        "demandes": "Demandes",
+        "emplois": "Emplois",
+        "pages": "Pages"
+      },
+      "unavailableTitle": "La gestion des pages n'est pas disponible ici",
+      "unavailableBody": "Cette version de DIASPORALE ne dit pas encore quelles pages vous gérez.",
+      "pagePicker": "Page",
+      "noPagesTitle": "Aucune entreprise ni association à votre nom",
+      "noPagesBody": "Les services se proposent au nom d'une page d'entreprise ou d'association dont vous êtes signataire.",
+      "goToPages": "Voir mes pages"
+    },
+    "manage": {
+      "title": "Offres de {{page}}",
+      "newOffer": "Nouvelle offre",
+      "cannotPublish": "Vous pourrez gérer les offres après un parrainage ou la vérification de votre inscription consulaire.",
+      "emptyTitle": "Aucune offre pour cette page",
+      "emptyBody": "Décrivez une prestation : elle reste en brouillon tant que vous ne la publiez pas.",
+      "listLabel": "Offres de la page",
+      "updated": "Mise à jour le {{date}}",
+      "edit": "Modifier",
+      "action": {
+        "publish": "Publier",
+        "pause": "Mettre en pause",
+        "resume": "Reprendre",
+        "withdraw": "Retirer"
+      },
+      "done": {
+        "publish": "Offre publiée.",
+        "pause": "Offre mise en pause.",
+        "resume": "Offre reprise.",
+        "withdraw": "Offre retirée."
+      },
+      "confirmWithdrawTitle": "Retirer « {{title}} » ?",
+      "confirmWithdrawBody": "Une offre retirée n'est plus visible ni demandable, et ne peut pas être republiée.",
+      "confirmWithdraw": "Retirer définitivement"
+    },
+    "form": {
+      "createTitle": "Nouvelle offre",
+      "editTitle": "Modifier l'offre",
+      "title": "Titre",
+      "titleHint": "De {{min}} à {{max}} caractères.",
+      "description": "Description",
+      "descriptionHint": "Ce que comprend la prestation. Ni téléphone, ni adresse e-mail, ni lien : le contact passe par la demande sur DIASPORALE.",
+      "category": "Catégorie",
+      "categoryHint": "Les professions réglementées (santé, droit, finance) ne passent pas par ce catalogue.",
+      "delivery": "Mode de prestation",
+      "country": "Pays de la zone de service",
+      "city": "Ville",
+      "cityHint": "La ville où vous recevez ou vous déplacez ; pour un service à distance, la vôtre.",
+      "languages": "Langues de la prestation",
+      "duration": "Durée indicative",
+      "durationNone": "Non précisée",
+      "pricing": "Tarif annoncé",
+      "amount": "Montant",
+      "amountHint": "Zéro, en prix fixe, pour une prestation gratuite.",
+      "currency": "Devise",
+      "saveDraft": "Enregistrer le brouillon",
+      "publish": "Publier",
+      "save": "Enregistrer les modifications",
+      "conflictTitle": "L'offre a changé entre-temps",
+      "conflictBody": "Vos modifications n'ont pas été enregistrées. Rechargez la dernière version, puis refaites-les.",
+      "reload": "Recharger la dernière version",
+      "created": "Brouillon enregistré.",
+      "published": "Offre publiée.",
+      "saved": "Modifications enregistrées."
+    },
+    "pricingMode": {
+      "fixed": "Prix fixe",
+      "from": "À partir de",
+      "quote": "Sur devis"
+    }
+  },
+  "errors": {
+    "service_title_too_short": "Le titre compte au moins 3 caractères.",
+    "service_title_too_long": "Le titre compte 100 caractères au plus.",
+    "service_description_too_short": "Décrivez la prestation en 10 caractères au moins.",
+    "service_description_too_long": "La description compte 2 000 caractères au plus.",
+    "service_contact_details_forbidden": "Retirez téléphone, adresse e-mail et lien : le contact passe par la demande sur DIASPORALE.",
+    "service_category_invalid": "Choisissez une catégorie de la liste.",
+    "service_country_required": "Choisissez le pays de la zone de service.",
+    "service_country_unknown": "Ce pays n'est pas reconnu.",
+    "service_country_is_home": "Le catalogue sert la diaspora : choisissez un pays hors du Gabon.",
+    "service_city_required": "Saisissez la ville de la zone de service.",
+    "service_city_too_long": "La ville de la zone de service compte 80 caractères au plus.",
+    "service_delivery_invalid": "Choisissez un mode de prestation.",
+    "service_languages_required": "Choisissez au moins une langue.",
+    "service_languages_too_many": "Cinq langues au plus.",
+    "service_language_invalid": "Une langue n'est pas reconnue.",
+    "service_duration_invalid": "Choisissez une durée de 5 minutes à 24 heures.",
+    "service_pricing_invalid": "Choisissez prix fixe, à partir de, ou sur devis.",
+    "service_price_from_zero": "« À partir de » demande un montant supérieur à zéro ; pour une prestation gratuite, choisissez un prix fixe de zéro.",
+    "service_query_too_long": "La recherche compte 100 caractères au plus.",
+    "service_delivery_filter_invalid": "Ce mode de prestation n'existe pas.",
+    "service_offer_withdrawn": "Cette offre est retirée : elle ne se modifie ni ne se republie.",
+    "service_offer_transition_invalid": "Ce changement d'état n'est pas possible pour cette offre.",
+    "service_offer_version_conflict": "L'offre a changé entre-temps : rechargez-la, puis recommencez.",
+    "service_offer_limit_reached": "Cette page a atteint le nombre maximal d'offres non retirées : retirez-en une d'abord.",
+    "service_page_kind_not_allowed": "Seules les pages d'entreprise ou d'association proposent des services.",
+    "currency_invalid": "Choisissez une devise de la liste.",
+    "amount_invalid": "Saisissez un montant valide, sans plus de décimales que la devise n'en compte.",
+    "amount_too_large": "Ce montant dépasse la limite de saisie."
+  }
+}

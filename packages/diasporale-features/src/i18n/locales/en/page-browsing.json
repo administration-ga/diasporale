@@ -1,0 +1,20 @@
+{
+  "pageBrowsing": {
+    "title": "Diaspora pages",
+    "lead": "Find diaspora associations and businesses, their news and their services.",
+    "views": "Discover and follow pages",
+    "browse": "Discover pages",
+    "kindLabel": "Page type",
+    "allKinds": "All pages",
+    "associations": "Associations",
+    "companies": "Businesses",
+    "followedTitle": "Followed pages",
+    "followedLead": "Pages you follow, from most recently followed to oldest. Following a page does not grant a role to manage it.",
+    "followedEmptyTitle": "You do not follow any pages yet",
+    "followedEmptyBody": "Discover an association or business, then select “Follow” on its page to find its news here.",
+    "followingShortcut": "Find my followed pages",
+    "backToDirectory": "Back to directory",
+    "unfollow": "Unfollow",
+    "unfollowLabel": "Unfollow {{name}}"
+  }
+}

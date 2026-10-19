@@ -1,0 +1,7 @@
+{
+  "bell": {
+    "system": { "association_event_reminder": "Rappel : un événement auquel vous êtes inscrit approche." },
+    "openAssociationEvent": "Voir l’événement",
+    "partialUnread": "Voir les notifications, décompte partiel : {{count}}."
+  }
+}

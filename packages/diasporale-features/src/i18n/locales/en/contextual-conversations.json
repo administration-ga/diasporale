@@ -1,0 +1,19 @@
+{
+  "bell": {
+    "system": {
+      "contextual_message": "New message in a request conversation.",
+      "contextual_closed": "A request conversation is closed: it can still be read."
+    },
+    "openConversation": "Open the conversation"
+  },
+  "conversationEntry": {
+    "open": "Open the conversation",
+    "write": "Write",
+    "review": "Review the conversation",
+    "unread": "New message",
+    "opening": "Opening the conversation…"
+  },
+  "contextualRules": {
+    "context_address_forbidden": "No exact address here: give a neighbourhood or a public place instead."
+  }
+}

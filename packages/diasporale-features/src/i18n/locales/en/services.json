@@ -1,0 +1,219 @@
+{
+  "services": {
+    "meta": {
+      "catalog": "Services",
+      "offer": "Service offer",
+      "activity": "My activity"
+    },
+    "catalog": {
+      "title": "Diaspora services",
+      "lead": "Services offered by the network's businesses and associations. DIASPORALE puts people in touch: no payment goes through the platform.",
+      "offerYourServices": "Do you offer services? Manage your offers in My activity"
+    },
+    "search": {
+      "label": "Search for a service",
+      "query": "Search",
+      "queryPlaceholder": "Hair, translation, photos…",
+      "city": "City",
+      "cityHint": "Type the city: no location access is requested.",
+      "country": "Country",
+      "anyCountry": "All countries",
+      "category": "Category",
+      "anyCategory": "All categories",
+      "delivery": "Delivery",
+      "budget": "Maximum budget",
+      "budgetHint": "Offers above it are left out; quote-based offers and offers in another currency stay listed, flagged.",
+      "currency": "Budget currency",
+      "submit": "Search",
+      "reset": "Clear filters"
+    },
+    "deliveryFilter": {
+      "any": "All",
+      "onsite": "In person",
+      "remote": "Remote"
+    },
+    "results": {
+      "title": "Offers",
+      "label": "Offers found",
+      "budgetRule": "Budget applied: offers above it are left out; quote-based offers and offers in another currency stay listed, flagged, because their price cannot be compared.",
+      "emptyTitle": "No offer matches",
+      "emptyBody": "Only active offers from the network's businesses and associations are listed.",
+      "emptyFilters": "Try without the city, without the delivery mode, or in another country: a remote service is listed under the provider's country.",
+      "emptyBudget": "With a budget, offers above it are left out.",
+      "unavailableTitle": "The services catalogue is not available here",
+      "unavailableBody": "This version of DIASPORALE does not serve services yet: nothing is made up in their place.",
+      "retry": "Try again",
+      "loadMore": "Show more",
+      "loadingMore": "Loading…"
+    },
+    "category": {
+      "beauty": "Hair and beauty",
+      "digital_creation": "Digital design",
+      "photography": "Photography",
+      "translation": "Translation",
+      "settling_in": "Settling-in help"
+    },
+    "delivery": {
+      "onsite": "In person",
+      "remote": "Remote",
+      "both": "In person or remote"
+    },
+    "card": {
+      "by": "Offered by {{name}}",
+      "zone": "{{city}}, {{country}}",
+      "duration": "Typical duration: {{duration}}"
+    },
+    "price": {
+      "fixed": "Price: {{price}}",
+      "from": "From {{price}}",
+      "quote": "On quote",
+      "free": "Free"
+    },
+    "budgetFit": {
+      "within": "Within your budget",
+      "quote": "On quote: price not compared with your budget",
+      "other_currency": "Other currency: price not compared with your budget"
+    },
+    "duration": {
+      "minutes": "{{minutes}} min",
+      "hours": "{{hours}} h",
+      "hoursMinutes": "{{hours}} h {{minutes}} min"
+    },
+    "offer": {
+      "back": "All services",
+      "unavailableTitle": "This offer is not available",
+      "unavailableBody": "The provider may have paused or withdrawn it, or it does not exist.",
+      "provider": "Offered by",
+      "badgeNote": "The badge says who the page is; it does not vouch for the quality of the service.",
+      "zone": "Service area",
+      "delivery": "Delivery",
+      "languages": "Languages",
+      "duration": "Typical duration",
+      "durationUnknown": "Not specified",
+      "price": "Price announced by the provider",
+      "updated": "Updated",
+      "description": "The service",
+      "noPayment": "No payment on DIASPORALE: the provider invoices the service directly, on the terms they offer you.",
+      "manageNote": "You manage this offer on behalf of the page.",
+      "manage": "Manage the page's services",
+      "statusNote": {
+        "draft": "Draft: members cannot see this offer yet.",
+        "paused": "Paused: members no longer see it and cannot request it.",
+        "withdrawn": "Withdrawn: it is no longer visible or requestable, and cannot be republished."
+      }
+    },
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "paused": "Paused",
+      "withdrawn": "Withdrawn"
+    },
+    "activity": {
+      "title": "My activity",
+      "lead": "The offers and requests of the pages you manage, and your pages.",
+      "tabsLabel": "My activity sections",
+      "tab": {
+        "offres": "Offers",
+        "demandes": "Requests",
+        "emplois": "Jobs",
+        "pages": "Pages"
+      },
+      "unavailableTitle": "Page management is not available here",
+      "unavailableBody": "This version of DIASPORALE cannot tell yet which pages you manage.",
+      "pagePicker": "Page",
+      "noPagesTitle": "No business or association in your name",
+      "noPagesBody": "Services are offered on behalf of a business or association page you sign for.",
+      "goToPages": "See my pages"
+    },
+    "manage": {
+      "title": "Offers of {{page}}",
+      "newOffer": "New offer",
+      "cannotPublish": "You will be able to manage offers after a sponsorship or the verification of your consular registration.",
+      "emptyTitle": "No offer for this page",
+      "emptyBody": "Describe a service: it stays a draft until you publish it.",
+      "listLabel": "Page offers",
+      "updated": "Updated on {{date}}",
+      "edit": "Edit",
+      "action": {
+        "publish": "Publish",
+        "pause": "Pause",
+        "resume": "Resume",
+        "withdraw": "Withdraw"
+      },
+      "done": {
+        "publish": "Offer published.",
+        "pause": "Offer paused.",
+        "resume": "Offer resumed.",
+        "withdraw": "Offer withdrawn."
+      },
+      "confirmWithdrawTitle": "Withdraw “{{title}}”?",
+      "confirmWithdrawBody": "A withdrawn offer is no longer visible or requestable, and cannot be republished.",
+      "confirmWithdraw": "Withdraw for good"
+    },
+    "form": {
+      "createTitle": "New offer",
+      "editTitle": "Edit the offer",
+      "title": "Title",
+      "titleHint": "{{min}} to {{max}} characters.",
+      "description": "Description",
+      "descriptionHint": "What the service includes. No phone number, email address or link: contact goes through the request on DIASPORALE.",
+      "category": "Category",
+      "categoryHint": "Regulated professions (health, law, finance) do not go through this catalogue.",
+      "delivery": "Delivery",
+      "country": "Service area country",
+      "city": "City",
+      "cityHint": "The city where you receive or travel to clients; for a remote service, yours.",
+      "languages": "Languages of the service",
+      "duration": "Typical duration",
+      "durationNone": "Not specified",
+      "pricing": "Announced price",
+      "amount": "Amount",
+      "amountHint": "Zero, as a fixed price, for a free service.",
+      "currency": "Currency",
+      "saveDraft": "Save draft",
+      "publish": "Publish",
+      "save": "Save changes",
+      "conflictTitle": "The offer changed in the meantime",
+      "conflictBody": "Your changes were not saved. Reload the latest version, then make them again.",
+      "reload": "Reload the latest version",
+      "created": "Draft saved.",
+      "published": "Offer published.",
+      "saved": "Changes saved."
+    },
+    "pricingMode": {
+      "fixed": "Fixed price",
+      "from": "From",
+      "quote": "On quote"
+    }
+  },
+  "errors": {
+    "service_title_too_short": "The title has at least 3 characters.",
+    "service_title_too_long": "The title has at most 100 characters.",
+    "service_description_too_short": "Describe the service in at least 10 characters.",
+    "service_description_too_long": "The description has at most 2,000 characters.",
+    "service_contact_details_forbidden": "Remove phone numbers, email addresses and links: contact goes through the request on DIASPORALE.",
+    "service_category_invalid": "Choose a category from the list.",
+    "service_country_required": "Choose the country of the service area.",
+    "service_country_unknown": "This country is not recognised.",
+    "service_country_is_home": "The catalogue serves the diaspora: choose a country outside Gabon.",
+    "service_city_required": "Type the city of the service area.",
+    "service_city_too_long": "The service area city has at most 80 characters.",
+    "service_delivery_invalid": "Choose a delivery mode.",
+    "service_languages_required": "Choose at least one language.",
+    "service_languages_too_many": "Five languages at most.",
+    "service_language_invalid": "A language is not recognised.",
+    "service_duration_invalid": "Choose a duration from 5 minutes to 24 hours.",
+    "service_pricing_invalid": "Choose fixed price, from, or on quote.",
+    "service_price_from_zero": "“From” needs an amount above zero; for a free service, choose a fixed price of zero.",
+    "service_query_too_long": "The search has at most 100 characters.",
+    "service_delivery_filter_invalid": "This delivery mode does not exist.",
+    "service_offer_withdrawn": "This offer is withdrawn: it can no longer be edited or republished.",
+    "service_offer_transition_invalid": "This status change is not possible for this offer.",
+    "service_offer_version_conflict": "The offer changed in the meantime: reload it, then try again.",
+    "service_offer_limit_reached": "This page has reached the maximum number of offers that are not withdrawn: withdraw one first.",
+    "service_page_kind_not_allowed": "Only business or association pages offer services.",
+    "currency_invalid": "Choose a currency from the list.",
+    "amount_invalid": "Type a valid amount, with no more decimals than the currency has.",
+    "amount_too_large": "This amount exceeds the input limit."
+  }
+}

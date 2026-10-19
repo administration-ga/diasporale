@@ -1,0 +1,24 @@
+{
+  "pagePostEditing": {
+    "open": "Edit text",
+    "title": "Edit text for {{name}}",
+    "description": "You are editing a post on behalf of {{name}}. Its media, audience and reach stay the same.",
+    "body": "Post text",
+    "textHint": "Up to {{max}} characters. This post must keep some text.",
+    "mediaHint": "Up to {{max}} characters. You can leave the text empty: the photos or video stay attached, including while their scan is pending.",
+    "save": "Submit edit",
+    "sent": "Edit submitted. It remains subject to the page’s moderation.",
+    "draftKept": "Your draft stays in this form. It has not been replaced by the received text.",
+    "replaceWarning": "Loading the current text will completely replace your draft in this form. Copy any passages you want to keep before continuing.",
+    "replaceDraft": "Replace my draft with the current text",
+    "waitForUpdate": "Wait for the post to update: its current text has not arrived yet. You can also close and reopen this window."
+  },
+  "pagePostManagement": {
+    "tab": "Posts",
+    "title": "Page posts",
+    "lead": "Publish, edit and remove updates on behalf of the page. Team permissions are checked again for every action."
+  },
+  "errors": {
+    "page_post_changed": "This post has changed since you opened it. None of the changes in your draft have been submitted."
+  }
+}

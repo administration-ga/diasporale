@@ -1,0 +1,42 @@
+{
+  "discovery": {
+    "label": "Feed discovery",
+    "roleDescription": "discovery scroller",
+    "hint": "Use the up and down arrows, or Page Up and Page Down, to change posts; Home and End for the first or last loaded item; Escape to return to the list.",
+    "view": {
+      "label": "Feed view",
+      "list": "List",
+      "discovery": "Discovery"
+    },
+    "position": "Post {{position}} of {{total}}",
+    "positionMore": "Post {{position}} of {{total}}, more to come",
+    "counter": "{{position}}/{{total}}",
+    "counterEnd": "End",
+    "previous": "Previous",
+    "next": "Next",
+    "slide": {
+      "roleDescription": "post",
+      "label": "{{position}} of {{total}}",
+      "status": "Feed status"
+    },
+    "refresh": {
+      "label": "Refresh",
+      "pending_one": "{{count}} new post",
+      "pending_other": "{{count}} new posts",
+      "added_one": "{{count}} new post shown at the top.",
+      "added_other": "{{count}} new posts shown at the top.",
+      "upToDate": "No new posts for now."
+    },
+    "item": {
+      "panel": "Full post",
+      "expand": "Read the whole post",
+      "collapse": "Collapse the post"
+    },
+    "end": {
+      "title": "You have seen everything in this feed.",
+      "body": "New posts will appear when you choose “Refresh”.",
+      "top": "Back to the first post",
+      "list": "Back to the list"
+    }
+  }
+}

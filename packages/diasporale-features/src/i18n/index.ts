@@ -18,10 +18,10 @@ import {
 } from "@antsia/social-features/i18n"
 import type { i18n as I18nInstance } from "i18next"
 
-import enDiasporale from "./locales/en/diasporale.json"
-import frDiasporale from "./locales/fr/diasporale.json"
+import { DIASPORALE_LOCALES } from "./resources"
 
 export { DEFAULT_LOCALE, isSupportedLocale, SUPPORTED_LOCALES, type AppResources, type Locale }
+export { DIASPORALE_LOCALES, LOCALE_PARTS, mergeLocaleParts, type LocaleTree } from "./resources"
 
 /** Cookie de langue : lu par le rendu serveur, posé par le sélecteur de langue. */
 export const LOCALE_COOKIE = "diasporale-langue"
@@ -31,10 +31,10 @@ export const DIASPORALE_NAMESPACE = "diasporale"
 /** La marque, variable `{{brand}}` des textes du moteur. */
 export const DIASPORALE_BRAND = "DIASPORALE"
 
-/** Les ressources de l'espace de noms `diasporale`, par langue. */
+/** Les ressources de l'espace de noms `diasporale`, par langue (fichier principal et fragments fusionnés). */
 export const diasporaleResources: AppResources = {
-  fr: { [DIASPORALE_NAMESPACE]: frDiasporale },
-  en: { [DIASPORALE_NAMESPACE]: enDiasporale },
+  fr: { [DIASPORALE_NAMESPACE]: DIASPORALE_LOCALES.fr },
+  en: { [DIASPORALE_NAMESPACE]: DIASPORALE_LOCALES.en },
 }
 
 /**
