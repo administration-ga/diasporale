@@ -281,6 +281,18 @@ Le mouvement est sobre et sert la compréhension :
 
 Pas d'animation sur une action au clavier. `prefers-reduced-motion` coupe tout.
 
+**Exception assumée — le mot-symbole de la porte** (demande du propriétaire, 19/10/2026,
+inspirée de « Sculpture Hero » publié sur 21st.dev). Sur la porte d'entrée (`/`, `/entrer`
+et ses étapes), le mot-symbole est fait de particules simulées sur le GPU (WebGL2). Une fois
+par session de navigation, elles s'assemblent depuis tous les côtés (la diaspora qui se
+rassemble), en 2,6 s, sans jamais montrer le texte net avant. Sous le curseur, ou sous un
+doigt qui glisse sur la vitrine, la matière devient liquide, puis reprend sa forme ; au
+repos, rien ne bouge et la boucle s'arrête. La couleur est lue dans le thème (Sable ou
+Gaboma, clair ou sombre), jamais écrite dans le code. Le texte réel reste dans le DOM et
+s'affiche seul sans WebGL2, en contraste forcé ou avec `prefers-reduced-motion` : la règle
+« coupe tout » s'applique aussi ici. Le clavier n'anime rien ; le défilement vertical et le
+zoom restent au navigateur. Moteur : `apps/diasporale_com/src/lib/liquid-wordmark/`.
+
 ## 10. Accessibilité — paires mesurées (WCAG 2.1)
 
 Valeurs de la v3.2 (15/10/2026). Elles sont aussi **mesurées en direct** sur `/charte`, dans le

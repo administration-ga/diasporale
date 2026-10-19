@@ -38,6 +38,10 @@ vi.mock("@diasporale/features/data", async (importOriginal) => ({
 vi.mock("@/components/site-chrome", () => ({
   PublicShell: (props: { children: ReactNode }) => <main>{props.children}</main>,
 }))
+vi.mock("@/components/entry-door", () => ({
+  EntryDoor: (props: { children: ReactNode }) => <main>{props.children}</main>,
+  EntryCard: (props: { children: ReactNode }) => <section>{props.children}</section>,
+}))
 vi.mock("@/components/gate", () => ({ Gate: (props: { children: () => ReactNode }) => props.children() }))
 vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error } }))
 

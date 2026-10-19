@@ -19,19 +19,19 @@ import {
 import { useActions, useDataSource, useSession } from "@diasporale/features/data"
 import { DEMO_IDN_IDENTITIES, isValidDestination } from "@diasporale/features/demo"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { ArrowRightIcon, FlaskConicalIcon, IdCardIcon, KeyRoundIcon, MailIcon, PhoneIcon, ShieldCheckIcon } from "lucide-react"
+import { ArrowLeftIcon, FlaskConicalIcon, MailIcon, PhoneIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useId, useState, type FocusEvent, type ReactNode } from "react"
+import { useEffect, useId, useState, type FocusEvent } from "react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
-import { PublicShell } from "@/components/site-chrome"
+import { EntryCard, EntryDoor } from "@/components/entry-door"
 import { routes } from "@/lib/routes"
 
 /** Une personne déjà connectée n'a rien à faire sur l'entrée : elle va à son fil ou à l'onboarding. */
-function useLeaveEntryWhenSignedIn(enabled = true) {
+export function useLeaveEntryWhenSignedIn(enabled = true) {
   const session = useSession()
   const router = useRouter()
   useEffect(() => {
@@ -40,87 +40,16 @@ function useLeaveEntryWhenSignedIn(enabled = true) {
   }, [enabled, session, router])
 }
 
-function EntryFrame(props: { title: string; lead: string; children: ReactNode }) {
-  return (
-    <PublicShell hideEnter>
-      <div className="mx-auto w-full max-w-[640px] px-4 pb-10 pt-6 md:pt-12">
-        <h1 className="font-display text-4xl font-bold leading-tight">{props.title}</h1>
-        <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{props.lead}</p>
-        <div className="mt-8 flex flex-col gap-4">{props.children}</div>
-      </div>
-    </PublicShell>
-  )
-}
-
-/** `/entrer` — deux portes, IDN en premier ; jamais de mot de passe (EXF-DG-01). */
-export function EnterScreen(props: { signOutIncomplete?: boolean; signUp?: boolean } = {}) {
+/** Le retour d'une étape vers la porte (`/entrer`), sous la carte de l'étape. */
+function BackToDoor() {
   const { t } = useDiasporaleT()
-  const source = useDataSource()
-  useLeaveEntryWhenSignedIn(!props.signOutIncomplete)
-  return (
-    <EntryFrame title={t(props.signUp ? "landing.createAccount" : "entry.title")} lead={t("entry.lead")}>
-      {props.signOutIncomplete ? <p role="alert" className="rounded-xl bg-muted p-4 text-sm">{t("entry.signOutIncomplete")}</p> : null}
-      {source.kind === "demo" ? <DoorLink
-        href={routes.enterIdn()}
-        icon={<IdCardIcon aria-hidden />}
-        title={t("entry.idnTitle")}
-        body={t("entry.idnBody")}
-        badge={t("entry.recommended")}
-        emphasis
-      /> : <IdnUnavailable />}
-      <DoorLink href={routes.enterCode()} icon={<KeyRoundIcon aria-hidden />} title={t("entry.codeTitle")} body={t("entry.codeBody")} />
-      <p className="flex items-start gap-2 text-[13px] text-muted-foreground">
-        <ShieldCheckIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
-        {t("entry.noPassword")}
-      </p>
-    </EntryFrame>
-  )
-}
-
-/** Le fournisseur moteur ne branche pas encore IDN ; une porte indisponible ne navigue pas. */
-function IdnUnavailable() {
-  const { t } = useDiasporaleT()
-  return (
-    <div className="flex items-start gap-4 rounded-2xl bg-card p-5 text-muted-foreground shadow-card">
-      <IdCardIcon className="mt-1 size-6 shrink-0" aria-hidden />
-      <div>
-        <p className="font-display text-xl font-bold">{t("entry.idnTitle")}</p>
-        <p className="mt-1 text-[15px] leading-relaxed">{t("landing.idnUnavailable")}</p>
-      </div>
-    </div>
-  )
-}
-
-function DoorLink(props: { href: string; icon: ReactNode; title: string; body: string; badge?: string; emphasis?: boolean }) {
   return (
     <NextLink
-      href={props.href}
-      className={cn(
-        "group flex items-start gap-4 rounded-2xl bg-card p-5 shadow-card transition-shadow hover:shadow-card-hover focus-visible:shadow-focus",
-      )}
+      href={routes.enter()}
+      className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:shadow-focus"
     >
-      {/* La porte recommandée se distingue par sa pastille bleue et son badge, jamais par un contour. */}
-      <span
-        aria-hidden
-        className={cn(
-          "grid size-12 shrink-0 place-items-center rounded-xl [&_svg]:size-6",
-          props.emphasis ? "bg-[var(--primary-50)] text-[var(--primary-700)]" : "bg-tag text-tag-code",
-        )}
-      >
-        {props.icon}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex flex-wrap items-center gap-2">
-          <span className="font-display text-xl font-bold">{props.title}</span>
-          {props.badge ? (
-            <span className="rounded-[var(--radius-xs)] bg-[var(--primary-50)] px-1.5 py-0.5 text-[11px] font-semibold text-[var(--primary-700)]">
-              {props.badge}
-            </span>
-          ) : null}
-        </span>
-        <span className="mt-1 block text-[15px] leading-relaxed text-muted-foreground">{props.body}</span>
-      </span>
-      <ArrowRightIcon className="mt-1 size-5 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" aria-hidden />
+      <ArrowLeftIcon className="size-4" aria-hidden />
+      {t("common.back")}
     </NextLink>
   )
 }
@@ -174,121 +103,124 @@ export function IdnScreen() {
   if (source.kind !== "demo") return null
   const consentError = form.formState.errors.consent?.message
   return (
-    <EntryFrame title={t("idn.title")} lead={t("idn.lead")}>
-      <FloatingNotice role="note" tone="demo" icon={<FlaskConicalIcon />} heading={t("demo.bannerTitle")}>
-        {t("idn.simulation")}
-      </FloatingNotice>
-      <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-medium">{t("idn.identityLegend")}</legend>
-          <Controller
-            control={form.control}
-            name="identity"
-            render={({ field }) => (
-              <RadioGroup value={field.value} onValueChange={field.onChange} aria-label={t("idn.identityLegend")}>
-                {DEMO_IDN_IDENTITIES.map((item) => (
-                  <RadioCard key={item.key} value={item.key}>
-                    <span className="block font-medium">
-                      {item.firstName} {item.lastName}
-                    </span>
-                    <span className="block text-[13px] text-muted-foreground">{t(`idn.preset.${item.key}`)}</span>
-                  </RadioCard>
-                ))}
-                <RadioCard value="custom">
-                  <span className="block font-medium">{t("idn.customTitle")}</span>
-                  <span className="block text-[13px] text-muted-foreground">{t("idn.customBody")}</span>
-                </RadioCard>
-              </RadioGroup>
-            )}
-          />
-          {form.formState.errors.identity ? (
-            <p role="alert" className="text-[13px] font-medium text-destructive">
-              {t(`errors.${form.formState.errors.identity.message}`)}
-            </p>
-          ) : null}
-        </fieldset>
-
-        {identity === "custom" ? (
-          <Card className="flex flex-col gap-4 p-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field id={`${ids}-prenom`} label={t("idn.firstName")}>
-                {(control) => (
-                  <Input id={control.id} autoComplete="given-name" {...form.register("firstName", {
-                    onBlur: (event: FocusEvent<HTMLInputElement>) => form.setValue("firstName", normalizeGivenNames(event.target.value), { shouldDirty: true, shouldValidate: true }),
-                  })} />
-                )}
-              </Field>
-              <Field id={`${ids}-nom`} label={t("idn.lastName")}>
-                {(control) => (
-                  <Input id={control.id} autoComplete="family-name" {...form.register("lastName", {
-                    onBlur: (event: FocusEvent<HTMLInputElement>) => form.setValue("lastName", normalizeFamilyName(event.target.value), { shouldDirty: true, shouldValidate: true }),
-                  })} />
-                )}
-              </Field>
-            </div>
-            <Field id={`${ids}-loa`} label={t("idn.loa")} hint={t("idn.loaHint")}>
-              {(control) => (
-                <select
-                  id={control.id}
-                  aria-describedby={control.describedBy}
-                  className="h-11 w-full rounded-md border border-input bg-card px-3 text-[15px] focus-visible:shadow-focus"
-                  {...form.register("loa")}
-                >
-                  <option value="1">{t("idn.loaLevel", { level: 1 })}</option>
-                  <option value="2">{t("idn.loaLevel", { level: 2 })}</option>
-                  <option value="3">{t("idn.loaLevel", { level: 3 })}</option>
-                </select>
-              )}
-            </Field>
-            <div className="flex items-center gap-3">
-              <Controller
-                control={form.control}
-                name="gabonese"
-                render={({ field }) => (
-                  <Checkbox id={`${ids}-nationalite`} checked={field.value} onCheckedChange={(checked) => field.onChange(checked === true)} />
-                )}
-              />
-              <Label htmlFor={`${ids}-nationalite`}>{t("idn.gabonese")}</Label>
-            </div>
-          </Card>
-        ) : null}
-
-        <div className="rounded-xl bg-muted p-4">
-          <p className="text-sm font-semibold">{t("idn.receivesTitle")}</p>
-          <p className="mt-1 text-[13px] text-muted-foreground">{t("idn.receives")}</p>
-          <p className="mt-2 text-sm font-semibold">{t("idn.neverTitle")}</p>
-          <p className="mt-1 text-[13px] text-muted-foreground">{t("idn.never")}</p>
-          <div className="mt-4 flex items-start gap-3">
+    <EntryDoor align="start">
+      <EntryCard title={t("idn.title")} lead={t("idn.lead")}>
+        <FloatingNotice role="note" tone="demo" icon={<FlaskConicalIcon />} heading={t("demo.bannerTitle")}>
+          {t("idn.simulation")}
+        </FloatingNotice>
+        <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-sm font-medium">{t("idn.identityLegend")}</legend>
             <Controller
               control={form.control}
-              name="consent"
+              name="identity"
               render={({ field }) => (
-                <Checkbox
-                  id={`${ids}-consentement`}
-                  checked={field.value}
-                  onCheckedChange={(checked) => field.onChange(checked === true)}
-                  aria-invalid={consentError ? true : undefined}
-                  aria-describedby={consentError ? `${ids}-consentement-erreur` : undefined}
-                  className="mt-0.5"
-                />
+                <RadioGroup value={field.value} onValueChange={field.onChange} aria-label={t("idn.identityLegend")}>
+                  {DEMO_IDN_IDENTITIES.map((item) => (
+                    <RadioCard key={item.key} value={item.key}>
+                      <span className="block font-medium">
+                        {item.firstName} {item.lastName}
+                      </span>
+                      <span className="block text-[13px] text-muted-foreground">{t(`idn.preset.${item.key}`)}</span>
+                    </RadioCard>
+                  ))}
+                  <RadioCard value="custom">
+                    <span className="block font-medium">{t("idn.customTitle")}</span>
+                    <span className="block text-[13px] text-muted-foreground">{t("idn.customBody")}</span>
+                  </RadioCard>
+                </RadioGroup>
               )}
             />
-            <Label htmlFor={`${ids}-consentement`} className="leading-snug">
-              {t("idn.consent")}
-            </Label>
-          </div>
-          {consentError ? (
-            <p id={`${ids}-consentement-erreur`} role="alert" className="mt-2 text-[13px] font-medium text-destructive">
-              {t(`errors.${consentError}`)}
-            </p>
-          ) : null}
-        </div>
+            {form.formState.errors.identity ? (
+              <p role="alert" className="text-[13px] font-medium text-destructive">
+                {t(`errors.${form.formState.errors.identity.message}`)}
+              </p>
+            ) : null}
+          </fieldset>
 
-        <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? t("common.pleaseWait") : t("idn.submit")}
-        </Button>
-      </form>
-    </EntryFrame>
+          {identity === "custom" ? (
+            <Card className="flex flex-col gap-4 p-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field id={`${ids}-prenom`} label={t("idn.firstName")}>
+                  {(control) => (
+                    <Input id={control.id} autoComplete="given-name" {...form.register("firstName", {
+                      onBlur: (event: FocusEvent<HTMLInputElement>) => form.setValue("firstName", normalizeGivenNames(event.target.value), { shouldDirty: true, shouldValidate: true }),
+                    })} />
+                  )}
+                </Field>
+                <Field id={`${ids}-nom`} label={t("idn.lastName")}>
+                  {(control) => (
+                    <Input id={control.id} autoComplete="family-name" {...form.register("lastName", {
+                      onBlur: (event: FocusEvent<HTMLInputElement>) => form.setValue("lastName", normalizeFamilyName(event.target.value), { shouldDirty: true, shouldValidate: true }),
+                    })} />
+                  )}
+                </Field>
+              </div>
+              <Field id={`${ids}-loa`} label={t("idn.loa")} hint={t("idn.loaHint")}>
+                {(control) => (
+                  <select
+                    id={control.id}
+                    aria-describedby={control.describedBy}
+                    className="h-11 w-full rounded-md border border-input bg-card px-3 text-[15px] focus-visible:shadow-focus"
+                    {...form.register("loa")}
+                  >
+                    <option value="1">{t("idn.loaLevel", { level: 1 })}</option>
+                    <option value="2">{t("idn.loaLevel", { level: 2 })}</option>
+                    <option value="3">{t("idn.loaLevel", { level: 3 })}</option>
+                  </select>
+                )}
+              </Field>
+              <div className="flex items-center gap-3">
+                <Controller
+                  control={form.control}
+                  name="gabonese"
+                  render={({ field }) => (
+                    <Checkbox id={`${ids}-nationalite`} checked={field.value} onCheckedChange={(checked) => field.onChange(checked === true)} />
+                  )}
+                />
+                <Label htmlFor={`${ids}-nationalite`}>{t("idn.gabonese")}</Label>
+              </div>
+            </Card>
+          ) : null}
+
+          <div className="rounded-xl bg-muted p-4">
+            <p className="text-sm font-semibold">{t("idn.receivesTitle")}</p>
+            <p className="mt-1 text-[13px] text-muted-foreground">{t("idn.receives")}</p>
+            <p className="mt-2 text-sm font-semibold">{t("idn.neverTitle")}</p>
+            <p className="mt-1 text-[13px] text-muted-foreground">{t("idn.never")}</p>
+            <div className="mt-4 flex items-start gap-3">
+              <Controller
+                control={form.control}
+                name="consent"
+                render={({ field }) => (
+                  <Checkbox
+                    id={`${ids}-consentement`}
+                    checked={field.value}
+                    onCheckedChange={(checked) => field.onChange(checked === true)}
+                    aria-invalid={consentError ? true : undefined}
+                    aria-describedby={consentError ? `${ids}-consentement-erreur` : undefined}
+                    className="mt-0.5"
+                  />
+                )}
+              />
+              <Label htmlFor={`${ids}-consentement`} className="leading-snug">
+                {t("idn.consent")}
+              </Label>
+            </div>
+            {consentError ? (
+              <p id={`${ids}-consentement-erreur`} role="alert" className="mt-2 text-[13px] font-medium text-destructive">
+                {t(`errors.${consentError}`)}
+              </p>
+            ) : null}
+          </div>
+
+          <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? t("common.pleaseWait") : t("idn.submit")}
+          </Button>
+        </form>
+        <BackToDoor />
+      </EntryCard>
+    </EntryDoor>
   )
 }
 
@@ -301,21 +233,30 @@ const codeSchema = z.object({ code: z.string().regex(/^\s*\d{3}\s?\d{3}\s*$/, "c
 /** `/entrer/code` — un code à usage unique, jamais de mot de passe ; en démonstration, le code s'affiche. */
 export function CodeScreen() {
   const { t } = useDiasporaleT()
+  useLeaveEntryWhenSignedIn()
   return (
-    <EntryFrame title={t("code.title")} lead={t("code.lead")}>
-      <CodeForm />
-    </EntryFrame>
+    <EntryDoor>
+      <EntryCard title={t("code.title")} lead={t("code.lead")}>
+        <CodeForm />
+        <BackToDoor />
+      </EntryCard>
+    </EntryDoor>
   )
 }
 
-/** Même accès par code sur l'accueil et sur sa page dédiée : aucune seconde authentification. */
-export function CodeForm(props: { compact?: boolean } = {}) {
+/**
+ * Même accès par code sur la porte et sur sa page dédiée : aucune seconde
+ * authentification. L'écran qui le monte décide du départ d'une session déjà
+ * ouverte (`useLeaveEntryWhenSignedIn`) : après une déconnexion incomplète, la
+ * porte le suspend. Dans la porte (`compact`), le bouton dit « Se connecter »,
+ * ou « Recevoir le code » quand la carte crée un compte.
+ */
+export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
   const { t } = useDiasporaleT()
   const actions = useActions()
   const source = useDataSource()
   const router = useRouter()
   const ids = useId()
-  useLeaveEntryWhenSignedIn()
   const [kind, setKind] = useState<"email" | "phone">("email")
   const [sent, setSent] = useState<{ demoCode: string | null } | null>(null)
   const destinationForm = useForm<{ destination: string }>({
@@ -412,7 +353,7 @@ export function CodeForm(props: { compact?: boolean } = {}) {
             )}
           </Field>
           <Button type="submit" size="lg" disabled={sending}>
-            {sending ? t("common.pleaseWait") : t(props.compact ? "landing.signIn" : "code.send")}
+            {sending ? t("common.pleaseWait") : t(props.compact && !props.signUp ? "landing.signIn" : "code.send")}
           </Button>
         </form>
       ) : (

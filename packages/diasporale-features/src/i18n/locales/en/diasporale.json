@@ -69,12 +69,10 @@
   "entry": {
     "signOutIncomplete": "Full sign-out could not be confirmed. Other devices may remain signed in and some data may remain in this browser. Sign in again to retry signing out once your connection is restored.",
     "title": "Join DIASPORALE",
-    "lead": "Choose your door. You will never create a password.",
-    "idnTitle": "IDN digital identity",
-    "idnBody": "Sign in with identite.ga. Your account is declared from the start; with assurance level 2, it carries the Verified badge.",
-    "recommended": "Recommended",
-    "codeTitle": "Code by email or text",
-    "codeBody": "Light account: you read right away, you post after a sponsorship or the verification of your consular registration.",
+    "signUpTitle": "Create your DIASPORALE account",
+    "signUpLead": "Light account: you read right away, you post after a sponsorship or the verification of your consular registration.",
+    "existingAccount": "I already have an account: sign in",
+    "smsInstead": "Get the code by text message instead",
     "noPassword": "No password: IDN or a one-time code. Your contact details are never shown to other members."
   },
   "idn": {

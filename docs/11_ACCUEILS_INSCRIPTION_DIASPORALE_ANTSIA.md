@@ -1,5 +1,19 @@
 # Accueils centrés sur l’inscription — 17 octobre 2026
 
+> **Mise à jour du 19 octobre 2026 — une seule porte, comme l’accueil d’ANTSIA.** Demande
+> du propriétaire : appliquer à `/entrer` les principes de l’accueil d’ANTSIA, où `/` et
+> `/entrer` rendent le même écran (`AccessHomeScreen`). Sur DIASPORALE, `/entrer` n’affiche
+> plus ses « deux portes » : il rend la porte de l’accueil (`EntryDoor`, vitrine à gauche,
+> carte d’accès à droite). La carte porte l’intention (`inscription=1` : « Créer votre
+> compte DIASPORALE », bouton « Recevoir le code », lien « J’ai déjà un compte : me
+> connecter ») et l’avertissement `deconnexion=incomplete`, qui suspend la redirection
+> d’une session encore ouverte. Les étapes `/entrer/code` et `/entrer/idn` (démonstration)
+> sont montées dans la même porte, avec un retour vers `/entrer`. En démonstration, la carte
+> garde un lien « Recevoir plutôt le code par SMS » vers `/entrer/code` ; le moteur
+> n’expose que l’e-mail. Le mode sombre se bascule en un appui en haut à droite
+> (`AppearanceToggle` du moteur, ADR-0027). Le mot-symbole est en matière liquide :
+> voir la charte, §9.
+
 Demande du propriétaire : présenter DIASPORALE et ANTSIA comme des réseaux sociaux
 dont la première action est de créer son compte ou de se connecter, sur ordinateur
 et sur téléphone, en prenant l’accueil de Facebook comme référence de structure.

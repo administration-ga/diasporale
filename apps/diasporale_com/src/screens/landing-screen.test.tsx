@@ -9,9 +9,10 @@ import type { ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import EnterPage from "@/app/entrer/page"
+import HomePage from "@/app/page"
 import { routes } from "@/lib/routes"
 
-import { CodeForm, EnterScreen } from "./enter-screens"
+import { CodeForm, CodeScreen } from "./enter-screens"
 import { LandingScreen } from "./landing-screen"
 
 const navigation = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }))
@@ -46,11 +47,18 @@ afterEach(() => {
 describe("Accueil — accès au réseau personnel", () => {
   it("conserve une inscription par code accessible quand IDN n'est pas branchée au moteur", () => {
     const { mount } = setup("engine")
-    mount(<EnterScreen signUp />)
-    expect(screen.getByRole("heading", { level: 1, name: t("landing.createAccount") })).toBeInTheDocument()
-    expect(screen.queryByRole("link", { name: new RegExp(t("entry.idnTitle")) })).not.toBeInTheDocument()
+    mount(<LandingScreen intent="sign-up" />)
+    expect(screen.getByRole("heading", { level: 2, name: t("entry.signUpTitle") })).toBeInTheDocument()
+    expect(screen.getByText(t("entry.signUpLead").replace(/\s+/g, " "))).toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: t("landing.idnContinue") })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: t("landing.idnContinue") })).toBeDisabled()
     expect(screen.getByText(t("landing.idnUnavailable"))).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: new RegExp(t("entry.codeTitle")) })).toHaveAttribute("href", routes.enterCode())
+    expect(screen.getByRole("textbox", { name: t("code.emailLabel") })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: t("code.send") })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: t("entry.existingAccount") })).toHaveAttribute("href", routes.enter())
+    expect(screen.queryByRole("link", { name: t("landing.createAccount") })).not.toBeInTheDocument()
+    // Le moteur n'expose que l'e-mail : aucun SMS proposé, ni ici ni par un lien.
+    expect(screen.queryByRole("link", { name: t("entry.smsInstead") })).not.toBeInTheDocument()
   })
 
   it("propose l'inscription et l'IDN de démonstration avec la connexion par code intégrée", () => {
@@ -62,6 +70,8 @@ describe("Accueil — accès au réseau personnel", () => {
     expect(screen.getByRole("textbox", { name: t("code.emailLabel") })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: t("landing.signIn") })).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: t("code.kind.phone") })).not.toBeInTheDocument()
+    // Le SMS de démonstration reste joignable, sur la page dédiée au code.
+    expect(screen.getByRole("link", { name: t("entry.smsInstead") })).toHaveAttribute("href", routes.enterCode())
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument()
     expect(store.getState().session.personId).toBeNull()
     expect(requestCode).not.toHaveBeenCalled()
@@ -160,16 +170,58 @@ describe("Entrée — intention d'inscription", () => {
     { label: "inscription explicite", inscription: "1", signUp: true },
     { label: "paramètre absent", inscription: undefined, signUp: false },
     { label: "tableau ignoré", inscription: ["1"], signUp: false },
-  ])("présente le titre adapté pour $label sans créer de compte", async ({ inscription, signUp }) => {
+  ])("présente la carte adaptée pour $label sans créer de compte", async ({ inscription, signUp }) => {
     const { mount, store, requestCode, join } = setup()
     const page = await EnterPage({ searchParams: Promise.resolve({ inscription }) })
     mount(page)
 
-    expect(screen.getByRole("heading", { level: 1, name: t(signUp ? "landing.createAccount" : "entry.title") })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: new RegExp(t("entry.codeTitle")) })).toHaveAttribute("href", routes.enterCode())
+    expect(screen.getByRole("heading", { level: 2, name: t(signUp ? "entry.signUpTitle" : "landing.signInTitle") })).toBeInTheDocument()
+    expect(screen.getByRole("textbox", { name: t("code.emailLabel") })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: t(signUp ? "code.send" : "landing.signIn") })).toBeInTheDocument()
+    if (signUp) expect(screen.getByRole("link", { name: t("entry.existingAccount") })).toHaveAttribute("href", routes.enter())
+    else expect(screen.getByRole("link", { name: t("landing.createAccount") })).toHaveAttribute("href", routes.register())
     expect(store.getState().session.personId).toBeNull()
     expect(requestCode).not.toHaveBeenCalled()
     expect(join).not.toHaveBeenCalled()
+  })
+})
+
+describe("Porte — une seule pour l'accueil, /entrer et leurs étapes (principe de l'accueil d'ANTSIA)", () => {
+  // La promesse tient sur deux lignes (`\n`) : son nom accessible est comparé espaces normalisés.
+  const promise = (name: string) => name.replace(/\s+/g, " ") === t("landing.title").replace(/\s+/g, " ")
+
+  it("rend la même vitrine sur l'accueil et sur /entrer", async () => {
+    const { mount } = setup()
+    const home = mount(HomePage())
+    const homeHeading = screen.getByRole("heading", { level: 1 }).textContent
+    expect(screen.getByRole("heading", { level: 1, name: promise })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: t("nav.home") })).toHaveAttribute("href", routes.home())
+    home.unmount()
+
+    mount(await EnterPage({ searchParams: Promise.resolve({}) }))
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(homeHeading)
+    expect(screen.getByRole("link", { name: t("nav.home") })).toHaveAttribute("href", routes.home())
+  })
+
+  it("montre le mot-symbole réel, sans canevas, quand WebGL2 et le mouvement ne sont pas disponibles", () => {
+    const { mount } = setup()
+    mount()
+
+    const brand = screen.getByRole("link", { name: t("nav.home") })
+    expect(brand).toHaveTextContent(t("brand.name"))
+    expect(brand.querySelector("[data-liquid]")).toHaveAttribute("data-liquid", "off")
+    expect(brand.querySelector("canvas")).toBeNull()
+  })
+
+  it("monte l'étape du code dans la même porte, avec son retour vers /entrer", () => {
+    const { mount } = setup("engine")
+    mount(<CodeScreen />)
+
+    expect(screen.getByRole("heading", { level: 1, name: promise })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { level: 2, name: t("code.title") })).toBeInTheDocument()
+    expect(screen.getByRole("textbox", { name: t("code.emailLabel") })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: t("code.send") })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: t("common.back") })).toHaveAttribute("href", routes.enter())
   })
 })
 

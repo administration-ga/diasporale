@@ -10,11 +10,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import EnterPage from "@/app/entrer/page"
 import { routes } from "@/lib/routes"
 
-import { EnterScreen } from "./enter-screens"
+import { LandingScreen } from "./landing-screen"
 
 const mocks = vi.hoisted(() => ({
   session: { status: "ready", data: { status: "anonymous" } } as Loadable<SessionView>,
-  router: { replace: vi.fn() },
+  router: { push: vi.fn(), replace: vi.fn() },
 }))
 
 vi.mock("next/navigation", () => ({ useRouter: () => mocks.router }))
@@ -22,9 +22,11 @@ vi.mock("@diasporale/features/data", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@diasporale/features/data")>()),
   useSession: () => mocks.session,
   useDataSource: () => ({ kind: "demo" }),
+  useActions: () => ({}),
 }))
-vi.mock("@/components/site-chrome", () => ({
-  PublicShell: (props: { children: ReactNode }) => <main>{props.children}</main>,
+// La porte (vitrine, mot-symbole, pied de page) n'est pas l'objet de ces tests : seule la carte d'accès l'est.
+vi.mock("@/components/entry-door", () => ({
+  EntryDoor: (props: { children: ReactNode }) => <main>{props.children}</main>,
 }))
 
 const t = getFixedT("fr")
@@ -53,15 +55,15 @@ function signedIn(member: MembershipView | null = membership): Loadable<SessionV
 }
 
 function tree(signOutIncomplete?: boolean) {
-  return <I18nProvider locale="fr"><EnterScreen signOutIncomplete={signOutIncomplete} /></I18nProvider>
+  return <I18nProvider locale="fr"><LandingScreen signOutIncomplete={signOutIncomplete} /></I18nProvider>
 }
 
-function expectDoors() {
-  const idn = screen.getByRole("link", { name: new RegExp(t("entry.idnTitle")) })
-  const code = screen.getByRole("link", { name: new RegExp(t("entry.codeTitle")) })
+/** Les deux accès de la carte : IDN (démonstration) et le code par e-mail. */
+function expectAccess() {
+  const idn = screen.getByRole("link", { name: t("landing.idnContinue") })
   expect(idn).toHaveAttribute("href", routes.enterIdn())
-  expect(code).toHaveAttribute("href", routes.enterCode())
-  return { idn, code }
+  expect(screen.getByRole("textbox", { name: t("code.emailLabel") })).toBeInTheDocument()
+  return { idn }
 }
 
 beforeEach(() => {
@@ -71,13 +73,13 @@ beforeEach(() => {
 
 afterEach(cleanup)
 
-describe("EnterScreen — rendre visible une déconnexion incomplète", () => {
-  it("affiche l'avertissement à une personne anonyme avant les deux portes", () => {
+describe("Porte d'entrée — rendre visible une déconnexion incomplète", () => {
+  it("affiche l'avertissement à une personne anonyme avant les accès", () => {
     render(tree(true))
 
     const alert = screen.getByRole("alert")
     expect(alert).toHaveTextContent(t("entry.signOutIncomplete"))
-    const { idn } = expectDoors()
+    const { idn } = expectAccess()
     expect(alert.compareDocumentPosition(idn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(mocks.router.replace).not.toHaveBeenCalled()
   })
@@ -87,7 +89,7 @@ describe("EnterScreen — rendre visible une déconnexion incomplète", () => {
     render(tree(true))
 
     expect(screen.getByRole("alert")).toHaveTextContent(t("entry.signOutIncomplete"))
-    expectDoors()
+    expectAccess()
     expect(mocks.router.replace).not.toHaveBeenCalled()
   })
 
@@ -109,11 +111,11 @@ describe("EnterScreen — rendre visible une déconnexion incomplète", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
   })
 
-  it("affiche les portes ordinaires sans avertissement quand l'indicateur est absent", () => {
-    render(<I18nProvider locale="fr"><EnterScreen /></I18nProvider>)
+  it("affiche la carte de connexion ordinaire sans avertissement quand l'indicateur est absent", () => {
+    render(tree())
 
-    expectDoors()
-    expect(screen.getByRole("heading", { level: 1, name: t("entry.title") })).toBeInTheDocument()
+    expectAccess()
+    expect(screen.getByRole("heading", { level: 2, name: t("landing.signInTitle") })).toBeInTheDocument()
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
     expect(mocks.router.replace).not.toHaveBeenCalled()
   })
@@ -135,6 +137,15 @@ describe("/entrer — validation serveur de l'indicateur de déconnexion", () =>
 
     if (warning) expect(screen.getByRole("alert")).toHaveTextContent(t("entry.signOutIncomplete"))
     else expect(screen.queryByRole("alert")).not.toBeInTheDocument()
-    expectDoors()
+    expectAccess()
+  })
+
+  it("garde l'avertissement dans la carte d'inscription quand les deux intentions sont présentes", async () => {
+    const page = await EnterPage({ searchParams: Promise.resolve({ inscription: "1", deconnexion: "incomplete" }) })
+    render(<I18nProvider locale="fr">{page}</I18nProvider>)
+
+    expect(screen.getByRole("heading", { level: 2, name: t("entry.signUpTitle") })).toBeInTheDocument()
+    expect(screen.getByRole("alert")).toHaveTextContent(t("entry.signOutIncomplete"))
+    expect(mocks.router.replace).not.toHaveBeenCalled()
   })
 })
