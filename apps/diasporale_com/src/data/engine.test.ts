@@ -204,6 +204,19 @@ describe("écritures de la source « moteur »", () => {
     expect(auth.signIn).toHaveBeenCalledWith({ email: "ada@exemple.test", otp: "654321" })
   })
 
+  it("la demande de code porte la langue affichée à ce moment-là : le moteur compose le code dans cette langue", async () => {
+    const { convex } = fakeConvex({ "modules/platform/devTools:latestOtp": () => null })
+    const auth = fakeAuth()
+    let displayed: "fr" | "en" = "en"
+    const actions = createEngineActions({ convex, authClient: auth.client, locale: () => displayed })
+    await actions.requestCode({ kind: "email", value: "ada@exemple.test" })
+    expect(auth.send).toHaveBeenLastCalledWith({ email: "ada@exemple.test", type: "sign-in", fetchOptions: { headers: { "Accept-Language": "en" } } })
+    // La bascule de langue s'applique à la demande suivante, sans recréer la source.
+    displayed = "fr"
+    await actions.requestCode({ kind: "email", value: "ada@exemple.test" })
+    expect(auth.send).toHaveBeenLastCalledWith({ email: "ada@exemple.test", type: "sign-in", fetchOptions: { headers: { "Accept-Language": "fr" } } })
+  })
+
   it("un code refusé rend son code fermé ; sans envoi préalable, le code a expiré", async () => {
     const { convex } = fakeConvex({ "modules/platform/devTools:latestOtp": () => null })
     const auth = fakeAuth({ signIn: async () => ({ data: null, error: { code: "INVALID_OTP", status: 400 } }) })

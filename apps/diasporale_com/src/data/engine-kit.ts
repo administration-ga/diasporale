@@ -20,6 +20,7 @@ import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
 import { DIASPORALE_NETWORK_SLUG } from "@diasporale/domain"
 import type { ActionErrorCode, ActionResult, Loadable } from "@diasporale/features/data"
+import type { Locale } from "@diasporale/features/i18n"
 import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
@@ -128,6 +129,8 @@ export function useNetworkId(): Loaded<Id<"networks"> | null> {
 export interface EngineSourceDeps {
   readonly convex: ConvexReactClient
   readonly authClient: EngineAuthClient
+  /** La langue affichée, relue à chaque demande de code : le moteur compose le code dans cette langue. */
+  readonly locale?: () => Locale
   /** Attente entre deux lectures de l'issue d'une attestation (remplaçable dans les tests). */
   readonly sleep?: (ms: number) => Promise<void>
 }

@@ -67,8 +67,9 @@ récapitulatifs dans `person.locale`.
 
 ## 5. Limites
 
-- Le code de connexion envoyé par e-mail suit la langue du déploiement (`AUTH_DEFAULT_LOCALE`) et
-  porte la marque ANTSIA : à traiter côté moteur (langue par requête).
+- ~~Le code de connexion envoyé par e-mail suit la langue du déploiement (`AUTH_DEFAULT_LOCALE`) et
+  porte la marque ANTSIA.~~ Levée le 19/10 : le code suit la langue affichée et porte la marque du
+  réseau d'origine (docs/35).
 - Le jeu de démonstration (source « démonstration ») est écrit en français : c'est du contenu, pas
   de l'interface.
 - Les textes légaux restent des textes provisoires, en attente du juriste.

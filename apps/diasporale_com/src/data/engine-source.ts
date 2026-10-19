@@ -682,7 +682,10 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
       // Le SMS arrive avec l'identité du moteur (PA4).
       if (destination.kind !== "email") return { ok: false, code: "feature_unavailable" }
       const email = destination.value.trim().toLowerCase()
-      const sent = await deps.authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in" })
+      // La langue affichée accompagne la demande (`Accept-Language`, relayé tel quel par
+      // `/api/auth/*`) : le moteur compose le code dans cette langue, à la marque DIASPORALE.
+      const locale = deps.locale?.()
+      const sent = await deps.authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in", ...(locale ? { fetchOptions: { headers: { "Accept-Language": locale } } } : {}) })
       if (sent.error) return { ok: false, code: authActionErrorCode(sent.error) }
       pendingEmail = email
       // En développement LOCAL seulement (outils ouverts et backend local), le moteur rend le code ; ailleurs, `null`.

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { useDataSource } from "@diasporale/features/data"
 import { I18nProvider } from "@diasporale/features/i18n/client"
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import { getFunctionName, type FunctionReference } from "convex/server"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -48,8 +48,8 @@ function SourceProbe() {
   return <p>{useDataSource().kind}</p>
 }
 
-function tree() {
-  return <I18nProvider locale="fr"><EngineDataProviders><SourceProbe /></EngineDataProviders></I18nProvider>
+function tree(locale: "fr" | "en" = "fr") {
+  return <I18nProvider locale={locale}><EngineDataProviders><SourceProbe /></EngineDataProviders></I18nProvider>
 }
 
 beforeEach(() => {
@@ -73,11 +73,20 @@ describe("EngineDataProviders — contrat de session du moteur", () => {
       authClient: mocks.authClient,
       labels: { loading: "Ouverture de votre session…", failed: "Votre session n'a pas pu s'ouvrir.", retry: "Réessayer" },
     })
-    expect(mocks.source).toHaveBeenCalledExactlyOnceWith({ convex: mocks.convex, authClient: mocks.authClient })
+    expect(mocks.source).toHaveBeenCalledExactlyOnceWith({ convex: mocks.convex, authClient: mocks.authClient, locale: expect.any(Function) })
     expect(screen.getByText("engine")).toBeInTheDocument()
     expect(mocks.icom).toHaveBeenCalledOnce()
 
     view.rerender(tree())
+    expect(mocks.source).toHaveBeenCalledOnce()
+  })
+
+  it("la source lit la langue affichée à chaque demande de code, sans être recréée quand elle change", async () => {
+    const view = render(tree("fr"))
+    const deps = mocks.source.mock.lastCall?.[0] as { locale?: () => string } | undefined
+    expect(deps?.locale?.()).toBe("fr")
+    view.rerender(tree("en"))
+    await waitFor(() => expect(deps?.locale?.()).toBe("en"))
     expect(mocks.source).toHaveBeenCalledOnce()
   })
 
