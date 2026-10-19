@@ -59,7 +59,7 @@ Certains tests existants ont été ajustés à la nouvelle réalité sans être 
 2. **Conversations contextuelles** (DG-013, mentorat accepté, candidature présélectionnée) : contrat écrit par ANTSIA le 19/10 (`ANTSIA/docs/contrats/CONVERSATION-CONTEXTUELLE-V1.md`), décisions D1 à D16 validées par le propriétaire le même jour, avec les amendements D5 et D8. Sous-lots DIASPORALE : CC-3a (règles pures et chargeurs, après le type CC-2a), CC-3b (crochets d'ouverture, de synchronisation et de purge dans nos transitions), CC-6 (port, adaptateurs, entrées depuis nos écrans, filtre « Mises en relation » de Messages). Voir section 7.
 3. **Moteur, côté ANTSIA** : affectation des équipes de modération par pays et routage des signalements ; durcissement des gardes (un déclarant ou un signataire ne tranche pas un dossier où il est partie) ; liens profonds depuis les notifications poussées (`open.ts`) ; carte de la page porteuse dans l'avis `moderation_decision` (agent P14B, section 7).
 4. **Notifications** des nouveaux modules (entraide, mentorat, kit, emploi) sur le modèle des genres neutres déjà posés.
-5. **Recettes** : parcours « coiffeur à Paris » de bout en bout, entraide et mission bénévole à deux comptes, relecture du kit, candidature et décision, guichet de modération, tableau du pilote ; reprise de DG-002. **Jouées le 19/10 sur le backend local** (section 12) : DG-002, entraide, mission, mentorat, candidature et coiffeur validés ; CC-V et traitement au guichet bloqués en local faute d'opérateur ; restent la relecture du kit et le tableau du pilote.
+5. **Recettes** : parcours « coiffeur à Paris » de bout en bout, entraide et mission bénévole à deux comptes, relecture du kit, candidature et décision, guichet de modération, tableau du pilote ; reprise de DG-002. **Jouées le 19/10 sur le backend local** (section 12) : DG-002, entraide, mission, mentorat, candidature et coiffeur (jusqu'à l'avis) validés ; CC-V, traitement au guichet et publication de l'avis bloqués en local faute d'opérateur ; restent la relecture du kit et le tableau du pilote.
 6. **Hors code** : test de l'arborescence avec de vrais utilisateurs (G1.1), recrutement du pilote, décisions juridiques (motif de non-sélection, nom public du relecteur).
 
 ## 6. Résultat du lot de confiance
@@ -306,7 +306,7 @@ Compte rendu complet : [`docs/recette/deux-comptes-2026-10-19`](recette/deux-com
 | Mission bénévole d'une association | Validée (consentement exigé, places, liste réservée à l'équipe) |
 | Mentorat : profil, demande, acceptation | Validé |
 | Candidature : offre, candidature, présélection | Validée |
-| Coiffeur à Paris | Demande → proposition → accord → prestation réalisée à l'heure ; avis : voir le compte rendu |
+| Coiffeur à Paris | Demande → proposition → accord → prestation réalisée à l'heure → avis 5/5 à la fin du rendez-vous, en attente de modération (publication et réponse de la page non jouables sans équipe) |
 | CC-V | Bloquée en local : politique contextuelle fermée, ouverte seulement par un opérateur ; entrées « Écrire » présentes des deux côtés |
 | Guichet | Partielle : signalement et masquage validés ; traitement impossible sans équipe de modération de DIASPORALE (rôle d'opérateur ou d'administrateur du réseau) |
 
