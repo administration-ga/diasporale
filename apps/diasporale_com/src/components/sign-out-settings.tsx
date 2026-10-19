@@ -8,16 +8,20 @@ import { useRef, useState } from "react"
 
 import { routes } from "@/lib/routes"
 
-/** La source moteur conserve sa navigation complète et son éventuel avis de révocation. */
-export function SignOutSettings() {
-  const { t } = useDiasporaleT()
+/**
+ * Se déconnecter partout, un seul geste à la fois. La source moteur conserve sa
+ * navigation complète et son éventuel avis de révocation ; la démonstration
+ * recharge l'accueil. Partagé par les réglages et l'accueil des comptes sans
+ * adhésion.
+ */
+export function useSignOutEverywhere() {
   const actions = useActions()
   const { kind } = useDataSource()
   const running = useRef(false)
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
 
-  const signOut = async () => {
+  const signOutEverywhere = async () => {
     if (running.current) return
     running.current = true
     setBusy(true)
@@ -33,6 +37,13 @@ export function SignOutSettings() {
     }
   }
 
+  return { busy, failed, signOutEverywhere }
+}
+
+export function SignOutSettings() {
+  const { t } = useDiasporaleT()
+  const { busy, failed, signOutEverywhere } = useSignOutEverywhere()
+
   return (
     <section id="session" aria-labelledby="session-titre" aria-busy={busy} className="scroll-mt-20">
       <Card className="flex flex-col gap-4 p-5">
@@ -41,7 +52,7 @@ export function SignOutSettings() {
           <p className="mt-1 text-[13px] leading-snug text-muted-foreground">{t("settings.sessionLead")}</p>
         </div>
         {failed ? <p role="alert" className="text-sm text-destructive">{t("errors.unknown")}</p> : null}
-        <Button type="button" variant="outline" disabled={busy} onClick={() => void signOut()} className="self-start">
+        <Button type="button" variant="outline" disabled={busy} onClick={() => void signOutEverywhere()} className="self-start">
           <LogOutIcon aria-hidden className="size-4" />
           {t(busy ? "settings.signingOut" : "settings.signOutEverywhere")}
         </Button>

@@ -17,7 +17,7 @@ import {
 } from "@diasporale/features"
 import { useActions, useHandleSuggestions, useOpenCountries } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { ArrowLeftIcon, ArrowRightIcon, CheckIcon } from "lucide-react"
+import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useId, useState, type ReactNode } from "react"
 import { Controller, useForm, useWatch, type Control, type FieldPath } from "react-hook-form"
@@ -25,6 +25,7 @@ import { toast } from "sonner"
 import { z } from "zod"
 
 import { Gate } from "@/components/gate"
+import { useSignOutEverywhere } from "@/components/sign-out-settings"
 import { PublicShell } from "@/components/site-chrome"
 import { routes } from "@/lib/routes"
 
@@ -333,6 +334,34 @@ function Onboarding() {
           </Button>
         </div>
       </form>
+      <WelcomeSignOut />
+    </div>
+  )
+}
+
+/**
+ * La sortie d'un compte connecté sans adhésion : ce n'est pas le sien, ou il veut
+ * en changer. Ni les réglages ni la porte ne lui sont ouverts tant qu'il n'est pas
+ * membre ; sans ce geste, il restait enfermé dans l'accueil.
+ */
+function WelcomeSignOut() {
+  const { t } = useDiasporaleT()
+  const { busy, failed, signOutEverywhere } = useSignOutEverywhere()
+  return (
+    <div aria-busy={busy} className="mt-10 flex flex-col items-center gap-2 text-center text-[13px] text-muted-foreground">
+      <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+        <span>{t("welcome.notYourAccount")}</span>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void signOutEverywhere()}
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:shadow-focus disabled:cursor-wait disabled:opacity-70"
+        >
+          <LogOutIcon aria-hidden className="size-3.5" />
+          {t(busy ? "settings.signingOut" : "settings.signOutEverywhere")}
+        </button>
+      </p>
+      {failed ? <p role="alert" className="text-destructive">{t("errors.unknown")}</p> : null}
     </div>
   )
 }

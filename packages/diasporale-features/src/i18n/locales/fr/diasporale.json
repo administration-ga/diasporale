@@ -144,7 +144,8 @@
     "consentsLegend": "Consentements",
     "consentsFooter": "Vous pourrez retirer chaque consentement d'un geste dans vos réglages.",
     "submit": "Entrer dans DIASPORALE",
-    "joined": "Bienvenue dans DIASPORALE."
+    "joined": "Bienvenue dans DIASPORALE.",
+    "notYourAccount": "Ce n'est pas votre compte, ou vous voulez en changer ?"
   },
   "consent": {
     "required": "Requis",
