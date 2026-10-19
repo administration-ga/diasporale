@@ -53,6 +53,7 @@ import { demoManagedPage } from "./page-admin"
 import { canRead, isConnected, sponsorFacts, statusOf } from "./selectors"
 import {
   DEMO_STATE_VERSION,
+  SEED_DISPLAY_NAMES,
   createDemoSeed,
   type DemoMedia,
   type DemoMembership,
@@ -95,6 +96,21 @@ function canonicalCivilNames(state: DemoState): DemoState {
     if (names.firstName === person.idn.firstName && names.lastName === person.idn.lastName) continue
     persons ??= { ...state.persons }
     persons[id] = { ...person, idn: { ...person.idn, ...names } }
+  }
+  return persons === null ? state : { ...state, persons }
+}
+
+/**
+ * Corrige la casse des noms sociaux du jeu fictif enregistré avant le 19/10 : seulement quand
+ * l'alias est resté celui du jeu ; un alias que le membre a choisi reste intact.
+ */
+function canonicalSeedDisplayNames(state: DemoState): DemoState {
+  let persons: Record<string, DemoPerson> | null = null
+  for (const [id, names] of Object.entries(SEED_DISPLAY_NAMES)) {
+    const person = state.persons[id]
+    if (!person?.profile || person.profile.displayName !== names.legacy) continue
+    persons ??= { ...state.persons }
+    persons[id] = { ...person, profile: { ...person.profile, displayName: names.current } }
   }
   return persons === null ? state : { ...state, persons }
 }
@@ -143,7 +159,7 @@ export class DemoStore {
       if (raw) {
         const parsed = JSON.parse(raw) as DemoState
         if (parsed.version === DEMO_STATE_VERSION) {
-          const canonical = withContentPreferenceIdentities(canonicalCivilNames(parsed))
+          const canonical = withContentPreferenceIdentities(canonicalSeedDisplayNames(canonicalCivilNames(parsed)))
           if (canonical !== parsed) this.persist(canonical)
           return canonical
         }

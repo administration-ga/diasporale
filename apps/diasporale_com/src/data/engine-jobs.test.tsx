@@ -44,7 +44,7 @@ const MINE = {
   message: "Motivation fictive de recette.", sharedTalentProfile: true, createdAt: 1, updatedAt: 2, actions: ["withdraw"],
 }
 const RECEIVED = {
-  applicationId: "app-1", jobId: "job-1", status: "sent", offerVersion: 2, candidate: { displayName: "Mireille Ivindo", handle: "mireille.demo" },
+  applicationId: "app-1", jobId: "job-1", status: "sent", offerVersion: 2, candidate: { displayName: "Mireille IVINDO", handle: "mireille.demo" },
   message: "Motivation fictive de recette.", talentProfile: { title: "Comptable", skills: ["Paie"], availability: "immediate", languages: ["fr"], country: "FR" },
   notSelectedReason: null, createdAt: 1, updatedAt: 1, actions: ["mark_seen", "shortlist", "not_select"],
 }
@@ -151,7 +151,7 @@ describe("emploi — lectures du moteur", () => {
     expect(mocks.loaded).toHaveBeenCalledWith("modules/diaspora/jobs:jobOfferApplications", { networkId: "network-diasporale", jobId: "job-1", status: "sent", paginationOpts: { numItems: 20, cursor: null } })
     expect(received.result.current).toMatchObject({
       status: "ready",
-      data: { items: [{ id: "app-1", candidate: { displayName: "Mireille Ivindo" }, talentProfile: { title: "Comptable", country: "FR" }, notSelectedReason: null }] },
+      data: { items: [{ id: "app-1", candidate: { displayName: "Mireille IVINDO" }, talentProfile: { title: "Comptable", country: "FR" }, notSelectedReason: null }] },
     })
   })
 

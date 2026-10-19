@@ -208,7 +208,7 @@ describe("/entraide/<id> — une question", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Trouver une colocation étudiante à Bordeaux" })).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Retour à l'entraide" })).toHaveAttribute("href", routes.mutualAid("FR", "Bordeaux"))
     const accepted = screen.getByRole("region", { name: "Réponse retenue" })
-    expect(within(accepted).getByRole("link", { name: "Mireille Ivindo" })).toHaveAttribute("href", routes.profile("mireille.ivindo"))
+    expect(within(accepted).getByRole("link", { name: "Mireille IVINDO" })).toHaveAttribute("href", routes.profile("mireille.ivindo"))
     expect(screen.getByRole("button", { name: "Clore la question" })).toBeInTheDocument()
     expect(await screen.findByRole("button", { name: "Retenir cette réponse" })).toBeInTheDocument()
 
@@ -263,8 +263,8 @@ describe("/entraide/<id> — une mission bénévole", () => {
     expect(await screen.findByRole("heading", { level: 2, name: "Gérer la mission" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Clore les inscriptions" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Annuler la mission" })).toBeInTheDocument()
-    expect(await screen.findByRole("link", { name: "Mireille Ivindo" })).toHaveAttribute("href", routes.profile("mireille.ivindo"))
-    expect(screen.getByRole("link", { name: "Clarisse Mbéi" })).toBeInTheDocument()
+    expect(await screen.findByRole("link", { name: "Mireille IVINDO" })).toHaveAttribute("href", routes.profile("mireille.ivindo"))
+    expect(screen.getByRole("link", { name: "Clarisse MBÉI" })).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/@example\.com/)
   })
 

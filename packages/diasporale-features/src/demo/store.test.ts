@@ -201,7 +201,7 @@ describe("R3 — un compte léger se fait parrainer", () => {
     expect(await store.sponsor("@nouvelle.venue")).toEqual({ ok: true, value: null })
     await store.switchTo(newcomer)
     expect(store.statusOf(newcomer)).toBe("declaree")
-    expect(membershipView(store.getState(), newcomer, T0)?.sponsoredBy).toEqual({ handle: "mireille.ivindo", displayName: "Mireille Ivindo" })
+    expect(membershipView(store.getState(), newcomer, T0)?.sponsoredBy).toEqual({ handle: "mireille.ivindo", displayName: "Mireille IVINDO" })
     expect(await store.publish(post)).toEqual({ ok: true, value: { moderation: "pending_review" } })
   })
 
@@ -405,7 +405,7 @@ describe("la cloche", () => {
     const [request] = notificationsView(store.getState(), "p-mireille")
     expect(request).toMatchObject({
       kind: "connection_request",
-      actor: { handle: "steeve.ngounie", displayName: "Steeve Ngounié" },
+      actor: { handle: "steeve.ngounie", displayName: "Steeve NGOUNIÉ" },
       read: false,
       inviteOutcome: null,
     })
@@ -803,7 +803,7 @@ describe("partage cité (EXF-DG-10)", () => {
     expect(await store.publish(share("post-7"))).toEqual({ ok: true, value: { moderation: "published" } })
     const mine = feedView(store.getState(), me(), "recents", T0).find((post) => post.share !== null)
     expect(mine?.body).toBe("")
-    expect(mine?.share).toMatchObject({ available: true, postId: "post-7", author: { kind: "person", handle: "prisca.abanga", displayName: "Prisca Abanga" } })
+    expect(mine?.share).toMatchObject({ available: true, postId: "post-7", author: { kind: "person", handle: "prisca.abanga", displayName: "Prisca ABANGA" } })
     expect(postDetailView(store.getState(), "post-7", "p-prisca", T0)?.shareCount).toBe(1)
     expect(notificationsView(store.getState(), "p-prisca")[0]).toMatchObject({ kind: "post_share", postId: "post-7" })
   })

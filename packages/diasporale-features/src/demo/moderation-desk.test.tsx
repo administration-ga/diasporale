@@ -171,7 +171,7 @@ describe("Guichet de démonstration — équipes", () => {
     expect(await desk.findMember({ personId: PERSON, handle: " " })).toEqual({ ok: false, code: "moderation_desk_handle_required" })
     expect(await desk.findMember({ personId: PERSON, handle: "inconnu.demo" })).toEqual({ ok: true, value: null })
     const found = await desk.findMember({ personId: PERSON, handle: "@steeve.ngounie" })
-    expect(found).toEqual({ ok: true, value: { personId: "p-steeve", handle: "steeve.ngounie", displayName: "Steeve Ngounié" } })
+    expect(found).toEqual({ ok: true, value: { personId: "p-steeve", handle: "steeve.ngounie", displayName: "Steeve NGOUNIÉ" } })
     expect(await desk.setTeamMember({ personId: PERSON, teamId: DEMO_DESK_TEAM_ID, memberPersonId: "p-steeve", active: true, reason: "Court" })).toEqual({ ok: false, code: "moderation_desk_reason_length" })
     await act(async () => {
       expect(await desk.setTeamMember({ personId: PERSON, teamId: DEMO_DESK_TEAM_ID, memberPersonId: "p-steeve", active: true, reason: REASON })).toEqual({ ok: true, value: null })

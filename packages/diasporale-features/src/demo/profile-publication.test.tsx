@@ -30,7 +30,7 @@ describe("Profil commun de démonstration — état propriétaire et persistance
     const { store, publication, storage } = setup()
     const { result } = renderHook(() => publication.useMyProfile())
     expect(result.current).toEqual({ status: "ready", data: {
-      personId: PERSON, handle: "prisca.abanga", displayName: "Prisca Abanga", headline: "Étudiante en droit à Bordeaux", published: true, private: false,
+      personId: PERSON, handle: "prisca.abanga", displayName: "Prisca ABANGA", headline: "Étudiante en droit à Bordeaux", published: true, private: false,
     } })
     expect(store.getState().version).toBe(DEMO_STATE_VERSION)
     expect(store.getState().sequence).toBe(100)
@@ -101,7 +101,7 @@ describe("Profil de démonstration — publication et découvrabilité distincte
     const connections = store.getState().connections
     const follows = store.getState().follows
     await publication.setPrivacy(PERSON, true)
-    expect(profileView(store.getState(), "prisca.abanga", OTHER, NOW)?.displayName).toBe("Prisca Abanga")
+    expect(profileView(store.getState(), "prisca.abanga", OTHER, NOW)?.displayName).toBe("Prisca ABANGA")
     expect(memberSearchView(store.getState(), OTHER, "Prisca", undefined, NOW)).toEqual([])
     expect(suggestionsView(store.getState(), OTHER, NOW).some((hit) => hit.personId === PERSON)).toBe(false)
     expect(relationView(store.getState(), "p-mireille", PERSON).connection).toBe("connected")

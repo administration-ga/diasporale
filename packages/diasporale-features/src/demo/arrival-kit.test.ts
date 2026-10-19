@@ -85,7 +85,7 @@ describe("démonstration — le jeu fictif du kit d'arrivée", () => {
     expect(france.items.filter((item) => item.official).map((item) => [item.id, item.carrier])).toEqual([
       ["kit-1", { kind: "page", page: { id: "page-poste-fr", handle: "poste-demo-france", name: "Poste consulaire de démonstration — France", badge: "official", ownerKind: "institution" } }],
     ])
-    expect(france.items.find((item) => item.id === "kit-2")?.carrier).toEqual({ kind: "person", person: { displayName: "Mireille Ivindo", handle: "mireille.ivindo" } })
+    expect(france.items.find((item) => item.id === "kit-2")?.carrier).toEqual({ kind: "person", person: { displayName: "Mireille IVINDO", handle: "mireille.ivindo" } })
     expect(ids(ready(renderHook(() => kit.useResources(request({ city: " paris " }))).result.current))).toEqual(["kit-2", "kit-3"])
     expect(ids(ready(renderHook(() => kit.useResources(request({ nationalOnly: true }))).result.current))).toEqual(["kit-8", "kit-1"])
     expect(ids(ready(renderHook(() => kit.useResources(request({ category: "health" }))).result.current))).toEqual(["kit-3"])
@@ -110,7 +110,7 @@ describe("démonstration — fiche, file de relecture et situation", () => {
     expect(detail).toMatchObject({
       id: "kit-2",
       source: { name: "Portail public d'information bancaire (source fictive)", url: null },
-      reviewer: { displayName: "Prisca Abanga", handle: "prisca.abanga" },
+      reviewer: { displayName: "Prisca ABANGA", handle: "prisca.abanga" },
       statusReason: null,
       outdatedFlags: 0,
       viewer: { canManage: false, canReview: true, canFlag: true, hasFlagged: false },

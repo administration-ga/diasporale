@@ -460,7 +460,7 @@ describe("un profil de talent", () => {
     expect(talentShortName(undefined)).toBeNull()
     expect(talentShortName("   ")).toBeNull()
     expect(talentShortName("Awa")).toBe("Awa")
-    expect(talentShortName("Mireille Ivindo")).toBe("Mireille I.")
+    expect(talentShortName("Mireille IVINDO")).toBe("Mireille I.")
     expect(talentShortName("NDONG MBA Jean-Rémy")).toBe("Jean-Rémy N.")
     expect(talentShortName("Jean-Rémy Éloïse NDONG")).toBe("Jean-Rémy N.")
     expect(talentShortName("NDONG")).toBe("NDONG")
