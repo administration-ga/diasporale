@@ -2,30 +2,30 @@
 
 import { useOptionalAppearance } from "@antsia/social-features/shell/appearance"
 import { cn } from "@diasporale/features"
-import { LOCALE_COOKIE, SUPPORTED_LOCALES, type Locale } from "@diasporale/features/i18n"
+import { SUPPORTED_LOCALES, type Locale } from "@diasporale/features/i18n"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+
+import { useAccountLocaleChoice, useApplyLocale } from "./account-locale"
 
 const segment =
   "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[var(--esp-r-chrome)] px-3 text-sm font-medium transition-colors focus-visible:shadow-focus"
 
-/** Mémorise la langue choisie (un an) ; le rendu serveur la lit au prochain rafraîchissement. */
-function persistLocale(next: Locale) {
-  document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`
-}
-
 /**
- * Langue : français ou anglais (mêmes clés, cliquet i18n). Le choix est un
- * cookie lu par le rendu serveur — aucune langue ne clignote à l'hydratation.
+ * Langue : français ou anglais (mêmes clés, cliquet i18n). Le choix s'applique
+ * tout de suite à toute l'interface, sans rechargement ; il est gardé par un cookie
+ * lu par le rendu serveur (aucune langue ne clignote à l'hydratation) et, en
+ * session, enregistré sur le compte (`AccountLocale`).
  */
 export function LanguageSwitch(props: { className?: string }) {
   const { t, locale } = useDiasporaleT()
-  const router = useRouter()
+  const applyLocale = useApplyLocale()
+  const accountChoice = useAccountLocaleChoice()
   const choose = (next: Locale) => {
-    persistLocale(next)
-    router.refresh()
+    if (next === locale) return
+    if (accountChoice) accountChoice(next)
+    else void applyLocale(next)
   }
   return (
     <div role="group" aria-label={t("preferences.language")} className={cn("inline-flex gap-1 rounded-[var(--esp-r-chrome)] bg-[var(--esp-neutral-chip)] p-1", props.className)}>

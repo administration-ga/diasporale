@@ -12,6 +12,7 @@
         "description": "The ANTSIA network’s theme: the green, yellow and blue of the flag, on pure white and true black."
       },
       "saveFailed": "The theme could not be saved to your account."
-    }
+    },
+    "languageSaveFailed": "The language could not be saved to your account."
   }
 }

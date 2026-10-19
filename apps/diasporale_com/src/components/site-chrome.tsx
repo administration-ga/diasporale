@@ -9,7 +9,7 @@ import type { ReactNode } from "react"
 import { routes } from "@/lib/routes"
 
 import { useDismissal, useFloatingCard } from "./floating-cards"
-import { LanguageSwitch, ThemeSwitch } from "./preferences"
+import { LanguageSwitch } from "./preferences"
 import { Wordmark } from "./wordmark"
 
 /** Lien d'action d'une carte flottante : le bleu des liens, souligné au survol. */
@@ -105,9 +105,9 @@ export function SiteFooter(props: { compact?: boolean } = {}) {
             {t("footer.charte")}
           </NextLink>
         </nav>
+        {/* La langue seule : l'apparence se règle dans les préférences (et par le bouton de la porte). */}
         <div className="flex flex-col gap-2">
           <LanguageSwitch />
-          <ThemeSwitch />
         </div>
       </div>
     </footer>

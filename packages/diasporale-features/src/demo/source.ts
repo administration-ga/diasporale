@@ -469,6 +469,7 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       toggleBookmark: (postId) => store.toggleBookmark(postId),
       hidePost: (postId) => store.hidePost(postId),
       saveAccountTheme: (theme) => store.saveAccountTheme(theme),
+      saveAccountLocale: (locale) => store.saveAccountLocale(locale),
       muteAuthor: (personId) => store.muteAuthor(personId),
       reportPost: (input) => store.reportPost(input),
       removePost: (postId) => store.removePost(postId),

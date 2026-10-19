@@ -645,6 +645,7 @@ export function sessionView(state: DemoState, now: number): SessionView {
       local: local ? { kind: local.kind, masked: maskDestination(local.kind, local.value) } : null,
       nameHints: person.idn ? { firstName: person.idn.firstName, lastName: person.idn.lastName } : {},
       ...(person.theme !== undefined ? { theme: person.theme } : {}),
+      ...(person.locale !== undefined ? { locale: person.locale } : {}),
     },
     membership: membershipView(state, personId, now),
   }

@@ -86,6 +86,8 @@ export function toAccountView(person: MyPerson, identity: MyIdentity, email: str
     nameHints: {},
     // Le thème du compte, s'il en a un (le moteur ne rend qu'un thème courant du contrat commun).
     ...(person.theme !== undefined ? { theme: person.theme } : {}),
+    // La langue du compte, si la personne en a choisi une.
+    ...(person.locale !== undefined ? { locale: person.locale } : {}),
   }
 }
 

@@ -278,6 +278,11 @@ export interface AccountView {
    * n'a pas laisse ici le choix de l'appareil.
    */
   readonly theme?: string
+  /**
+   * La langue enregistrée sur le compte (`fr`, `en`), absente tant que la personne n'en a
+   * choisi aucune. Commune aux réseaux du moteur : elle sert aussi aux avis poussés.
+   */
+  readonly locale?: string
 }
 
 export interface MembershipView {

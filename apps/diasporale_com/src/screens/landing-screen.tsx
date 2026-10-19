@@ -6,6 +6,7 @@ import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { IdCardIcon, LockKeyholeIcon } from "lucide-react"
 import NextLink from "next/link"
 
+import { DoorVision } from "@/components/door-vision"
 import { EntryDoor } from "@/components/entry-door"
 import { routes } from "@/lib/routes"
 
@@ -19,10 +20,11 @@ export type EntryIntent = "sign-in" | "sign-up"
  * (`/entrer?inscription=1`) — et l'avertissement d'une déconnexion incomplète.
  * Une session ouverte part à son fil ou à l'accueil du nouveau membre, sauf
  * après une déconnexion incomplète : l'avertissement reste alors lisible.
+ * Sous la porte, la vision de DIASPORALE (`DoorVision`).
  */
 export function LandingScreen(props: { intent?: EntryIntent; signOutIncomplete?: boolean } = {}) {
   return (
-    <EntryDoor>
+    <EntryDoor after={<DoorVision showJoin={props.intent !== "sign-up"} />}>
       <AccessCard signUp={props.intent === "sign-up"} signOutIncomplete={props.signOutIncomplete === true} />
     </EntryDoor>
   )

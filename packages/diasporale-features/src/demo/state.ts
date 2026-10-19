@@ -49,6 +49,8 @@ export interface DemoPerson {
   readonly profile: { readonly handle: string; readonly displayName: string; readonly headline: string | null } | null
   /** Le thème enregistré sur le compte fictif ; absent tant qu'aucun n'est choisi. */
   readonly theme?: string
+  /** La langue enregistrée sur le compte fictif (`fr`, `en`) ; absente tant qu'aucune n'est choisie. */
+  readonly locale?: string
   /** Absents dans les états v7 existants : profil publié et découvrable, sans migration destructive. */
   readonly withdrawnAt?: number
   readonly privateAt?: number

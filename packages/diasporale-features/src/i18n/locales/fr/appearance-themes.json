@@ -12,6 +12,7 @@
         "description": "Le thème du réseau ANTSIA : vert, jaune et bleu du drapeau, sur blanc franc et noir absolu."
       },
       "saveFailed": "Le thème n’a pas pu être enregistré sur votre compte."
-    }
+    },
+    "languageSaveFailed": "La langue n'a pas pu être enregistrée sur votre compte."
   }
 }

@@ -1,0 +1,66 @@
+{
+  "landing": {
+    "vision": {
+      "title": "What DIASPORALE is",
+      "lead": "The closed social network of Gabonese people living abroad: your country, your community, and you always know who is posting.",
+      "offerTitle": "What you will find",
+      "offer": {
+        "country": {
+          "title": "Your country, your community",
+          "body": "A space for each host country (news, events, associations, businesses) and what matters to the whole diaspora."
+        },
+        "settle": {
+          "title": "Settle in and help each other",
+          "body": "An arrival kit with dated resources, practical questions between members and volunteer mentors."
+        },
+        "work": {
+          "title": "Work and do business",
+          "body": "Job offers, talents visible by choice and the diaspora's services, from the request to the appointment."
+        },
+        "associations": {
+          "title": "Associations, up close",
+          "body": "Their pages, their memberships, their calendar and their volunteer missions."
+        },
+        "contact": {
+          "title": "Talk without exposing your contact details",
+          "body": "Contact goes through messaging: a “Write” button, never a displayed phone number."
+        }
+      },
+      "countriesTitle": "Countries already open",
+      "trustTitle": "A network you can trust",
+      "trust": {
+        "closed": {
+          "title": "Reserved for Gabonese people abroad",
+          "body": "What is posted here stays here, unless its author chooses to share it on ANTSIA."
+        },
+        "speaker": {
+          "title": "You always know who is speaking",
+          "body": "Every account and every page carries a trust marker computed by the network, never self-declared."
+        },
+        "verified": {
+          "title": "Verified with your consent",
+          "body": "consulat.ga confirms a consular registration and nothing else: no passport, no civil records, no file."
+        },
+        "sponsored": {
+          "title": "Or sponsored",
+          "body": "A verified member who knows you can sponsor you; every sponsorship is recorded."
+        },
+        "data": {
+          "title": "Your data, your choices",
+          "body": "Separate, revocable consents, an opt-in directory, export and erasure from your settings."
+        },
+        "free": {
+          "title": "Free for members",
+          "body": "Access to the network is free; a professional service may have its own price."
+        }
+      },
+      "stepsTitle": "How to join",
+      "steps": {
+        "account": "Create your account with a code received by email, no password.",
+        "residence": "Tell us where you live: your country of residence, then your consents, one by one.",
+        "publish": "Read right away; post after the consular verification or a sponsorship."
+      },
+      "join": "Join DIASPORALE"
+    }
+  }
+}

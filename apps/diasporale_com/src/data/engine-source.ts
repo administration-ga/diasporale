@@ -20,6 +20,7 @@
 import type { EngineAuthClient } from "@antsia/api/auth-client"
 import { signOutEverywhere } from "@antsia/api/sign-out-everywhere"
 import { isMemberThemeId } from "@antsia/social-contracts/appearance"
+import { isSupportedLocale } from "@diasporale/features/i18n"
 import { useAuthenticatedConvexQuery, useStableConvexAuth } from "@antsia/api/hooks"
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
@@ -842,6 +843,13 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
       attempt(async () => {
         if (!isMemberThemeId(theme)) throw new Refusal("feature_unavailable")
         await deps.convex.mutation(api.modules.people.preferences.setMyPreferences, { theme })
+        return null
+      }),
+
+    saveAccountLocale: (locale) =>
+      attempt(async () => {
+        if (!isSupportedLocale(locale)) throw new Refusal("feature_unavailable")
+        await deps.convex.mutation(api.modules.people.preferences.setMyPreferences, { locale })
         return null
       }),
 
