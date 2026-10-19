@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { canAlsoPublishOnRoot, isCountryOpen, type CountryCode } from "@diasporale/domain"
 import { GlobeIcon, ImagePlusIcon, LoaderCircleIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react"
-import { type ChangeEvent, type FormEvent, type KeyboardEvent, useEffect, useId, useRef, useState } from "react"
+import { type ChangeEvent, type FormEvent, type KeyboardEvent, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -19,6 +19,7 @@ import {
   postMediaRefusal,
 } from "../data/media"
 import type { PublishMediaInput, UploadedMedia } from "../data/port"
+import type { PagePublicationInput, PagePublicationsCapability } from "../data/page-publications-port"
 import type { PostView } from "../data/types"
 import { useDiasporaleT } from "../i18n/client"
 import { cn } from "../lib/cn"
@@ -36,7 +37,7 @@ export const POST_BODY_MAX = 2000
 const composerFields = z.object({
   body: z.string().trim().max(POST_BODY_MAX, "post_too_long"),
   reach: z.enum(["local", "diaspora"]),
-  audience: z.enum(["public", "connections"]),
+  audience: z.enum(["public", "connections", "followers"]),
   alsoOnRoot: z.boolean(),
   /** Les médias joints, dans l'ordre : la clé de leur dépôt et leur texte alternatif. */
   media: z
@@ -46,8 +47,10 @@ const composerFields = z.object({
   sharing: z.boolean(),
 })
 // Une photo sans légende, un partage sans un mot, sont des publications légitimes ; un message vide seul ne l'est pas.
-const composerSchema = composerFields.superRefine((values, context) => {
-  if (values.body.length === 0 && values.media.length === 0 && !values.sharing) {
+const composerSchemaFor = (requireMedia: boolean) => composerFields.superRefine((values, context) => {
+  if (requireMedia && values.media.length === 0) {
+    context.addIssue({ code: "custom", path: ["media"], message: "association_event_gallery_media_required" })
+  } else if (values.body.length === 0 && values.media.length === 0 && !values.sharing) {
     context.addIssue({ code: "custom", path: ["body"], message: "post_empty" })
   }
 })
@@ -133,13 +136,29 @@ export function PostComposerSheet(props: {
    * composeur la montre, n'offre aucun média, et rend le texte facultatif.
    */
   share?: PostView | null
+  /** Une page parle sous sa propre identité, avec ses abonnés et sa règle collective. */
+  page?: {
+    readonly id: string
+    readonly name: string
+    readonly country: CountryCode | null
+    readonly publish: PagePublicationsCapability["publish"]
+    /** Un contexte collectif fermé : aucun choix de portée ne peut l'élargir. */
+    readonly fixedScope?: { readonly description: string; readonly audienceLabel: string; readonly requireMedia: boolean }
+  }
 }) {
   const { t, locale } = useDiasporaleT()
   const actions = useActions()
   const ids = useId()
   // Un partage monte sa propre instance (la coque la remonte à chaque partage) : il naît en mode partage.
-  const share = props.share ?? null
-  const form = useForm<ComposerValues>({ resolver: zodResolver(composerSchema), defaultValues: { ...DEFAULTS, sharing: share !== null } })
+  const page = props.page
+  const fixedScope = page?.fixedScope
+  const hasFixedScope = fixedScope !== undefined
+  const share = page ? null : props.share ?? null
+  const defaults: ComposerValues = { ...DEFAULTS, reach: fixedScope || (page && !page.country) ? "diaspora" : "local", sharing: share !== null }
+  const schema = useMemo(() => composerSchemaFor(fixedScope?.requireMedia === true), [fixedScope?.requireMedia])
+  const form = useForm<ComposerValues>({ resolver: zodResolver(schema), defaultValues: defaults })
+  const active = useRef(false)
+  useLayoutEffect(() => { active.current = true; return () => { active.current = false } }, [])
   // Idempotence : la même clé pour tous les essais d'une publication (un échec réseau rejoué ne double
   // rien), une clé neuve dès qu'elle est publiée.
   const [publishKey, setPublishKey] = useState(newPublishKey)
@@ -154,7 +173,7 @@ export function PostComposerSheet(props: {
   const audience = useWatch({ control: form.control, name: "audience" })
   const reach = useWatch({ control: form.control, name: "reach" })
   const body = useWatch({ control: form.control, name: "body" })
-  const rootAllowed = canAlsoPublishOnRoot(audience)
+  const rootAllowed = !page && canAlsoPublishOnRoot(audience === "followers" ? "connections" : audience)
 
   // Une audience restreinte ferme la case ANTSIA : la valeur suit, jamais l'inverse.
   useEffect(() => {
@@ -166,16 +185,23 @@ export function PostComposerSheet(props: {
   useEffect(() => {
     if (!draftKey) return
     const draft = readDraft(draftKey)
-    if (draft) form.reset({ ...draft, media: [], sharing: false })
-  }, [draftKey, form])
+    if (draft) form.reset({
+      ...draft,
+      reach: hasFixedScope || (page && !page.country) ? "diaspora" : draft.reach,
+      audience: hasFixedScope ? "public" : page ? (draft.audience === "followers" ? "followers" : "public") : (draft.audience === "connections" ? "connections" : "public"),
+      alsoOnRoot: page ? false : draft.alsoOnRoot,
+      media: [],
+      sharing: false,
+    })
+  }, [draftKey, form, page?.country, page?.id, hasFixedScope])
 
   // Puis gardé à chaque pause dans la frappe.
   const alsoOnRoot = useWatch({ control: form.control, name: "alsoOnRoot" })
   useEffect(() => {
     if (!draftKey) return
-    const timer = setTimeout(() => writeDraft(draftKey, { body, reach, audience, alsoOnRoot }), DRAFT_SAVE_MS)
+    const timer = setTimeout(() => writeDraft(draftKey, { body, reach: hasFixedScope ? "diaspora" : reach, audience: hasFixedScope ? "public" : audience, alsoOnRoot: hasFixedScope ? false : alsoOnRoot }), DRAFT_SAVE_MS)
     return () => clearTimeout(timer)
-  }, [draftKey, body, reach, audience, alsoOnRoot])
+  }, [draftKey, body, reach, audience, alsoOnRoot, hasFixedScope])
 
   // Les aperçus locaux (URL d'objet) se libèrent au retrait, à la publication, et quand le composeur quitte l'écran.
   const previewUrls = useRef(new Set<string>())
@@ -266,10 +292,18 @@ export function PostComposerSheet(props: {
       }
       media.push({ upload: state.upload, altText: item.altText })
     }
-    const result = await actions.publish({
+    if (fixedScope?.requireMedia && media.length === 0) { setMediaError("association_event_gallery_media_required"); return }
+    const pageInput: Omit<PagePublicationInput, "pageId"> = {
+      body: values.body,
+      reach: fixedScope || (page && !page.country) ? "diaspora" : values.reach,
+      audience: !fixedScope && values.audience === "followers" ? "followers" : "public",
+      ...(media.length > 0 ? { media } : {}),
+      idempotencyKey: publishKey,
+    }
+    const result = page ? await page.publish({ pageId: page.id, ...pageInput }) : await actions.publish({
       body: values.body,
       reach: values.reach,
-      audience: values.audience,
+      audience: values.audience === "connections" ? "connections" : "public",
       alsoOnRoot: values.alsoOnRoot,
       // Local : le pays du hub. Diaspora : le pays d'ORIGINE, en pastille dans les autres hubs (EXF-DG-16).
       country: props.memberCountry,
@@ -277,15 +311,17 @@ export function PostComposerSheet(props: {
       ...(share ? { sharedPostId: share.id } : {}),
       idempotencyKey: publishKey,
     })
+    if (fixedScope && !active.current) return
     if (!result.ok) {
       toast.error(t(`errors.${result.code}`))
       return
     }
     setPublishKey(newPublishKey())
-    toast.success(result.value.moderation === "published" ? t(share ? "composer.shared" : "composer.published") : t("composer.sentForReview"))
-    if (draftKey) writeDraft(draftKey, { body: "", reach: DEFAULTS.reach, audience: DEFAULTS.audience, alsoOnRoot: DEFAULTS.alsoOnRoot })
+    if (page) toast.success(t("pagePublications.sent", { name: page.name }))
+    else toast.success("moderation" in result.value && result.value.moderation === "published" ? t(share ? "composer.shared" : "composer.published") : t("composer.sentForReview"))
+    if (draftKey) writeDraft(draftKey, { body: "", reach: hasFixedScope ? "diaspora" : DEFAULTS.reach, audience: DEFAULTS.audience, alsoOnRoot: DEFAULTS.alsoOnRoot })
     clearAttachments()
-    form.reset(DEFAULTS)
+    form.reset(defaults)
     props.onOpenChange(false)
   })
 
@@ -295,27 +331,38 @@ export function PostComposerSheet(props: {
     submissionInFlight.current = true
     try {
       await publishValidatedForm(event)
+    } catch {
+      if (!fixedScope || active.current) toast.error(t("errors.unknown"))
     } finally {
       submissionInFlight.current = false
     }
   }
 
-  const countryLabel = countryName(props.memberCountry, locale)
-  const reviewNotice = reach === "local" && !isCountryOpen(props.memberCountry, props.openCountries)
+  const localCountry = page?.country ?? props.memberCountry
+  const countryLabel = countryName(localCountry, locale)
+  const reviewNotice = reach === "local" && !isCountryOpen(localCountry, props.openCountries)
   const bodyError = form.formState.errors.body?.message
+  const mediaFieldError = form.formState.errors.media?.root?.message ?? form.formState.errors.media?.message
+  const mediaNotice = mediaError ?? mediaFieldError
 
   return (
     <Sheet open={props.open} onOpenChange={props.onOpenChange}>
       <SheetContent
-        title={share ? t("composer.shareTitle") : t("composer.title")}
-        description={share ? t("composer.shareDescription") : t("composer.description")}
-        hideDescription
+        title={page ? t("pagePublications.composeTitle") : share ? t("composer.shareTitle") : t("composer.title")}
+        description={fixedScope?.description ?? (page ? t("pagePublications.composeDescription", { name: page.name }) : share ? t("composer.shareDescription") : t("composer.description"))}
+        hideDescription={!fixedScope}
         closeLabel={t("common.close")}
       >
         <form onSubmit={onSubmit} className="flex flex-col gap-5" aria-busy={form.formState.isSubmitting} noValidate>
           {/* Le succès ne doit effacer que le contenu effectivement envoyé.
               Un fieldset conserve les valeurs RHF tout en gelant tous les contrôles. */}
           <fieldset disabled={form.formState.isSubmitting} className="contents">
+          {page ? (
+            <div className="rounded-lg bg-muted p-3">
+              <p className="text-sm font-semibold">{t("pagePublications.identity", { name: page.name })}</p>
+              <p className="mt-1 text-[13px] text-muted-foreground">{t("pagePublications.networkNotice")}</p>
+            </div>
+          ) : null}
           {share ? (
             <div className="flex flex-col gap-1.5">
               <p className="text-sm font-medium">{t("composer.shareOriginal")}</p>
@@ -339,7 +386,7 @@ export function PostComposerSheet(props: {
                 aria-invalid={control.invalid || undefined}
                 rows={5}
                 maxLength={POST_BODY_MAX + 200}
-                placeholder={share ? t("composer.sharePlaceholder") : t("composer.placeholder", { country: countryLabel })}
+                placeholder={page ? t("pagePublications.placeholder", { name: page.name }) : share ? t("composer.sharePlaceholder") : t("composer.placeholder", { country: countryLabel })}
                 {...form.register("body")}
               />
             )}
@@ -421,13 +468,14 @@ export function PostComposerSheet(props: {
               </p>
             </div>
             <input ref={fileInput} type="file" accept={POST_MEDIA_ACCEPT} multiple hidden onChange={attachFiles} />
-            {mediaError ? (
+            {mediaNotice ? (
               <p role="alert" className="text-[13px] text-destructive">
-                {t(`errors.${mediaError}`)}
+                {t(`errors.${mediaNotice}`)}
               </p>
             ) : null}
           </fieldset>
 
+          {fixedScope ? <p className="rounded-lg bg-muted p-3 text-sm font-medium">{fixedScope.audienceLabel}</p> : <>
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-sm font-medium">{t("composer.reachLegend")}</legend>
             <Controller
@@ -435,12 +483,12 @@ export function PostComposerSheet(props: {
               name="reach"
               render={({ field }) => (
                 <RadioGroup value={field.value} onValueChange={field.onChange} aria-label={t("composer.reachLegend")}>
-                  <RadioCard value="local">
+                  {!page || page.country ? <RadioCard value="local">
                     <span className="flex flex-wrap items-center gap-2">
-                      <CountryTag country={props.memberCountry} />
+                      <CountryTag country={localCountry} />
                       <span className="text-sm">{t("composer.reachLocal", { country: countryLabel })}</span>
                     </span>
-                  </RadioCard>
+                  </RadioCard> : null}
                   <RadioCard value="diaspora">
                     <span className="flex flex-wrap items-center gap-2">
                       <ScopeTag />
@@ -450,6 +498,7 @@ export function PostComposerSheet(props: {
                 </RadioGroup>
               )}
             />
+            {page && !page.country ? <p className="text-[13px] text-muted-foreground">{t("pagePublications.noCountry")}</p> : null}
             {reviewNotice ? <p className="text-[13px] text-pending-foreground">{t("composer.reviewNotice")}</p> : null}
           </fieldset>
 
@@ -463,15 +512,16 @@ export function PostComposerSheet(props: {
                   <RadioCard value="public">
                     <span className="text-sm">{t("composer.audiencePublic")}</span>
                   </RadioCard>
-                  <RadioCard value="connections">
-                    <span className="text-sm">{t("composer.audienceConnections")}</span>
+                  <RadioCard value={page ? "followers" : "connections"}>
+                    <span className="text-sm">{page ? t("pagePublications.followersAudience") : t("composer.audienceConnections")}</span>
                   </RadioCard>
                 </RadioGroup>
               )}
             />
           </fieldset>
+          </>}
 
-          <div className="flex items-start gap-3 rounded-lg bg-muted p-3">
+          {!page ? <div className="flex items-start gap-3 rounded-lg bg-muted p-3">
             <Controller
               control={form.control}
               name="alsoOnRoot"
@@ -495,7 +545,7 @@ export function PostComposerSheet(props: {
                 {rootAllowed ? t("composer.alsoOnRootHint") : t("composer.alsoOnRootDisabled")}
               </p>
             </div>
-          </div>
+          </div> : null}
 
           <div className="sticky bottom-0 -mx-5 -mb-4 flex justify-end gap-2 border-t border-border bg-card px-5 py-3">
             <Button variant="ghost" onClick={() => props.onOpenChange(false)}>

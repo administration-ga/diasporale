@@ -1,17 +1,20 @@
-import { screen } from "@testing-library/react"
-import type { ComponentProps } from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { screen, waitFor } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { act, type ComponentProps } from "react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { PostView } from "../../data/types"
 import { getFixedT } from "../../i18n"
 import { RoutingProvider, type FeatureRoutes } from "../../routing"
 import { renderWithI18n } from "../../test-utils"
 import { PostCard } from "./post-card"
+import { PostShareProvider } from "../post-share"
 
-const mocks = vi.hoisted(() => ({ menu: vi.fn() }))
+const mocks = vi.hoisted(() => ({ menu: vi.fn(), copied: vi.fn() }))
 
 // Le menu a son propre contrat de données ; la carte lui transmet aussi l'identité neutralisée.
 vi.mock("../post-menu", () => ({ PostMenu: (props: { post: PostView }) => { mocks.menu(props.post); return null } }))
+vi.mock("sonner", () => ({ toast: { success: mocks.copied, error: vi.fn() } }))
 
 const routes: FeatureRoutes = {
   profile: vi.fn((handle: string) => `/@${handle}`),
@@ -47,14 +50,15 @@ const post: PostView = {
 
 function Link(props: ComponentProps<"a">) { return <a {...props} /> }
 
-function mount(value = post, locale: "fr" | "en" = "fr") {
+function mount(value = post, locale: "fr" | "en" = "fr", share: ((value: PostView) => void) | null = null) {
   return renderWithI18n(
-    <RoutingProvider routes={routes} Link={Link}><PostCard post={value} now={now} canReact={false} /></RoutingProvider>,
+    <RoutingProvider routes={routes} Link={Link}><PostShareProvider value={share}><PostCard post={value} now={now} canReact={false} /></PostShareProvider></RoutingProvider>,
     locale,
   )
 }
 
 beforeEach(() => { vi.clearAllMocks() })
+afterEach(() => { vi.restoreAllMocks() })
 
 describe("PostCard — auteur retiré et contenu conservé", () => {
   it.each(["fr", "en"] as const)("rend un auteur neutre traduit en %s sans lien de profil ni badges", (locale) => {
@@ -101,5 +105,93 @@ describe("PostCard — auteur retiré et contenu conservé", () => {
     expect(screen.getByText(post.body)).toBeInTheDocument()
     expect(container.querySelector('a[href="/publication/post-conserve"]')).toBeInTheDocument()
     expect(mocks.menu).toHaveBeenLastCalledWith(page)
+  })
+})
+
+describe("PostCard — partage accessible en lecture seule", () => {
+  it.each(["fr", "en"] as const)("copie le lien courant en %s sans donner de droit de citation et rend le focus au bouton", async (locale) => {
+    const user = userEvent.setup()
+    const write = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue(undefined)
+    const t = getFixedT(locale)
+    mount(post, locale)
+    const trigger = screen.getByRole("button", { name: t("post.share") })
+    expect(screen.getByRole("button", { name: t("post.react") })).toBeDisabled()
+    await user.click(trigger)
+
+    const link = screen.getByRole("textbox", { name: t("post.shareActions.link") })
+    const expected = new URL(routes.post(post.id), window.location.origin).href
+    expect(link).toHaveValue(expected)
+    expect(link).toHaveAttribute("readonly")
+    expect(link).toHaveFocus()
+    expect(screen.queryByRole("button", { name: t("post.shareActions.quote") })).not.toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: t("post.shareActions.copyLink") }))
+    expect(write).toHaveBeenCalledWith(expected)
+    expect(mocks.copied).toHaveBeenCalledWith(t("post.shareActions.copied"))
+
+    await user.keyboard("{Escape}")
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+    await waitFor(() => expect(trigger).toHaveFocus())
+  })
+
+  it("un refus du presse-papiers garde le lien sélectionné et ne prétend pas l'avoir copié", async () => {
+    const user = userEvent.setup()
+    vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(new DOMException("denied", "NotAllowedError"))
+    const t = getFixedT("fr")
+    mount()
+    await user.click(screen.getByRole("button", { name: t("post.share") }))
+    await user.click(screen.getByRole("button", { name: t("post.shareActions.copyLink") }))
+    const link = screen.getByRole("textbox", { name: t("post.shareActions.link") }) as HTMLInputElement
+    // Le texte brut conserve l’espace insécable française, normalisée par les requêtes textuelles.
+    expect((await screen.findByRole("alert")).textContent).toBe(t("post.shareActions.copyFailed"))
+    expect(link).toHaveFocus()
+    expect(link.selectionStart).toBe(0)
+    expect(link.selectionEnd).toBe(link.value.length)
+    expect(mocks.copied).not.toHaveBeenCalled()
+  })
+
+  it("conserve le focus et une seule copie tant que le presse-papiers n'a pas répondu", async () => {
+    const user = userEvent.setup()
+    let complete: () => void = () => undefined
+    const write = vi.spyOn(navigator.clipboard, "writeText").mockImplementation(() => new Promise<void>((resolve) => { complete = resolve }))
+    const t = getFixedT("fr")
+    mount()
+    await user.click(screen.getByRole("button", { name: t("post.share") }))
+    const copy = screen.getByRole("button", { name: t("post.shareActions.copyLink") })
+    await user.click(copy)
+    expect(copy).not.toBeDisabled()
+    expect(copy).toHaveAttribute("aria-disabled", "true")
+    expect(copy).toHaveFocus()
+    await user.click(copy)
+    expect(write).toHaveBeenCalledTimes(1)
+    await act(async () => complete())
+    expect(copy).toHaveAttribute("aria-disabled", "false")
+    expect(copy).toHaveFocus()
+  })
+
+  it("conserve le partage cité existant pour un membre autorisé", async () => {
+    const user = userEvent.setup(), share = vi.fn()
+    const value: PostView = { ...post, author: { ...post.author, handle: "recette", displayName: "Recette" } }
+    const t = getFixedT("fr")
+    mount(value, "fr", share)
+    await user.click(screen.getByRole("button", { name: t("post.share") }))
+    await user.click(screen.getByRole("button", { name: t("post.shareActions.quote") }))
+    expect(share).toHaveBeenCalledExactlyOnceWith(value)
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+  })
+
+  it("une audience limitée permet de copier l'adresse mais ne propose pas de citation", async () => {
+    const user = userEvent.setup(), share = vi.fn()
+    const t = getFixedT("fr")
+    mount({ ...post, audience: "connections" }, "fr", share)
+    await user.click(screen.getByRole("button", { name: t("post.share") }))
+    expect(screen.getByRole("textbox", { name: t("post.shareActions.link") })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: t("post.shareActions.quote") })).not.toBeInTheDocument()
+    expect(share).not.toHaveBeenCalled()
+  })
+
+  it("ne propose pas de partager une publication encore en relecture", () => {
+    const t = getFixedT("fr")
+    mount({ ...post, moderation: "pending_review", isMine: true }, "fr", vi.fn())
+    expect(screen.queryByRole("button", { name: t("post.share") })).not.toBeInTheDocument()
   })
 })

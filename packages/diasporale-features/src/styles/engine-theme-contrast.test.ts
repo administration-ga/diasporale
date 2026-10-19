@@ -153,15 +153,16 @@ describe("thème DIASPORALE servi par le moteur — cascade base + thème", () =
     })
   })
 
-  it("élévation par la clarté dans les deux thèmes : le fond est la couche la plus basse, la carte se lève, ce qui flotte se lève encore", () => {
+  it("fond papier et cartes sable en clair ; cartes éclaircies sur fond nuit en sombre", () => {
+    expect(tokenLuminance(THEMES.clair, "--background")).toBeGreaterThan(tokenLuminance(THEMES.clair, "--card"))
+    expect(tokenLuminance(THEMES.sombre, "--card")).toBeGreaterThan(tokenLuminance(THEMES.sombre, "--background"))
     for (const theme of [THEMES.clair, THEMES.sombre]) {
-      expect(tokenLuminance(theme, "--card")).toBeGreaterThan(tokenLuminance(theme, "--background"))
       expect(tokenLuminance(theme, "--popover")).toBeGreaterThanOrEqual(tokenLuminance(theme, "--card"))
     }
     // Sans filet, chaque marche se voit : la carte et ce qui flotte s'écartent nettement.
     expect(contrastRatio(THEMES.sombre, "--card", "--background")).toBeGreaterThanOrEqual(1.15)
     expect(contrastRatio(THEMES.sombre, "--popover", "--card")).toBeGreaterThanOrEqual(1.12)
-    // En clair (v3.2), le papier se détache du sable comme une carte des grands réseaux (1,10 avant).
+    // Correction du propriétaire (v3.3) : les cartes sable se détachent du fond papier.
     expect(contrastRatio(THEMES.clair, "--card", "--background")).toBeGreaterThanOrEqual(1.12)
   })
 
@@ -210,7 +211,7 @@ describe("thème DIASPORALE servi par le moteur — cascade base + thème", () =
     }
   })
 
-  it("garde le bleu Gabon foncé (v3.2, décision du propriétaire) comme bleu d'action et le sable v3.2 comme fond", () => {
+  it("garde le bleu Gabon foncé comme bleu d'action et la palette papier/sable", () => {
     expect(THEMES.clair.get("--esp-blue-500")).toBe("#0167a8")
     expect(THEMES.clair.get("--esp-neutral-100")).toBe("#f1efeb")
   })

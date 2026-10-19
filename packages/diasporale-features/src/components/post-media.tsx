@@ -2,14 +2,21 @@
 
 import { ImmersiveOverlay } from "@antsia/ui/overlay"
 import { ChevronLeftIcon, ChevronRightIcon, ImageOffIcon, LoaderCircleIcon, Maximize2Icon, ShieldAlertIcon, XIcon } from "lucide-react"
-import { useCallback, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ComponentProps, type KeyboardEvent, type RefObject } from "react"
 
 import { useOptionalDataSource } from "../data/context"
 import type { DiasporaleDataSource } from "../data/port"
 import type { PostMediaView } from "../data/types"
 import { useDiasporaleT } from "../i18n/client"
 import { cn } from "../lib/cn"
-import { claimMediaViewer, ownsMediaViewer, releaseMediaViewer } from "../lib/media-viewer-lease"
+import {
+  claimMediaPlayback,
+  claimMediaViewer,
+  ownsMediaViewer,
+  registerMediaPlayer,
+  releaseMediaViewer,
+  stopAllMediaPlayback,
+} from "../lib/media-viewer-lease"
 
 /**
  * Les médias d'une publication (EXF-DG-10). Une photo seule garde ses
@@ -80,6 +87,8 @@ function MediaGrid(props: GridProps & { source: DiasporaleDataSource | null; con
     const current = props.media[index]
     if (live.current !== scope || !props.canOpen || !props.canDisplay || !current || !isDelivered(current)) return
     if (!claimMediaViewer(scope.token)) return
+    // Lecteur unique (DG-017) : la visionneuse ouverte, aucune autre lecture ne continue derrière elle.
+    stopAllMediaPlayback()
     setSelection({ scope, index })
   }
 
@@ -163,7 +172,7 @@ function ViewerMedia(props: { item: PostMediaView; canDisplay: boolean }) {
   if (!props.canDisplay || !isDelivered(item)) return <MediaUnavailable item={item} className="w-full max-w-xl" />
   const size = item.width && item.height ? { width: item.width, height: item.height } : {}
   return item.kind === "video" ? (
-    <video src={item.url ?? undefined} controls tabIndex={0} preload="metadata" playsInline aria-label={item.altText ?? t("post.media.video")} className="max-h-full max-w-full object-contain" {...size} />
+    <ExclusiveVideo src={item.url ?? undefined} controls tabIndex={0} preload="metadata" playsInline aria-label={item.altText ?? t("post.media.video")} className="max-h-full max-w-full object-contain" {...size} />
   ) : (
     // eslint-disable-next-line @next/next/no-img-element -- URL délivrée par la garde, sans copie ni optimiseur
     <img src={item.url ?? undefined} alt={item.altText ?? t("post.media.photo")} decoding="async" className="max-h-full max-w-full object-contain" {...size} />
@@ -189,8 +198,8 @@ function MediaTile(props: { item: PostMediaView; single: boolean; wide: boolean;
     return (
       <div className={cn("min-w-0", props.wide && "col-span-2")}>
         <div className={frame}>
-          <video
-            ref={video}
+          <ExclusiveVideo
+            mediaRef={video}
             src={item.url ?? undefined}
             controls
             preload="metadata"
@@ -229,4 +238,24 @@ function MediaTile(props: { item: PostMediaView; single: boolean; wide: boolean;
       <span aria-hidden className="absolute bottom-2 right-2 grid size-8 place-items-center rounded-full bg-card/90 text-foreground"><Maximize2Icon className="size-4" /></span>
     </button>
   ) : <div className={frame}>{image}</div>
+}
+
+/**
+ * Une `<video>` native inscrite au lecteur unique (DG-017) : la lancer met en
+ * pause toute autre lecture de l'onglet, et une suspension (appel en cours) la
+ * refuse. Le DOM rendu, commandes natives comprises, reste celui d'une vidéo
+ * ordinaire ; le démontage la désinscrit, le registre reste donc borné.
+ */
+function ExclusiveVideo({ mediaRef, onPlay, ...props }: Omit<ComponentProps<"video">, "ref"> & { mediaRef?: RefObject<HTMLVideoElement | null> }) {
+  const [token] = useState(() => Symbol("lecteur"))
+  const attach = useCallback((node: HTMLVideoElement | null) => {
+    if (mediaRef) mediaRef.current = node
+    if (node === null) return
+    const unregister = registerMediaPlayer(token, node)
+    return () => {
+      unregister()
+      if (mediaRef && mediaRef.current === node) mediaRef.current = null
+    }
+  }, [mediaRef, token])
+  return <video {...props} ref={attach} onPlay={(event) => { claimMediaPlayback(token); onPlay?.(event) }} />
 }

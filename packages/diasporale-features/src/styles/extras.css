@@ -53,7 +53,7 @@
      surface la plus claire de sa piste — papier en clair, survol levé en sombre. */
   --dg-chosen-bg: var(--esp-segment-on);
   --dg-chosen-fg: var(--esp-segment-on-fg);
-  --dg-thumb: var(--card);
+  --dg-thumb: var(--esp-neutral-0);
 
   /* Bouton destructif : hors du contrat du moteur, dérivé de lui. Le survol
      se rapproche de l'encre (plus sombre en clair, plus clair en sombre). */

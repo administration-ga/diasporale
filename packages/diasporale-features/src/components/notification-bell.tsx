@@ -3,16 +3,36 @@
 import {
   BadgeCheckIcon,
   BellIcon,
+  BriefcaseBusinessIcon,
+  CalendarIcon,
+  CalendarCheckIcon,
+  CalendarXIcon,
   CheckIcon,
+  CircleCheckIcon,
+  CircleXIcon,
+  FileTextIcon,
+  FlagIcon,
+  GraduationCapIcon,
+  HandHeartIcon,
   HandshakeIcon,
   HeartIcon,
+  HourglassIcon,
+  InboxIcon,
   type LucideIcon,
   MessageCircleIcon,
+  MessageCircleOffIcon,
+  MessageSquareReplyIcon,
+  MessagesSquareIcon,
   Repeat2Icon,
+  ScaleIcon,
   ShieldQuestionIcon,
   SparklesIcon,
   UserCheckIcon,
   UserPlusIcon,
+  UserRoundCheckIcon,
+  UserRoundXIcon,
+  UsersIcon,
+  UserXIcon,
   AtSignIcon,
   UserMinusIcon,
 } from "lucide-react"
@@ -21,7 +41,15 @@ import { toast } from "sonner"
 
 import type { ActionResult } from "../data/port"
 import { useActions, useNotifications, useUnreadCount } from "../data/context"
-import type { NotificationKind, NotificationView } from "../data/types"
+import {
+  COMMUNITY_NOTIFICATION_KINDS,
+  CONTEXTUAL_NOTIFICATION_KINDS,
+  SERVICE_NOTIFICATION_KINDS,
+  type CommunityNoticeView,
+  type NotificationKind,
+  type NotificationView,
+  type ServiceNoticeView,
+} from "../data/types"
 import { useDiasporaleT } from "../i18n/client"
 import { cn } from "../lib/cn"
 import { formatRelative } from "../lib/format"
@@ -43,6 +71,38 @@ const KIND_ICONS: Readonly<Record<NotificationKind, LucideIcon>> = {
   sponsorship_withdrawn: UserMinusIcon,
   attestation_verified: BadgeCheckIcon,
   attestation_not_confirmed: ShieldQuestionIcon,
+  association_event_reminder: CalendarIcon,
+  // Mise en relation (DG-010, DG-015, DG-016).
+  service_request_received: InboxIcon,
+  service_proposal_received: FileTextIcon,
+  service_request_declined: CircleXIcon,
+  service_proposal_accepted: CalendarCheckIcon,
+  service_request_cancelled: CalendarXIcon,
+  service_request_expired: HourglassIcon,
+  service_booking_completed: CircleCheckIcon,
+  service_booking_no_show: UserXIcon,
+  service_no_show_contested: FlagIcon,
+  association_membership_requested: UsersIcon,
+  association_membership_accepted: UserRoundCheckIcon,
+  association_membership_declined: UserRoundXIcon,
+  association_membership_removed: UserMinusIcon,
+  service_review_replied: MessageSquareReplyIcon,
+  // Vie communautaire (vague H : entraide, mentorat, emploi, kit d'arrivée).
+  aid_answer_received: MessagesSquareIcon,
+  aid_answer_retained: CircleCheckIcon,
+  aid_mission_signup: HandHeartIcon,
+  mentoring_request_received: GraduationCapIcon,
+  mentoring_request_accepted: UserRoundCheckIcon,
+  mentoring_request_declined: UserRoundXIcon,
+  mentoring_closed: UserMinusIcon,
+  job_application_received: BriefcaseBusinessIcon,
+  job_application_shortlisted: BadgeCheckIcon,
+  job_application_not_selected: CircleXIcon,
+  kit_resource_reviewed: FileTextIcon,
+  // Conversation de mise en relation (CC-2b du moteur).
+  contextual_message: MessageCircleIcon,
+  contextual_closed: MessageCircleOffIcon,
+  moderation_decision: ScaleIcon,
   other: BellIcon,
 }
 
@@ -68,13 +128,104 @@ function isActorLed(kind: NotificationKind): kind is ActorLedKind {
   return ACTOR_LED.has(kind)
 }
 
-/** Les phrases entières du système ; un retrait de parrainage en a une pour quand personne n'est nommé. */
-export const BELL_SYSTEM_KINDS = ["sponsorship_withdrawn", "attestation_verified", "attestation_not_confirmed", "other"] as const satisfies readonly NotificationKind[]
+/**
+ * Les phrases entières du système ; un retrait de parrainage en a une pour quand personne n'est nommé.
+ * Les avis de mise en relation en sont : neutres, ils ne nomment personne.
+ */
+export const BELL_SYSTEM_KINDS = [
+  "sponsorship_withdrawn",
+  "attestation_verified",
+  "attestation_not_confirmed",
+  "association_event_reminder",
+  ...SERVICE_NOTIFICATION_KINDS,
+  ...COMMUNITY_NOTIFICATION_KINDS,
+  ...CONTEXTUAL_NOTIFICATION_KINDS,
+  "moderation_decision",
+  "other",
+] as const satisfies readonly NotificationKind[]
 type SystemKind = (typeof BELL_SYSTEM_KINDS)[number]
 
 /** La clé d'une phrase du système : un genre nouveau, sans phrase ni nom devant, ne compile pas. */
 function systemSentence(kind: SystemKind): `bell.system.${SystemKind}` {
   return `bell.system.${kind}`
+}
+
+/**
+ * Les adresses des avis de mise en relation, quand l'application les fournit dans sa
+ * table (`serviceRequest`, `activityRequest`, `associationMembers`, `myAssociations`) :
+ * chacune relit les droits à l'ouverture et ne porte qu'un identifiant. Absentes, l'avis
+ * retombe sur la fiche de la page ; sans page lisible, il n'offre aucun lien inventé.
+ */
+type ServiceNoticeRoutes = ReturnType<typeof useRouting>["routes"] & {
+  readonly serviceRequest?: (requestId: string) => string
+  readonly activityRequest?: (requestId: string) => string
+  readonly associationMembers?: (handle: string) => string
+  readonly myAssociations?: () => string
+}
+
+/**
+ * Le lien d'un avis de la vie communautaire : l'objet qu'il ouvre, par la route que
+ * l'application fournit (chaque route relit les droits à l'ouverture), avec son libellé.
+ * Sans route fournie, aucun lien inventé.
+ */
+function communityNoticeLink(notice: CommunityNoticeView, routes: ReturnType<typeof useRouting>["routes"]): { readonly href: string; readonly label: string } | null {
+  switch (notice.opens) {
+    case "aidQuestion": {
+      const href = routes.mutualAidItem?.(notice.objectId)
+      return href ? { href, label: "bell.communityLink.aidQuestion" } : null
+    }
+    case "aidMission": {
+      const href = routes.mutualAidItem?.(notice.objectId)
+      return href ? { href, label: "bell.communityLink.aidMission" } : null
+    }
+    case "mentoringRequest": {
+      const href = routes.myMentoring?.()
+      return href ? { href, label: "bell.communityLink.mentoringRequest" } : null
+    }
+    case "jobApplication": {
+      // L'équipe : le recrutement de la page concernée quand elle se lit, sinon Mon activité.
+      const teamHref = notice.pageHandle !== null ? routes.pageJobs?.(notice.pageHandle) ?? routes.jobsActivity?.() : routes.jobsActivity?.()
+      const href = notice.audience === "team" ? teamHref : routes.myApplications?.()
+      return href ? { href, label: notice.audience === "team" ? "bell.communityLink.jobApplicationTeam" : "bell.communityLink.jobApplicationCandidate" } : null
+    }
+    case "kitResource": {
+      const href = routes.arrivalKitResource?.(notice.objectId)
+      return href ? { href, label: "bell.communityLink.kitResource" } : null
+    }
+  }
+}
+
+/**
+ * Le lien d'un avis de décision de modération : les décisions de la page quand le moteur
+ * nomme une page dont je signe à la lecture, sinon « Mes données » ; chaque route relit
+ * les droits à l'ouverture. Sans route fournie par l'application, aucun lien inventé.
+ */
+function moderationDecisionLink(item: NotificationView, routes: ReturnType<typeof useRouting>["routes"]): { readonly href: string; readonly page: boolean } | null {
+  if (item.kind !== "moderation_decision" || !item.moderationDecision) return null
+  const handle = item.moderationDecision.pageHandle
+  const href = handle !== null ? routes.pageDecisions?.(handle) : routes.myDecisions?.()
+  return href ? { href, page: handle !== null } : null
+}
+
+/** La route propre à l'interlocuteur : sa demande, la demande reçue, les adhérents, ses associations. */
+function deepServiceHref(notice: ServiceNoticeView, routes: ServiceNoticeRoutes): string | undefined {
+  switch (notice.audience) {
+    case "requester":
+      return notice.requestId !== null ? routes.serviceRequest?.(notice.requestId) : undefined
+    case "provider":
+      return notice.requestId !== null ? routes.activityRequest?.(notice.requestId) : undefined
+    case "responsible":
+      return notice.pageHandle !== null ? routes.associationMembers?.(notice.pageHandle) : undefined
+    case "member":
+      return routes.myAssociations?.()
+  }
+}
+
+/** Le lien d'un avis de mise en relation : la route qui relit les droits (`deep`), sinon la fiche de la page. */
+function serviceNoticeLink(notice: ServiceNoticeView, routes: ServiceNoticeRoutes): { readonly href: string; readonly deep: boolean } | null {
+  const deep = deepServiceHref(notice, routes)
+  if (deep) return { href: deep, deep: true }
+  return notice.pageHandle !== null ? { href: routes.page(notice.pageHandle), deep: false } : null
 }
 
 /**
@@ -87,7 +238,7 @@ export function NotificationBell(props: { className?: string }) {
   const unread = useUnreadCount()
   const [open, setOpen] = useState(false)
   const count = unread.status === "ready" ? unread.data : null
-  const shown = count && count.count > 0 ? (count.capped ? "99+" : String(count.count)) : null
+  const shown = count && count.count > 0 ? (count.capped ? "99+" : `${count.count}${count.truncated ? "+" : ""}`) : null
 
   return (
     <>
@@ -95,7 +246,7 @@ export function NotificationBell(props: { className?: string }) {
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={count && count.count > 0 ? t("bell.openUnread", { count: count.count }) : t("bell.open")}
+        aria-label={count?.truncated ? t("bell.partialUnread", { count: count.count }) : count && count.count > 0 ? t("bell.openUnread", { count: count.count }) : t("bell.open")}
         onClick={() => setOpen(true)}
         className={cn(
           "relative inline-flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:shadow-focus",
@@ -203,6 +354,18 @@ function NotificationRow(props: { item: NotificationView; now: number; onNavigat
   const [busy, setBusy] = useState(false)
   const { item } = props
   const Icon = KIND_ICONS[item.kind]
+  const eventHref = item.kind === "association_event_reminder" && item.associationEvent
+    ? routes.associationEvent?.(item.associationEvent.pageHandle, item.associationEvent.eventId) ?? routes.page(item.associationEvent.pageHandle) : null
+  // Mise en relation : la route qui relit les droits, ou la fiche de la page ; rien sans cible relue.
+  const serviceNotice = item.serviceNotice ?? null
+  const serviceLink = serviceNotice ? serviceNoticeLink(serviceNotice, routes) : null
+  // Décision de modération (P16 · G9) : mes décisions, ou celles d'une page dont je signe.
+  const decisionLink = moderationDecisionLink(item, routes)
+  // Vie communautaire (vague H) : l'objet relu, par sa route ; rien sans cible relue.
+  const communityNotice = item.communityNotice ?? null
+  const communityLink = communityNotice ? communityNoticeLink(communityNotice, routes) : null
+  // Conversation de mise en relation (CC-6) : le fil relu pour moi, par la route de l'application.
+  const conversationHref = item.contextualThreadId ? routes.contextualConversation?.(item.contextualThreadId) : undefined
 
   const run = async (action: () => Promise<ActionResult>) => {
     setBusy(true)
@@ -226,6 +389,27 @@ function NotificationRow(props: { item: NotificationView; now: number; onNavigat
             {item.inviteOutcome ? ` · ${t(`bell.outcome.${item.inviteOutcome}`)}` : null}
             {item.read ? null : <span className="sr-only"> · {t("bell.unread")}</span>}
           </p>
+          {eventHref ? <Link href={eventHref} onClick={props.onNavigate} className="mt-1 inline-flex text-[13px] font-semibold text-[var(--esp-accent-deep)] hover:underline focus-visible:shadow-focus">{t("bell.openAssociationEvent")}</Link> : null}
+          {serviceNotice && serviceLink ? (
+            <Link href={serviceLink.href} onClick={props.onNavigate} className="mt-1 inline-flex text-[13px] font-semibold text-[var(--esp-accent-deep)] hover:underline focus-visible:shadow-focus">
+              {serviceLink.deep ? t(`bell.serviceLink.${serviceNotice.audience}`) : t("bell.serviceLinkPage")}
+            </Link>
+          ) : null}
+          {decisionLink ? (
+            <Link href={decisionLink.href} onClick={props.onNavigate} className="mt-1 inline-flex text-[13px] font-semibold text-[var(--esp-accent-deep)] hover:underline focus-visible:shadow-focus">
+              {t(decisionLink.page ? "bell.openPageDecisions" : "bell.openMyDecisions")}
+            </Link>
+          ) : null}
+          {communityLink ? (
+            <Link href={communityLink.href} onClick={props.onNavigate} className="mt-1 inline-flex text-[13px] font-semibold text-[var(--esp-accent-deep)] hover:underline focus-visible:shadow-focus">
+              {t(communityLink.label)}
+            </Link>
+          ) : null}
+          {conversationHref ? (
+            <Link href={conversationHref} onClick={props.onNavigate} className="mt-1 inline-flex text-[13px] font-semibold text-[var(--esp-accent-deep)] hover:underline focus-visible:shadow-focus">
+              {t("bell.openConversation")}
+            </Link>
+          ) : null}
           {item.postId ? (
             <Link
               href={routes.post(item.postId)}

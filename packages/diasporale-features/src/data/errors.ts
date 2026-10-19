@@ -8,6 +8,22 @@ import {
 } from "@diasporale/domain"
 
 import { HANDLE_REFUSALS } from "../lib/handle"
+import { ASSOCIATION_ERROR_CODES } from "./associations-port"
+import { ASSOCIATION_ACTIVITY_ERROR_CODES } from "./association-activities-port"
+import { DATA_RIGHTS_ERROR_CODES } from "./data-rights-port"
+import { PAGE_ADMIN_ERROR_CODES } from "./page-admin-port"
+import { PAGE_ERROR_CODES } from "./pages-port"
+import { PAGE_PUBLICATIONS_ERROR_CODES } from "./page-publications-port"
+import { SERVICE_REQUEST_ERROR_CODES } from "./service-requests-port"
+import { SERVICE_REVIEW_ERROR_CODES } from "./service-reviews-port"
+import { SERVICE_ERROR_CODES } from "./services-port"
+import { CONTENT_REPORT_ERROR_CODES } from "./content-reports-port"
+import { MUTUAL_AID_ERROR_CODES } from "./mutual-aid-port"
+import { ARRIVAL_KIT_ERROR_CODES } from "./arrival-kit-port"
+import { MENTORING_ERROR_CODES } from "./mentoring-port"
+import { JOB_ERROR_CODES } from "./jobs-port"
+import { MODERATION_DESK_ERROR_CODES } from "./moderation-desk-port"
+import { PILOT_METRICS_ERROR_CODES } from "./pilot-metrics-port"
 
 /**
  * Les codes de refus FERMÉS que l'écran traduit par `errors.<code>`.
@@ -85,6 +101,23 @@ export const ACTION_ERROR_CODES = [
   ...SPONSORSHIP_REFUSALS,
   ...SPONSORSHIP_REVOCATION_REFUSALS,
   ...HANDLE_REFUSALS,
+  // Les codes des capacités du plan global (docs/14), chacun tenu par son chantier.
+  ...PAGE_ERROR_CODES,
+  ...PAGE_PUBLICATIONS_ERROR_CODES,
+  ...PAGE_ADMIN_ERROR_CODES,
+  ...SERVICE_ERROR_CODES,
+  ...SERVICE_REQUEST_ERROR_CODES,
+  ...DATA_RIGHTS_ERROR_CODES,
+  ...ASSOCIATION_ERROR_CODES,
+  ...ASSOCIATION_ACTIVITY_ERROR_CODES,
+  ...SERVICE_REVIEW_ERROR_CODES,
+  ...CONTENT_REPORT_ERROR_CODES,
+  ...MUTUAL_AID_ERROR_CODES,
+  ...ARRIVAL_KIT_ERROR_CODES,
+  ...MENTORING_ERROR_CODES,
+  ...JOB_ERROR_CODES,
+  ...MODERATION_DESK_ERROR_CODES,
+  ...PILOT_METRICS_ERROR_CODES,
 ] as const
 
 export type ActionErrorCode = (typeof ACTION_ERROR_CODES)[number]

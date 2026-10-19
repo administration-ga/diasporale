@@ -24,6 +24,8 @@ import type {
   Reach,
 } from "@diasporale/domain"
 
+import type { AssociationEventsCapability, AssociationGroupsCapability } from "./association-activities-port"
+
 import type {
   BookmarkView,
   BookmarksPageQuery,
@@ -54,6 +56,23 @@ import type {
 } from "./types"
 
 import type { ActionErrorCode } from "./errors"
+import type { AssociationsCapability } from "./associations-port"
+import type { DataRightsCapability } from "./data-rights-port"
+import type { PageAdminCapability } from "./page-admin-port"
+import type { PagesCapability } from "./pages-port"
+import type { PagePublicationsCapability } from "./page-publications-port"
+import type { ServiceRequestsCapability } from "./service-requests-port"
+import type { ServiceReviewsCapability } from "./service-reviews-port"
+import type { ServicesCapability } from "./services-port"
+import type { ContentReportsCapability } from "./content-reports-port"
+import type { MutualAidCapability } from "./mutual-aid-port"
+import type { ArrivalKitCapability } from "./arrival-kit-port"
+import type { MentoringCapability } from "./mentoring-port"
+import type { JobsCapability } from "./jobs-port"
+import type { ModerationDeskCapability } from "./moderation-desk-port"
+import type { PilotMetricsCapability } from "./pilot-metrics-port"
+import type { ConversationsCapability } from "./conversations-port"
+import type { PageDecisionsCapability } from "./page-decisions-port"
 
 export type ActionResult<T = null> =
   | { readonly ok: true; readonly value: T }
@@ -76,6 +95,46 @@ export interface ProfilePublication {
   setPrivacy(personId: string, isPrivate: boolean): Promise<ActionResult>
   withdraw(personId: string): Promise<ActionResult>
   republish(personId: string): Promise<ActionResult>
+}
+
+/** Choix privés du lecteur dans DIASPORALE, sans effet sur ses relations. */
+export type ContentPreferenceKind = "hiddenPosts" | "mutedAuthors"
+
+export interface ContentPreferenceAuthor {
+  readonly kind: "person" | "page"
+  readonly displayName: string
+  readonly handle: string | null
+  readonly avatarUrl: string | null
+}
+
+export interface ContentPreferenceItem {
+  readonly choiceId: string
+  /** Zéro si un ancien choix ne porte pas de date connue. */
+  readonly at: number
+  readonly postId: string | null
+  readonly body: string | null
+  readonly author: ContentPreferenceAuthor | null
+}
+
+export interface ContentPreferencesPage {
+  readonly items: readonly ContentPreferenceItem[]
+  readonly continueCursor: string | null
+  readonly isDone: boolean
+}
+
+export interface ContentPreferencesRequest {
+  readonly personId: string
+  readonly kind: ContentPreferenceKind
+  readonly cursor: string | null
+}
+
+export type ContentPreferencesQuery = Loadable<ContentPreferencesPage> & {
+  readonly retry?: () => Promise<unknown>
+}
+
+export interface ContentPreferences {
+  usePage(args: ContentPreferencesRequest): ContentPreferencesQuery
+  restore(args: { personId: string; kind: ContentPreferenceKind; choiceId: string }): Promise<ActionResult<{ restored: boolean }>>
 }
 
 /** Ce qu'IDN rend au retour OIDC (simulé en démonstration). */
@@ -230,9 +289,46 @@ export interface DemoControls {
 
 export interface DiasporaleDataSource {
   readonly kind: "demo" | "engine"
+  readonly associationGroups?: AssociationGroupsCapability
+  readonly associationEvents?: AssociationEventsCapability
   /** Disponible seulement si le fournisseur sait gérer les images du profil commun. */
   readonly profileImages?: ProfileImagesActions | null
   readonly profilePublication?: ProfilePublication
+  readonly contentPreferences?: ContentPreferences
+  /** Pages : fiche réelle, abonnement, annuaire (DG-007, `pages-port.ts`). */
+  readonly pages?: PagesCapability
+  /** Parole et mur des pages, indépendants de leur identité et de leur équipe. */
+  readonly pagePublications?: PagePublicationsCapability
+  /** Gestion des pages : création, revendication, équipe (DG-008, `page-admin-port.ts`). */
+  readonly pageAdmin?: PageAdminCapability
+  /** Catalogue des services des pages professionnelles (DG-011/012, `services-port.ts`). */
+  readonly services?: ServicesCapability
+  /** Demandes, propositions et rendez-vous (DG-014/015, `service-requests-port.ts`). */
+  readonly serviceRequests?: ServiceRequestsCapability
+  /** Droits personnels : export, effacement, décisions et recours (DG-026, `data-rights-port.ts`). */
+  readonly dataRights?: DataRightsCapability
+  /** Associations : adhésion distincte de l'abonnement, responsables, rôles (DG-010, `associations-port.ts`). */
+  readonly associations?: AssociationsCapability
+  /** Avis admissibles sur une prestation et réponse de la page (DG-016, `service-reviews-port.ts`). */
+  readonly serviceReviews?: ServiceReviewsCapability
+  /** Signaler un contenu de la vague H par la porte unique de modération (G9, `content-reports-port.ts`). */
+  readonly contentReports?: ContentReportsCapability
+  /** Entraide (DG-024 a, `mutual-aid-port.ts`). */
+  readonly mutualAid?: MutualAidCapability
+  /** Kit d'arrivée (DG-024 b, `arrival-kit-port.ts`). */
+  readonly arrivalKit?: ArrivalKitCapability
+  /** Mentorat (DG-024 c, `mentoring-port.ts`). */
+  readonly mentoring?: MentoringCapability
+  /** Talents et emploi (DG-025, `jobs-port.ts`). */
+  readonly jobs?: JobsCapability
+  /** Modération par pays (PD6 · G9, `moderation-desk-port.ts`). */
+  readonly moderationDesk?: ModerationDeskCapability
+  /** Mesure du pilote (DG-027 · G11, `pilot-metrics-port.ts`). */
+  readonly pilotMetrics?: PilotMetricsCapability
+  /** Décisions qui ont retiré un contenu porté par une page, et leur recours (P16 · G9, `page-decisions-port.ts`). */
+  readonly pageDecisions?: PageDecisionsCapability
+  /** Le fil de mise en relation d'un objet, lu et ouvert depuis l'objet (CC-6, `conversations-port.ts`). */
+  readonly conversations?: ConversationsCapability
   useSession(): Loadable<SessionView>
   useOpenCountries(): Loadable<readonly OpenCountryView[]>
   useCountryHub(country: CountryCode): Loadable<CountryHubView>

@@ -5,7 +5,7 @@ import { hasCapability, type CountryCode, type FeedScope } from "@diasporale/dom
 import { useMemo, useSyncExternalStore } from "react"
 
 import { describeMediaFile, downscaleImage } from "../data/media"
-import type { DemoAccountView, DiasporaleDataSource } from "../data/port"
+import type { ContentPreferencesQuery, ContentPreferencesRequest, DemoAccountView, DiasporaleDataSource } from "../data/port"
 import type {
   BookmarkView,
   BookmarksPageQuery,
@@ -27,6 +27,13 @@ import type {
 } from "../data/types"
 import { BOOKMARKS_PAGE_SIZE } from "../data/types"
 import { splitDisplayName, suggestHandles } from "../lib/handle"
+import { contentPreferencesPage } from "./content-preferences"
+import { createDemoAssociationsContext } from "./associations"
+import { createDemoAssociationActivities } from "./association-activities"
+import { createDemoDataRights } from "./data-rights"
+import { createDemoPageAdmin, demoPageAdminContext } from "./page-admin"
+import { createDemoPages } from "./pages"
+import { createDemoPagePublications } from "./page-publications"
 import {
   bookmarksView,
   commentsView,
@@ -37,7 +44,6 @@ import {
   memberSearchView,
   openCountriesView,
   ownProfileView,
-  pageDetailView,
   postDetailView,
   notificationsView,
   profileView,
@@ -49,6 +55,17 @@ import {
   suggestionsView,
   unreadCountView,
 } from "./selectors"
+import { createDemoServiceRequestsContext } from "./service-requests"
+import { createDemoServiceReviews } from "./service-reviews"
+import { createDemoServices } from "./services"
+import { createDemoContentReports } from "./content-reports"
+import { createDemoMutualAid } from "./mutual-aid"
+import { createDemoArrivalKit } from "./arrival-kit"
+import { createDemoMentoring } from "./mentoring"
+import { createDemoJobs } from "./jobs"
+import { createDemoModerationDesk } from "./moderation-desk"
+import { createDemoPilotMetrics } from "./pilot-metrics"
+import { createDemoPageDecisions } from "./page-decisions"
 import type { DemoStore } from "./store"
 
 const LOADING = { status: "loading" } as const
@@ -88,6 +105,18 @@ function localPostsPage(posts: readonly PostView[], cursor: FeedCursorView | nul
  */
 export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
   const useVersion = () => useSyncExternalStore(store.subscribe, store.getVersion, () => -1)
+  const demoServices = createDemoServices(store)
+  // La fiche d'une page lit la capacité (abonnements locaux, rôle du lecteur) : une seule instance.
+  const demoPages = createDemoPages(store)
+  const demoPageTeams = demoPageAdminContext(store)
+  const demoAssociations = createDemoAssociationsContext(store)
+  const demoAssociationActivities = createDemoAssociationActivities(store, { associations: demoAssociations, teams: demoPageTeams })
+  const demoRequests = createDemoServiceRequestsContext(store, {
+    findOffer: demoServices.findOffer,
+    signatoriesOf: demoPageTeams.signatoriesOf,
+    subscribeSignatories: demoPageTeams.subscribe,
+    getSignatoriesVersion: demoPageTeams.getVersion,
+  })
 
   return {
     kind: "demo",
@@ -105,6 +134,34 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       republish: (personId) => store.republishProfile(personId),
       updateIdentity: (personId, input) => store.updateProfileIdentity(personId, input),
     },
+    contentPreferences: {
+      usePage({ personId, kind, cursor }: ContentPreferencesRequest): ContentPreferencesQuery {
+        const version = useVersion()
+        return useMemo(() => version < 0 ? LOADING : contentPreferencesPage(store.getState(), { personId, kind, cursor }, store.now()), [version, personId, kind, cursor])
+      },
+      restore: (args) => store.restoreContentPreference(args),
+    },
+    // Capacités des chantiers du plan global (docs/14), chacune dans son fichier.
+    pages: demoPages,
+    pagePublications: createDemoPagePublications(store),
+    pageAdmin: createDemoPageAdmin(store),
+    services: demoServices.capability,
+    serviceRequests: demoRequests.capability,
+    dataRights: createDemoDataRights(store),
+    associations: demoAssociations.capability,
+    associationGroups: demoAssociationActivities.groups,
+    associationEvents: demoAssociationActivities.events,
+    serviceReviews: createDemoServiceReviews(store, { requests: demoRequests, teams: demoPageTeams, findOffer: demoServices.findOffer }),
+    contentReports: createDemoContentReports(store),
+    // Vague H du plan global (entraide, kit d'arrivée, mentorat, emploi, modération, mesure).
+    mutualAid: createDemoMutualAid(store),
+    arrivalKit: createDemoArrivalKit(store),
+    mentoring: createDemoMentoring(store),
+    jobs: createDemoJobs(store),
+    moderationDesk: createDemoModerationDesk(store),
+    pilotMetrics: createDemoPilotMetrics(store),
+    // P16 · G9 : décisions qui ont retiré un contenu porté par une page, relues pour un signataire vivant.
+    pageDecisions: createDemoPageDecisions(store, demoPageTeams),
 
     useSession() {
       const version = useVersion()
@@ -200,14 +257,8 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       }, [version, handle, publishedAt, postId])
     },
 
-    usePage(handle: string) {
-      const version = useVersion()
-      return useMemo(() => {
-        if (version < 0) return LOADING
-        const state = store.getState()
-        return ready(pageDetailView(state, handle, state.session.personId, store.now()))
-      }, [version, handle])
-    },
+    // Même fiche que la capacité « pages » (DG-007) : abonnements locaux et rôle du lecteur compris.
+    usePage: (handle: string) => demoPages.usePage(handle),
 
     useRelation(personId: string) {
       const version = useVersion()

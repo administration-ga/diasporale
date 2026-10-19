@@ -137,6 +137,17 @@ export interface DemoMark {
   readonly postId: string
   readonly kind: "bookmark" | "hidden"
   readonly createdAt: number
+  /** Identité du choix masqué ; absente des instantanés v7 antérieurs. */
+  readonly choiceId?: string
+}
+
+/** Métadonnées des sourdines, sans modifier le tableau historique de paires. */
+export interface DemoMuteChoice {
+  readonly personId: string
+  readonly targetId: string
+  readonly choiceId: string
+  /** Zéro pour une paire héritée dont la date n'a jamais été enregistrée. */
+  readonly createdAt: number
 }
 
 /** Un signalement (EXF-DG-12) : la publication est aussitôt masquée pour la personne qui signale. */
@@ -217,6 +228,8 @@ export interface DemoState {
   readonly sponsorships: readonly DemoSponsorship[]
   readonly consents: readonly DemoConsent[]
   readonly pages: Readonly<Record<string, DemoPage>>
+  /** Choix collectif des pages ; absent dans les instantanés v7 antérieurs. */
+  readonly pagePinnedPosts?: Readonly<Record<string, string>>
   readonly posts: readonly DemoPost[]
   readonly events: readonly DemoEvent[]
   readonly connections: readonly (readonly [string, string])[]
@@ -229,6 +242,8 @@ export interface DemoState {
   readonly marks: readonly DemoMark[]
   /** Sourdines : [qui se tait, qui est tu]. */
   readonly mutes: readonly (readonly [string, string])[]
+  /** Facultatif pour relire les instantanés v7 sans remise à zéro. */
+  readonly muteChoices?: readonly DemoMuteChoice[]
   readonly reports: readonly DemoReport[]
   /** « Ne plus me proposer » : [qui écarte, qui est écarté]. */
   readonly suggestionDismissals: readonly (readonly [string, string])[]

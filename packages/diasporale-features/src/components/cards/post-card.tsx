@@ -1,7 +1,7 @@
 "use client"
 
 import type { CountryCode } from "@diasporale/domain"
-import { GlobeIcon, HandHeartIcon, HeartIcon, LightbulbIcon, MessageCircleIcon, PartyPopperIcon, Repeat2Icon, type LucideIcon } from "lucide-react"
+import { GlobeIcon, HandHeartIcon, HeartIcon, LightbulbIcon, MessageCircleIcon, PartyPopperIcon, type LucideIcon } from "lucide-react"
 import { DropdownMenu } from "radix-ui"
 import { useState } from "react"
 
@@ -14,7 +14,7 @@ import { useRouting } from "../../routing"
 import { PostCommentsSheet } from "../comments"
 import { PostMediaGrid } from "../post-media"
 import { PostMenu } from "../post-menu"
-import { isShareable, SharedPostEmbed, usePostShare } from "../post-share"
+import { PostShareButton, SharedPostEmbed } from "../post-share"
 import { RichText } from "../rich-text"
 import { ContentScopeTag } from "../country-tag"
 import { ModerationBanner } from "../moderation-banner"
@@ -53,7 +53,6 @@ export function PostCard(props: {
     ? { ...props.post, author: { ...props.post.author, handle: "", displayName: t("bell.someone"), badges: [] } }
     : props.post
   const [commentsOpen, setCommentsOpen] = useState(false)
-  const share = usePostShare()
   const authorHref = neutralAuthor ? null : post.author.kind === "page" ? routes.page(post.author.handle) : routes.profile(post.author.handle)
   const mine = post.myReaction
   const MineIcon = mine ? REACTIONS[mine].icon : HeartIcon
@@ -155,19 +154,7 @@ export function PostCard(props: {
             <MessageCircleIcon className="size-4" aria-hidden />
             {t("post.comments", { count: post.commentCount })}
           </button>
-          {share && isShareable(post) ? (
-            <button
-              type="button"
-              aria-haspopup="dialog"
-              onClick={() => share(post)}
-              aria-label={post.shareCount > 0 ? t("post.shareCounted", { count: post.shareCount }) : undefined}
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-md px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:shadow-focus"
-            >
-              <Repeat2Icon className="size-4" aria-hidden />
-              {t("post.share")}
-              {post.shareCount > 0 ? <span className="tabular-nums" aria-hidden>· {post.shareCount}</span> : null}
-            </button>
-          ) : null}
+          {post.moderation === "published" ? <PostShareButton key={post.id} post={post} /> : null}
           {post.visibility === "root" ? (
             <span className="ml-auto inline-flex items-center gap-1 rounded-[var(--radius-xs)] bg-tag-diaspora px-2 py-1 text-[11px] font-semibold text-tag-diaspora-foreground">
               <GlobeIcon className="size-3.5" aria-hidden />

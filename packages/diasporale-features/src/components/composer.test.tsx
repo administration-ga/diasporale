@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { DataSourceProvider } from "../data/context"
 import type { ActionResult, DiasporaleDataSource, PublishInput, UploadedMedia } from "../data/port"
+import type { PagePublicationsCapability } from "../data/page-publications-port"
 import { getFixedT } from "../i18n"
 import { I18nProvider } from "../i18n/client"
 import { PostComposerSheet } from "./composer"
@@ -13,6 +14,7 @@ const t = getFixedT("fr")
 const publish = vi.fn<(input: PublishInput) => Promise<ActionResult<{ moderation: "published" }>>>()
 const uploadMedia = vi.fn<(file: File) => Promise<ActionResult<UploadedMedia>>>()
 const onClose = vi.fn()
+const pagePublish = vi.fn<PagePublicationsCapability["publish"]>()
 const source = { kind: "engine", actions: { publish, uploadMedia } } as unknown as DiasporaleDataSource
 
 function deferred<T>() {
@@ -37,6 +39,13 @@ function choose(files: File[]) {
   const input = document.querySelector<HTMLInputElement>('input[type="file"]')
   if (!input) throw new Error("Sélecteur absent")
   fireEvent.change(input, { target: { files } })
+}
+
+function PageComposer({ fixed = true }: { readonly fixed?: boolean }) {
+  const [open, setOpen] = useState(true)
+  return <I18nProvider locale="fr"><DataSourceProvider source={source}>
+    <PostComposerSheet open={open} onOpenChange={(next) => { setOpen(next); if (!next) onClose() }} memberCountry="FR" openCountries={["FR"]} draftKey="recette:page-fixed" page={{ id: "page-1", name: "Association de recette", country: "FR", publish: pagePublish, ...(fixed ? { fixedScope: { description: t("eventGallery.composeDescription", { title: "Rencontre de recette" }), audienceLabel: t("eventGallery.associationAudience"), requireMedia: true } } : {}) }} />
+  </DataSourceProvider></I18nProvider>
 }
 
 beforeEach(() => {
@@ -162,5 +171,59 @@ describe("Composeur — les fichiers choisis rejoignent réellement la publicati
     await user.click(screen.getByRole("button", { name: t("composer.publish") }))
     await waitFor(() => expect(publish).toHaveBeenCalledOnce())
     expect(publish.mock.calls[0]?.[0].media).toHaveLength(1)
+  })
+})
+
+describe("Composeur — portée fixe de galerie, sans changer les pages ordinaires", () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    pagePublish.mockReset().mockResolvedValue({ ok: true, value: { postId: "post-gallery", created: true } })
+  })
+  afterEach(() => { window.localStorage.clear() })
+
+  it("force le brouillon interne et exige un média avant toute publication de galerie", async () => {
+    window.localStorage.setItem("recette:page-fixed", JSON.stringify({ body: "Légende conservée dans son événement", reach: "local", audience: "followers", alsoOnRoot: true }))
+    const user = userEvent.setup()
+    render(<PageComposer />)
+    expect(screen.getByRole("textbox", { name: t("composer.bodyLabel") })).toHaveValue("Légende conservée dans son événement")
+    expect(screen.getByRole("dialog")).toHaveAccessibleDescription(/Rencontre de recette/)
+    expect(screen.getByText(t("eventGallery.associationAudience"))).toBeVisible()
+    expect(screen.queryByRole("radiogroup", { name: t("composer.reachLegend") })).not.toBeInTheDocument()
+    expect(screen.queryByRole("radiogroup", { name: t("composer.audienceLegend") })).not.toBeInTheDocument()
+    expect(screen.queryByRole("checkbox", { name: t("composer.alsoOnRoot") })).not.toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: t("composer.publish") }))
+    expect(await screen.findByRole("alert")).toHaveTextContent(t("errors.association_event_gallery_media_required"))
+    expect(pagePublish).not.toHaveBeenCalled()
+    expect(publish).not.toHaveBeenCalled()
+    expect(onClose).not.toHaveBeenCalled()
+    await waitFor(() => expect(JSON.parse(window.localStorage.getItem("recette:page-fixed") ?? "null")).toEqual({ body: "Légende conservée dans son événement", reach: "diaspora", audience: "public", alsoOnRoot: false }))
+  })
+
+  it("réutilise le dépôt et le texte alternatif, puis transmet une portée fixe même pour une page avec pays", async () => {
+    const user = userEvent.setup()
+    render(<PageComposer />)
+    choose([new File(["photo de recette"], "rencontre.png", { type: "image/png" })])
+    await waitFor(() => expect(screen.getByRole("button", { name: t("composer.publish") })).toBeEnabled())
+    await user.type(screen.getByRole("textbox", { name: t("composer.mediaAltLabel") }), "La salle de rencontre")
+    await user.click(screen.getByRole("button", { name: t("composer.publish") }))
+    await waitFor(() => expect(pagePublish).toHaveBeenCalledOnce())
+    expect(pagePublish.mock.calls[0]?.[0]).toEqual({ pageId: "page-1", body: "", reach: "diaspora", audience: "public", media: [{ upload: { ref: "stored-rencontre.png", kind: "image", mimeType: "image/png", sizeBytes: "photo de recette".length }, altText: "La salle de rencontre" }], idempotencyKey: expect.any(String) })
+    expect(publish).not.toHaveBeenCalled()
+    expect(uploadMedia).toHaveBeenCalledOnce()
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it("une page sans portée fixe garde son choix abonnés et sa publication de texte seul", async () => {
+    const user = userEvent.setup()
+    render(<PageComposer fixed={false} />)
+    expect(screen.getByRole("radiogroup", { name: t("composer.reachLegend") })).toBeVisible()
+    expect(screen.getByRole("radiogroup", { name: t("composer.audienceLegend") })).toBeVisible()
+    await user.click(screen.getByRole("radio", { name: t("pagePublications.followersAudience") }))
+    await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Un texte ordinaire de la page")
+    await user.click(screen.getByRole("button", { name: t("composer.publish") }))
+    await waitFor(() => expect(pagePublish).toHaveBeenCalledOnce())
+    expect(pagePublish.mock.calls[0]?.[0]).toMatchObject({ pageId: "page-1", body: "Un texte ordinaire de la page", reach: "local", audience: "followers" })
+    expect(pagePublish.mock.calls[0]?.[0].media).toBeUndefined()
+    expect(uploadMedia).not.toHaveBeenCalled()
   })
 })

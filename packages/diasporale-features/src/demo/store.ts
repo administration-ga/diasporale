@@ -9,7 +9,8 @@
  * l'interface (`DiasporaleDataSource`) reste.
  */
 import { normalizeCivilName } from "@antsia/social-domain/civilName"
-import { DISPLAY_NAME_MAX_LENGTH, HEADLINE_MAX_LENGTH, isProfileDiscoverable, isProfilePublished } from "@antsia/social-domain/content"
+import { assertPostContent, DISPLAY_NAME_MAX_LENGTH, HEADLINE_MAX_LENGTH, isProfileDiscoverable, isProfilePublished } from "@antsia/social-domain/content"
+import { isDomainViolation } from "@antsia/social-domain/violation"
 import {
   applyAttestationToFacet,
   applyMembershipEvent,
@@ -41,10 +42,14 @@ import {
 
 import type { ActionErrorCode } from "../data/errors"
 import { postMediaRefusal } from "../data/media"
-import type { ActionResult, CodeDestination, CommentInput, IdnSignInInput, JoinInput, PublishInput, ReportInput, UploadedMedia } from "../data/port"
+import type { ManagedPageDetailView } from "../data/page-admin-port"
+import type { PagePublicationInput } from "../data/page-publications-port"
+import type { ActionResult, CodeDestination, CommentInput, ContentPreferenceKind, IdnSignInInput, JoinInput, PublishInput, PublishMediaInput, ReportInput, UploadedMedia } from "../data/port"
 import { COMMENT_MAX_LENGTH, REPORT_NOTE_MAX, type ReactionKind } from "../data/types"
 import { handleRefusal, handleToken, normalizeHandle } from "../lib/handle"
 import { emailHash, fakeConsularAttestation } from "./attestation-provider"
+import { contentPreferencesRefusal, hasContentPreference, withContentPreferenceIdentities } from "./content-preferences"
+import { demoManagedPage } from "./page-admin"
 import { canRead, isConnected, sponsorFacts, statusOf } from "./selectors"
 import {
   DEMO_STATE_VERSION,
@@ -62,6 +67,8 @@ export const POST_MAX_LENGTH = 2000
 export const DISPLAY_NAME_MIN = 2
 export const DISPLAY_NAME_MAX = 60
 const CODE_TTL_MS = 10 * 60 * 1000
+const PAGE_PUBLICATIONS_KEYS_STORAGE_KEY = "diasporale:demonstration:page-publications:v1"
+const PAGE_PUBLICATIONS_KEYS_MAX = 200
 
 const OK: ActionResult = { ok: true, value: null }
 const fail = (code: ActionErrorCode): ActionResult<never> => ({ ok: false, code })
@@ -95,7 +102,10 @@ function canonicalCivilNames(state: DemoState): DemoState {
 export class DemoStore {
   private state: DemoState
   private version = 0
+  /** Distingue aussi une session A → B → A pendant une action en attente. */
+  private sessionRevision = 0
   private readonly listeners = new Set<() => void>()
+  private pageReadingProjection: ((state: DemoState) => DemoState) | null = null
 
   constructor(
     private readonly storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null,
@@ -103,6 +113,7 @@ export class DemoStore {
     private readonly latencyMs = 220,
   ) {
     this.state = this.load()
+    this.loadPagePublishedKeys()
   }
 
   // ── Abonnement (useSyncExternalStore) ─────────────────────────────────
@@ -114,7 +125,12 @@ export class DemoStore {
   readonly getVersion = (): number => this.version
 
   getState(): DemoState {
-    return this.state
+    return this.pageReadingProjection?.(this.state) ?? this.state
+  }
+
+  /** Surcouches de lecture locales : jamais sérialisées dans le jeu fictif. */
+  setPageReadingProjection(project: (state: DemoState) => DemoState): void {
+    this.pageReadingProjection = project
   }
 
   now(): number {
@@ -127,7 +143,7 @@ export class DemoStore {
       if (raw) {
         const parsed = JSON.parse(raw) as DemoState
         if (parsed.version === DEMO_STATE_VERSION) {
-          const canonical = canonicalCivilNames(parsed)
+          const canonical = withContentPreferenceIdentities(canonicalCivilNames(parsed))
           if (canonical !== parsed) this.persist(canonical)
           return canonical
         }
@@ -146,8 +162,37 @@ export class DemoStore {
     }
   }
 
+  private loadPagePublishedKeys(): void {
+    try {
+      const raw = this.storage?.getItem(PAGE_PUBLICATIONS_KEYS_STORAGE_KEY)
+      if (!raw) return
+      const parsed: unknown = JSON.parse(raw)
+      if (typeof parsed !== "object" || parsed === null) return
+      const cache = parsed as { readonly version?: unknown; readonly seedCreatedAt?: unknown; readonly entries?: unknown }
+      if (cache.version !== 1 || cache.seedCreatedAt !== this.state.createdAt || !Array.isArray(cache.entries)) return
+      for (const entry of cache.entries.slice(-PAGE_PUBLICATIONS_KEYS_MAX)) {
+        if (!Array.isArray(entry) || entry.length !== 2 || typeof entry[0] !== "string" || typeof entry[1] !== "string" || entry[0].length > 1000 || entry[1].length > 200) continue
+        this.pagePublishedKeys.set(entry[0], entry[1])
+      }
+    } catch {
+      // Cache illisible ou interdit : aucune clé n'est reprise.
+    }
+  }
+
+  private persistPagePublishedKeys(): void {
+    try {
+      this.storage?.setItem(PAGE_PUBLICATIONS_KEYS_STORAGE_KEY, JSON.stringify({ version: 1, seedCreatedAt: this.state.createdAt, entries: [...this.pagePublishedKeys] }))
+    } catch {
+      // Le rejeu reste protégé en mémoire quand le stockage est plein.
+    }
+  }
+
   private commit(next: DemoState): void {
-    this.state = canonicalCivilNames(next)
+    if (next.session.personId !== this.state.session.personId) {
+      this.sessionRevision += 1
+      this.staged.clear()
+    }
+    this.state = withContentPreferenceIdentities(canonicalCivilNames(next))
     this.version += 1
     this.persist(this.state)
     for (const listener of this.listeners) listener()
@@ -157,12 +202,14 @@ export class DemoStore {
     if (this.latencyMs > 0) await new Promise((resolve) => setTimeout(resolve, this.latencyMs))
   }
 
-  private nextId(prefix: string): [string, number] {
-    return [`${prefix}-${this.state.sequence}`, this.state.sequence + 1]
+  private nextId(prefix: string, state: DemoState = this.state): [string, number] {
+    return [`${prefix}-${state.sequence}`, state.sequence + 1]
   }
 
   /** Les clés d'idempotence déjà publiées, et la réponse qu'elles ont reçue (mémoire de la page seulement). */
   private readonly publishedKeys = new Map<string, ContentModerationState>()
+  /** Bornées et propres à la page ET au lecteur ; le rejeu repasse toujours son autorité vivante. */
+  private readonly pagePublishedKeys = new Map<string, string>()
 
   /** Les photos déposées, en attente de la publication qui les embarquera (mémoire de la page seulement). */
   private readonly staged = new Map<string, Omit<DemoMedia, "altText">>()
@@ -176,6 +223,25 @@ export class DemoStore {
     // Poids de la photo réduite : la charge base64 d'une data URL, aux trois quarts.
     const sizeBytes = Math.max(1, Math.floor(((media.url.length - media.url.indexOf(",") - 1) * 3) / 4))
     return { ref, kind: "image", mimeType: "image/jpeg", sizeBytes, width: media.width, height: media.height }
+  }
+
+  /** Consomme ensemble des photos déposées, sans créer de publication dans le fil. */
+  consumeStagedMedia(inputs: readonly PublishMediaInput[]): ActionResult<readonly DemoMedia[]> {
+    const refusal = postMediaRefusal(inputs.map((item) => ({ kind: item.upload.kind, mimeType: item.upload.mimeType, sizeBytes: item.upload.sizeBytes, altText: item.altText.trim() })))
+    if (refusal) return fail(refusal)
+    const refs = new Set<string>()
+    const media: DemoMedia[] = []
+    for (const item of inputs) {
+      const kept = this.staged.get(item.upload.ref)
+      if (!kept || kept.kind !== item.upload.kind || refs.has(item.upload.ref)) return fail("media_upload_failed")
+      const sizeBytes = Math.max(1, Math.floor(((kept.url.length - kept.url.indexOf(",") - 1) * 3) / 4))
+      if (item.upload.mimeType !== "image/jpeg" || item.upload.sizeBytes !== sizeBytes) return fail("media_upload_failed")
+      refs.add(item.upload.ref)
+      media.push({ ...kept, altText: item.altText.trim() || null })
+    }
+    // Aucune référence n'est consommée tant que l'ensemble n'a pas été accepté.
+    for (const ref of refs) this.staged.delete(ref)
+    return { ok: true, value: media }
   }
 
   private viewer(): { person: DemoPerson; membership: DemoMembership | undefined } | null {
@@ -341,6 +407,160 @@ export class DemoStore {
   }
 
   // ── Contenus ───────────────────────────────────────────────────────────
+  private pageAuthority(pageId: string, publishing: boolean): { readonly page: ManagedPageDetailView; readonly personId: string } | ActionErrorCode {
+    const state = this.getState()
+    const personId = state.session.personId
+    if (!personId || !state.persons[personId]) return "not_signed_in"
+    const membership = state.memberships[personId]
+    if (!membership) return "not_member"
+    const status = statusOf(state, personId, this.clock())
+    if (status === null || status === "partie") return "not_member"
+    if (!hasCapability(status, "read_network", { suspensionReadAccess: membership.grounds.suspension?.readAccess ?? "none" }) || status === "suspendue") return "suspended"
+    if (publishing && !hasCapability(status, "publish")) return "status_insufficient"
+    const identity = state.pages[pageId]
+    const page = identity ? demoManagedPage(this, identity.handle) : null
+    if (!page) return "not_found"
+    if (page.myRole === null) return "page_role_required"
+    return { page, personId }
+  }
+
+  /** Parole de la page : même magasin et mêmes médias que les publications personnelles. */
+  publishPage(input: PagePublicationInput): ActionResult<{ readonly postId: string; readonly created: boolean }> {
+    const authority = this.pageAuthority(input.pageId, true)
+    if (typeof authority === "string") return fail(authority)
+    if (input.idempotencyKey.trim().length === 0 || input.idempotencyKey.length > 200) return fail("unknown")
+    const key = JSON.stringify([authority.personId, authority.page.id, input.idempotencyKey])
+    const replay = this.pagePublishedKeys.get(key)
+    if (replay !== undefined) return { ok: true, value: { postId: replay, created: false } }
+    const refusal = postMediaRefusal((input.media ?? []).map((item) => ({ kind: item.upload.kind, mimeType: item.upload.mimeType, sizeBytes: item.upload.sizeBytes, altText: item.altText.trim() })))
+    if (refusal) return fail(refusal)
+    const media: DemoMedia[] = []
+    const refs = new Set<string>()
+    for (const item of input.media ?? []) {
+      const kept = this.staged.get(item.upload.ref)
+      if (!kept || kept.kind !== item.upload.kind || refs.has(item.upload.ref)) return fail("media_upload_failed")
+      const storedSize = Math.max(1, Math.floor(((kept.url.length - kept.url.indexOf(",") - 1) * 3) / 4))
+      if (item.upload.mimeType !== "image/jpeg" || item.upload.sizeBytes !== storedSize) return fail("media_upload_failed")
+      refs.add(item.upload.ref)
+      media.push({ ...kept, altText: item.altText.trim() || null })
+    }
+    let body: string
+    try {
+      body = assertPostContent({ body: input.body, mediaCount: media.length, isShare: false })
+    } catch (error) {
+      if (!isDomainViolation(error)) throw error
+      return fail(error.code === "POST_EMPTY" ? "post_empty" : error.code === "POST_TOO_LONG" ? "post_too_long" : "unknown")
+    }
+    if (input.audience !== "public" && input.audience !== "followers") return fail("unknown")
+    if (input.reach === "local" && authority.page.country === null) return fail("page_post_country_required")
+    const scope = parseContentScope({ reach: input.reach, country: input.reach === "local" ? authority.page.country : null })
+    if (!scope.ok) return fail(scope.code)
+    if (scope.value.reach === "local" && !this.state.openCountries.includes(scope.value.country)) return fail("feature_unavailable")
+    const policy = publicationPolicy({
+      scope: scope.value,
+      openCountries: this.state.openCountries,
+      countryActiveModerators: scope.value.reach === "local" ? (this.state.countryModerators[scope.value.country] ?? 0) : 0,
+      networkActiveModerators: this.state.networkModerators,
+    })
+    const [postId, sequence] = this.nextId("post")
+    // Les abonnés réactifs ne peuvent rejouer la même clé pendant la notification.
+    for (const ref of refs) this.staged.delete(ref)
+    this.pagePublishedKeys.set(key, postId)
+    if (this.pagePublishedKeys.size > PAGE_PUBLICATIONS_KEYS_MAX) {
+      const oldest = this.pagePublishedKeys.keys().next().value
+      if (oldest !== undefined) this.pagePublishedKeys.delete(oldest)
+    }
+    this.commit({
+      ...this.state,
+      sequence,
+      posts: [{ id: postId, author: { kind: "page", id: authority.page.id }, body, ...(media.length > 0 ? { media } : {}), scope: scope.value,
+        audience: input.audience === "followers" ? "page" : "public", visibility: "network", moderation: initialModerationState(policy), createdAt: this.clock(), reactions: {}, baseReactions: 0, editedAt: null }, ...this.state.posts],
+    })
+    this.persistPagePublishedKeys()
+    return { ok: true, value: { postId, created: true } }
+  }
+
+  /** Le texte appartient à la page : le mandat et la version lue sont revalidés ensemble. */
+  editPagePublication(input: {
+    readonly pageId: string
+    readonly postId: string
+    readonly body: string
+    readonly expectedBody: string
+    readonly expectedEditedAt: number | null
+  }): ActionResult<{ readonly changed: boolean; readonly editedAt: number | null }> {
+    const authority = this.pageAuthority(input.pageId, true)
+    if (typeof authority === "string") return fail(authority)
+    const post = this.state.posts.find((candidate) => candidate.id === input.postId)
+    const now = this.clock()
+    if (!post || post.author.kind !== "page" || post.author.id !== authority.page.id || post.sharedPostId !== undefined
+      || post.moderation !== "published" || !canRead(this.getState(), post, authority.personId, now)) return fail("not_found")
+    let body: string
+    try {
+      body = assertPostContent({ body: input.body, mediaCount: post.media?.length ?? 0, isShare: false })
+    } catch (error) {
+      if (!isDomainViolation(error)) throw error
+      return fail(error.code === "POST_EMPTY" ? "post_empty" : error.code === "POST_TOO_LONG" ? "post_too_long" : "unknown")
+    }
+    // Une réponse perdue se rejoue sans réécrire ni changer la date d'édition.
+    if (body === post.body) return { ok: true, value: { changed: false, editedAt: post.editedAt } }
+    if (post.body !== input.expectedBody || post.editedAt !== input.expectedEditedAt) return fail("page_post_changed")
+    const moderation = initialModerationState(publicationPolicy({
+      scope: post.scope,
+      openCountries: this.state.openCountries,
+      countryActiveModerators: post.scope.reach === "local" ? (this.state.countryModerators[post.scope.country] ?? 0) : 0,
+      networkActiveModerators: this.state.networkModerators,
+    }))
+    this.commit({
+      ...this.state,
+      posts: this.state.posts.map((candidate) => candidate.id === post.id ? { ...candidate, body, editedAt: now, moderation } : candidate),
+    })
+    return { ok: true, value: { changed: true, editedAt: now } }
+  }
+
+  /** Une annonce collective, relue sous le mandat et la version visible du signataire. */
+  setPagePinnedPost(input: {
+    readonly pageId: string
+    readonly postId: string | null
+    readonly expectedPinnedPostId: string | null
+  }): ActionResult<{ readonly changed: boolean }> {
+    const authority = this.pageAuthority(input.pageId, true)
+    if (typeof authority === "string") return fail(authority)
+    const state = this.getState()
+    const now = this.clock()
+    const readable = (post: DemoPost | undefined): post is DemoPost => post !== undefined
+      && post.author.kind === "page" && post.author.id === authority.page.id
+      && post.moderation === "published" && canRead(state, post, authority.personId, now)
+    const pinnedId = this.state.pagePinnedPosts?.[authority.page.id]
+    const pinned = this.state.posts.find((post) => post.id === pinnedId)
+    const currentId = readable(pinned) ? pinned.id : null
+    const target = input.postId === null ? undefined : this.state.posts.find((post) => post.id === input.postId)
+    if (input.postId !== null && !readable(target)) return fail("not_found")
+    // Un rejeu identique ne réécrit ni le choix, ni les dates des publications.
+    if (currentId === input.postId) return { ok: true, value: { changed: false } }
+    if (currentId !== input.expectedPinnedPostId) return fail("page_pin_changed")
+    const pagePinnedPosts = { ...this.state.pagePinnedPosts }
+    if (input.postId === null) delete pagePinnedPosts[authority.page.id]
+    else pagePinnedPosts[authority.page.id] = input.postId
+    // Seul l'état brut est sérialisé : les pages de la surcouche restent à leur port.
+    this.commit({ ...this.state, pagePinnedPosts })
+    return { ok: true, value: { changed: true } }
+  }
+
+  /** Tout signataire vivant retire la parole de sa page, quelle que soit la personne qui l'a déposée. */
+  removePagePublication(input: { readonly pageId: string; readonly postId: string }): ActionResult {
+    const authority = this.pageAuthority(input.pageId, false)
+    if (typeof authority === "string") return fail(authority)
+    const post = this.state.posts.find((candidate) => candidate.id === input.postId)
+    if (!post || post.author.kind !== "page" || post.author.id !== authority.page.id) return fail("not_found")
+    this.commit({
+      ...this.state,
+      posts: this.state.posts.filter((candidate) => candidate.id !== input.postId),
+      comments: this.state.comments.filter((comment) => comment.postId !== input.postId),
+      marks: this.state.marks.filter((mark) => mark.postId !== input.postId || mark.kind === "hidden"),
+    })
+    return OK
+  }
+
   async publish(input: PublishInput): Promise<ActionResult<{ moderation: ContentModerationState }>> {
     await this.pause()
     const viewer = this.viewer()
@@ -370,7 +590,7 @@ export class DemoStore {
       const first = this.state.posts.find((item) => item.id === input.sharedPostId)
       const originalId = first?.sharedPostId
       const target = originalId === undefined ? first : this.state.posts.find((item) => item.id === originalId)
-      if (!target || !canRead(this.state, target, viewer.person.id, now)) return fail("not_found")
+      if (!target || !canRead(this.getState(), target, viewer.person.id, now)) return fail("not_found")
       if (target.audience !== "public" || target.moderation !== "published") return fail("share_not_allowed")
       if (media.length > 0) return fail("share_with_media")
       shared = target
@@ -451,7 +671,7 @@ export class DemoStore {
     if (!capabilitiesOf(deriveMembershipStatus(viewer.membership.grounds, now)).has("publish")) return fail("publish_not_allowed")
     const post = this.state.posts.find((candidate) => candidate.id === input.postId)
     // Une publication illisible ou non publiée n'existe pas pour le lecteur.
-    if (!post || post.moderation !== "published" || !canRead(this.state, post, viewer.person.id, now)) return fail("not_found")
+    if (!post || post.moderation !== "published" || !canRead(this.getState(), post, viewer.person.id, now)) return fail("not_found")
     const body = input.body.trim()
     if (body.length === 0) return fail("comment_empty")
     if (body.length > COMMENT_MAX_LENGTH) return fail("comment_too_long")
@@ -496,7 +716,7 @@ export class DemoStore {
     if (!target || target.authorId !== viewer.person.id || target.removedAt !== null) return fail("not_found")
     if (target.parentId !== null && !this.state.comments.some((item) => item.id === target.parentId && item.postId === target.postId && item.removedAt === null)) return fail("not_found")
     const post = this.state.posts.find((item) => item.id === target.postId)
-    if (!post || !canRead(this.state, post, viewer.person.id, now)) return fail("not_found")
+    if (!post || !canRead(this.getState(), post, viewer.person.id, now)) return fail("not_found")
     if (post.author.kind === "person") {
       const authorId = post.author.id
       const authorStatus = statusOf(this.state, authorId, now)
@@ -533,7 +753,7 @@ export class DemoStore {
   /** Une publication que le lecteur peut lire, sinon rien (refus indistinct). */
   private readablePost(postId: string, viewerId: string) {
     const post = this.state.posts.find((candidate) => candidate.id === postId)
-    return post && canRead(this.state, post, viewerId, this.clock()) ? post : null
+    return post && canRead(this.getState(), post, viewerId, this.clock()) ? post : null
   }
 
   async toggleBookmark(postId: string): Promise<ActionResult<{ bookmarked: boolean }>> {
@@ -563,7 +783,8 @@ export class DemoStore {
 
   private withHidden(state: DemoState, personId: string, postId: string): DemoState {
     if (state.marks.some((mark) => mark.personId === personId && mark.postId === postId && mark.kind === "hidden")) return state
-    return { ...state, marks: [...state.marks, { personId, postId, kind: "hidden", createdAt: this.clock() }] }
+    const [choiceId, sequence] = this.nextId("content-choice", state)
+    return { ...state, marks: [...state.marks, { personId, postId, kind: "hidden", createdAt: this.clock(), choiceId }], sequence }
   }
 
   async muteAuthor(personId: string): Promise<ActionResult> {
@@ -574,8 +795,46 @@ export class DemoStore {
     // Se taire soi-même viderait son propre fil sans qu'aucun écran ne dise pourquoi : sans effet, comme le moteur.
     if (personId === me || this.state.mutes.some(([by, target]) => by === me && target === personId)) return OK
     if (!this.state.persons[personId]) return fail("not_found")
-    this.commit({ ...this.state, mutes: [...this.state.mutes, [me, personId] as const] })
+    const [choiceId, sequence] = this.nextId("content-choice")
+    this.commit({
+      ...this.state,
+      mutes: [...this.state.mutes, [me, personId] as const],
+      muteChoices: [...(this.state.muteChoices ?? []), { personId: me, targetId: personId, choiceId, createdAt: this.clock() }],
+      sequence,
+    })
     return OK
+  }
+
+  /** Annule seulement le choix privé exact, même lorsque ses détails ne sont plus lisibles. */
+  async restoreContentPreference(args: { personId: string; kind: ContentPreferenceKind; choiceId: string }): Promise<ActionResult<{ restored: boolean }>> {
+    const { personId, kind, choiceId } = args
+    const unchanged: ActionResult<{ restored: boolean }> = { ok: true, value: { restored: false } }
+    if (this.state.session.personId !== personId) return unchanged
+    const refusal = contentPreferencesRefusal(this.state, personId, this.clock())
+    if (refusal) return fail(refusal)
+    if (!hasContentPreference(this.state, personId, kind, choiceId)) return unchanged
+    const sessionRevision = this.sessionRevision
+    await this.pause()
+    if (this.sessionRevision !== sessionRevision || this.state.session.personId !== personId) return unchanged
+    const currentRefusal = contentPreferencesRefusal(this.state, personId, this.clock())
+    if (currentRefusal) return fail(currentRefusal)
+    if (!hasContentPreference(this.state, personId, kind, choiceId)) return unchanged
+    if (kind === "hiddenPosts") {
+      this.commit({
+        ...this.state,
+        marks: this.state.marks.filter((mark) => !(mark.personId === personId && mark.kind === "hidden" && mark.choiceId === choiceId)),
+      })
+    } else {
+      const choice = this.state.muteChoices?.find((item) => item.personId === personId && item.choiceId === choiceId)
+      if (!choice) return unchanged
+      const pairIndex = this.state.mutes.findIndex(([by, target]) => by === personId && target === choice.targetId)
+      this.commit({
+        ...this.state,
+        mutes: this.state.mutes.filter((_, index) => index !== pairIndex),
+        muteChoices: this.state.muteChoices?.filter((item) => !(item.personId === personId && item.choiceId === choiceId)),
+      })
+    }
+    return { ok: true, value: { restored: true } }
   }
 
   async reportPost(input: ReportInput): Promise<ActionResult> {
@@ -624,7 +883,8 @@ export class DemoStore {
       ...this.state,
       posts: this.state.posts.filter((candidate) => candidate.id !== postId),
       comments: this.state.comments.filter((item) => item.postId !== postId),
-      marks: this.state.marks.filter((mark) => mark.postId !== postId),
+      // Le signet disparaît ; le choix privé masqué reste annulable, en ligne neutre.
+      marks: this.state.marks.filter((mark) => mark.postId !== postId || mark.kind === "hidden"),
     })
     return OK
   }
@@ -1123,8 +1383,11 @@ export class DemoStore {
   }
 
   async reset(): Promise<void> {
+    this.staged.clear()
+    this.pagePublishedKeys.clear()
     try {
       this.storage?.removeItem(DEMO_STORAGE_KEY)
+      this.storage?.removeItem(PAGE_PUBLICATIONS_KEYS_STORAGE_KEY)
     } catch {
       // ignoré : la remise à zéro en mémoire suffit
     }

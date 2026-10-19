@@ -51,3 +51,23 @@ export const useHandleSuggestions = (displayName: string) => useDataSource().use
 export const useSponsorDashboard = () => useDataSource().useSponsorDashboard()
 export const useMyConsents = () => useDataSource().useMyConsents()
 export const useActions = () => useDataSource().actions
+
+/** Les capacités facultatives des chantiers du plan global : `null` si le fournisseur ne les sert pas. */
+export const usePagesCapability = () => useDataSource().pages ?? null
+export const usePageAdmin = () => useDataSource().pageAdmin ?? null
+export const useServices = () => useDataSource().services ?? null
+export const useServiceRequests = () => useDataSource().serviceRequests ?? null
+export const useDataRights = () => useDataSource().dataRights ?? null
+export const useAssociations = () => useDataSource().associations ?? null
+export const useAssociationGroups = () => useDataSource().associationGroups ?? null
+export const useAssociationEvents = () => useDataSource().associationEvents ?? null
+export const useServiceReviews = () => useDataSource().serviceReviews ?? null
+export const useContentReports = () => useDataSource().contentReports ?? null
+export const useMutualAid = () => useDataSource().mutualAid ?? null
+export const useArrivalKit = () => useDataSource().arrivalKit ?? null
+export const useMentoring = () => useDataSource().mentoring ?? null
+export const useJobs = () => useDataSource().jobs ?? null
+export const useModerationDesk = () => useDataSource().moderationDesk ?? null
+export const usePilotMetrics = () => useDataSource().pilotMetrics ?? null
+export const usePageDecisions = () => useDataSource().pageDecisions ?? null
+export const useConversations = () => useDataSource().conversations ?? null
