@@ -69,12 +69,10 @@
   "entry": {
     "signOutIncomplete": "La déconnexion complète n’a pas pu être confirmée. D’autres appareils peuvent rester connectés et des données de ce navigateur peuvent subsister. Reconnectez-vous pour réessayer la déconnexion dès que la connexion est rétablie.",
     "title": "Entrer dans DIASPORALE",
-    "lead": "Choisissez votre porte. Vous ne créerez jamais de mot de passe.",
-    "idnTitle": "Identité numérique IDN",
-    "idnBody": "Connexion par identite.ga. Votre compte est déclaré dès l'entrée ; avec un niveau de garantie 2, il porte le badge Vérifié.",
-    "recommended": "Recommandé",
-    "codeTitle": "Code par e-mail ou SMS",
-    "codeBody": "Compte léger : vous lisez tout de suite, vous publiez après un parrainage ou la vérification de votre inscription consulaire.",
+    "signUpTitle": "Créer votre compte DIASPORALE",
+    "signUpLead": "Compte léger : vous lisez tout de suite, vous publiez après un parrainage ou la vérification de votre inscription consulaire.",
+    "existingAccount": "J’ai déjà un compte : me connecter",
+    "smsInstead": "Recevoir plutôt le code par SMS",
     "noPassword": "Aucun mot de passe : IDN ou un code à usage unique. Vos coordonnées ne sont jamais montrées aux autres membres."
   },
   "idn": {
