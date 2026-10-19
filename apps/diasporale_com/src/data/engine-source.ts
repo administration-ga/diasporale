@@ -19,6 +19,7 @@
  */
 import type { EngineAuthClient } from "@antsia/api/auth-client"
 import { signOutEverywhere } from "@antsia/api/sign-out-everywhere"
+import { isMemberThemeId } from "@antsia/social-contracts/appearance"
 import { useAuthenticatedConvexQuery, useStableConvexAuth } from "@antsia/api/hooks"
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
@@ -833,6 +834,14 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     hidePost: (postId) =>
       attempt(async () => {
         await deps.convex.mutation(api.modules.marks.marks.hidePost, { networkId: await diasporale(), postId: postId as Id<"posts"> })
+        return null
+      }),
+
+    // Le thème du compte, commun aux réseaux du moteur (ADR-0026) : seul un thème du contrat commun s'y enregistre.
+    saveAccountTheme: (theme) =>
+      attempt(async () => {
+        if (!isMemberThemeId(theme)) throw new Refusal("feature_unavailable")
+        await deps.convex.mutation(api.modules.people.preferences.setMyPreferences, { theme })
         return null
       }),
 

@@ -272,6 +272,12 @@ export interface AccountView {
   readonly local: { readonly kind: "email" | "phone"; readonly masked: string } | null
   /** Prénom et nom reçus d'IDN — servent aux SUGGESTIONS de handle, jamais recopiés d'office. */
   readonly nameHints: { readonly firstName?: string; readonly lastName?: string }
+  /**
+   * Le thème enregistré sur le compte, absent tant que la personne n'en a choisi aucun. Le
+   * compte est commun aux réseaux du moteur : un thème qu'antsia.ga propose et que DIASPORALE
+   * n'a pas laisse ici le choix de l'appareil.
+   */
+  readonly theme?: string
 }
 
 export interface MembershipView {

@@ -788,6 +788,18 @@ export class DemoStore {
     return { ok: true, value: { bookmarked: !existing } }
   }
 
+  /** Le thème du compte fictif : un identifiant de thème, enregistré pour la personne en session. */
+  async saveAccountTheme(theme: string): Promise<ActionResult> {
+    await this.pause()
+    const personId = this.state.session.personId
+    const person = personId ? this.state.persons[personId] : undefined
+    if (!personId || !person) return fail("not_signed_in")
+    if (!/^[a-z][a-z-]{0,39}$/.test(theme)) return fail("feature_unavailable")
+    if (person.theme === theme) return OK
+    this.commit({ ...this.state, persons: { ...this.state.persons, [personId]: { ...person, theme } } })
+    return OK
+  }
+
   async hidePost(postId: string): Promise<ActionResult> {
     await this.pause()
     const viewer = this.viewer()
