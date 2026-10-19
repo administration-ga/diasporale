@@ -238,6 +238,8 @@ export interface DiasporaleActions {
   toggleBookmark(postId: string): Promise<ActionResult<{ bookmarked: boolean }>>
   /** Ne plus voir une publication — pour soi seulement. */
   hidePost(postId: string): Promise<ActionResult>
+  /** Enregistrer sur le compte le thème choisi (Réglages > Langue et apparence). Capacité facultative du fournisseur. */
+  saveAccountTheme?(theme: string): Promise<ActionResult>
   /** Mettre un auteur en sourdine : ses publications quittent mes fils, sans qu'il l'apprenne. */
   muteAuthor(personId: string): Promise<ActionResult>
   /** Signaler une publication ; elle est aussitôt masquée pour la personne qui signale. */

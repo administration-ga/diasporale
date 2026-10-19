@@ -84,7 +84,7 @@ describe("/pages/<handle>/adherents — les responsables de l'association", () =
     expect(screen.getByRole("link", { name: "Retour à la page de l'association" })).toHaveAttribute("href", routes.page("collectif-ivindo-lyon"))
     expect(screen.getByRole("tab", { name: "Demandes" })).toHaveAttribute("aria-selected", "true")
     const request = screen.getByRole("listitem")
-    expect(within(request).getByRole("link", { name: "Rodrigue Komo" })).toHaveAttribute("href", routes.profile("rodrigue.komo"))
+    expect(within(request).getByRole("link", { name: "Rodrigue KOMO" })).toHaveAttribute("href", routes.profile("rodrigue.komo"))
     expect(within(request).getByText(/Son mot : J'arrive à Lyon en janvier/)).toBeInTheDocument()
 
     await act(async () => { fireEvent.click(within(request).getByRole("button", { name: "Accepter" })) })
@@ -93,7 +93,7 @@ describe("/pages/<handle>/adherents — les responsables de l'association", () =
 
     openTab("Adhérents")
     const accepted = await screen.findAllByRole("listitem")
-    expect(accepted.map((item) => within(item).getAllByRole("link")[0]!.textContent)).toEqual(["Nadia Mpassa", "Clarisse Mbéi", "Rodrigue Komo"])
+    expect(accepted.map((item) => within(item).getAllByRole("link")[0]!.textContent)).toEqual(["Nadia MPASSA", "Clarisse MBÉI", "Rodrigue KOMO"])
     expect(within(accepted[0]!).getByText("Rôle : Animateur")).toBeInTheDocument()
   })
 
@@ -102,7 +102,7 @@ describe("/pages/<handle>/adherents — les responsables de l'association", () =
     openTab("Adhérents")
     const nadia = (await screen.findAllByRole("listitem"))[0]!
     fireEvent.click(within(nadia).getByRole("button", { name: "Exclure" }))
-    const sheet = await screen.findByRole("dialog", { name: "Exclure Nadia Mpassa de l'association ?" })
+    const sheet = await screen.findByRole("dialog", { name: "Exclure Nadia MPASSA de l'association ?" })
     const reason = within(sheet).getByLabelText("Motif (obligatoire)")
     fireEvent.change(reason, { target: { value: "bref" } })
     await act(async () => { fireEvent.click(within(sheet).getByRole("button", { name: "Exclure" })) })
@@ -141,7 +141,7 @@ describe("/pages/<handle>/adherents — les responsables de l'association", () =
     })
     expect(screen.getByText(/Signataire de la page, vous traitez les demandes/)).toBeInTheDocument()
     fireEvent.click(screen.getByRole("button", { name: "Refuser" }))
-    const sheet = await screen.findByRole("dialog", { name: "Refuser la demande de Rodrigue Komo ?" })
+    const sheet = await screen.findByRole("dialog", { name: "Refuser la demande de Rodrigue KOMO ?" })
     expect(within(sheet).getByText(/Elle pourra redemander dans 7 jours/)).toBeInTheDocument()
     await act(async () => { fireEvent.click(within(sheet).getByRole("button", { name: "Refuser la demande" })) })
     expect(await screen.findByText("Demande refusée.")).toBeInTheDocument()
@@ -155,7 +155,7 @@ describe("/pages/<handle>/adherents — les responsables de l'association", () =
     mount("p-nadia", <AssociationMembersScreen handle="collectif-ivindo-lyon" />)
     expect(screen.getByText("Cette liste n'est pas disponible.")).toBeInTheDocument()
     expect(screen.queryByRole("tab")).not.toBeInTheDocument()
-    expect(screen.queryByText("Nadia Mpassa")).not.toBeInTheDocument()
+    expect(screen.queryByText("Nadia MPASSA")).not.toBeInTheDocument()
   })
 
   it("dit l'indisponibilité quand le fournisseur ne sert pas les associations", () => {

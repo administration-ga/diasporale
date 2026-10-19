@@ -7,6 +7,8 @@ import { useId } from "react"
 
 import { isDiasporaleThemeId, type DiasporaleThemeId } from "@/lib/appearance"
 
+import { useAccountThemeChoice } from "./account-theme"
+
 /** Le nom et la phrase de chaque thème (clés citées en toutes lettres : cliquet i18n). */
 const THEME_TEXT = {
   sable: { name: "preferences.palette.sable.name", description: "preferences.palette.sable.description" },
@@ -21,13 +23,15 @@ const SWATCHES = ["bg-[var(--esp-theme-swatch-1)]", "bg-[var(--esp-theme-swatch-
  * option est peinte dans SON thème (`data-charte` sur l'option) : le membre voit le
  * fond, la carte, le texte et les trois couleurs du thème avant de choisir, dans le
  * mode (clair ou sombre) qu'il a choisi. Le choix est immédiat, sans bouton
- * d'enregistrement, et reste sur cet appareil (fournisseur d'apparence du moteur).
+ * d'enregistrement : en session, il s'enregistre aussi sur le compte (`AccountTheme`) ;
+ * hors session, il reste sur cet appareil (fournisseur d'apparence du moteur).
  * Comme toute option en carte de la charte, la sélection se lit sans contour : la
  * teinte de sélection et la pastille remplie.
  */
 export function ThemePicker(props: { className?: string }) {
   const { t } = useDiasporaleT()
   const appearance = useOptionalAppearance()
+  const accountChoice = useAccountThemeChoice()
   const labelId = useId()
   const hintId = useId()
   if (appearance === null || appearance.themes.length < 2) return null
@@ -43,7 +47,7 @@ export function ThemePicker(props: { className?: string }) {
         aria-labelledby={labelId}
         aria-describedby={hintId}
         value={appearance.theme ?? undefined}
-        onValueChange={appearance.setTheme}
+        onValueChange={accountChoice ?? appearance.setTheme}
         className="grid-cols-1 sm:grid-cols-2"
       >
         {appearance.themes.map((entry) => {

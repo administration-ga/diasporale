@@ -84,8 +84,8 @@ describe("démonstration — le jeu fictif de l'entraide", () => {
     expect(renderHook(() => aid.useQuestions({ country: "GA", status: "open", cursor: null })).result.current).toEqual({ status: "error", code: "aid_country_is_home" })
 
     const resolved = questionOf(aid, "aid-q-1")
-    expect(resolved).toMatchObject({ status: "resolved", hasAcceptedAnswer: true, canAnswer: true, canEdit: false, author: { displayName: "Prisca Abanga", handle: "prisca.abanga" } })
-    expect(resolved.acceptedAnswer).toMatchObject({ id: "aid-a-1", isAccepted: true, author: { displayName: "Mireille Ivindo" } })
+    expect(resolved).toMatchObject({ status: "resolved", hasAcceptedAnswer: true, canAnswer: true, canEdit: false, author: { displayName: "Prisca ABANGA", handle: "prisca.abanga" } })
+    expect(resolved.acceptedAnswer).toMatchObject({ id: "aid-a-1", isAccepted: true, author: { displayName: "Mireille IVINDO" } })
     const answers = ready(renderHook(() => aid.useAnswers({ questionId: "aid-q-1", cursor: null })).result.current)
     expect(answers.items.map((answer) => [answer.id, answer.isAccepted, answer.isMine])).toEqual([["aid-a-1", true, false], ["aid-a-2", false, true]])
     expect(questionOf(aid, "aid-q-4")).toMatchObject({ status: "closed", canAnswer: false })
@@ -100,7 +100,7 @@ describe("démonstration — le jeu fictif de l'entraide", () => {
     expect(ready(renderHook(() => aid.useMissions({ country: "FR", city: "Marseille", from: 0, cursor: null })).result.current).items).toEqual([])
     expect(ready(renderHook(() => aid.useMissionPages()).result.current)).toEqual([{ id: LYON, handle: "collectif-ivindo-lyon", name: "Collectif Ivindo de Lyon (démo)", country: "FR", city: "Lyon" }])
     const volunteers = ready(renderHook(() => aid.useVolunteers({ missionId: "aid-m-1", cursor: null })).result.current)
-    expect(volunteers.items.map((row) => row.person.displayName)).toEqual(["Mireille Ivindo", "Clarisse Mbéi"])
+    expect(volunteers.items.map((row) => row.person.displayName)).toEqual(["Mireille IVINDO", "Clarisse MBÉI"])
     expect(missionOf(aid, "aid-m-2")).toMatchObject({ status: "full", canManage: true, signup: { allowed: false, refusal: "aid_mission_full" } })
     const team = ready(renderHook(() => aid.usePageMissions({ pageId: LYON, cursor: null })).result.current)
     expect(team.items.map((mission) => mission.id)).toEqual(["aid-m-3", "aid-m-2", "aid-m-1"])
@@ -210,7 +210,7 @@ describe("démonstration — missions et inscriptions", () => {
     expect(await aid.signUp({ missionId: "aid-m-20", shareNameWithTeam: true })).toEqual({ ok: true, value: null })
 
     await store.switchTo("p-steeve")
-    expect(ready(renderHook(() => aid.useVolunteers({ missionId: "aid-m-20", cursor: null })).result.current).items.map((row) => row.person.displayName)).toEqual(["Nadia Mpassa"])
+    expect(ready(renderHook(() => aid.useVolunteers({ missionId: "aid-m-20", cursor: null })).result.current).items.map((row) => row.person.displayName)).toEqual(["Nadia MPASSA"])
     const mission = missionOf(aid, "aid-m-20")
     expect(await aid.updateMission({ ...MISSION, places: 0, missionId: "aid-m-20", expectedVersion: mission.version })).toEqual({ ok: false, code: "aid_mission_places_invalid" })
     expect(await aid.updateMission({ ...MISSION, places: 3, missionId: "aid-m-20", expectedVersion: mission.version })).toEqual({ ok: true, value: null })

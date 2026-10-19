@@ -806,3 +806,23 @@ describe("partage cité par le moteur (EXF-DG-10)", () => {
     expect(engineActionErrorCode(engineError({ code: "invalidArgument", rule: "POST_SHARE_WITH_MEDIA" }))).toBe("share_with_media")
   })
 })
+
+describe("thème du compte (commun aux réseaux du moteur, ADR-0026)", () => {
+  it("enregistre Sable ou Gaboma par les préférences de la personne, sans réseau", async () => {
+    const { convex, calls } = fakeConvex({ "modules/people/preferences:setMyPreferences": () => null })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.saveAccountTheme?.("gaboma")).toEqual({ ok: true, value: null })
+    expect(await actions.saveAccountTheme?.("sable")).toEqual({ ok: true, value: null })
+    expect(calls).toEqual([
+      { name: "modules/people/preferences:setMyPreferences", args: { theme: "gaboma" } },
+      { name: "modules/people/preferences:setMyPreferences", args: { theme: "sable" } },
+    ])
+  })
+
+  it("refuse un identifiant hors du contrat commun sans appeler le moteur", async () => {
+    const { convex, calls } = fakeConvex({})
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.saveAccountTheme?.("prune")).toEqual({ ok: false, code: "feature_unavailable" })
+    expect(calls).toEqual([])
+  })
+})

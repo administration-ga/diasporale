@@ -106,7 +106,7 @@ function mine(id: string, overrides: Partial<MyJobApplicationView> = {}): MyJobA
 
 function received(id: string, overrides: Partial<ReceivedJobApplicationView> = {}): ReceivedJobApplicationView {
   return {
-    id, jobId: "job-1", status: "sent", offerVersion: 1, candidate: { displayName: "Mireille Ivindo", handle: "mireille.demo" },
+    id, jobId: "job-1", status: "sent", offerVersion: 1, candidate: { displayName: "Mireille IVINDO", handle: "mireille.demo" },
     message: "Motivation fictive de recette.", talentProfile: null, notSelectedReason: null, createdAt: Date.UTC(2026, 9, 17), updatedAt: Date.UTC(2026, 9, 17),
     actions: ["mark_seen", "shortlist", "not_select"], ...overrides,
   }
@@ -481,7 +481,7 @@ describe("JobRecruiterPanel — l'espace recruteur d'une page", () => {
     render(tree(<JobRecruiterPanel pageId="page-1" pageHandle="traiteur-paris" />))
     fireEvent.click(screen.getByRole("button", { name: "Voir les candidatures" }))
     const applications = screen.getByRole("list", { name: "Candidatures reçues" })
-    expect(within(applications).getByText("Mireille Ivindo")).toBeTruthy()
+    expect(within(applications).getByText("Mireille IVINDO")).toBeTruthy()
     expect(within(applications).getByText(/il n'en reste que l'état/)).toBeTruthy()
     await act(async () => { fireEvent.click(within(applications).getByRole("button", { name: "Marquer comme vue" })) })
     expect(mocks.markSeen).toHaveBeenCalledWith("r1")

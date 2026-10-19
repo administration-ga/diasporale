@@ -95,6 +95,26 @@ describe("démonstration — noms civils structurés", () => {
     expect(storage.setItem).toHaveBeenCalledOnce()
   })
 
+  it("écrit les noms sociaux d'un jeu enregistré avant le 19/10 en « Prénom NOM », sans toucher un alias choisi", () => {
+    const seed = createDemoSeed(NOW)
+    const mireille = seed.persons["p-mireille"]!
+    const prisca = seed.persons["p-prisca"]!
+    const legacy = {
+      ...seed,
+      persons: {
+        ...seed.persons,
+        "p-mireille": { ...mireille, profile: { ...mireille.profile!, displayName: "Mireille Ivindo" } },
+        "p-prisca": { ...prisca, profile: { ...prisca.profile!, displayName: "Prisca, alias choisi" } },
+      },
+    }
+    const storage = memoryStorage(legacy)
+    const store = new DemoStore(storage, () => NOW, 0)
+    expect(store.getState().persons["p-mireille"]!.profile?.displayName).toBe("Mireille IVINDO")
+    expect(store.getState().persons["p-prisca"]!.profile?.displayName).toBe("Prisca, alias choisi")
+    expect((JSON.parse(storage.values.get(DEMO_STORAGE_KEY)!) as DemoState).persons["p-mireille"]!.profile?.displayName).toBe("Mireille IVINDO")
+    expect(storage.setItem).toHaveBeenCalledOnce()
+  })
+
   it("conserve le snapshot et sa session en mémoire si la correction ne peut pas être persistée", () => {
     const { state, canonical } = legacyState()
     const storage = memoryStorage(state)
@@ -158,10 +178,10 @@ describe("démonstration — noms civils structurés", () => {
   it("définit explicitement les quatre identités civiles et conserve les noms sociaux choisis", () => {
     const { persons } = createDemoSeed(NOW)
     expect(Object.values(persons).filter((person) => person.idn !== null).map((person) => [person.id, person.idn, person.profile?.displayName])).toEqual([
-      ["p-prisca", { sub: "idn-p-prisca", firstName: "Prisca", lastName: "ABANGA", loa: 2, gaboneseNationality: true }, "Prisca Abanga"],
-      ["p-steeve", { sub: "idn-p-steeve", firstName: "Steeve", lastName: "NGOUNIÉ", loa: 1, gaboneseNationality: true }, "Steeve Ngounié"],
-      ["p-nadia", { sub: "idn-p-nadia", firstName: "Nadia", lastName: "MPASSA", loa: 2, gaboneseNationality: true }, "Nadia Mpassa"],
-      ["p-clarisse", { sub: "idn-p-clarisse", firstName: "Clarisse", lastName: "MBÉI", loa: 3, gaboneseNationality: true }, "Clarisse Mbéi"],
+      ["p-prisca", { sub: "idn-p-prisca", firstName: "Prisca", lastName: "ABANGA", loa: 2, gaboneseNationality: true }, "Prisca ABANGA"],
+      ["p-steeve", { sub: "idn-p-steeve", firstName: "Steeve", lastName: "NGOUNIÉ", loa: 1, gaboneseNationality: true }, "Steeve NGOUNIÉ"],
+      ["p-nadia", { sub: "idn-p-nadia", firstName: "Nadia", lastName: "MPASSA", loa: 2, gaboneseNationality: true }, "Nadia MPASSA"],
+      ["p-clarisse", { sub: "idn-p-clarisse", firstName: "Clarisse", lastName: "MBÉI", loa: 3, gaboneseNationality: true }, "Clarisse MBÉI"],
     ])
   })
 

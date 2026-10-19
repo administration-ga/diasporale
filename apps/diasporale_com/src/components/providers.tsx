@@ -14,6 +14,7 @@ import { APPEARANCE } from "@/lib/appearance"
 import { publicEnv } from "@/lib/env"
 import { routes } from "@/lib/routes"
 
+import { AccountTheme } from "./account-theme"
 import { DemoFloatingCard } from "./site-chrome"
 import { ToastRegion } from "./toast-region"
 
@@ -107,18 +108,21 @@ function FloatingStack() {
  * L'apparence est celle du moteur (`AppearanceProvider`) : mode Système, Clair ou
  * Sombre et thème au choix du membre (Sable par défaut, ou Gaboma), mémorisés sur
  * l'appareil sous le préfixe du réseau, posés sur `<html>` avant l'affichage par le
- * script d'amorçage de la mise en page, puis tenus ici.
+ * script d'amorçage de la mise en page, puis tenus ici. En session, le thème est aussi
+ * celui du compte (`AccountTheme`, sous la source de données qui le lit et l'écrit).
  */
 export function Providers(props: { locale: Locale; children: ReactNode }) {
   return (
     <AppearanceProvider storagePrefix={APPEARANCE.storagePrefix} themes={APPEARANCE.themes}>
       <I18nProvider locale={props.locale}>
         <DataProviders>
-          <RoutingProvider routes={featureRoutes} Link={AppLink}>
-            {props.children}
-            <FloatingStack />
-            <DemoFloatingCard />
-          </RoutingProvider>
+          <AccountTheme>
+            <RoutingProvider routes={featureRoutes} Link={AppLink}>
+              {props.children}
+              <FloatingStack />
+              <DemoFloatingCard />
+            </RoutingProvider>
+          </AccountTheme>
         </DataProviders>
       </I18nProvider>
     </AppearanceProvider>

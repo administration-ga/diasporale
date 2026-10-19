@@ -83,7 +83,7 @@ describe("démonstration — demandes de service", () => {
 
     await as(store, "p-mireille")
     const inbox = renderHook(() => capability.usePageRequests({ pageId: "page-saveurs", status: null, cursor: null }))
-    expect(ready(inbox.result.current).items[0]).toMatchObject({ requestId, requester: { displayName: "Prisca Abanga", handle: "prisca.abanga" }, deadlineAt: NOW + DAY + 4 * HOUR })
+    expect(ready(inbox.result.current).items[0]).toMatchObject({ requestId, requester: { displayName: "Prisca ABANGA", handle: "prisca.abanga" }, deadlineAt: NOW + DAY + 4 * HOUR })
     const detail = renderHook(() => capability.useRequest(requestId))
     expect(ready(detail.result.current)).toMatchObject({ viewerRole: "page", need: NEED, actions: ["propose", "refuse"] })
     await act(async () => { expect(await capability.propose(proposalInput(requestId))).toEqual({ ok: true, value: { version: 1 } }) })

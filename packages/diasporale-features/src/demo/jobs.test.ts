@@ -177,7 +177,7 @@ describe("démonstration de l'emploi — candidatures privées", () => {
     expect(await team.jobs.shortlist("application-demo-steeve")).toEqual({ ok: false, code: "job_application_transition_invalid" })
     const received = data(renderHook(() => team.jobs.useOfferApplications({ jobId: "job-demo-livraison", cursor: null })).result.current)
     expect(received.items).toEqual([expect.objectContaining({
-      id: "application-demo-steeve", status: "not_selected", candidate: { displayName: "Steeve Ngounié", handle: "steeve.ngounie" },
+      id: "application-demo-steeve", status: "not_selected", candidate: { displayName: "Steeve NGOUNIÉ", handle: "steeve.ngounie" },
       notSelectedReason: "Disponibilités trop courtes.", talentProfile: expect.objectContaining({ title: "Développeur web (démo)" }), actions: [],
     })])
     expect(await team.jobs.shortlist("application-demo-prisca")).toEqual({ ok: false, code: "not_found" })

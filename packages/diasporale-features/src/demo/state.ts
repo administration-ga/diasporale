@@ -47,6 +47,8 @@ export interface DemoPerson {
   readonly local: { readonly kind: "email" | "phone"; readonly value: string } | null
   /** Profil social : n'existe qu'APRÈS l'onboarding (adhésion explicite, invariant 5). */
   readonly profile: { readonly handle: string; readonly displayName: string; readonly headline: string | null } | null
+  /** Le thème enregistré sur le compte fictif ; absent tant qu'aucun n'est choisi. */
+  readonly theme?: string
   /** Absents dans les états v7 existants : profil publié et découvrable, sans migration destructive. */
   readonly withdrawnAt?: number
   readonly privateAt?: number
@@ -288,6 +290,20 @@ function member(
   }
 }
 
+/**
+ * Noms sociaux des six personnes fictives, écrits « Prénom NOM » comme toute identité de
+ * personne (règle du 17/10/2026). Jusqu'au 19/10, le jeu les écrivait « Prénom Nom » :
+ * `legacy` permet au chargement de corriger un jeu déjà enregistré dans le navigateur.
+ */
+export const SEED_DISPLAY_NAMES = {
+  "p-mireille": { current: "Mireille IVINDO", legacy: "Mireille Ivindo" },
+  "p-prisca": { current: "Prisca ABANGA", legacy: "Prisca Abanga" },
+  "p-steeve": { current: "Steeve NGOUNIÉ", legacy: "Steeve Ngounié" },
+  "p-rodrigue": { current: "Rodrigue KOMO", legacy: "Rodrigue Komo" },
+  "p-nadia": { current: "Nadia MPASSA", legacy: "Nadia Mpassa" },
+  "p-clarisse": { current: "Clarisse MBÉI", legacy: "Clarisse Mbéi" },
+} as const satisfies Readonly<Record<string, { readonly current: string; readonly legacy: string }>>
+
 function person(
   id: string,
   displayName: string,
@@ -313,25 +329,25 @@ function person(
 /** Construit l'état de démonstration initial, daté par rapport à `now`. */
 export function createDemoSeed(now: number): DemoState {
   const persons: Record<string, DemoPerson> = {
-    "p-mireille": person("p-mireille", "Mireille Ivindo", "mireille.ivindo", "Infirmière à Paris, bénévole associative", now - 420 * DAY, {
+    "p-mireille": person("p-mireille", SEED_DISPLAY_NAMES["p-mireille"].current, "mireille.ivindo", "Infirmière à Paris, bénévole associative", now - 420 * DAY, {
       demoAccountKey: "demo.accounts.mireille",
       email: "mireille@example.com",
     }),
-    "p-prisca": person("p-prisca", "Prisca Abanga", "prisca.abanga", "Étudiante en droit à Bordeaux", now - 160 * DAY, {
+    "p-prisca": person("p-prisca", SEED_DISPLAY_NAMES["p-prisca"].current, "prisca.abanga", "Étudiante en droit à Bordeaux", now - 160 * DAY, {
       idn: { firstName: "Prisca", lastName: "ABANGA", loa: 2 },
       demoAccountKey: "demo.accounts.prisca",
     }),
-    "p-steeve": person("p-steeve", "Steeve Ngounié", "steeve.ngounie", "Développeur à Lyon", now - 75 * DAY, {
+    "p-steeve": person("p-steeve", SEED_DISPLAY_NAMES["p-steeve"].current, "steeve.ngounie", "Développeur à Lyon", now - 75 * DAY, {
       idn: { firstName: "Steeve", lastName: "NGOUNIÉ", loa: 1 },
       demoAccountKey: "demo.accounts.steeve",
     }),
-    "p-rodrigue": person("p-rodrigue", "Rodrigue Komo", "rodrigue.komo", "Ingénieur à Montréal", now - 40 * DAY, {
+    "p-rodrigue": person("p-rodrigue", SEED_DISPLAY_NAMES["p-rodrigue"].current, "rodrigue.komo", "Ingénieur à Montréal", now - 40 * DAY, {
       email: "rodrigue@example.com",
     }),
-    "p-nadia": person("p-nadia", "Nadia Mpassa", "nadia.mpassa", "Entrepreneuse à Bruxelles", now - 300 * DAY, {
+    "p-nadia": person("p-nadia", SEED_DISPLAY_NAMES["p-nadia"].current, "nadia.mpassa", "Entrepreneuse à Bruxelles", now - 300 * DAY, {
       idn: { firstName: "Nadia", lastName: "MPASSA", loa: 2 },
     }),
-    "p-clarisse": person("p-clarisse", "Clarisse Mbéi", "clarisse.mbei", null, now - 210 * DAY, {
+    "p-clarisse": person("p-clarisse", SEED_DISPLAY_NAMES["p-clarisse"].current, "clarisse.mbei", null, now - 210 * DAY, {
       idn: { firstName: "Clarisse", lastName: "MBÉI", loa: 3 },
       administrationLink: true,
     }),

@@ -320,11 +320,11 @@ describe("SharedPostEmbed — l'original d'un partage cité", () => {
     withRouting(
       <SharedPostEmbed
         now={10_000}
-        share={{ available: true, postId: "post-7", author: { kind: "person", handle: "prisca.abanga", displayName: "Prisca Abanga" }, body: "Une coiffeuse à Bordeaux ?", media: [], publishedAt: 4_000 }}
+        share={{ available: true, postId: "post-7", author: { kind: "person", handle: "prisca.abanga", displayName: "Prisca ABANGA" }, body: "Une coiffeuse à Bordeaux ?", media: [], publishedAt: 4_000 }}
       />,
     )
     const region = screen.getByRole("figure", { name: "Publication partagée" })
-    expect(within(region).getByRole("link", { name: "Prisca Abanga" })).toHaveAttribute("href", "/@prisca.abanga")
+    expect(within(region).getByRole("link", { name: "Prisca ABANGA" })).toHaveAttribute("href", "/@prisca.abanga")
     expect(region.querySelector('a[href="/publication/post-7"]')).not.toBeNull()
     expect(within(region).getByText("Une coiffeuse à Bordeaux ?")).toBeInTheDocument()
   })

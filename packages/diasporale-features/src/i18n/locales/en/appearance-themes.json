@@ -2,7 +2,7 @@
   "preferences": {
     "appearance": "Appearance",
     "palette": {
-      "hint": "The theme changes DIASPORALE’s colors; light or dark appearance stays as you chose it. The change is immediate and kept on this device.",
+      "hint": "The theme changes DIASPORALE’s colors; light or dark appearance stays as you chose it. The change is immediate. When you are signed in, your choice is saved to your account: it follows you across your devices and on antsia.ga.",
       "sable": {
         "name": "Sand",
         "description": "DIASPORALE’s theme: Gabon blue, teal and sand, on a paper background with brown ink."
@@ -10,7 +10,8 @@
       "gaboma": {
         "name": "Gaboma",
         "description": "The ANTSIA network’s theme: the green, yellow and blue of the flag, on pure white and true black."
-      }
+      },
+      "saveFailed": "The theme could not be saved to your account."
     }
   }
 }

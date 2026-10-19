@@ -339,8 +339,8 @@ La charte vit en trois couches, importées dans cet ordre par
    les reliefs nommés, trois écarts de base bornés au nœud DIASPORALE (un lien d'interface hérite
    sa couleur ; anneau de focus de la charte ; sous-titres `h2`–`h6` en Plex Sans 600).
 
-- **Pose** : `data-charte="diasporale"` sur `<html>`, où `next-themes` pose aussi la classe
-  `dark`. Les portails (feuilles, menus, toasts) héritent donc de la charte.
+- **Pose** : `data-charte="diasporale"` sur `<html>`, où le fournisseur d'apparence du moteur
+  pose aussi la classe `dark` (et, avant l'affichage, son script d'amorçage). Les portails (feuilles, menus, toasts) héritent donc de la charte.
 - **Cascade sombre** : le bloc sombre de la base (`.dark[data-charte]`, spécificité 0,2,0)
   l'emporte sur le bloc clair du thème (0,1,0). Le thème redéclare donc en sombre CHAQUE rôle du
   bloc sombre de la base, sinon le bleu du moteur reparaîtrait.

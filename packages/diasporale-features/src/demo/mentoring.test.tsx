@@ -81,7 +81,7 @@ describe("démonstration — mentorat", () => {
     })
     // Prisca est une relation de Mireille : la ville, réservée aux relations, lui est montrée ; Clarisse est en pause.
     expect(ready(search.result.current)).toEqual({
-      items: [expect.objectContaining({ mentorId: MIREILLE, displayName: "Mireille Ivindo", handle: "mireille.ivindo", city: "Paris", country: "FR", domains: ["housing", "family", "admin"], acceptsRequests: true })],
+      items: [expect.objectContaining({ mentorId: MIREILLE, displayName: "Mireille IVINDO", handle: "mireille.ivindo", city: "Paris", country: "FR", domains: ["housing", "family", "admin"], acceptsRequests: true })],
       isDone: true,
       continueCursor: null,
     })
@@ -103,12 +103,12 @@ describe("démonstration — mentorat", () => {
     const mine = renderHook(() => capability.useMenteeRequests({ cursor: null }))
     expect(ready(mine.result.current).items).toEqual([expect.objectContaining({
       requestId, status: "sent", viewerRole: "mentee", goal: "Trouver un logement étudiant",
-      counterpart: { displayName: "Mireille Ivindo", handle: "mireille.ivindo" }, deadlineAt: NOW + 14 * DAY, slot: null, moderation: "published",
+      counterpart: { displayName: "Mireille IVINDO", handle: "mireille.ivindo" }, deadlineAt: NOW + 14 * DAY, slot: null, moderation: "published",
     })])
 
     await as(store, "p-mireille")
     const inbox = renderHook(() => capability.useMentorRequests({ status: "sent", cursor: null }))
-    expect(ready(inbox.result.current).items.map((item) => [item.requestId, item.counterpart.displayName])).toEqual([[requestId, "Prisca Abanga"], ["mentorat-demo-steeve", "Steeve Ngounié"]])
+    expect(ready(inbox.result.current).items.map((item) => [item.requestId, item.counterpart.displayName])).toEqual([[requestId, "Prisca ABANGA"], ["mentorat-demo-steeve", "Steeve NGOUNIÉ"]])
     // G9, comme le moteur : l'état de modération d'une demande ne va jamais à son mentor.
     expect(ready(inbox.result.current).items.some((item) => "moderation" in item)).toBe(false)
     const detail = renderHook(() => capability.useRequest(requestId))

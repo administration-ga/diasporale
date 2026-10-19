@@ -57,7 +57,7 @@ describe("démonstration — le jeu fictif des associations", () => {
     expect(requested.items.map((item) => [item.person.handle, item.requestMessage !== null])).toEqual([["rodrigue.komo", true]])
     const accepted = ready(members(associations, { pageId: LYON, status: "accepted", cursor: null }).result.current)
     expect(accepted).toMatchObject({ isDone: true, continueCursor: null })
-    expect(accepted.items.map((item) => [item.person.displayName, item.role, item.requestMessage])).toEqual([["Nadia Mpassa", "animator", null], ["Clarisse Mbéi", "member", null]])
+    expect(accepted.items.map((item) => [item.person.displayName, item.role, item.requestMessage])).toEqual([["Nadia MPASSA", "animator", null], ["Clarisse MBÉI", "member", null]])
     expect(ready(members(associations, { pageId: LYON, status: "removed", cursor: null }).result.current).items).toEqual([])
   })
 

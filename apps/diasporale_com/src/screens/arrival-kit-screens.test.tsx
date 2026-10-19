@@ -222,8 +222,8 @@ describe("/kit-arrivee/<id> — la fiche", () => {
     expect(screen.getByText("Portail public d'information bancaire (source fictive)")).toBeInTheDocument()
     expect(screen.getByText("Source fictive de démonstration : aucun lien n'est proposé.")).toBeInTheDocument()
     expect(screen.queryByRole("link", { name: /Portail public/ })).not.toBeInTheDocument()
-    expect(screen.getByRole("link", { name: "Mireille Ivindo" })).toHaveAttribute("href", routes.profile("mireille.ivindo"))
-    expect(screen.getByRole("link", { name: "Prisca Abanga" })).toHaveAttribute("href", routes.profile("prisca.abanga"))
+    expect(screen.getByRole("link", { name: "Mireille IVINDO" })).toHaveAttribute("href", routes.profile("mireille.ivindo"))
+    expect(screen.getByRole("link", { name: "Prisca ABANGA" })).toHaveAttribute("href", routes.profile("prisca.abanga"))
     expect(screen.getByText("Vérifiée auprès de la source le")).toBeInTheDocument()
     expect(screen.getByText("À revoir à partir du")).toBeInTheDocument()
     expect(screen.getByText(/Ressource communautaire relue par une autre personne/)).toBeInTheDocument()
@@ -255,7 +255,7 @@ describe("/kit-arrivee/<id> — la fiche", () => {
     expect(screen.getByRole("link", { name: "Collectif Ivindo de Lyon (démo)" })).toHaveAttribute("href", routes.page("collectif-ivindo-lyon"))
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Publier" })) })
     expect(await screen.findByText("Ressource publiée dans le kit.")).toBeInTheDocument()
-    expect(await screen.findByRole("link", { name: "Prisca Abanga" })).toHaveAttribute("href", routes.profile("prisca.abanga"))
+    expect(await screen.findByRole("link", { name: "Prisca ABANGA" })).toHaveAttribute("href", routes.profile("prisca.abanga"))
   })
 
   it("renvoyer exige un motif ; la ressource renvoyée quitte la relectrice, qui revient au kit", async () => {
