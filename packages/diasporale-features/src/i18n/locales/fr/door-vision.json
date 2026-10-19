@@ -1,0 +1,66 @@
+{
+  "landing": {
+    "vision": {
+      "title": "Ce qu'est DIASPORALE",
+      "lead": "Le réseau social fermé des Gabonais de l'étranger : votre pays, votre communauté, et l'on sait toujours qui publie.",
+      "offerTitle": "Ce que vous y trouvez",
+      "offer": {
+        "country": {
+          "title": "Votre pays, votre communauté",
+          "body": "Un espace par pays d'accueil — actualités, évènements, associations, entreprises — et ce qui concerne toute la diaspora."
+        },
+        "settle": {
+          "title": "S'installer et s'entraider",
+          "body": "Un kit d'arrivée aux ressources datées, des questions pratiques entre membres et des mentors bénévoles."
+        },
+        "work": {
+          "title": "Travailler et entreprendre",
+          "body": "Des offres d'emploi, des talents visibles par choix et les services de la diaspora, de la demande au rendez-vous."
+        },
+        "associations": {
+          "title": "Les associations, de près",
+          "body": "Leurs pages, leurs adhésions, leur agenda et leurs missions bénévoles."
+        },
+        "contact": {
+          "title": "Échanger sans exposer ses coordonnées",
+          "body": "Le contact passe par la messagerie : un bouton « Écrire », jamais un numéro affiché."
+        }
+      },
+      "countriesTitle": "Les pays déjà ouverts",
+      "trustTitle": "Un réseau de confiance",
+      "trust": {
+        "closed": {
+          "title": "Réservé aux Gabonais de l'étranger",
+          "body": "Ce qui s'y publie y reste, sauf si son auteur choisit de le partager sur ANTSIA."
+        },
+        "speaker": {
+          "title": "On sait toujours qui parle",
+          "body": "Chaque compte et chaque page portent un repère de confiance calculé par le réseau, jamais déclaré."
+        },
+        "verified": {
+          "title": "Vérifié avec votre accord",
+          "body": "consulat.ga confirme une inscription consulaire, et rien d'autre : ni passeport, ni état civil, ni dossier."
+        },
+        "sponsored": {
+          "title": "Ou parrainé",
+          "body": "Un membre vérifié qui vous connaît peut vous parrainer ; chaque parrainage est tracé."
+        },
+        "data": {
+          "title": "Vos données, vos choix",
+          "body": "Des consentements séparés et révocables, un annuaire sur option, l'export et l'effacement depuis vos réglages."
+        },
+        "free": {
+          "title": "Gratuit pour les membres",
+          "body": "L'accès au réseau ne se paie pas ; une prestation professionnelle peut avoir son propre prix."
+        }
+      },
+      "stepsTitle": "Comment entrer",
+      "steps": {
+        "account": "Créez votre compte avec un code reçu par e-mail, sans mot de passe.",
+        "residence": "Dites où vous vivez : votre pays de résidence, puis vos consentements, un par un.",
+        "publish": "Lisez tout de suite ; publiez après la vérification consulaire ou un parrainage."
+      },
+      "join": "Rejoindre DIASPORALE"
+    }
+  }
+}

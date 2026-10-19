@@ -21,6 +21,7 @@ import enEventCalendar from "./locales/en/event-calendar.json"
 import enDataRights from "./locales/en/data-rights.json"
 import enDiasporale from "./locales/en/diasporale.json"
 import enDiscovery from "./locales/en/discovery.json"
+import enDoorVision from "./locales/en/door-vision.json"
 import enNavigation from "./locales/en/navigation.json"
 import enPageAdmin from "./locales/en/page-admin.json"
 import enPageBrowsing from "./locales/en/page-browsing.json"
@@ -62,6 +63,7 @@ import frEventCalendar from "./locales/fr/event-calendar.json"
 import frDataRights from "./locales/fr/data-rights.json"
 import frDiasporale from "./locales/fr/diasporale.json"
 import frDiscovery from "./locales/fr/discovery.json"
+import frDoorVision from "./locales/fr/door-vision.json"
 import frNavigation from "./locales/fr/navigation.json"
 import frPageAdmin from "./locales/fr/page-admin.json"
 import frPageBrowsing from "./locales/fr/page-browsing.json"
@@ -110,6 +112,7 @@ export const LOCALE_PARTS = {
     "event-calendar": frEventCalendar,
     "data-rights": frDataRights,
     discovery: frDiscovery,
+    "door-vision": frDoorVision,
     navigation: frNavigation,
     "page-admin": frPageAdmin,
     "page-browsing": frPageBrowsing,
@@ -153,6 +156,7 @@ export const LOCALE_PARTS = {
     "event-calendar": enEventCalendar,
     "data-rights": enDataRights,
     discovery: enDiscovery,
+    "door-vision": enDoorVision,
     navigation: enNavigation,
     "page-admin": enPageAdmin,
     "page-browsing": enPageBrowsing,
