@@ -24,8 +24,9 @@ const ALL: readonly DemoAccountEntry[] = DIASPORALE_DEMO_ACTORS.map((actor) => (
 
 function capability(entries: readonly DemoAccountEntry[] = ALL) {
   const readLocalCode = vi.fn<DemoAccountsCapability["readLocalCode"]>().mockResolvedValue("654321")
+  const welcomeOutsider = vi.fn<DemoAccountsCapability["welcomeOutsider"]>()
   const equip = vi.fn<DemoAccountsCapability["equip"]>()
-  const value: DemoAccountsCapability = { useCatalogue: () => ({ status: "ready", data: entries }), readLocalCode, equip }
+  const value: DemoAccountsCapability = { useCatalogue: () => ({ status: "ready", data: entries }), readLocalCode, welcomeOutsider, equip }
   return { value, readLocalCode, equip }
 }
 
@@ -76,18 +77,38 @@ describe("Porte — bouton des comptes de démonstration", () => {
     expect(screen.getByRole("link", { name: new RegExp(t("demoAccounts.open")) })).toHaveAttribute("href", routes.demo())
   })
 
-  it("ouvre la feuille des acteurs, groupés en membres, pages, rôles et services", async () => {
+  it("ouvre la feuille des acteurs, groupés en membres, pages, rôles et services, accès restreints", async () => {
     const { user } = setup({ demoAccounts: capability().value })
     await user.click(screen.getByRole("button", { name: new RegExp(t("demoAccounts.open")) }))
 
     const sheet = screen.getByRole("dialog", { name: t("demoAccounts.title") })
-    for (const group of ["members", "pages", "roles"] as const) {
+    for (const group of ["members", "pages", "roles", "access"] as const) {
       expect(within(sheet).getByRole("heading", { name: t(`demoAccounts.groups.${group}`) })).toBeInTheDocument()
     }
+    expect(DIASPORALE_DEMO_ACTORS).toHaveLength(20)
     expect(within(sheet).getAllByRole("button", { name: /./ }).filter((button) => button.closest("li"))).toHaveLength(DIASPORALE_DEMO_ACTORS.length)
     expect(actorButton(t("demoAccounts.actors.verifie.title"))).toHaveAccessibleName(/Patrice MBOUMBA/)
     expect(actorButton(t("demoAccounts.actors.nouveau.title"))).toHaveAccessibleName(new RegExp(t("demoAccounts.newcomer")))
     expect(actorButton(t("demoAccounts.actors.suspendu.title"))).toHaveAccessibleName(new RegExp(t("membership.status.suspendue")))
+  })
+
+  it("range les accès restreints ensemble : suspensions, blocage, extérieur au réseau sans statut", async () => {
+    const { user } = setup({ demoAccounts: capability().value })
+    await user.click(screen.getByRole("button", { name: new RegExp(t("demoAccounts.open")) }))
+
+    const section = screen.getByRole("heading", { name: t("demoAccounts.groups.access") }).closest("section")
+    if (!section) throw new Error("Groupe des accès restreints absent")
+    expect(within(section).getAllByRole("button")).toHaveLength(4)
+    for (const actor of ["suspendu", "suspendu-racine", "bloque", "exterieur"] as const) {
+      expect(within(section).getByRole("button", { name: new RegExp(`^${t(`demoAccounts.actors.${actor}.title`)}`) })).toBeInTheDocument()
+    }
+    // La suspension de la racine se lit « suspendue » dans DIASPORALE ; le bloqué garde son statut.
+    expect(actorButton(t("demoAccounts.actors.suspendu-racine.title"))).toHaveAccessibleName(new RegExp(`Christelle IVANGA.*${t("membership.status.suspendue")}`))
+    expect(actorButton(t("demoAccounts.actors.bloque.title"))).toHaveAccessibleName(new RegExp(`Yannick MBADINGA.*${t("membership.status.verifiee")}`))
+    // L'extérieur n'a aucun statut dans DIASPORALE : « hors réseau ».
+    const outsider = actorButton(t("demoAccounts.actors.exterieur.title"))
+    expect(outsider).toHaveAccessibleName(new RegExp(`Brice MOUNDOUNGA.*${t("demoAccounts.outsider")}`))
+    for (const status of ["en_attente", "declaree", "verifiee", "suspendue"] as const) expect(outsider).not.toHaveAccessibleName(new RegExp(t(`membership.status.${status}`)))
   })
 
   it("connecte l'acteur par le vrai code : envoi à son adresse réservée, code lu, vérification", async () => {

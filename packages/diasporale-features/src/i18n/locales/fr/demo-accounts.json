@@ -8,9 +8,11 @@
     "groups": {
       "members": "Membres, statut par statut",
       "pages": "Pages",
-      "roles": "Rôles et services"
+      "roles": "Rôles et services",
+      "access": "Accès restreints"
     },
     "newcomer": "Compte neuf",
+    "outsider": "Hors réseau",
     "signingIn": "Connexion en cours…",
     "preparing": "Préparation du compte de démonstration…",
     "ready": "Compte de démonstration prêt : {{name}}.",
@@ -83,7 +85,19 @@
       },
       "suspendu": {
         "title": "Membre suspendu",
-        "description": "Adhésion suspendue : il ne publie plus."
+        "description": "Suspendu dans DIASPORALE seulement : il ne publie plus."
+      },
+      "suspendu-racine": {
+        "title": "Suspension à la racine",
+        "description": "Compte suspendu sur ANTSIA : la suspension vaut partout, DIASPORALE compris."
+      },
+      "bloque": {
+        "title": "Membre bloqué",
+        "description": "Bloqué par le compte « Membre vérifié » : plus aucun lien entre eux, dans les deux sens."
+      },
+      "exterieur": {
+        "title": "Extérieur au réseau",
+        "description": "Compte ANTSIA sans adhésion à DIASPORALE : il arrive à l'accueil."
       }
     }
   }

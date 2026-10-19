@@ -161,9 +161,9 @@ function ActorChoice(props: { entry: DemoAccountEntry; pending: boolean; disable
       </span>
       <span className="flex shrink-0 flex-col items-end gap-1">
         <CountryTag country={spec.country} />
-        {spec.expectedStatus !== null ? (
+        {spec.expectedStatus !== null || spec.outsider ? (
           <span className="rounded-full bg-card px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-            {t(`membership.status.${spec.expectedStatus}`)}
+            {spec.expectedStatus !== null ? t(`membership.status.${spec.expectedStatus}`) : t("demoAccounts.outsider")}
           </span>
         ) : null}
       </span>

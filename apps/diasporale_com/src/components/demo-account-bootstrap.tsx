@@ -110,8 +110,10 @@ async function playGestures(spec: DiasporaleDemoActorSpec, equipment: DemoEquipm
  * Développement local : après une connexion par le panneau des comptes de
  * démonstration (`DemoAccountsButton`), rejoue le VRAI accueil (`join` : profil
  * publié, consentements, adhésion), demande au moteur ce que le compte ne peut
- * pas se donner seul (`equip` : faits fictifs, statut dérivé, rôle, équipe, page),
- * puis joue les vrais gestes de l'acteur, une seule fois, à sa première entrée.
+ * pas se donner seul (`equip` : faits fictifs, statut dérivé, rôle, équipe, page,
+ * blocage, suspension), puis joue les vrais gestes de l'acteur, une seule fois, à
+ * sa première entrée. L'utilisateur extérieur au réseau ne rejoue que l'accueil
+ * d'ANTSIA (`welcomeOutsider`), jamais `join`, et arrive à l'accueil de DIASPORALE.
  * Sans acteur en attente dans cet onglet, il ne fait rien ; le moteur refuse
  * l'équipement hors des outils de développement locaux.
  */
@@ -154,7 +156,11 @@ function EngineDemoAccountBootstrap(props: { capability: DemoAccountsCapability 
     void (async () => {
       try {
         const firstEntry = !member
-        if (firstEntry) {
+        if (firstEntry && spec.outsider) {
+          // Extérieur au réseau : le compte ANTSIA seulement, sans jamais entrer dans DIASPORALE.
+          const welcomed = await capability.welcomeOutsider({ handle: profile.handle, displayName: name })
+          if (!welcomed.ok) throw new Error(welcomed.code)
+        } else if (firstEntry) {
           const joined = await actions.join({
             facet: { countryOfResidence: spec.country, city: spec.page?.city ?? null },
             handle: profile.handle,
@@ -169,7 +175,8 @@ function EngineDemoAccountBootstrap(props: { capability: DemoAccountsCapability 
         const complete = firstEntry ? await playGestures(spec, equipped.value, { mentoring, jobs, services, mutualAid }) : true
         if (complete) toast.success(t("demoAccounts.ready", { name }), { id: notice })
         else toast.error(t("demoAccounts.equipFailed", { name }), { id: notice })
-        router.replace(routes.feed())
+        // Sans adhésion (extérieur au réseau), l'accueil de DIASPORALE ; sinon le fil.
+        router.replace(equipped.value.status === null ? routes.welcome() : routes.feed())
       } catch {
         toast.error(t("demoAccounts.equipFailed", { name }), { id: notice })
       } finally {
