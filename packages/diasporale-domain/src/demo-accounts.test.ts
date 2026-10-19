@@ -23,7 +23,8 @@ describe("comptes de démonstration de DIASPORALE", () => {
   test("le statut attendu découle des faits par la règle officielle, sans exception", () => {
     for (const actor of DIASPORALE_DEMO_ACTORS) {
       const spec = DIASPORALE_DEMO_ACTOR_SPECS[actor]
-      if (spec.profile === null) {
+      // Sans entrée dans le réseau, aucun statut : le nouvel arrivant, l'utilisateur extérieur.
+      if (spec.profile === null || spec.outsider) {
         expect(spec.expectedStatus, actor).toBeNull()
         continue
       }
@@ -32,7 +33,8 @@ describe("comptes de démonstration de DIASPORALE", () => {
           idn: spec.grounds.idn,
           sponsored: spec.grounds.sponsored,
           consularAttestation: spec.grounds.consularAttestation,
-          suspension: spec.grounds.suspended ? { until: null, readAccess: "read_only" } : null,
+          // Une suspension de la racine vaut partout : dans DIASPORALE, elle se lit comme une suspension.
+          suspension: spec.grounds.suspended || spec.grounds.suspendedAtRoot ? { until: null, readAccess: "read_only" } : null,
           leftAt: null,
         },
         NOW,
@@ -100,5 +102,35 @@ describe("comptes de démonstration de DIASPORALE", () => {
     // Le parrain du compte parrainé existe et peut parrainer.
     expect(DIASPORALE_DEMO_ACTOR_SPECS.verifie.canSponsor).toBe(true)
     expect(DIASPORALE_DEMO_ACTORS.filter((actor) => DIASPORALE_DEMO_ACTOR_SPECS[actor].grounds.sponsored)).toEqual(["parraine"])
+  })
+
+  test("accès restreints : un bloqueur qui agit dans le réseau, une suspension de la racine, un extérieur sans rien dans DIASPORALE", () => {
+    for (const actor of DIASPORALE_DEMO_ACTORS) {
+      const spec = DIASPORALE_DEMO_ACTOR_SPECS[actor]
+      const restricted = spec.outsider || spec.blockedBy !== null || spec.grounds.suspended || spec.grounds.suspendedAtRoot
+      expect(spec.group === "access", actor).toBe(restricted)
+      if (spec.blockedBy !== null) {
+        // Un blocage lie deux personnes qui ont un profil ; le bloqueur agit dans le réseau, sans restriction lui-même.
+        const blocker = DIASPORALE_DEMO_ACTOR_SPECS[spec.blockedBy]
+        expect(spec.blockedBy, actor).not.toBe(actor)
+        expect(spec.profile, actor).not.toBeNull()
+        expect(blocker.profile, actor).not.toBeNull()
+        expect(blocker.outsider || blocker.blockedBy !== null || blocker.grounds.suspended || blocker.grounds.suspendedAtRoot, actor).toBe(false)
+      }
+      // La suspension de la racine frappe un membre entré dans DIASPORALE.
+      if (spec.grounds.suspendedAtRoot) expect(spec.outsider, actor).toBe(false)
+      if (spec.outsider) {
+        // Rien dans DIASPORALE : ni fait, ni rôle, ni équipe, ni page, ni geste, ni blocage.
+        expect(spec.profile, actor).not.toBeNull()
+        expect(spec.grounds, actor).toEqual({ idn: null, sponsored: false, consularAttestation: false, suspended: false, suspendedAtRoot: false })
+        expect([spec.role, spec.moderationTeam, spec.page, spec.gestures, spec.canSponsor, spec.blockedBy], actor).toEqual(["member", false, null, [], false, null])
+      }
+    }
+    // Un acteur par accès restreint, le bloqué l'étant par le membre vérifié.
+    expect(DIASPORALE_DEMO_ACTORS.filter((actor) => DIASPORALE_DEMO_ACTOR_SPECS[actor].grounds.suspended)).toEqual(["suspendu"])
+    expect(DIASPORALE_DEMO_ACTORS.filter((actor) => DIASPORALE_DEMO_ACTOR_SPECS[actor].grounds.suspendedAtRoot)).toEqual(["suspendu-racine"])
+    expect(DIASPORALE_DEMO_ACTORS.filter((actor) => DIASPORALE_DEMO_ACTOR_SPECS[actor].blockedBy !== null)).toEqual(["bloque"])
+    expect(DIASPORALE_DEMO_ACTORS.filter((actor) => DIASPORALE_DEMO_ACTOR_SPECS[actor].outsider)).toEqual(["exterieur"])
+    expect(DIASPORALE_DEMO_ACTOR_SPECS.bloque.blockedBy).toBe("verifie")
   })
 })
