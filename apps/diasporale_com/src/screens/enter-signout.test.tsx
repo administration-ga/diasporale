@@ -28,6 +28,8 @@ vi.mock("@diasporale/features/data", async (importOriginal) => ({
 vi.mock("@/components/entry-door", () => ({
   EntryDoor: (props: { children: ReactNode }) => <main>{props.children}</main>,
 }))
+// Le bouton des comptes de démonstration non plus (testé dans `demo-accounts-panel.test.tsx`).
+vi.mock("@/components/demo-accounts-panel", () => ({ DemoAccountsButton: () => null }))
 
 const t = getFixedT("fr")
 const membership: MembershipView = {

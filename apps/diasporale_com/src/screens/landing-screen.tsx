@@ -6,6 +6,7 @@ import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { IdCardIcon, LockKeyholeIcon } from "lucide-react"
 import NextLink from "next/link"
 
+import { DemoAccountsButton } from "@/components/demo-accounts-panel"
 import { DoorVision } from "@/components/door-vision"
 import { EntryDoor } from "@/components/entry-door"
 import { routes } from "@/lib/routes"
@@ -93,6 +94,8 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean }) {
           </>
         )}
       </div>
+      {/* Comptes de démonstration par acteur : développement local du moteur, ou comptes fictifs de la démonstration. */}
+      <DemoAccountsButton />
     </section>
   )
 }

@@ -19,6 +19,7 @@ import enAssociationAttendance from "./locales/en/association-attendance.json"
 import enEventGallery from "./locales/en/event-gallery.json"
 import enEventCalendar from "./locales/en/event-calendar.json"
 import enDataRights from "./locales/en/data-rights.json"
+import enDemoAccounts from "./locales/en/demo-accounts.json"
 import enDiasporale from "./locales/en/diasporale.json"
 import enDiscovery from "./locales/en/discovery.json"
 import enDoorVision from "./locales/en/door-vision.json"
@@ -61,6 +62,7 @@ import frAssociationAttendance from "./locales/fr/association-attendance.json"
 import frEventGallery from "./locales/fr/event-gallery.json"
 import frEventCalendar from "./locales/fr/event-calendar.json"
 import frDataRights from "./locales/fr/data-rights.json"
+import frDemoAccounts from "./locales/fr/demo-accounts.json"
 import frDiasporale from "./locales/fr/diasporale.json"
 import frDiscovery from "./locales/fr/discovery.json"
 import frDoorVision from "./locales/fr/door-vision.json"
@@ -111,6 +113,7 @@ export const LOCALE_PARTS = {
     "event-gallery": frEventGallery,
     "event-calendar": frEventCalendar,
     "data-rights": frDataRights,
+    "demo-accounts": frDemoAccounts,
     discovery: frDiscovery,
     "door-vision": frDoorVision,
     navigation: frNavigation,
@@ -155,6 +158,7 @@ export const LOCALE_PARTS = {
     "event-gallery": enEventGallery,
     "event-calendar": enEventCalendar,
     "data-rights": enDataRights,
+    "demo-accounts": enDemoAccounts,
     discovery: enDiscovery,
     "door-vision": enDoorVision,
     navigation: enNavigation,

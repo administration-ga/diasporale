@@ -1,0 +1,90 @@
+{
+  "demoAccounts": {
+    "open": "Demo accounts",
+    "openHint": "Local development only",
+    "title": "Demo accounts",
+    "lead": "Each account signs in with the real one-time code, read here for you; its onboarding and setup then happen on their own. People, pages and addresses are fictitious.",
+    "close": "Close",
+    "groups": {
+      "members": "Members, status by status",
+      "pages": "Pages",
+      "roles": "Roles and services"
+    },
+    "newcomer": "New account",
+    "signingIn": "Signing in…",
+    "preparing": "Preparing the demo account…",
+    "ready": "Demo account ready: {{name}}.",
+    "failed": "The demo sign-in did not go through. Try again in a moment.",
+    "equipFailed": "The account is open, but its setup did not go through: {{name}}.",
+    "actors": {
+      "nouveau": {
+        "title": "Newcomer",
+        "description": "New account: onboarding still to fill in."
+      },
+      "leger": {
+        "title": "Light account",
+        "description": "Email code, no IDN or sponsorship: reads now, posts later."
+      },
+      "declare": {
+        "title": "Declared member",
+        "description": "IDN identity, assurance level 1."
+      },
+      "parraine": {
+        "title": "Sponsored member",
+        "description": "Sponsored by the “Verified member” account."
+      },
+      "verifie": {
+        "title": "Verified member",
+        "description": "Consular registration attested; can sponsor."
+      },
+      "belgique": {
+        "title": "Member in Belgium",
+        "description": "Verified in Brussels, Belgium hub."
+      },
+      "canada": {
+        "title": "Member in Canada",
+        "description": "IDN level 2 in Montreal, Canada hub."
+      },
+      "association": {
+        "title": "Association",
+        "description": "Chair of an association in Lyon; one volunteer mission."
+      },
+      "entreprise": {
+        "title": "Company",
+        "description": "Caterer in Paris: one service offer and one job offer."
+      },
+      "media": {
+        "title": "Media",
+        "description": "Journalist, admin of a verified media page."
+      },
+      "communaute": {
+        "title": "Community",
+        "description": "Organiser of a student collective in Bordeaux."
+      },
+      "institution": {
+        "title": "Institution",
+        "description": "Officer of a fictitious consular post, official page."
+      },
+      "mentor": {
+        "title": "Mentor",
+        "description": "Volunteer mentor, mentoring profile published."
+      },
+      "talent": {
+        "title": "Talent",
+        "description": "Developer looking for a job, profile published."
+      },
+      "moderateur": {
+        "title": "Moderation",
+        "description": "Network moderator, France team."
+      },
+      "administrateur": {
+        "title": "Network administration",
+        "description": "Administrator of the DIASPORALE network."
+      },
+      "suspendu": {
+        "title": "Suspended member",
+        "description": "Membership suspended: can no longer post."
+      }
+    }
+  }
+}

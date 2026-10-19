@@ -1,0 +1,90 @@
+{
+  "demoAccounts": {
+    "open": "Comptes de démonstration",
+    "openHint": "Développement local seulement",
+    "title": "Comptes de démonstration",
+    "lead": "Chaque compte entre par le vrai code à usage unique, lu ici pour vous, puis son accueil et son équipement se font tout seuls. Personnes, pages et adresses sont fictives.",
+    "close": "Fermer",
+    "groups": {
+      "members": "Membres, statut par statut",
+      "pages": "Pages",
+      "roles": "Rôles et services"
+    },
+    "newcomer": "Compte neuf",
+    "signingIn": "Connexion en cours…",
+    "preparing": "Préparation du compte de démonstration…",
+    "ready": "Compte de démonstration prêt : {{name}}.",
+    "failed": "La connexion de démonstration n'a pas abouti. Réessayez dans quelques instants.",
+    "equipFailed": "Le compte est ouvert, mais sa préparation n'a pas abouti : {{name}}.",
+    "actors": {
+      "nouveau": {
+        "title": "Nouvel arrivant",
+        "description": "Compte neuf : l'accueil reste à remplir."
+      },
+      "leger": {
+        "title": "Compte léger",
+        "description": "Code par e-mail, sans IDN ni parrainage : il lit, il publiera plus tard."
+      },
+      "declare": {
+        "title": "Membre déclaré",
+        "description": "Identité IDN de niveau 1."
+      },
+      "parraine": {
+        "title": "Membre parrainé",
+        "description": "Parrainé par le compte « Membre vérifié »."
+      },
+      "verifie": {
+        "title": "Membre vérifié",
+        "description": "Inscription consulaire attestée ; il peut parrainer."
+      },
+      "belgique": {
+        "title": "Membre en Belgique",
+        "description": "Vérifiée à Bruxelles, hub Belgique."
+      },
+      "canada": {
+        "title": "Membre au Canada",
+        "description": "IDN de niveau 2 à Montréal, hub Canada."
+      },
+      "association": {
+        "title": "Association",
+        "description": "Présidente d'une association à Lyon ; une mission bénévole."
+      },
+      "entreprise": {
+        "title": "Entreprise",
+        "description": "Traiteur à Paris : une offre de service et une offre d'emploi."
+      },
+      "media": {
+        "title": "Média",
+        "description": "Journaliste, administratrice d'un média vérifié."
+      },
+      "communaute": {
+        "title": "Communauté",
+        "description": "Animateur d'un collectif d'étudiants à Bordeaux."
+      },
+      "institution": {
+        "title": "Institution",
+        "description": "Agent d'un poste consulaire fictif, page officielle."
+      },
+      "mentor": {
+        "title": "Mentor",
+        "description": "Mentore bénévole, profil de mentorat publié."
+      },
+      "talent": {
+        "title": "Talent",
+        "description": "Développeur en recherche d'emploi, profil publié."
+      },
+      "moderateur": {
+        "title": "Modération",
+        "description": "Modératrice du réseau, équipe France."
+      },
+      "administrateur": {
+        "title": "Administration du réseau",
+        "description": "Administrateur du réseau DIASPORALE."
+      },
+      "suspendu": {
+        "title": "Membre suspendu",
+        "description": "Adhésion suspendue : il ne publie plus."
+      }
+    }
+  }
+}
