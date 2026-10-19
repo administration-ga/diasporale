@@ -19,6 +19,7 @@ import { NetworkProvider } from "@antsia/api/network"
 import { NextRouterAdapter } from "@antsia/api/routing/next"
 import { conversationHref, dockStore, draftKey } from "@antsia/social-features/messagerie"
 import { CommunicationShell } from "@antsia/social-features/shell"
+import { useOptionalAppearance } from "@antsia/social-features/shell/appearance"
 import { useIsReseauMobile } from "@antsia/ui/overlay"
 import { api } from "@convex/_generated/api"
 import { DIASPORALE_NETWORK_SLUG } from "@diasporale/domain"
@@ -27,14 +28,12 @@ import { useQuery } from "convex/react"
 import { useRouter } from "next/navigation"
 import { createContext, type ReactNode, useCallback, useContext, useMemo } from "react"
 
+import { DEFAULT_CHARTE } from "@/lib/appearance"
 import { engineRoutes } from "@/lib/engine-routes"
 import { ICOM_DEMO, resolveIcomState, type IcomNetwork, type IcomState } from "@/lib/icom-state"
 import { routes } from "@/lib/routes"
 
 export type { IcomNetwork, IcomOffReason, IcomState } from "@/lib/icom-state"
-
-/** La charte de DIASPORALE, redéclarée par les surfaces portalisées du moteur (carte iCom, appel, statuts). */
-const ICOM_CHARTE = "diasporale"
 
 /** Le palier `xl` où la coque montre son rail droit, donc la carte iCom ancrée (`xl:flex` d'`AppShell`). */
 const RAIL_VISIBLE_QUERY = "(min-width: 80rem)"
@@ -57,15 +56,20 @@ export function useIcomNetwork(): IcomNetwork | null {
   return state.status === "on" ? state.network : null
 }
 
-/** Un îlot des surfaces du moteur : routage de Next et réseau courant, là où la surface est montée. */
+/**
+ * Un îlot des surfaces du moteur : routage de Next et réseau courant, là où la surface est montée.
+ * Les surfaces portalisées du moteur (carte iCom, appel, statuts) redéclarent la charte du
+ * réseau : celle du thème choisi (Sable ou Gaboma), Sable hors du fournisseur d'apparence.
+ */
 export function IcomIsland(props: { network: IcomNetwork; children: ReactNode }) {
+  const appearance = useOptionalAppearance()
   return (
     <NextRouterAdapter>
       <NetworkProvider
         networkId={props.network.networkId}
         slug={props.network.slug}
         personId={props.network.personId}
-        charte={ICOM_CHARTE}
+        charte={appearance?.charte ?? DEFAULT_CHARTE}
         routes={engineRoutes}
       >
         {props.children}

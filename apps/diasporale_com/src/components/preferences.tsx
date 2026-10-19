@@ -1,10 +1,10 @@
 "use client"
 
+import { useOptionalAppearance } from "@antsia/social-features/shell/appearance"
 import { cn } from "@diasporale/features"
 import { LOCALE_COOKIE, SUPPORTED_LOCALES, type Locale } from "@diasporale/features/i18n"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react"
-import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -51,22 +51,28 @@ const THEMES = [
   { id: "system", icon: MonitorIcon },
 ] as const
 
-/** Thème clair, sombre ou celui du système (next-themes, classe `dark` sur <html>). */
+/**
+ * Apparence claire, sombre ou celle du système : le mode du fournisseur d'apparence du
+ * moteur (classe `dark` sur <html>, mémorisée sur l'appareil). Le thème (Sable ou
+ * Gaboma) est un autre réglage : `ThemePicker`. Hors du fournisseur, rien ne s'affiche.
+ */
 export function ThemeSwitch(props: { className?: string }) {
   const { t } = useDiasporaleT()
-  const { theme, setTheme } = useTheme()
+  const appearance = useOptionalAppearance()
+  // Le mode relu sur l'appareil n'est connu qu'après le montage : aucun bouton n'est pressé avant.
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
+  if (appearance === null) return null
   return (
-    <div role="group" aria-label={t("preferences.theme")} className={cn("inline-flex max-w-full flex-wrap gap-1 rounded-[var(--esp-r-chrome)] bg-[var(--esp-neutral-chip)] p-1", props.className)}>
+    <div role="group" aria-label={t("preferences.appearance")} className={cn("inline-flex max-w-full flex-wrap gap-1 rounded-[var(--esp-r-chrome)] bg-[var(--esp-neutral-chip)] p-1", props.className)}>
       {THEMES.map(({ id, icon: Icon }) => {
-        const active = mounted && theme === id
+        const active = mounted && appearance.mode === id
         return (
           <button
             key={id}
             type="button"
             aria-pressed={active}
-            onClick={() => setTheme(id)}
+            onClick={() => appearance.setMode(id)}
             className={cn(segment, active ? "bg-thumb text-foreground shadow-card" : "text-muted-foreground hover:text-foreground")}
           >
             <Icon className="size-4" aria-hidden />

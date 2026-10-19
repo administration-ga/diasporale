@@ -66,33 +66,33 @@
   /* Écart assumé à la base du moteur : un lien d'interface (nom d'auteur, carte,
      navigation) HÉRITE sa couleur et ne se souligne au survol que si l'écran le
      demande (`hover:underline`) ; le bleu reste celui des liens de texte. */
-  [data-charte="diasporale"] a {
+  :is([data-charte="diasporale"], [data-charte="diasporale-gaboma"]) a {
     color: inherit;
   }
 
-  [data-charte="diasporale"] a:hover {
+  :is([data-charte="diasporale"], [data-charte="diasporale-gaboma"]) a:hover {
     text-decoration: none;
   }
 
-  [data-charte="diasporale"] body {
+  :is([data-charte="diasporale"], [data-charte="diasporale-gaboma"]) body {
     line-height: 1.55;
   }
 
-  [data-charte="diasporale"] :is(h1, h2, h3) {
+  :is([data-charte="diasporale"], [data-charte="diasporale-gaboma"]) :is(h1, h2, h3) {
     text-wrap: balance;
   }
 
   /* Un seul titre en Plex Condensed par écran (charte §3) : la base du moteur
      met tous les titres en display ; ici, les sous-titres reviennent à Plex Sans
      600. Un titre qui doit rester en display le demande (`font-display`). */
-  [data-charte="diasporale"] :is(h2, h3, h4, h5, h6) {
+  :is([data-charte="diasporale"], [data-charte="diasporale-gaboma"]) :is(h2, h3, h4, h5, h6) {
     font-family: var(--font-sans);
     font-weight: 600;
     letter-spacing: -0.01em;
   }
 
   /* Focus : l'anneau de la charte (3 px, `--shadow-focus`), jamais le contour du navigateur. */
-  [data-charte="diasporale"] :focus-visible {
+  :is([data-charte="diasporale"], [data-charte="diasporale-gaboma"]) :focus-visible {
     outline: none;
     box-shadow: var(--shadow-focus);
   }

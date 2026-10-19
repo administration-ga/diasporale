@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 
 import { describe, expect, it } from "vitest"
 
-import { cascade, contrastRatio, cssBlock, declarations, tokenLuminance } from "./contrast"
+import { cascade, contrastRatio, cssBlock, declarations, resolveToken, tokenLuminance } from "./contrast"
 
 /**
  * Cliquet du thème DIASPORALE tel que le moteur le sert : charte de base
@@ -30,7 +30,7 @@ const THEMES = {
 
 // Les rôles propres à DIASPORALE (`extras.css`), importés après le thème, mêmes sélecteurs.
 const extras = readFileSync(new URL("./extras.css", import.meta.url), "utf8")
-const EXTRAS_LIGHT = declarations(cssBlock(extras, '[data-charte="diasporale"] {'))
+const EXTRAS_LIGHT = declarations(cssBlock(extras, '[data-charte="diasporale"], [data-charte="diasporale-gaboma"] {'))
 const EXTRAS_DARK = declarations(cssBlock(extras, '.dark[data-charte="diasporale"],'))
 const WITH_EXTRAS = {
   clair: cascade(BASE_LIGHT, THEME_LIGHT, EXTRAS_LIGHT),
@@ -214,5 +214,123 @@ describe("thème DIASPORALE servi par le moteur — cascade base + thème", () =
   it("garde le bleu Gabon foncé comme bleu d'action et la palette papier/sable", () => {
     expect(THEMES.clair.get("--esp-blue-500")).toBe("#0167a8")
     expect(THEMES.clair.get("--esp-neutral-100")).toBe("#f1efeb")
+  })
+})
+
+/**
+ * Le second thème au choix du membre (19/10/2026) : Gaboma, le thème du réseau ANTSIA,
+ * sur la structure de DIASPORALE. `diasporale-gaboma.css` est une charte complète, sur son
+ * seul nœud (cliquet `theme-contract` du moteur) : il reprend Sable jeton pour jeton et
+ * n'en change que les couleurs. Les règles WCAG sont celles de Sable ; les marches de
+ * surface sont celles de la charte du réseau (blanc franc et noir absolu), plus serrées
+ * que le papier et le sable.
+ */
+const gabomaTheme = readFileSync(new URL("themes/diasporale-gaboma.css", ENGINE_UI), "utf8")
+const GABOMA_LIGHT = declarations(cssBlock(gabomaTheme, '[data-charte="diasporale-gaboma"] {'))
+const GABOMA_DARK = declarations(cssBlock(gabomaTheme, '.dark[data-charte="diasporale-gaboma"],'))
+const GABOMA = {
+  clair: cascade(BASE_LIGHT, GABOMA_LIGHT),
+  sombre: cascade(BASE_LIGHT, GABOMA_LIGHT, BASE_DARK, GABOMA_DARK),
+} as const
+const GABOMA_WITH_EXTRAS = {
+  clair: cascade(BASE_LIGHT, GABOMA_LIGHT, EXTRAS_LIGHT),
+  sombre: cascade(BASE_LIGHT, GABOMA_LIGHT, EXTRAS_LIGHT, BASE_DARK, GABOMA_DARK, EXTRAS_DARK),
+} as const
+/** Une valeur de couleur (aplat, relief teinté) : la seule chose qu'un thème change. */
+const isColorValue = (value: string) => /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(|oklch\(/i.test(value)
+
+// La charte du réseau, source des couleurs de Gaboma.
+const network = readFileSync(new URL("themes/antsia.css", ENGINE_UI), "utf8")
+const NETWORK_LIGHT = declarations(cssBlock(network, '[data-charte="antsia"] {'))
+const NETWORK = {
+  clair: NETWORK_LIGHT,
+  sombre: cascade(NETWORK_LIGHT, declarations(cssBlock(network, '.dark[data-charte="antsia"],'))),
+} as const
+const swatchesOf = (css: string) => [1, 2, 3].map((index) => new RegExp(`--esp-theme-swatch-${index}:\\s*(#[0-9a-f]{6})`, "i").exec(css.replace(/\/\*[\s\S]*?\*\//g, ""))?.[1])
+
+describe("thème Gaboma de DIASPORALE — cascade base + Sable + Gaboma", () => {
+  it("structure de Sable, jeton pour jeton : mêmes jetons dans le même ordre, mêmes renvois et mêmes mesures ; seules les couleurs changent", () => {
+    for (const [sable, gaboma] of [[THEME_LIGHT, GABOMA_LIGHT], [THEME_DARK, GABOMA_DARK]] as const) {
+      expect([...gaboma.keys()]).toEqual([...sable.keys()])
+      const drift = [...sable].filter(([token, value]) => !isColorValue(value) && gaboma.get(token) !== value)
+      expect(drift.map(([token]) => `${token} : ${sable.get(token)} ≠ ${gaboma.get(token)}`)).toEqual([])
+    }
+  })
+
+  it("le bloc sombre redéclare chaque rôle du bloc sombre de la base", () => {
+    expect([...BASE_DARK.keys()].filter((token) => !GABOMA_DARK.has(token))).toEqual([])
+  })
+
+  it("garde les avatars de DIASPORALE : une personne garde sa couleur d'un thème à l'autre", () => {
+    const avatars = [...THEME_LIGHT.keys()].filter((token) => /^--esp-(ava-|on-avatar)/.test(token))
+    expect(avatars.length).toBeGreaterThanOrEqual(7)
+    for (const token of avatars) expect(GABOMA_LIGHT.get(token), token).toBe(THEME_LIGHT.get(token))
+  })
+
+  it("reprend les couleurs de la charte du réseau (antsia.css), dans les deux modes", () => {
+    const same = (mode: "clair" | "sombre", ours: string, theirs: string) =>
+      expect(resolveToken(GABOMA[mode], ours), `${mode} ${ours}`).toBe(resolveToken(NETWORK[mode], theirs))
+    for (const mode of ["clair", "sombre"] as const) {
+      same(mode, "--primary", "--primary-500")
+      same(mode, "--background", "--background")
+      same(mode, "--card", "--card")
+      same(mode, "--muted-foreground", "--muted-foreground")
+      same(mode, "--input", "--input")
+    }
+    same("clair", "--foreground", "--foreground")
+    same("clair", "--muted", "--muted")
+    same("clair", "--border", "--border")
+    same("clair", "--success", "--success-500")
+    same("clair", "--destructive", "--danger-500")
+    same("sombre", "--popover", "--popover")
+    same("sombre", "--primary-50", "--primary-50")
+    expect(swatchesOf(gabomaTheme)).toEqual(swatchesOf(network))
+  })
+
+  it("chaque thème montre trois couleurs dans son aperçu", () => {
+    for (const css of [theme, gabomaTheme]) expect(swatchesOf(css).every((swatch) => swatch !== undefined)).toBe(true)
+  })
+
+  for (const [name, resolved] of Object.entries(GABOMA)) {
+    describe(`Gaboma ${name}`, () => {
+      it.each(TEXT_PAIRS)("texte %s sur %s ≥ 4,5:1", (foreground, background) => {
+        expect(contrastRatio(resolved, foreground, background)).toBeGreaterThanOrEqual(4.5)
+      })
+
+      it.each(BANNER_STOPS[name as keyof typeof BANNER_STOPS])("titre de bannière sur l'arrêt %s ≥ 4,5:1", (stop) => {
+        expect(contrastRatio(resolved, "--esp-on-banner", stop)).toBeGreaterThanOrEqual(4.5)
+      })
+
+      it.each(NON_TEXT_PAIRS)("contour %s sur %s ≥ 3:1", (foreground, background) => {
+        expect(contrastRatio(resolved, foreground, background)).toBeGreaterThanOrEqual(3)
+      })
+    })
+  }
+
+  for (const [name, resolved] of Object.entries(GABOMA_WITH_EXTRAS)) {
+    it.each(EXTRA_TEXT_PAIRS)(`rôles propres, Gaboma ${name} : texte %s sur %s ≥ 4,5:1`, (foreground, background) => {
+      expect(contrastRatio(resolved, foreground, background)).toBeGreaterThanOrEqual(4.5)
+    })
+  }
+
+  it("surfaces de la charte du réseau : carte, creux et sélection se distinguent sans filet", () => {
+    expect(contrastRatio(GABOMA.clair, "--card", "--background")).toBeGreaterThanOrEqual(1.04)
+    expect(contrastRatio(GABOMA.clair, "--muted", "--card")).toBeGreaterThanOrEqual(1.04)
+    expect(contrastRatio(GABOMA.clair, "--primary-50", "--card")).toBeGreaterThanOrEqual(1.1)
+    const card = tokenLuminance(GABOMA.sombre, "--card")
+    expect(card).toBeGreaterThan(tokenLuminance(GABOMA.sombre, "--background"))
+    expect(tokenLuminance(GABOMA.sombre, "--popover")).toBeGreaterThan(card)
+    expect(tokenLuminance(GABOMA.sombre, "--muted")).toBeGreaterThan(card)
+    for (const selection of ["--primary-50", "--esp-accent-soft"]) {
+      expect(tokenLuminance(GABOMA.sombre, selection), selection).toBeGreaterThan(tokenLuminance(GABOMA.sombre, "--popover"))
+      expect(contrastRatio(GABOMA.sombre, selection, "--card"), selection).toBeGreaterThanOrEqual(1.2)
+    }
+    for (const tint of ["--esp-tone-blue-bg", "--esp-tone-amber-bg", "--esp-tone-rose-bg", "--esp-tone-green-bg"]) {
+      expect(contrastRatio(GABOMA.sombre, tint, "--card"), tint).toBeGreaterThanOrEqual(1.1)
+    }
+    for (const resolved of [GABOMA_WITH_EXTRAS.clair, GABOMA_WITH_EXTRAS.sombre]) {
+      expect(tokenLuminance(resolved, "--dg-thumb")).toBeGreaterThan(tokenLuminance(resolved, "--esp-neutral-chip"))
+      expect(contrastRatio(resolved, "--dg-chosen-bg", "--background")).toBeGreaterThanOrEqual(7)
+    }
   })
 })

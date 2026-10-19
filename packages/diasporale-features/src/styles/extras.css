@@ -10,11 +10,14 @@
    drapeau (charte v2, 15/10/2026).
 
    Mêmes sélecteurs que le thème, importés après lui : à spécificité égale,
-   l'ordre d'import tranche. Le cliquet `engine-theme-contrast.test.ts`
-   rejoue la cascade complète (base, thème, rôles) dans les deux thèmes.
+   l'ordre d'import tranche. Ils couvrent les deux thèmes au choix du membre,
+   Sable (`diasporale`) et Gaboma (`diasporale-gaboma`) : chaque rôle renvoie au
+   contrat, il suit donc le thème choisi. Le cliquet `engine-theme-contrast.test.ts`
+   rejoue la cascade complète (base, thème, rôles) dans les deux thèmes et les
+   deux modes.
    ════════════════════════════════════════════════════════════════════════ */
 
-[data-charte="diasporale"] {
+[data-charte="diasporale"], [data-charte="diasporale-gaboma"] {
   /* L'étiquette pays (charte §5). L'œillet est un trou : il montre le fond. */
   --dg-tag-bg: var(--esp-neutral-chip);
   --dg-tag-fg: var(--muted-foreground);
@@ -72,7 +75,9 @@
 }
 
 .dark[data-charte="diasporale"],
-.dark [data-charte="diasporale"] {
+.dark [data-charte="diasporale"],
+.dark[data-charte="diasporale-gaboma"],
+.dark [data-charte="diasporale-gaboma"] {
   /* En sombre, l'encre se pose sur le rouge éclairci (6,81:1). */
   --destructive-foreground: var(--esp-neutral-900);
   /* La carte est plus sombre que la piste : le curseur prend le survol, plus clair. */
@@ -83,7 +88,7 @@
 
 /* Mouvement réduit : aucune transition ni animation de la charte. */
 @media (prefers-reduced-motion: reduce) {
-  [data-charte="diasporale"] {
+  [data-charte="diasporale"], [data-charte="diasporale-gaboma"] {
     --dg-duration-fast: 0ms;
     --dg-duration-base: 0ms;
   }

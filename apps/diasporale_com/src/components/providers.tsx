@@ -1,15 +1,16 @@
 "use client"
 
+import { AppearanceProvider } from "@antsia/social-features/shell/appearance"
 import { RoutingProvider, type FeatureRoutes, type LinkComponent } from "@diasporale/features"
 import { DataSourceProvider } from "@diasporale/features/data"
 import { DemoStore, createDemoDataSource } from "@diasporale/features/demo"
 import { I18nProvider, useDiasporaleT } from "@diasporale/features/i18n/client"
 import type { Locale } from "@diasporale/features/i18n"
-import { ThemeProvider } from "next-themes"
 import NextLink from "next/link"
 import { useState, type ReactNode } from "react"
 
 import { EngineDataProviders } from "@/data/engine-providers"
+import { APPEARANCE } from "@/lib/appearance"
 import { publicEnv } from "@/lib/env"
 import { routes } from "@/lib/routes"
 
@@ -102,9 +103,15 @@ function FloatingStack() {
   )
 }
 
+/**
+ * L'apparence est celle du moteur (`AppearanceProvider`) : mode Système, Clair ou
+ * Sombre et thème au choix du membre (Sable par défaut, ou Gaboma), mémorisés sur
+ * l'appareil sous le préfixe du réseau, posés sur `<html>` avant l'affichage par le
+ * script d'amorçage de la mise en page, puis tenus ici.
+ */
 export function Providers(props: { locale: Locale; children: ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <AppearanceProvider storagePrefix={APPEARANCE.storagePrefix} themes={APPEARANCE.themes}>
       <I18nProvider locale={props.locale}>
         <DataProviders>
           <RoutingProvider routes={featureRoutes} Link={AppLink}>
@@ -114,6 +121,6 @@ export function Providers(props: { locale: Locale; children: ReactNode }) {
           </RoutingProvider>
         </DataProviders>
       </I18nProvider>
-    </ThemeProvider>
+    </AppearanceProvider>
   )
 }

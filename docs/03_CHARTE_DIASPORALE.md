@@ -432,4 +432,22 @@ La charte vit en trois couches, importées dans cet ordre par
     (§4) ; la navigation active et la barre basse redéclarent `--esp-accent-*` en sombre (le libellé
     actif de la barre basse tombait à 1,8:1) ; la pastille « info » prend la teinte de statut bleue.
 
-*Fin de la charte DIASPORALE — version 3.2 du 15 octobre 2026.*
+14. **Thèmes au choix du membre (19/10/2026, demande du propriétaire)** : cette charte devient le
+    thème **« Sable »**, celui par défaut. Le membre peut lui préférer **« Gaboma »**, le thème du
+    réseau ANTSIA (vert, jaune et bleu du drapeau, blanc franc et noir absolu), dans Réglages >
+    Langue et apparence ; le choix est immédiat, reste sur l'appareil et se pose avant le premier
+    affichage (fournisseur d'apparence et script d'amorçage du moteur, clé
+    `antsia:diasporale:theme`). Gaboma vit dans `ANTSIA/packages/ui/src/themes/diasporale-gaboma.css`
+    (`data-charte="diasporale-gaboma"`) : la structure de Sable jeton pour jeton — mêmes rôles,
+    géométrie, IBM Plex et avatars — avec les couleurs d'`antsia.css` ; les rôles propres
+    (`extras.css`) et les écarts de base (`tailwind-theme.css`) couvrent les deux chartes. C'est le
+    seul endroit où les couleurs du drapeau reviennent (§12), et seulement par le geste du membre.
+    Le cliquet `engine-theme-contrast.test.ts` compare les deux structures, la parité avec
+    `antsia.css`, et rejoue tous les contrastes des deux thèmes, en clair et en sombre. Toute
+    modification d'un rôle ou d'une mesure dans `diasporale.css` se reporte dans
+    `diasporale-gaboma.css`. Aperçu (`--esp-theme-swatch-1` à 3) : sarcelle `#238090`, sable doré
+    `#D7AD63`, bleu Gabon `#0167A8` pour Sable ; vert, safran et bleu pour Gaboma. Inversement,
+    antsia.ga propose Sable en septième thème (`antsia-sable.css`, mêmes trois couleurs, sur la
+    géométrie et les polices du réseau).
+
+*Fin de la charte DIASPORALE — version 3.2 du 15 octobre 2026, thèmes au choix du 19 octobre 2026.*

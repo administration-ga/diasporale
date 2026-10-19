@@ -1,0 +1,16 @@
+{
+  "preferences": {
+    "appearance": "Apparence",
+    "palette": {
+      "hint": "Le thème change les couleurs de DIASPORALE ; l’apparence claire ou sombre reste celle que vous avez choisie. Le changement est immédiat et conservé sur cet appareil.",
+      "sable": {
+        "name": "Sable",
+        "description": "Le thème de DIASPORALE : bleu Gabon, sarcelle et sable, sur fond papier et encre brune."
+      },
+      "gaboma": {
+        "name": "Gaboma",
+        "description": "Le thème du réseau ANTSIA : vert, jaune et bleu du drapeau, sur blanc franc et noir absolu."
+      }
+    }
+  }
+}
