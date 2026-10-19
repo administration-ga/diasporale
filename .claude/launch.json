@@ -6,6 +6,18 @@
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "--cwd", "../ANTSIA", "dev:diasporale"],
       "port": 3031
+    },
+    {
+      "name": "antsia-convex",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "../ANTSIA", "dev:convex"],
+      "port": 3210
+    },
+    {
+      "name": "diasporale-engine",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "apps/diasporale_com", "dev:engine"],
+      "port": 3031
     }
   ]
 }
