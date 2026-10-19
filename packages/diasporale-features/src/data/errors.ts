@@ -128,3 +128,16 @@ export type ErrorCode = ActionErrorCode | FormErrorCode
 
 /** Tous les codes traduisibles, sans doublon. */
 export const ERROR_CODES: ReadonlySet<ErrorCode> = new Set<ErrorCode>([...ACTION_ERROR_CODES, ...FORM_ERROR_CODES])
+
+/**
+ * Les refus d'ACCÈS d'une lecture : réessayer n'y change rien. Un écran les dit
+ * tels quels (`errors.<code>`), sans « Réessayer » ; une panne
+ * (`network_unavailable`, `unknown`…) garde sa reprise.
+ */
+export const ACCESS_REFUSAL_CODES: ReadonlySet<ActionErrorCode> = new Set<ActionErrorCode>([
+  "not_signed_in",
+  "not_member",
+  "not_found",
+  "status_insufficient",
+  "suspended",
+])

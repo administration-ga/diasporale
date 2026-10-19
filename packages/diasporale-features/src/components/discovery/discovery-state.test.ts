@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 
 import type { FeedCursorView, PostView } from "../../data/types"
 import {
+  accessRefusal,
   canAutoAppend,
   discoveryReducer,
   discoveryTail,
@@ -184,9 +185,19 @@ describe("découverte — même source paginée que la liste", () => {
     expect(state.pending).toEqual([])
     expect(state.activeId).toBeNull()
     expect(discoveryTail(state)).toBe("error")
+    // Le refus se dit tel quel : la diapositive d'état ne propose pas « Réessayer ».
+    expect(accessRefusal(state)).toBe("suspended")
     // Même un chargement sans données en tête ne garde rien : seule une transition locale garde sa place.
     const reloading = report(loaded, null, { items: undefined, nextCursor: null, lacunar: false, isLoading: true, error: null })
     expect(reloading.items.map((item) => item.id)).not.toContain("post-001")
+  })
+
+  it("une panne n'est pas un refus d'accès, ni un refus en cours de relecture", () => {
+    const outage = report(initialDiscoveryState(), null, { items: undefined, nextCursor: null, lacunar: false, isLoading: false, error: "network_unavailable" })
+    expect(discoveryTail(outage)).toBe("error")
+    expect(accessRefusal(outage)).toBeNull()
+    const rereading = report(initialDiscoveryState(), null, { items: undefined, nextCursor: null, lacunar: false, isLoading: true, error: "suspended" })
+    expect(accessRefusal(rereading)).toBeNull()
   })
 
   it("derrière une fenêtre lacunaire vide, la suite ne s'enchaîne qu'au geste", () => {

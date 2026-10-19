@@ -28,7 +28,7 @@
  */
 import { feedCursorKey } from "@antsia/social-features/features/reseau-personnel/reseau-feed-pages"
 
-import type { ActionErrorCode } from "../../data/errors"
+import { ACCESS_REFUSAL_CODES, type ActionErrorCode } from "../../data/errors"
 import type { FeedCursorView, PostView } from "../../data/types"
 
 export interface DiscoveryPageReport {
@@ -314,6 +314,18 @@ export function failedPages(state: DiscoveryState): readonly string[] {
     const report = state.reports[key]
     return report !== undefined && report.error !== null && !report.isLoading
   })
+}
+
+/**
+ * Le refus d'accès d'une page en échec (suspension, adhésion…), ou `null` : un
+ * refus se dit tel quel, sans reprise ; une panne garde « Réessayer ».
+ */
+export function accessRefusal(state: DiscoveryState): ActionErrorCode | null {
+  for (const cursor of state.cursors) {
+    const report = state.reports[pageKey(cursor)]
+    if (report !== undefined && !report.isLoading && report.error !== null && ACCESS_REFUSAL_CODES.has(report.error)) return report.error
+  }
+  return null
 }
 
 export function hasLacunarPage(state: DiscoveryState): boolean {

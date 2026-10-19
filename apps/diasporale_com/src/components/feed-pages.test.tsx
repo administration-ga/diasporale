@@ -12,7 +12,7 @@ import { routes } from "@/lib/routes"
 interface PageResult {
   data: FeedPageView | undefined
   isLoading: boolean
-  error: "unknown" | null
+  error: "unknown" | "network_unavailable" | "suspended" | "not_member" | null
   retry: () => void
 }
 
@@ -224,6 +224,14 @@ describe("ProfilePostPages — le même chaînage pour le mur personnel", () => 
     expect(mocks.read).not.toHaveBeenCalled()
   })
 
+  it("dit la suspension sur le mur aussi, sans reprise", () => {
+    setProfilePage(null, [], null, { data: undefined, error: "suspended" })
+    render(profileTree())
+
+    expect(screen.getByRole("alert")).toHaveTextContent("errors.suspended")
+    expect(screen.queryByRole("button", { name: "feed.pagination.retry" })).not.toBeInTheDocument()
+  })
+
   it("réaligne le mur quand sa frontière amont change et ignore l'ancien terminal", () => {
     setProfilePage(null, [post("début du mur")], second)
     setProfilePage(second, [post("ancienne suite")], third)
@@ -368,6 +376,28 @@ describe("FeedPages — abonnements réactifs du fil DIASPORALE", () => {
     expect(screen.getByRole("article", { name: "seconde rétablie" })).toBeInTheDocument()
     expect(screen.getByText("feed.pagination.added:1")).toBeInTheDocument()
     expect(mocks.mounted).toHaveBeenCalledTimes(2)
+  })
+
+  it.each(["suspended", "not_member"] as const)("dit le refus d'accès %s tel quel, sans « Réessayer » ni message de connexion", (code) => {
+    const refused = setPage(null, [], null, { data: undefined, error: code })
+    render(tree())
+
+    const alert = screen.getByRole("alert")
+    expect(alert).toHaveTextContent("feed.pagination.deniedTitle")
+    expect(alert).toHaveTextContent(`errors.${code}`)
+    expect(screen.queryByText("feed.pagination.errorBody")).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "feed.pagination.retry" })).not.toBeInTheDocument()
+    expect(refused.retry).not.toHaveBeenCalled()
+    expect(screen.queryByText("Fil vide confirmé")).not.toBeInTheDocument()
+  })
+
+  it("garde le message de panne et sa reprise quand le réseau est injoignable", () => {
+    const failed = setPage(null, [], null, { data: undefined, error: "network_unavailable" })
+    render(tree())
+
+    expect(screen.getByRole("alert")).toHaveTextContent("feed.pagination.errorTitle")
+    fireEvent.click(screen.getByRole("button", { name: "feed.pagination.retry" }))
+    expect(failed.retry).toHaveBeenCalledOnce()
   })
 
   it("donne la priorité à une erreur initiale sur l'état vide même avec un résultat vide en cache", () => {

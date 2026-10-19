@@ -132,6 +132,9 @@ Gestes réels, joués par l'application à la première entrée :
     arrivant) n'avait aucune sortie dans l'accueil, ni « Se déconnecter », ni réglages. Le bas de
     `/bienvenue` porte désormais « Ce n'est pas votre compte, ou vous voulez en changer ? » et
     « Se déconnecter partout », la même déconnexion que les réglages (`useSignOutEverywhere`) ;
-  - NON CORRIGÉE : sous l'avis de suspension, le fil d'un compte suspendu dit « Les publications
-    ne sont pas disponibles. Vérifiez votre connexion », le message générique de tout refus de
-    lecture. C'est déjà le cas pour « Membre suspendu ».
+  - CORRIGÉE le 19/10 au soir : sous l'avis de suspension, le fil d'un compte suspendu disait « Les
+    publications ne sont pas disponibles. Vérifiez votre connexion », le message générique de tout
+    refus de lecture. Un refus d'accès (`ACCESS_REFUSAL_CODES` : suspension, adhésion, statut,
+    session, élément disparu) se dit maintenant tel quel, sans « Réessayer » : « Ces publications
+    ne vous sont pas accessibles », puis le texte du refus. Cela vaut pour le fil, les murs de profil
+    et de page, et la vue Découverte. Une panne garde son message et sa reprise.

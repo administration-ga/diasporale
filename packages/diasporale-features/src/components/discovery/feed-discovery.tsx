@@ -36,6 +36,7 @@ import {
 import { toast } from "sonner"
 
 import { useActions, useDataSource, useFeedPage } from "../../data/context"
+import type { ActionErrorCode } from "../../data/errors"
 import type { FeedCursorView, FeedPageRequest, MembershipView, ReactionKind } from "../../data/types"
 import { useDiasporaleT } from "../../i18n/client"
 import { cn } from "../../lib/cn"
@@ -45,6 +46,7 @@ import { RoutingProvider, useRouting } from "../../routing"
 import { discoveryPositionKey, readDiscoveryPosition, rememberDiscoveryPosition } from "./discovery-position"
 import { DiscoveryItem } from "./discovery-item"
 import {
+  accessRefusal,
   canAutoAppend,
   discoveryReducer,
   discoveryTail,
@@ -140,6 +142,7 @@ function DiscoverySession(props: FeedDiscoveryProps & { readonly positionKey: st
   const range = discoveryWindow(state.activeIndex, total)
   const activePost = state.items[state.activeIndex]
   const errors = failedPages(state)
+  const refusal = accessRefusal(state)
 
   useLayoutEffect(() => {
     activeIndexRef.current = state.activeIndex
@@ -361,6 +364,7 @@ function DiscoverySession(props: FeedDiscoveryProps & { readonly positionKey: st
         >
           <StatusSlide
             tail={tail === "more" && appendable ? "loading" : tail}
+            refusal={refusal}
             lacunar={hasLacunarPage(state)}
             onRetry={() => { for (const key of errors) retries.current.get(key)?.() }}
             onMore={() => dispatch({ type: "append" })}
@@ -447,10 +451,17 @@ function DiscoverySession(props: FeedDiscoveryProps & { readonly positionKey: st
         </div>
       </div>
       {errors.length > 0 && tail !== "error" ? (
-        <Card role="alert" className="flex flex-wrap items-center justify-between gap-3 p-3">
-          <p className="text-sm">{t("feed.pagination.errorTitle")}</p>
-          <Button variant="outline" size="sm" onClick={() => { for (const key of errors) retries.current.get(key)?.() }}>{t("feed.pagination.retry")}</Button>
-        </Card>
+        refusal !== null ? (
+          // Un refus d'accès n'est pas une panne : il se dit, sans reprise.
+          <Card role="alert" className="p-3">
+            <p className="text-sm">{t(`errors.${refusal}`)}</p>
+          </Card>
+        ) : (
+          <Card role="alert" className="flex flex-wrap items-center justify-between gap-3 p-3">
+            <p className="text-sm">{t("feed.pagination.errorTitle")}</p>
+            <Button variant="outline" size="sm" onClick={() => { for (const key of errors) retries.current.get(key)?.() }}>{t("feed.pagination.retry")}</Button>
+          </Card>
+        )
       ) : null}
       {tail === "empty" ? props.emptyFallback : (
         <div
@@ -476,6 +487,8 @@ function DiscoverySession(props: FeedDiscoveryProps & { readonly positionKey: st
 
 function StatusSlide(props: {
   readonly tail: "loading" | "error" | "more" | "end" | "empty"
+  /** Le refus d'accès d'une page, dit tel quel et sans reprise ; `null` : une panne. */
+  readonly refusal: ActionErrorCode | null
   readonly lacunar: boolean
   readonly onRetry: () => void
   readonly onMore: () => void
@@ -491,7 +504,12 @@ function StatusSlide(props: {
           <p className="text-sm text-muted-foreground">{t("feed.pagination.loading")}</p>
         </div>
       ) : null}
-      {props.tail === "error" ? (
+      {props.tail === "error" && props.refusal !== null ? (
+        <Card role="alert" className="flex max-w-md flex-col items-center gap-1 p-4">
+          <h2 className="font-semibold">{t("feed.pagination.deniedTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{t(`errors.${props.refusal}`)}</p>
+        </Card>
+      ) : props.tail === "error" ? (
         <Card role="alert" className="flex max-w-md flex-col items-center gap-3 p-4">
           <h2 className="font-semibold">{t("feed.pagination.errorTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("feed.pagination.errorBody")}</p>

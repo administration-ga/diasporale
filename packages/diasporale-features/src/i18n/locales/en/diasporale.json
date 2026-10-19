@@ -309,6 +309,7 @@
       "retry": "Try again",
       "errorTitle": "Posts are unavailable.",
       "errorBody": "Check your connection and try again. Posts already displayed remain available.",
+      "deniedTitle": "These posts aren't available to you.",
       "lacunar": "Some posts may be missing from this feed. You can continue browsing the next ones.",
       "added_one": "{{count}} additional post displayed.",
       "added_other": "{{count}} additional posts displayed.",
