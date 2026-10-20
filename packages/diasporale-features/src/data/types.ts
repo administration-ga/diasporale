@@ -5,6 +5,7 @@
  * au-delà de l'identifiant opaque de la ligne ; aucune coordonnée, jamais.
  */
 export { DISPLAY_NAME_MAX_LENGTH, HEADLINE_MAX_LENGTH } from "@antsia/social-domain/content"
+import type { MediaWithheld } from "@antsia/social-contracts/media"
 import { PAGE_ASSOCIATION_TYPES, PAGE_COMPANY_SECTORS } from "@antsia/social-domain/pagePresentation"
 import type { PageAssociationType, PageCompanySector } from "@antsia/social-domain/pagePresentation"
 
@@ -324,7 +325,7 @@ export interface OwnProfileView {
 /** Une image de profil déjà jugée par la garde des fichiers du moteur. */
 export interface ProfileImageView {
   readonly url: string | null
-  readonly withheld: "fileScanPending" | "fileQuarantined" | null
+  readonly withheld: MediaWithheld | null
 }
 
 export interface ProfileView {
