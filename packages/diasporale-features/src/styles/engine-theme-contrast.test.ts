@@ -331,6 +331,7 @@ const ANTSIA_PRIMITIVE_OPT_INS: Readonly<Record<string, string | { clair: string
   "--esp-control-min-size": "44px",
   "--esp-primitive-card-radius": "var(--ui2-card-radius)",
   "--esp-primitive-button-radius": "var(--ui2-button-radius)",
+  "--esp-social-action-radius": "8px",
   "--esp-primitive-badge-radius": "var(--ui2-badge-radius)",
   "--esp-primitive-chip-radius": "var(--esp-chip-radius)",
   "--esp-primitive-chip-bg": "var(--esp-chip-bg)",
