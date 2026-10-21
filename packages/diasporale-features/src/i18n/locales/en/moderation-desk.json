@@ -78,7 +78,12 @@
       "diasporaKitResource": "Arrival kit resource",
       "diasporaJobOffer": "Diaspora job offer",
       "diasporaTalentProfile": "Talent profile",
-      "diasporaJobApplication": "Job application"
+      "diasporaJobApplication": "Job application",
+      "commerceStorefront": "Shop terms",
+      "professionalProfile": "Professional profile",
+      "professionalCollaboration": "Collaboration request",
+      "editorialVersion": "Article version",
+      "editorialMedia": "Media presentation"
     },
     "ground": {
       "harassment": "Harassment",
