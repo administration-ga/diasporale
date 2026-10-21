@@ -321,10 +321,10 @@ const isColorValue = (value: string) => /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(|oklch\
  * Les renvois conservent la palette partagée ; leurs nouveaux consommateurs
  * gardent leur repli historique tant que DIASPORALE ne les active pas.
  */
-const ANTSIA_PRIMITIVE_OPT_INS: Readonly<Record<string, string>> = {
+const ANTSIA_PRIMITIVE_OPT_INS: Readonly<Record<string, string | { clair: string; sombre: string }>> = {
   "--esp-card-padding": "16px",
   "--esp-card-gap": "12px",
-  "--esp-surface-shadow": "none",
+  "--esp-surface-shadow": "var(--esp-theme-card-shadow)",
   "--esp-raised-border": "transparent",
   "--esp-alert-border": "transparent",
   "--esp-alert-accent-width": "0px",
@@ -364,6 +364,66 @@ const ANTSIA_PRIMITIVE_OPT_INS: Readonly<Record<string, string>> = {
   "--ui2-tab-min-h": "44px",
   "--esp-field-border": "var(--input)",
   "--ui2-button-outline-fg": "var(--foreground)",
+  // Primitives de la recette responsive ANTSIA : elles restent initial côté DIASPORALE.
+  "--esp-motif-reference-glow": { clair: "rgb(0 0 0 / 0.07)", sombre: "rgb(255 255 255 / 0.12)" },
+  "--esp-motif-grain-ink": { clair: "rgb(0 0 0 / 0.07)", sombre: "rgb(255 255 255 / 0.05)" },
+  "--esp-theme-card-shadow": "none",
+  "--esp-heading-font-weight": "700",
+  "--esp-page-title-tracking": "-0.015em",
+  "--esp-section-title-tracking": "-0.01em",
+  "--esp-floating-shadow": "var(--esp-mobilebar-shadow)",
+  "--esp-post-shadow": "var(--esp-theme-card-shadow)",
+  "--esp-field-font-size": "16px",
+  "--esp-field-line-height": "1.4",
+  "--esp-textarea-min-height": "104px",
+  "--esp-page-title-size": "26px",
+  "--esp-page-title-leading": "1.1",
+  "--esp-section-title-size": "20px",
+  "--esp-section-title-leading": "1.2",
+  "--esp-subsection-title-size": "16px",
+  "--esp-subsection-title-leading": "1.3",
+  "--esp-heading-font-family": "var(--font-display)",
+  "--esp-content-font-size": "15px",
+  "--esp-content-line-height": "1.5",
+  "--esp-profile-avatar-page-radius": "24px",
+  "--esp-profile-avatar-size": "104px",
+  "--esp-fab-size": "52px",
+  "--esp-layout-max-width": "1400px",
+  "--esp-layout-gutter": "20px",
+  "--esp-layout-gap": "24px",
+  "--esp-desktop-main-max": "none",
+  "--esp-grid-compact-columns": "248px minmax(0, 1fr)",
+  "--esp-grid-wide-columns": "248px minmax(0, 1fr) 312px",
+  "--esp-mobile-content-padding": "4px 12px 120px",
+  "--esp-tablet-content-padding": "8px 24px 140px",
+  "--esp-tablet-content-max": "728px",
+  "--esp-mobile-dock-inset": "12px",
+  "--esp-mobile-dock-bottom": "16px",
+  "--esp-tablet-dock-bottom": "26px",
+  "--esp-tablet-dock-width": "540px",
+  // Avatars et titres ANTSIA : mêmes renvois dans les deux modes, palette résolue du mode.
+  "--esp-avatar-1-bg": "color-mix(in srgb, var(--role-social-fill) 15%, var(--card))",
+  "--esp-avatar-1-fg": "var(--role-social-ink)",
+  "--esp-avatar-2-bg": "var(--primary-fill)",
+  "--esp-avatar-2-fg": "var(--primary-fill-on)",
+  "--esp-avatar-3-bg": "var(--role-commerce-fill)",
+  "--esp-avatar-3-fg": "var(--role-commerce-on)",
+  "--esp-avatar-4-bg": "var(--role-message-soft)",
+  "--esp-avatar-4-fg": "var(--role-message-ink)",
+  "--esp-avatar-5-bg": "var(--role-social-fill)",
+  "--esp-avatar-5-fg": "var(--role-social-on)",
+  "--esp-avatar-6-bg": "var(--foreground)",
+  "--esp-avatar-6-fg": "var(--background)",
+  "--esp-avatar-neutral-bg": "var(--muted)",
+  "--esp-avatar-neutral-fg": "var(--foreground)",
+  "--esp-avatar-font-24": "9.5px",
+  "--esp-avatar-font-32": "11.5px",
+  "--esp-avatar-font-40": "13px",
+  "--esp-avatar-font-48": "15px",
+  "--esp-avatar-font-64": "20px",
+  "--esp-avatar-font-104": "32px",
+  "--esp-story-ring-seen-fill": "var(--border)",
+  "--esp-messages-heading-size": "22px",
 }
 
 function networkTheme(file: string, charte: string) {
@@ -419,9 +479,15 @@ describe("Sable et Gaboma — une structure, deux palettes, la maquette du rése
       expect(networkOnly.sort()).toEqual(Object.keys(ANTSIA_PRIMITIVE_OPT_INS).sort())
       for (const mode of ["clair", "sombre"] as const) {
         const defaults = mode === "clair" ? BASE_LIGHT : cascade(BASE_LIGHT, BASE_DARK)
-        for (const [token, value] of Object.entries(ANTSIA_PRIMITIVE_OPT_INS)) {
+        for (const [token, expected] of Object.entries(ANTSIA_PRIMITIVE_OPT_INS)) {
+          const value = typeof expected === "string" ? expected : expected[mode]
           expect(network[mode].get(token), `${mode} ${token} : activation ANTSIA`).toBe(value)
-          expect(resolveToken(network[mode], token), `${mode} ${token} : renvoi ANTSIA résolu`).not.toMatch(/^(initial|var\()/)
+          if (token === "--esp-heading-font-family") {
+            // Liste CSS valide : var() possède un repli de police, puis les familles de secours.
+            expect(resolveToken(network[mode], token), `${mode} ${token} : familles ANTSIA`).toBe('var(--font-familjen-grotesk, "Familjen Grotesk Variable"), "Inter", system-ui, sans-serif')
+          } else {
+            expect(resolveToken(network[mode], token), `${mode} ${token} : renvoi ANTSIA résolu`).not.toMatch(/^(initial|var\()/)
+          }
           expect(themes.theme[mode].get(token), `${mode} ${token} : défaut DIASPORALE`).toBe(defaults.get(token))
           expect(resolveToken(themes.theme[mode], token), `${mode} ${token} : repli DIASPORALE`).toBe(resolveToken(defaults, token))
         }
