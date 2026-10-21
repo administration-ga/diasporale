@@ -18,6 +18,13 @@
    ════════════════════════════════════════════════════════════════════════ */
 
 [data-charte="diasporale"], [data-charte="diasporale-gaboma"] {
+  /* Teintes douces v4 : renvois au contrat, relus par le cliquet de contraste. */
+  --dg-primary-soft: color-mix(in srgb, var(--primary-fill) 15%, var(--card));
+  --dg-social-soft: color-mix(in srgb, var(--role-social-fill) 15%, var(--card));
+  --dg-commerce-soft: color-mix(in srgb, var(--role-commerce-fill) 18%, var(--card));
+  --dg-success-soft: color-mix(in srgb, var(--role-success-fill) 14%, var(--card));
+  --dg-danger-soft: color-mix(in srgb, var(--role-danger-fill) 12%, var(--card));
+
   /* L'étiquette pays (charte §5). L'œillet est un trou : il montre le fond. */
   --dg-tag-bg: var(--esp-neutral-chip);
   --dg-tag-fg: var(--muted-foreground);
@@ -53,10 +60,10 @@
 
   /* Sélection, jamais par un contour (charte v3.2, §8) : la pilule choisie passe à
      l'encre inversée ; le curseur d'un sélecteur (onglets, thème, langue) est la
-     surface la plus claire de sa piste — papier en clair, survol levé en sombre. */
+     carte posée sur le creux de sa piste, dans les deux modes. */
   --dg-chosen-bg: var(--esp-segment-on);
   --dg-chosen-fg: var(--esp-segment-on-fg);
-  --dg-thumb: var(--esp-neutral-0);
+  --dg-thumb: var(--card);
 
   /* Bouton destructif : hors du contrat du moteur, dérivé de lui. Le survol
      se rapproche de l'encre (plus sombre en clair, plus clair en sombre). */
@@ -80,8 +87,6 @@
 .dark [data-charte="diasporale-gaboma"] {
   /* En sombre, l'encre se pose sur le rouge éclairci (6,81:1). */
   --destructive-foreground: var(--esp-neutral-900);
-  /* La carte est plus sombre que la piste : le curseur prend le survol, plus clair. */
-  --dg-thumb: var(--esp-neutral-hover);
   --dg-scrim: color-mix(in srgb, var(--esp-neutral-900) 72%, transparent);
   --dg-shadow-sheet: 0 12px 32px -20px color-mix(in srgb, var(--esp-neutral-900) 60%, transparent);
 }
