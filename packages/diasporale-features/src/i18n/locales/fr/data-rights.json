@@ -83,7 +83,12 @@
           "diasporaKitResource": "Ressource du kit d'arrivée",
           "diasporaJobOffer": "Offre d'emploi de la diaspora",
           "diasporaTalentProfile": "Profil de talent",
-          "diasporaJobApplication": "Candidature à une offre d'emploi"
+          "diasporaJobApplication": "Candidature à une offre d'emploi",
+          "commerceStorefront": "Conditions de la boutique",
+          "professionalProfile": "Profil professionnel",
+          "professionalCollaboration": "Demande de collaboration",
+          "editorialVersion": "Version d'article",
+          "editorialMedia": "Présentation du média"
         },
         "status": {
           "open": "En attente d'examen",
