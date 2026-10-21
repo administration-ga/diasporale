@@ -20,6 +20,7 @@
  * Une page créée par un membre naît « Communauté » ; aucun geste de cette
  * capacité ne la rend « Officiel ».
  */
+import type { MediaWithheld } from "@antsia/social-contracts/media"
 import { DECISION_REASON_MAX } from "@antsia/social-domain/audit"
 import {
   assertPageHandle,
@@ -233,7 +234,7 @@ export interface PageClaimView {
  */
 export interface PageClaimEvidenceView {
   readonly url: string | null
-  readonly withheld: "fileScanPending" | "fileQuarantined" | null
+  readonly withheld: MediaWithheld | null
 }
 
 export interface PageClaimDetailView extends PageClaimView {
@@ -250,7 +251,7 @@ export type PageImageSlot = "logo" | "banner"
 
 export interface PageImageView {
   readonly url: string | null
-  readonly withheld: "fileScanPending" | "fileQuarantined" | null
+  readonly withheld: MediaWithheld | null
 }
 
 // ═══════════════════════════════════════════════════════════════

@@ -243,7 +243,7 @@ function PageImageForm(props: {
         return false
       }
       setDelivered(result.value)
-      toast.success(t(file ? "pageAdmin.images.saved" : "pageAdmin.images.removed"))
+      if (result.value.withheld !== "fileScanUnavailable") toast.success(t(file ? "pageAdmin.images.saved" : "pageAdmin.images.removed"))
       if (input.current) input.current.value = ""
       return true
     } catch {
@@ -257,7 +257,7 @@ function PageImageForm(props: {
 
   // L'adresse servie par la garde : la plus récente des deux (réponse du dépôt, ou lecture de la page).
   const url = delivered?.withheld === null && delivered.url ? delivered.url : props.url
-  const notice = delivered?.withheld === "fileScanPending" ? "pageAdmin.images.pending" : delivered?.withheld === "fileQuarantined" ? "pageAdmin.images.quarantined" : null
+  const notice = delivered?.withheld === "fileScanPending" ? "pageAdmin.images.pending" : delivered?.withheld === "fileScanUnavailable" ? "errors:fileScanUnavailable" : delivered?.withheld === "fileQuarantined" ? "pageAdmin.images.quarantined" : null
   return (
     <div className="flex flex-col gap-2" aria-busy={busy}>
       <h4 className="text-sm font-semibold">{t(keys.title)}</h4>
@@ -273,7 +273,7 @@ function PageImageForm(props: {
       ) : (
         <p className="text-sm text-muted-foreground">{t("pageAdmin.images.none")}</p>
       )}
-      {notice ? <p role="status" className="text-sm text-muted-foreground">{t(notice)}</p> : null}
+      {notice ? <p role={delivered?.withheld === "fileScanUnavailable" ? "alert" : "status"} className="text-sm text-muted-foreground">{t(notice)}</p> : null}
       <Field id={`${id}-fichier`} label={t(keys.choose)}>
         {(control) => (
           <Input
