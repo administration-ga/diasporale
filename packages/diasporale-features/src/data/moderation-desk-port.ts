@@ -83,9 +83,16 @@ export type DeskSanctionKind = SanctionKind
  */
 export const DESK_GROUNDS = [
   "harassment",
+  // SU01d du moteur (21/10/2026, ordonnance n° 0011/PR/2026) : les six motifs ajoutés aux signalements.
+  "minor_harm",
   "hate",
   "violence",
   "sexual_content",
+  "deepfake_of_me",
+  "prohibited_ai_content",
+  "institution_impersonation",
+  "impersonation",
+  "privacy_or_honor",
   "misinformation",
   "spam",
   "fraud",

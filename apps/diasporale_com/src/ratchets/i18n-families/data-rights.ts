@@ -5,10 +5,13 @@
  *
  * Les motifs connus d'un dossier réutilisent `report.reason.<motif>` (famille du cliquet
  * principal) ; les codes de refus `errors.<code>` sont couverts par `ERROR_CODES`.
+ * SU01d du moteur (21/10/2026) : les motifs d'une décision suivent ceux du MOTEUR, plus nombreux
+ * que ceux du menu de signalement ; chacun garde donc son libellé `report.reason.<motif>`.
  */
 import {
   DECISION_APPEAL_LEVELS,
   DECISION_APPEAL_STATUSES,
+  DECISION_GROUNDS,
   DECISION_SANCTION_KINDS,
   DECISION_SANCTION_STATUSES,
   DECISION_STATUSES,
@@ -24,4 +27,5 @@ export const FAMILIES: readonly string[] = [
   ...DECISION_SANCTION_STATUSES.map((status) => `${DECISIONS}.sanctionStatus.${status}`),
   ...DECISION_APPEAL_LEVELS.flatMap((level) => [`${DECISIONS}.appealLevel.${level}`, `${DECISIONS}.appealHint.${level}`]),
   ...DECISION_APPEAL_STATUSES.map((status) => `${DECISIONS}.appealStatus.${status}`),
+  ...DECISION_GROUNDS.filter((ground) => ground !== "pre_review" && ground !== "unspecified").map((ground) => `report.reason.${ground}`),
 ]

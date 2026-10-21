@@ -1232,9 +1232,15 @@
     "reasonLegend": "Reason",
     "reason": {
       "harassment": "Harassment",
+      "minor_harm": "Content harmful to a minor",
       "hate": "Hate or discrimination",
       "violence": "Violence or threat",
       "sexual_content": "Sexual content",
+      "deepfake_of_me": "Deepfake of a person without consent",
+      "prohibited_ai_content": "Prohibited AI content",
+      "institution_impersonation": "Imitation of a State institution",
+      "impersonation": "Identity theft",
+      "privacy_or_honor": "Invasion of privacy or reputation",
       "misinformation": "False information",
       "other": "Other reason"
     },
