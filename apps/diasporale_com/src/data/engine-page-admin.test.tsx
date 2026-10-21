@@ -203,13 +203,13 @@ describe("gestion des pages — lectures du moteur", () => {
     expect(result.current).toMatchObject({ status: "ready", data: { continueCursor: "suite", items: [{ id: "claim-1" }] } })
   })
 
-  it("une pièce retenue par la garde n'a jamais d'adresse", () => {
+  it.each(["fileScanPending", "fileScanUnavailable", "fileQuarantined"] as const)("une pièce retenue par la garde (%s) n'a jamais d'adresse", (withheld) => {
     results({
-      "modules/pages/claims:getPageClaim": { ...CLAIM, evidence: [{ url: "https://depot.exemple.test/1", withheld: null }, { url: "https://depot.exemple.test/2", withheld: "fileScanPending" }] },
+      "modules/pages/claims:getPageClaim": { ...CLAIM, evidence: [{ url: "https://depot.exemple.test/1", withheld: null }, { url: "https://depot.exemple.test/2", withheld }] },
     })
     const { management } = source()
     const { result } = renderHook(() => management.useClaim("claim-1"))
-    expect(result.current).toMatchObject({ status: "ready", data: { evidence: [{ url: "https://depot.exemple.test/1", withheld: null }, { url: null, withheld: "fileScanPending" }] } })
+    expect(result.current).toMatchObject({ status: "ready", data: { evidence: [{ url: "https://depot.exemple.test/1", withheld: null }, { url: null, withheld }] } })
     expect(renderHook(() => management.useClaim(null)).result.current).toEqual({ status: "ready", data: null })
   })
 })
@@ -351,14 +351,14 @@ describe("gestion des pages — écritures du moteur", () => {
     expect(await management.withdrawClaim("claim-1")).toEqual({ ok: true, value: { withdrawn: false } })
   })
 
-  it("pose le logo par un dépôt neuf ; une retenue masque l'adresse", async () => {
+  it.each(["fileScanPending", "fileScanUnavailable", "fileQuarantined"] as const)("pose le logo par un dépôt neuf ; la retenue %s masque l'adresse", async (withheld) => {
     const deposit = vi.fn<typeof fetch>(async () => new Response(JSON.stringify({ storageId: "logo-neuf" })))
     const { management, calls } = source({
       fetch: deposit,
-      mutation: (name) => (name === "modules/pages/identity:generatePageImageUploadUrl" ? "https://depot.exemple.test/logo" : { url: "https://images.exemple.test/logo.png", withheld: "fileScanPending" }),
+      mutation: (name) => (name === "modules/pages/identity:generatePageImageUploadUrl" ? "https://depot.exemple.test/logo" : { url: "https://images.exemple.test/logo.png", withheld }),
     })
     const logo = pdf("logo.png", "image/png")
-    expect(await management.setImage!("page-1", "logo", logo)).toEqual({ ok: true, value: { url: null, withheld: "fileScanPending" } })
+    expect(await management.setImage!("page-1", "logo", logo)).toEqual({ ok: true, value: { url: null, withheld } })
     expect(calls).toEqual([
       { name: "modules/pages/identity:generatePageImageUploadUrl", args: { networkId: "network-diasporale", slot: "logo" } },
       { name: "modules/pages/identity:setPageImage", args: { networkId: "network-diasporale", pageId: "page-1", slot: "logo", storageId: "logo-neuf", mimeType: "image/png" } },

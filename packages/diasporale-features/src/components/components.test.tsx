@@ -295,6 +295,17 @@ describe("PostMediaGrid — les médias d'une publication", () => {
     expect(screen.getByRole("img", { name: "Fichier retenu par la garde des fichiers" })).toBeInTheDocument()
     expect(container.querySelector("img")).toBeNull()
   })
+
+  it("une analyse indisponible masque les URL contradictoires des images et vidéos", () => {
+    const media: Parameters<typeof PostMediaGrid>[0]["media"] = [
+      { ...photo, withheld: "scan_unavailable" },
+      { ...photo, kind: "video", withheld: "scan_unavailable" },
+    ]
+    const { container } = renderWithI18n(<PostMediaGrid media={media} />)
+    expect(screen.getAllByRole("img", { name: "Média indisponible" })).toHaveLength(2)
+    expect(container.querySelector("img, video")).toBeNull()
+    expect(container.innerHTML).not.toContain(photo.url)
+  })
 })
 
 describe("SharedPostEmbed — l'original d'un partage cité", () => {

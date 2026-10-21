@@ -214,8 +214,8 @@ function authorOf(item: FeedItem): PostView["author"] {
 export function toPostMediaView(media: EngineMedia): PostMediaView {
   return {
     kind: media.kind,
-    url: media.url,
-    withheld: media.withheld === "fileScanPending" ? "scan_pending" : media.withheld === "fileQuarantined" ? "quarantined" : null,
+    url: media.withheld === null ? media.url : null,
+    withheld: media.withheld === "fileScanPending" ? "scan_pending" : media.withheld === "fileScanUnavailable" ? "scan_unavailable" : media.withheld === "fileQuarantined" ? "quarantined" : null,
     altText: media.altText ?? null,
     width: media.width ?? null,
     height: media.height ?? null,

@@ -393,6 +393,21 @@ describe("gérer une page — identité et vérification", () => {
     expect(await screen.findByText(text("pageAdmin.images.pending"))).toBeInTheDocument()
   })
 
+  it("dit l'analyse du logo indisponible sans succès ni nouvelle URL, en conservant l'image déjà délivrée", async () => {
+    const heldUrl = "https://images.exemple.test/logo-retenu.png"
+    const previousUrl = "https://images.exemple.test/logo-delivre.png"
+    const setImage = vi.fn(() => ok({ url: heldUrl, withheld: "fileScanUnavailable" as const }))
+    provide(management({ setImage, useManagedPage: () => ready({ ...PAGE, logoUrl: previousUrl }) }))
+    const view = wrap(<PageManageScreen handle="amicale-lyon" tab="identite" />)
+    const logo = screen.getByLabelText(text("pageAdmin.images.chooseLogo"))
+    fireEvent.change(logo, { target: { files: [new File(["png"], "logo.png", { type: "image/png" })] } })
+    await waitFor(() => expect(setImage).toHaveBeenCalledOnce())
+    expect(await screen.findByRole("alert")).toHaveTextContent(t("errors:fileScanUnavailable"))
+    expect(mocks.success).not.toHaveBeenCalled()
+    expect(view.container.innerHTML).not.toContain(heldUrl)
+    expect(view.container.querySelector(`img[src="${previousUrl}"]`)).toBeInTheDocument()
+  })
+
   it("sans dépôt de fichier chez le fournisseur (démonstration), aucune commande d'image n'est promise", () => {
     provide(management())
     wrap(<PageManageScreen handle="amicale-lyon" tab="identite" />)
@@ -467,7 +482,7 @@ describe("gestes depuis la fiche et « Mon activité »", () => {
     const decideClaim = vi.fn(() => ok({ status: "approved" as const }))
     provide(management({
       useClaimQueue: () => ready({ items: [PENDING_CLAIM], continueCursor: null }),
-      useClaim: () => ready({ ...PENDING_CLAIM, evidence: [{ url: null, withheld: "fileScanPending" as const }, { url: "https://depot.exemple.test/piece", withheld: null }] }),
+      useClaim: () => ready({ ...PENDING_CLAIM, evidence: [{ url: null, withheld: "fileScanPending" as const }, { url: "https://depot.exemple.test/piece", withheld: null }, { url: "https://depot.exemple.test/retenue", withheld: "fileScanUnavailable" as const }] }),
       decideClaim,
     }))
     const user = userEvent.setup()
@@ -476,6 +491,9 @@ describe("gestes depuis la fiche et « Mon activité »", () => {
     const dialog = await screen.findByRole("dialog")
     expect(within(dialog).getByText(text("pageAdmin.review.evidencePending", { index: 1 }))).toBeInTheDocument()
     expect(within(dialog).getByRole("link", { name: text("pageAdmin.review.evidenceOpen", { index: 2 }) })).toHaveAttribute("href", "https://depot.exemple.test/piece")
+    expect(within(dialog).getByText(t("errors:fileScanUnavailable"))).toBeInTheDocument()
+    expect(within(dialog).queryByRole("link", { name: text("pageAdmin.review.evidenceOpen", { index: 3 }) })).not.toBeInTheDocument()
+    expect(dialog.innerHTML).not.toContain("https://depot.exemple.test/retenue")
     await user.click(within(dialog).getByRole("button", { name: text("pageAdmin.review.submit") }))
     expect(await within(dialog).findByText(text("errors.page_decision_required"))).toBeInTheDocument()
     await user.click(within(dialog).getByRole("radio", { name: raw("pageAdmin.review.decision.approved") }))
