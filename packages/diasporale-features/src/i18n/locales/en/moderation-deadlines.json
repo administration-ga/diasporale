@@ -1,0 +1,29 @@
+{
+  "moderationDesk": {
+    "deadlines": {
+      "title": "Legal deadlines",
+      "lead": "Reports that Ordinance No. {{ordinance}} requires to be decided within a deadline, nearest deadline first. The country and type chosen below do not filter them.",
+      "teamHint": "Legal deadlines and the case queue follow the chosen team.",
+      "loading": "Loading legal deadlines…",
+      "error": "Legal deadlines could not be loaded: the queue below shows every open case, without their deadlines.",
+      "empty": "No case with a legal deadline is waiting.",
+      "truncated": "Only the {{max}} nearest deadlines are shown: the other cases with a legal deadline stay in the queue below.",
+      "caseTitle": "Legal deadline",
+      "basis": {
+        "art24": "Art. 24: decision notified within {{hours}} h",
+        "art32": "Art. 32: prohibited AI content, removal within {{hours}} h",
+        "art33": "Art. 33: removal within {{hours}} h"
+      },
+      "remaining": "{{duration}} left",
+      "overdue": "{{duration}} overdue",
+      "hoursMinutes": "{{hours}} h {{minutes}} min",
+      "minutes": "{{minutes}} min",
+      "dueAt": "Deadline: {{date}}",
+      "acknowledged": "Acknowledgement sent on {{date}}",
+      "notAcknowledged": "Acknowledgement not delivered",
+      "ordinaryNote": "Cases with a legal deadline shown above are not repeated here.",
+      "ordinaryEmptyTitle": "No other open case",
+      "ordinaryEmptyBody": "Every waiting case has a legal deadline: they are shown above."
+    }
+  }
+}

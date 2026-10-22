@@ -1,8 +1,19 @@
 // @vitest-environment jsdom
+import { reportDecisionDueAt, reportLegalBasis } from "@antsia/social-domain/moderation"
 import { act, cleanup, renderHook } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { deskSanctions, isHeavyDecision, type DeskCaseView, type DeskPage, type Loadable } from "../data"
+import {
+  deskCountdown,
+  deskSanctions,
+  isHeavyDecision,
+  withoutDeadlineCases,
+  type DeskCaseView,
+  type DeskDeadlineLane,
+  type DeskPage,
+  type DeskQueueRequest,
+  type Loadable,
+} from "../data"
 import { createDemoModerationDesk, DEMO_DESK_TEAM_ID, DEMO_DESK_WINDOW } from "./moderation-desk"
 import { createDemoSeed, type DemoState } from "./state"
 import { DEMO_STORAGE_KEY, DemoStore } from "./store"
@@ -10,10 +21,12 @@ import { DEMO_STORAGE_KEY, DemoStore } from "./store"
 /**
  * Guichet de modération de démonstration : dossiers fictifs, décisions gardées
  * dans la page, sans effet sur le magasin ; mêmes règles que le moteur (motif,
- * mesures, partie au dossier, refus pour une autre session).
+ * mesures, partie au dossier, délais légaux, refus pour une autre session).
  */
 const NOW = Date.UTC(2026, 9, 18, 12)
-const DAY = 24 * 60 * 60 * 1000
+const MINUTE = 60 * 1000
+const HOUR = 60 * MINUTE
+const DAY = 24 * HOUR
 const PERSON = "p-prisca"
 const OTHER = "p-nadia"
 const REASON = "Propos insultants répétés (motif de démonstration)."
@@ -38,13 +51,13 @@ const ready = <T,>(loadable: Loadable<T>): T => {
   return loadable.data
 }
 
-/** Toute la file fictive, fenêtre après fenêtre. */
-function allCases(desk: ReturnType<typeof setup>["desk"], zone: Parameters<ReturnType<typeof setup>["desk"]["useQueue"]>[0]["zone"] = { kind: "all" }): DeskCaseView[] {
+/** Toute la file fictive, fenêtre après fenêtre ; la file ordinaire avec `lane`. */
+function allCases(desk: ReturnType<typeof setup>["desk"], zone: DeskQueueRequest["zone"] = { kind: "all" }, lane?: DeskQueueRequest["lane"]): DeskCaseView[] {
   const rows: DeskCaseView[] = []
   let cursor: string | null = null
   for (let turn = 0; turn < 10; turn += 1) {
     const current: string | null = cursor
-    const { result } = renderHook(() => desk.useQueue({ personId: PERSON, zone, surface: null, teamId: null, cursor: current }))
+    const { result } = renderHook(() => desk.useQueue({ personId: PERSON, zone, surface: null, teamId: null, lane, cursor: current }))
     const page: DeskPage<DeskCaseView> = ready(result.current)
     rows.push(...page.items)
     if (page.isDone) break
@@ -165,6 +178,53 @@ describe("Guichet de démonstration — décisions sans effet", () => {
   })
 })
 
+describe("Guichet de démonstration — délais légaux (SU01d du moteur)", () => {
+  const lane = (desk: ReturnType<typeof setup>["desk"], teamId: string | null = null): DeskDeadlineLane =>
+    ready(renderHook(() => desk.useDeadlines({ personId: PERSON, teamId })).result.current)
+
+  it("pose les délais par la règle du moteur, l'échéance la plus proche d'abord, accusé à la transmission", () => {
+    const { desk } = setup()
+    const { items, truncated } = lane(desk)
+    expect(truncated).toBe(false)
+    // Un hypertrucage (24 h) passe avant les harcèlements (72 h), quel que soit leur âge.
+    expect(items.map((row) => [row.ground, row.basis])).toEqual([["deepfake_of_me", "art33"], ["harassment", "art24"], ["harassment", "art24"], ["harassment", "art24"]])
+    expect(items[0]?.dueAt).toBe(NOW + 3 * HOUR)
+    for (const row of items) {
+      expect(row.dueAt).toBe(reportDecisionDueAt(row.ground, row.createdAt))
+      expect(row.acknowledgedAt).toBe(row.createdAt)
+    }
+    expect(items.map((row) => row.dueAt)).toEqual(items.map((row) => row.dueAt).sort((a, b) => a - b))
+    // Exactement les dossiers dont le motif porte un délai : ni le pays ni la nature ne comptent.
+    const withDeadline = allCases(desk).filter((row) => reportLegalBasis(row.ground) !== null).map((row) => row.reportId)
+    expect(items.map((row) => row.reportId).sort()).toEqual(withDeadline.sort())
+    expect(new Set(allCases(desk).filter((row) => withDeadline.includes(row.reportId)).map((row) => row.country))).toEqual(new Set(["FR", "BE", null]))
+  })
+
+  it("suit l'équipe choisie et refuse une équipe inconnue, une autre personne ou l'absence de session", () => {
+    const { desk } = setup()
+    expect(lane(desk, DEMO_DESK_TEAM_ID).items.map((row) => [row.reportId, row.level, row.teamId])).toEqual([["demo-dossier-9", "team", DEMO_DESK_TEAM_ID]])
+    expect(renderHook(() => desk.useDeadlines({ personId: PERSON, teamId: "equipe-inconnue" })).result.current).toEqual({ status: "error", code: "not_found" })
+    expect(renderHook(() => desk.useDeadlines({ personId: OTHER, teamId: null })).result.current).toEqual({ status: "error", code: "not_found" })
+    const signedOut = setup({ session: { personId: null } })
+    expect(renderHook(() => signedOut.desk.useDeadlines({ personId: PERSON, teamId: null })).result.current).toEqual({ status: "error", code: "not_signed_in" })
+  })
+
+  it("la file ordinaire ne reprend pas la voie ; un dossier tranché quitte la voie", async () => {
+    const { desk } = setup()
+    const shown = new Set(lane(desk).items.map((row) => row.reportId))
+    const ordinary = allCases(desk, { kind: "all" }, "ordinary")
+    expect(ordinary.some((row) => shown.has(row.reportId))).toBe(false)
+    expect(ordinary.length + shown.size).toBe(allCases(desk).length)
+    // Les filtres de la file ordinaire restent ceux de la file entière.
+    expect(allCases(desk, { kind: "country", country: "BE" }, "ordinary")).toEqual([])
+    await act(async () => {
+      expect(await desk.decide({ personId: PERSON, reportId: "demo-dossier-1", decision: "dismissed", reason: REASON, removal: false, personMeasure: "none", durationDays: null })).toEqual({ ok: true, value: { status: "dismissed" } })
+    })
+    expect(lane(desk).items.map((row) => row.reportId)).not.toContain("demo-dossier-1")
+    expect(allCases(desk, { kind: "all" }, "ordinary").map((row) => row.reportId)).not.toContain("demo-dossier-1")
+  })
+})
+
 describe("Guichet de démonstration — équipes", () => {
   it("cherche un membre du jeu, l'ajoute puis le retire, motif exigé", async () => {
     const { desk } = setup()
@@ -204,5 +264,28 @@ describe("Règles pures du port — mesures", () => {
     expect(isHeavyDecision({ decision: "actioned", removal: true, personMeasure: "none", durationDays: null }, "page")).toBe(true)
     expect(isHeavyDecision({ decision: "actioned", removal: true, personMeasure: "warning", durationDays: null }, "post")).toBe(false)
     expect(isHeavyDecision({ decision: "dismissed", removal: true, personMeasure: "exclusion", durationDays: null }, "person")).toBe(false)
+  })
+})
+
+describe("Règles pures du port — délais légaux", () => {
+  it("dit le reste à la minute inférieure et le retard à la minute supérieure ; l'échéance même n'est pas un retard", () => {
+    const due = NOW + 3 * HOUR
+    expect(deskCountdown(due, NOW)).toEqual({ overdue: false, hours: 3, minutes: 0 })
+    expect(deskCountdown(due, NOW + 1)).toEqual({ overdue: false, hours: 2, minutes: 59 })
+    expect(deskCountdown(due, due - MINUTE - 1)).toEqual({ overdue: false, hours: 0, minutes: 1 })
+    expect(deskCountdown(due, due)).toEqual({ overdue: false, hours: 0, minutes: 0 })
+    expect(deskCountdown(due, due + 1)).toEqual({ overdue: true, hours: 0, minutes: 1 })
+    expect(deskCountdown(due, due + 65 * MINUTE)).toEqual({ overdue: true, hours: 1, minutes: 5 })
+  })
+
+  it("n'écarte de la file ordinaire que les dossiers que la voie montre, sans nouvelle fenêtre s'il n'y a rien à écarter", () => {
+    const row = (reportId: string): DeskCaseView => ({
+      reportId, surface: "post", country: "FR", ground: "harassment", status: "open", level: "network", teamName: null, createdAt: NOW, hasAuthor: true, party: null,
+    })
+    const page: DeskPage<DeskCaseView> = { items: [row("a"), row("b")], continueCursor: "suite", isDone: false }
+    const deadline = { surface: "post", ground: "harassment", status: "open", level: "network", teamId: null, createdAt: NOW, basis: "art24", dueAt: NOW + 3 * DAY, acknowledgedAt: NOW } as const
+    expect(withoutDeadlineCases(page, { items: [{ ...deadline, reportId: "a" }], truncated: false })).toEqual({ items: [row("b")], continueCursor: "suite", isDone: false })
+    expect(withoutDeadlineCases(page, { items: [{ ...deadline, reportId: "z" }], truncated: true })).toBe(page)
+    expect(withoutDeadlineCases(page, { items: [], truncated: false })).toBe(page)
   })
 })

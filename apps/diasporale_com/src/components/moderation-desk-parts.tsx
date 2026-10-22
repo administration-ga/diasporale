@@ -72,6 +72,18 @@ export function useMounted(): RefObject<boolean> {
   return mounted
 }
 
+/** Rend le focus à la liste quand l'élément la quitte alors qu'il l'avait (dossier tranché entre-temps). */
+export function useFocusFallback(onGone: () => void): RefObject<HTMLLIElement | null> {
+  const item = useRef<HTMLLIElement>(null)
+  useLayoutEffect(() => {
+    const node = item.current
+    return () => {
+      if (node !== null && node.contains(document.activeElement)) onGone()
+    }
+  }, [onGone])
+  return item
+}
+
 /** Le pays que porte la cible, ou « sans pays ». */
 export function DeskCountry(props: { readonly country: CountryCode | null }) {
   const { t } = useDiasporaleT()

@@ -12,6 +12,11 @@
  * Une lecture ne part qu'une fois la session et l'adhésion lisibles ; un refus
  * ne laisse aucune ligne à l'écran.
  *
+ * SU01d : la voie des délais légaux est `moderation/cases.deadlineQueue`, avec la
+ * compétence du moteur (réseau ou équipe). Elle ne connaît ni le pays de la
+ * cible ni la personne attendue : l'écran ne la lit que sous un guichet ouvert
+ * pour la personne attendue (`myDesk`), qui se ferme au changement de session.
+ *
  * Écritures : les mutations EXISTANTES du moteur (`moderation/cases` :
  * `decide`, `reviewContent`, `reviewNetworkAppeal`, `createTeam`,
  * `setTeamMember`), qui motivent, journalisent et préviennent l'auteur. Le
@@ -28,11 +33,14 @@ import {
   deskReasonRefusal,
   deskSanctions,
   deskTeamNameRefusal,
+  withoutDeadlineCases,
   type ActionErrorCode,
   type ActionResult,
   type DeskAppealView,
   type DeskCaseDetailView,
   type DeskCaseView,
+  type DeskDeadlineLane,
+  type DeskDeadlineView,
   type DeskPage,
   type DeskPendingView,
   type DeskPreviewView,
@@ -67,6 +75,8 @@ const PREVIEW = api.modules.moderation.reviewProjection.preview
 
 type DeskRow = FunctionReturnType<typeof DESK.myDesk>
 type CaseRow = FunctionReturnType<typeof DESK.queue>["items"][number]
+type DeadlineRows = FunctionReturnType<typeof CASES.deadlineQueue>
+type DeadlineRow = DeadlineRows["items"][number]
 type CaseDetailRow = FunctionReturnType<typeof DESK.caseDetail>
 type PendingRow = FunctionReturnType<typeof DESK.pendingQueue>["items"][number]
 type AppealRow = FunctionReturnType<typeof DESK.appealQueue>["items"][number]
@@ -133,6 +143,37 @@ export function toCaseView(row: CaseRow): DeskCaseView {
     createdAt: row.createdAt,
     hasAuthor: row.hasAuthor,
     party: row.party,
+  }
+}
+
+/**
+ * SU01d : un dossier de la voie des délais légaux, le motif dit par une valeur
+ * fermée. Une ligne sans fondement ou sans échéance, ou déjà tranchée, n'en est
+ * pas une : elle reste dans la file ordinaire.
+ */
+export function toDeadlineView(row: DeadlineRow): DeskDeadlineView | null {
+  if (row.legalBasis === null || row.dueAt === null || (row.status !== "open" && row.status !== "reviewing")) return null
+  return {
+    reportId: row.reportId,
+    surface: row.target.kind,
+    ground: deskGround(row.reason),
+    status: row.status,
+    level: row.level,
+    teamId: row.teamId,
+    createdAt: row.createdAt,
+    basis: row.legalBasis,
+    dueAt: row.dueAt,
+    acknowledgedAt: row.acknowledgedAt,
+  }
+}
+
+export function toDeadlineLane(rows: DeadlineRows): DeskDeadlineLane {
+  return {
+    items: rows.items.flatMap((row) => {
+      const view = toDeadlineView(row)
+      return view === null ? [] : [view]
+    }),
+    truncated: rows.truncated,
   }
 }
 
@@ -218,6 +259,24 @@ const projectCases = (rows: FunctionReturnType<typeof DESK.queue>): DeskPage<Des
 const projectPending = (rows: FunctionReturnType<typeof DESK.pendingQueue>): DeskPage<DeskPendingView> => windowOf(rows, toPendingView)
 const projectAppeals = (rows: FunctionReturnType<typeof DESK.appealQueue>): DeskPage<DeskAppealView> => windowOf(rows, toAppealView)
 
+/** La voie des délais légaux d'une file : celle d'une équipe, ou toute la file accessible (rôle réseau). */
+function deadlineArgs(networkId: Id<"networks">, teamId: string | null): FunctionArgs<typeof CASES.deadlineQueue> {
+  return { networkId, ...(teamId ? { teamId: teamId as Id<"moderationTeams"> } : {}) }
+}
+
+/**
+ * La file ordinaire (SU01d) : la fenêtre sans les dossiers de la voie des délais
+ * légaux. Tant que la voie se charge, la fenêtre attend (aucun dossier n'apparaît
+ * pour disparaître aussitôt) ; une voie illisible laisse la fenêtre entière, rien
+ * n'est caché.
+ */
+export function ordinaryWindow(window: Loadable<DeskPage<DeskCaseView>>, deadlines: Loadable<DeskDeadlineLane> | null): Loadable<DeskPage<DeskCaseView>> {
+  if (deadlines === null || window.status !== "ready" || deadlines.status === "error") return window
+  if (deadlines.status === "loading") return LOADING
+  const data = withoutDeadlineCases(window.data, deadlines.data)
+  return data === window.data ? window : ready(data)
+}
+
 export function engineZone(zone: DeskZone): EngineZone {
   if (zone.kind === "country") return { kind: "country", country: zone.country }
   return zone.kind === "none" ? { kind: "none" } : { kind: "all" }
@@ -289,7 +348,7 @@ export function createEngineModerationDesk(deps: EngineSourceDeps): ModerationDe
       return useProjected(reader, loaded, projectDesk)
     },
 
-    useQueue({ personId, zone, surface, teamId, status, cursor }) {
+    useQueue({ personId, zone, surface, teamId, status, lane, cursor }) {
       const reader = useDeskReader(personId)
       const loaded = useLoaded(DESK.queue, reader.networkId
         ? {
@@ -303,7 +362,19 @@ export function createEngineModerationDesk(deps: EngineSourceDeps): ModerationDe
             paginationOpts: { cursor, numItems: DESK_PAGE_SIZE },
           }
         : "skip")
-      return useProjected(reader, loaded, projectCases)
+      const window = useProjected(reader, loaded, projectCases)
+      // SU01d : la tranche ne range pas ses fenêtres par échéance ; la file ordinaire écarte donc
+      // les dossiers de la voie des délais légaux, lue avec la même compétence (même abonnement).
+      const ordinary = lane === "ordinary"
+      const laneLoaded = useLoaded(CASES.deadlineQueue, reader.networkId && ordinary ? deadlineArgs(reader.networkId, teamId) : "skip")
+      const deadlines = useProjected(reader, laneLoaded, toDeadlineLane)
+      return useMemo(() => ordinaryWindow(window, ordinary ? deadlines : null), [window, ordinary, deadlines])
+    },
+
+    useDeadlines({ personId, teamId }) {
+      const reader = useDeskReader(personId)
+      const loaded = useLoaded(CASES.deadlineQueue, reader.networkId ? deadlineArgs(reader.networkId, teamId) : "skip")
+      return useProjected(reader, loaded, toDeadlineLane)
     },
 
     useCase({ personId, reportId }) {

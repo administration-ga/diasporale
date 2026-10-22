@@ -8,7 +8,7 @@ import { getFunctionName } from "convex/server"
 import { ConvexError } from "convex/values"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { createEngineModerationDesk, engineZone, moderationDeskErrorCode, toCaseView, toPendingView, toPreviewView } from "./engine-moderation-desk"
+import { createEngineModerationDesk, engineZone, moderationDeskErrorCode, toCaseView, toDeadlineView, toPendingView, toPreviewView } from "./engine-moderation-desk"
 
 /**
  * L'adaptateur du guichet de modération sans moteur : lectures réactives jouées
@@ -55,6 +55,21 @@ const CASE_ROW = {
   createdAt: NOW - DAY,
   hasAuthor: true,
   party: null,
+}
+/** Une ligne de `cases.deadlineQueue` (SU01d) : le dossier, son fondement, son échéance, son accusé. */
+const DEADLINE_ROW = {
+  reportId: "report-1",
+  networkId: DIASPORALE._id,
+  target: { kind: "post", id: "post-1" },
+  teamId: "team-fr",
+  level: "team",
+  reason: "harassment",
+  status: "open",
+  createdAt: NOW - DAY,
+  decisionReason: null,
+  legalBasis: "art24",
+  dueAt: NOW + 2 * DAY,
+  acknowledgedAt: NOW - DAY,
 }
 
 function engineError(data: Record<string, unknown>) {
@@ -199,6 +214,82 @@ describe("Guichet — file par pays", () => {
       available: true, title: null, body: "Texte signalé",
       media: [{ kind: "image", url: null, withheld: "quarantined", altText: null, width: null, height: null }],
     })
+  })
+})
+
+describe("Guichet — délais légaux (SU01d du moteur)", () => {
+  const DEADLINES = "modules/moderation/cases:deadlineQueue"
+  const QUEUE = "modules/diaspora/moderationDesk:queue"
+  const ordinary: DeskQueueRequest = { personId: PERSON._id, zone: { kind: "all" }, surface: null, teamId: "team-fr", status: "open", lane: "ordinary", cursor: null }
+
+  it("lit la voie du moteur pour l'équipe choisie ou toute la file, et projette fondement, échéance et accusé", () => {
+    const deepfake = { ...DEADLINE_ROW, reportId: "report-2", target: { kind: "comment", id: "comment-1" }, teamId: null, level: "network", reason: "deepfake_of_me", status: "reviewing", legalBasis: "art33", dueAt: NOW - 60_000, acknowledgedAt: null }
+    respondWith({ [DEADLINES]: { items: [deepfake, DEADLINE_ROW], truncated: true } })
+    const { desk } = setup()
+    const { result, rerender } = renderHook(() => desk.useDeadlines({ personId: PERSON._id, teamId: "team-fr" }))
+    expect(lastArgs(DEADLINES)).toEqual({ networkId: DIASPORALE._id, teamId: "team-fr" })
+    expect(result.current).toEqual({
+      status: "ready",
+      data: {
+        // L'ordre du moteur (l'échéance la plus proche d'abord) est gardé tel quel.
+        items: [
+          { reportId: "report-2", surface: "comment", ground: "deepfake_of_me", status: "reviewing", level: "network", teamId: null, createdAt: NOW - DAY, basis: "art33", dueAt: NOW - 60_000, acknowledgedAt: null },
+          { reportId: "report-1", surface: "post", ground: "harassment", status: "open", level: "team", teamId: "team-fr", createdAt: NOW - DAY, basis: "art24", dueAt: NOW + 2 * DAY, acknowledgedAt: NOW - DAY },
+        ],
+        truncated: true,
+      },
+    })
+    const first = result.current
+    rerender()
+    expect(result.current).toBe(first)
+    renderHook(() => desk.useDeadlines({ personId: PERSON._id, teamId: null }))
+    expect(lastArgs(DEADLINES)).toEqual({ networkId: DIASPORALE._id })
+  })
+
+  it("n'invente aucun délai : une ligne sans fondement, sans échéance ou déjà tranchée n'entre pas dans la voie", () => {
+    expect(toDeadlineView({ ...DEADLINE_ROW, legalBasis: null } as never)).toBeNull()
+    expect(toDeadlineView({ ...DEADLINE_ROW, dueAt: null } as never)).toBeNull()
+    expect(toDeadlineView({ ...DEADLINE_ROW, status: "actioned" } as never)).toBeNull()
+    expect(toDeadlineView({ ...DEADLINE_ROW, reason: "motif_inedit" } as never)).toMatchObject({ ground: "unspecified", basis: "art24" })
+  })
+
+  it("ne lit rien sans session, et rend le refus du moteur sans son détail", () => {
+    mocks.auth = { isAuthenticated: false, isPending: false, isUnauthenticated: true }
+    const { desk } = setup()
+    expect(renderHook(() => desk.useDeadlines({ personId: PERSON._id, teamId: null })).result.current).toEqual({ status: "error", code: "not_signed_in" })
+    expect(mocks.read).not.toHaveBeenCalledWith(DEADLINES, expect.anything())
+    mocks.auth = { isAuthenticated: true, isPending: false, isUnauthenticated: false }
+    respondWith({ [DEADLINES]: engineError({ code: "notFound", detail: "PRIVATE_DETAIL" }) })
+    const refused = renderHook(() => desk.useDeadlines({ personId: PERSON._id, teamId: "team-autre" })).result.current
+    expect(refused).toEqual({ status: "error", code: "not_found" })
+    expect(JSON.stringify(refused)).not.toContain("PRIVATE_DETAIL")
+  })
+
+  it("la file ordinaire écarte les dossiers de la voie, lue avec la même compétence ; la tranche ne reçoit aucun `lane`", () => {
+    const spam = { ...CASE_ROW, reportId: "report-3", reason: "spam" }
+    respondWith({ [QUEUE]: { items: [CASE_ROW, spam], continueCursor: "suite", isDone: false }, [DEADLINES]: { items: [DEADLINE_ROW], truncated: false } })
+    const { desk } = setup()
+    const { result, rerender } = renderHook(() => desk.useQueue(ordinary))
+    expect(result.current).toEqual({ status: "ready", data: { items: [toCaseView(spam as never)], continueCursor: "suite", isDone: false } })
+    const first = result.current
+    rerender()
+    expect(result.current).toBe(first)
+    expect(lastArgs(DEADLINES)).toEqual({ networkId: DIASPORALE._id, teamId: "team-fr" })
+    expect(lastArgs(QUEUE)).not.toHaveProperty("lane")
+
+    // Sans `lane`, la file entière, et la voie n'est pas lue.
+    mocks.read.mockClear()
+    const whole = renderHook(() => desk.useQueue({ ...ordinary, lane: undefined })).result.current
+    expect(whole).toMatchObject({ status: "ready", data: { items: [{ reportId: "report-1" }, { reportId: "report-3" }] } })
+    expect(mocks.read).not.toHaveBeenCalledWith(DEADLINES, expect.anything())
+  })
+
+  it("la file ordinaire attend la voie, et une voie illisible ne cache aucun dossier", () => {
+    respondWith({ [QUEUE]: { items: [CASE_ROW], continueCursor: null, isDone: true }, [DEADLINES]: undefined })
+    const { desk } = setup()
+    expect(renderHook(() => desk.useQueue(ordinary)).result.current).toEqual({ status: "loading" })
+    respondWith({ [QUEUE]: { items: [CASE_ROW], continueCursor: null, isDone: true }, [DEADLINES]: engineError({ code: "rateLimited", retryAfterMs: 1000 }) })
+    expect(renderHook(() => desk.useQueue(ordinary)).result.current).toMatchObject({ status: "ready", data: { items: [{ reportId: "report-1" }] } })
   })
 })
 

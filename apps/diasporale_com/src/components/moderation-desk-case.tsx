@@ -5,9 +5,10 @@
  * reste en place derrière elle, à la même position, et le focus revient au
  * dossier ouvert à la fermeture.
  *
- *  · un signalement : nature, pays de la cible, motif, ouverture, niveau,
- *    aperçu borné du moteur, décisions antérieures sur la même cible, puis la
- *    décision MOTIVÉE (classer, ou prendre des mesures choisies une à une) ;
+ *  · un signalement : nature, pays de la cible, motif, ouverture, niveau, délai
+ *    légal s'il a été ouvert depuis la voie des délais (SU01d), aperçu borné du
+ *    moteur, décisions antérieures sur la même cible, puis la décision MOTIVÉE
+ *    (classer, ou prendre des mesures choisies une à une) ;
  *  · un contenu en relecture préalable : aperçu, puis approuver ou refuser,
  *    motif obligatoire.
  * Une mesure lourde (suspension, exclusion, retrait d'une page ou d'un compte)
@@ -29,6 +30,7 @@ import {
   isTimedMeasure,
   type ActionErrorCode,
   type DeskCaseView,
+  type DeskDeadlineView,
   type DeskDecision,
   type DeskHistoryEntry,
   type DeskMeasureChoice,
@@ -42,6 +44,7 @@ import { useId, useLayoutEffect, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
+import { DeskCaseDeadline } from "./moderation-desk-deadlines"
 import {
   DESK_ERROR_VALUES,
   DeskConfirmStep,
@@ -56,6 +59,13 @@ import {
   useDeskLabels,
   useMounted,
 } from "./moderation-desk-parts"
+
+/** Le dossier ouvert : depuis la file ordinaire, ou depuis la voie des délais légaux avec son délai. */
+export interface DeskCaseOpening {
+  readonly reportId: string
+  readonly surface: DeskSurface
+  readonly deadline: DeskDeadlineView | null
+}
 
 const reasonSchema = z.string().trim().min(DESK_REASON_MIN, "moderation_desk_reason_length").max(DESK_REASON_MAX, "moderation_desk_reason_length")
 
@@ -117,8 +127,8 @@ function useMeasureSummary() {
 export function ModerationDeskCaseSheet(props: {
   readonly desk: ModerationDeskCapability
   readonly personId: string
-  /** Le dossier ouvert depuis la file ; `null` : feuille fermée. */
-  readonly row: DeskCaseView | null
+  /** Le dossier ouvert depuis la file ou la voie des délais légaux ; `null` : feuille fermée. */
+  readonly row: DeskCaseOpening | null
   readonly onClose: () => void
   readonly onDecided: (status: DeskDecision) => void
 }) {
@@ -139,6 +149,7 @@ export function ModerationDeskCaseSheet(props: {
             desk={props.desk}
             personId={props.personId}
             reportId={row.reportId}
+            deadline={row.deadline}
             onBusyChange={(value) => { busy.current = value }}
             onDecided={props.onDecided}
           />
@@ -152,6 +163,7 @@ function CaseBody(props: {
   readonly desk: ModerationDeskCapability
   readonly personId: string
   readonly reportId: string
+  readonly deadline: DeskDeadlineView | null
   readonly onBusyChange: (busy: boolean) => void
   readonly onDecided: (status: DeskDecision) => void
 }) {
@@ -176,6 +188,7 @@ function CaseBody(props: {
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <CaseFacts view={view} />
+      {props.deadline !== null ? <DeskCaseDeadline deadline={props.deadline} /> : null}
       <DeskPreview preview={preview} />
       <CaseHistory history={detail.data.history} more={detail.data.historyMore} />
       {view.party !== null ? (
