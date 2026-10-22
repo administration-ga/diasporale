@@ -4,9 +4,11 @@
  * `/moderation` — le guichet de modération par pays de DIASPORALE (PD6 · G9).
  *
  * Trois onglets portés par l'adresse (`routes.moderationDesk(tab)`) :
- *   · « File » : les signalements ouverts et la relecture préalable, filtrés
- *     par le pays de la cible, la nature et l'équipe ; un dossier s'examine
- *     dans une feuille (aperçu borné, décisions antérieures, décision motivée) ;
+ *   · « File » : en tête, les délais légaux (SU01d du moteur : fondement,
+ *     chronomètre, échéance, accusé de réception) ; puis la file ordinaire, les
+ *     signalements ouverts et la relecture préalable, filtrés par le pays de la
+ *     cible, la nature et l'équipe ; un dossier s'examine dans une feuille
+ *     (aperçu borné, décisions antérieures, décision motivée) ;
  *   · « Recours » : les recours du réseau, à l'administration du réseau seule ;
  *   · « Équipe » : ses équipes ; leur composition pour l'administration du réseau.
  *

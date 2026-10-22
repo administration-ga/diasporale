@@ -49,6 +49,7 @@ import enArrivalKit from "./locales/en/arrival-kit.json"
 import enMentoring from "./locales/en/mentoring.json"
 import enJobs from "./locales/en/jobs.json"
 import enModerationDesk from "./locales/en/moderation-desk.json"
+import enModerationDeadlines from "./locales/en/moderation-deadlines.json"
 import enPilotMetrics from "./locales/en/pilot-metrics.json"
 import enPageDecisions from "./locales/en/page-decisions.json"
 import enContextualConversations from "./locales/en/contextual-conversations.json"
@@ -93,6 +94,7 @@ import frArrivalKit from "./locales/fr/arrival-kit.json"
 import frMentoring from "./locales/fr/mentoring.json"
 import frJobs from "./locales/fr/jobs.json"
 import frModerationDesk from "./locales/fr/moderation-desk.json"
+import frModerationDeadlines from "./locales/fr/moderation-deadlines.json"
 import frPilotMetrics from "./locales/fr/pilot-metrics.json"
 import frPageDecisions from "./locales/fr/page-decisions.json"
 import frContextualConversations from "./locales/fr/contextual-conversations.json"
@@ -144,6 +146,7 @@ export const LOCALE_PARTS = {
     mentoring: frMentoring,
     jobs: frJobs,
     "moderation-desk": frModerationDesk,
+    "moderation-deadlines": frModerationDeadlines,
     "pilot-metrics": frPilotMetrics,
     "page-decisions": frPageDecisions,
     "contextual-conversations": frContextualConversations,
@@ -190,6 +193,7 @@ export const LOCALE_PARTS = {
     mentoring: enMentoring,
     jobs: enJobs,
     "moderation-desk": enModerationDesk,
+    "moderation-deadlines": enModerationDeadlines,
     "pilot-metrics": enPilotMetrics,
     "page-decisions": enPageDecisions,
     "contextual-conversations": enContextualConversations,

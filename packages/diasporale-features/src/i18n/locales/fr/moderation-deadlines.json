@@ -1,0 +1,29 @@
+{
+  "moderationDesk": {
+    "deadlines": {
+      "title": "Délais légaux",
+      "lead": "Les signalements que l'ordonnance n° {{ordinance}} oblige à trancher dans un délai, l'échéance la plus proche d'abord. Ni le pays ni la nature choisis plus bas ne les filtrent.",
+      "teamHint": "Les délais légaux et la file des dossiers suivent l'équipe choisie.",
+      "loading": "Chargement des délais légaux…",
+      "error": "Les délais légaux n'ont pas pu être chargés : la file ci-dessous montre tous les dossiers ouverts, sans leurs échéances.",
+      "empty": "Aucun dossier à délai légal en attente.",
+      "truncated": "Seules les {{max}} échéances les plus proches sont montrées : les autres dossiers à délai légal restent dans la file ci-dessous.",
+      "caseTitle": "Délai légal",
+      "basis": {
+        "art24": "Art. 24 : décision notifiée sous {{hours}} h",
+        "art32": "Art. 32 : contenu d'IA interdit, retrait sous {{hours}} h",
+        "art33": "Art. 33 : retrait sous {{hours}} h"
+      },
+      "remaining": "Reste {{duration}}",
+      "overdue": "En retard de {{duration}}",
+      "hoursMinutes": "{{hours}} h {{minutes}} min",
+      "minutes": "{{minutes}} min",
+      "dueAt": "Échéance : {{date}}",
+      "acknowledged": "Accusé de réception envoyé le {{date}}",
+      "notAcknowledged": "Accusé de réception non remis",
+      "ordinaryNote": "Les dossiers à délai légal présentés plus haut n'y sont pas repris.",
+      "ordinaryEmptyTitle": "Aucun autre dossier ouvert",
+      "ordinaryEmptyBody": "Les dossiers en attente ont tous un délai légal : ils sont présentés plus haut."
+    }
+  }
+}

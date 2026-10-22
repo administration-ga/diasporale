@@ -1,16 +1,18 @@
 "use client"
 
 /**
- * L'onglet « File » du guichet de modération (PD6 · G9) : les signalements
- * ouverts, ou les contenus en relecture préalable (pages à vérifier, évènements
- * en relecture…), filtrés par le pays que porte la CIBLE, par nature et par
- * équipe. Une fenêtre à la fois (« Afficher plus ») : une fenêtre filtrée peut
- * être vide et annoncer sa suite ; rien n'est compté.
+ * L'onglet « File » du guichet de modération (PD6 · G9). En tête, la voie des
+ * délais légaux (SU01d du moteur) ; puis la file ordinaire, qui ne la reprend
+ * pas : les signalements ouverts, ou les contenus en relecture préalable (pages
+ * à vérifier, évènements en relecture…), filtrés par le pays que porte la CIBLE
+ * et par nature. L'équipe choisie vaut pour les deux. Une fenêtre à la fois
+ * (« Afficher plus ») : une fenêtre filtrée peut être vide et annoncer sa
+ * suite ; rien n'est compté.
  *
  * Un dossier s'examine dans une feuille : la file reste en place derrière elle,
- * à la même position. Une décision prise, le message d'issue reçoit le focus ;
- * un dossier qui quitte la file pendant que son bouton a le focus le rend au
- * titre de la file.
+ * à la même position. Une décision prise, le message d'issue reçoit le focus,
+ * dans la partie d'où le dossier a été ouvert ; un dossier qui quitte la file
+ * pendant que son bouton a le focus le rend au titre de sa partie.
  * PROPRIÉTAIRE : chantier « modération par pays ».
  */
 import { Button, Card, EmptyState } from "@diasporale/features"
@@ -29,11 +31,15 @@ import {
 } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { InboxIcon, ScanSearchIcon } from "lucide-react"
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 
-import { ModerationDeskCaseSheet, ModerationDeskPendingSheet } from "./moderation-desk-case"
-import { DeskCountry, DeskSurfaceSelect, DeskZoneSelect, deskDateTime, deskSelectClass, useDeskLabels } from "./moderation-desk-parts"
+import { ModerationDeskCaseSheet, ModerationDeskPendingSheet, type DeskCaseOpening } from "./moderation-desk-case"
+import { ModerationDeskDeadlines } from "./moderation-desk-deadlines"
+import { DeskCountry, DeskSurfaceSelect, DeskZoneSelect, deskDateTime, deskSelectClass, useDeskLabels, useFocusFallback } from "./moderation-desk-parts"
 import { ServicePager } from "./service-pager"
+
+/** La partie de l'onglet d'où vient une décision : son message d'issue s'y affiche. */
+type DeskPart = "deadlines" | "queue"
 
 /** L'équipe lue par défaut : toute la file accessible pour un rôle réseau, sinon la première équipe. */
 export function defaultDeskTeam(view: ModerationDeskView): string | null {
@@ -52,14 +58,17 @@ export function ModerationDeskQueue(props: { readonly desk: ModerationDeskCapabi
   const [surface, setSurface] = useState<DeskSurface | null>(null)
   const [teamId, setTeamId] = useState<string | null>(() => defaultDeskTeam(props.view))
   const [status, setStatus] = useState<DeskOpenStatus>("open")
-  const [openedCase, setOpenedCase] = useState<DeskCaseView | null>(null)
+  const [openedCase, setOpenedCase] = useState<DeskCaseOpening | null>(null)
   const [openedPending, setOpenedPending] = useState<DeskPendingView | null>(null)
-  const [notice, setNotice] = useState<string | null>(null)
+  const [notice, setNotice] = useState<{ readonly message: string; readonly part: DeskPart } | null>(null)
   const [focusRequest, setFocusRequest] = useState(0)
   const zone = useMemo(() => deskZoneFromKey(zoneKey), [zoneKey])
   const filtersKey = `${source}:${status}:${zoneKey}:${surface ?? "*"}:${teamId ?? "*"}`
   const narrowed = zoneKey !== "all" || surface !== null || (source === "reports" && status !== "open")
   const { desk, personId } = props
+  // SU01d : la voie des délais légaux de la file lue ; ni le pays, ni la nature, ni l'état ne la filtrent.
+  const deadlines = desk.useDeadlines({ personId, teamId })
+  const deadlinesShown = deadlines.status === "ready" && deadlines.data.items.length > 0
 
   // Après la fermeture de la feuille : la restauration du focus de la feuille passe d'abord, puis le message.
   useEffect(() => {
@@ -68,10 +77,14 @@ export function ModerationDeskQueue(props: { readonly desk: ModerationDeskCapabi
     return () => clearTimeout(timer)
   }, [focusRequest])
 
-  const announce = (message: string) => {
-    setNotice(message)
+  const announce = (message: string, part: DeskPart) => {
+    setNotice({ message, part })
     setFocusRequest((value) => value + 1)
   }
+  const noticeLine = (part: DeskPart) =>
+    notice !== null && notice.part === part ? (
+      <p ref={statusLine} tabIndex={-1} role="status" className="rounded-xl bg-muted p-3 text-sm focus-visible:shadow-focus">{notice.message}</p>
+    ) : null
   /** Un dossier retiré de la file pendant que son bouton avait le focus : le focus revient au titre. */
   const focusQueue = useCallback(() => heading.current?.focus(), [])
 
@@ -80,46 +93,16 @@ export function ModerationDeskQueue(props: { readonly desk: ModerationDeskCapabi
   const showTeams = props.view.networkWide ? teamOptions.length > 0 : teamOptions.length > 1
 
   return (
-    <section aria-labelledby={`${id}-titre`} className="flex min-w-0 flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <h2 id={`${id}-titre`} ref={heading} tabIndex={-1} className="rounded-md font-display text-xl font-bold focus-visible:shadow-focus">{t("moderationDesk.queue.title")}</h2>
-        <p className="text-sm leading-relaxed text-muted-foreground">{t("moderationDesk.queue.lead")}</p>
-      </div>
-
-      <div role="group" aria-label={t("moderationDesk.filters.label")} className="grid min-w-0 gap-3 sm:grid-cols-2">
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <label htmlFor={`${id}-source`} className="text-sm font-medium">{t("moderationDesk.filters.source")}</label>
-          <select
-            id={`${id}-source`}
-            className={deskSelectClass}
-            value={source}
-            onChange={(event) => setSource(DESK_SOURCES.find((value) => value === event.target.value) ?? "reports")}
-          >
-            {DESK_SOURCES.map((value) => <option key={value} value={value}>{t(`moderationDesk.filters.sourceOption.${value}`)}</option>)}
-          </select>
-        </div>
-        {source === "reports" ? (
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <label htmlFor={`${id}-etat`} className="text-sm font-medium">{t("moderationDesk.filters.status")}</label>
-            <select
-              id={`${id}-etat`}
-              className={deskSelectClass}
-              value={status}
-              onChange={(event) => setStatus(DESK_OPEN_STATUSES.find((value) => value === event.target.value) ?? "open")}
-            >
-              {DESK_OPEN_STATUSES.map((value) => <option key={value} value={value}>{t(`moderationDesk.filters.statusOption.${value}`)}</option>)}
-            </select>
-          </div>
-        ) : null}
-        <DeskZoneSelect id={`${id}-pays`} value={zoneKey} onChange={setZoneKey} />
-        <DeskSurfaceSelect id={`${id}-nature`} value={surface} onChange={setSurface} />
-        {showTeams ? (
+    <div className="flex min-w-0 flex-col gap-6">
+      {showTeams ? (
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2">
           <div className="flex min-w-0 flex-col gap-1.5">
             <label htmlFor={`${id}-equipe`} className="text-sm font-medium">{t("moderationDesk.filters.team")}</label>
             <select
               id={`${id}-equipe`}
               className={deskSelectClass}
               value={teamId ?? ""}
+              aria-describedby={`${id}-equipe-aide`}
               onChange={(event) => setTeamId(event.target.value === "" ? null : event.target.value)}
             >
               {props.view.networkWide ? <option value="">{t("moderationDesk.filters.teamAll")}</option> : null}
@@ -129,54 +112,99 @@ export function ModerationDeskQueue(props: { readonly desk: ModerationDeskCapabi
                 </option>
               ))}
             </select>
+            <p id={`${id}-equipe-aide`} className="text-[13px] leading-snug text-muted-foreground">{t("moderationDesk.deadlines.teamHint")}</p>
           </div>
-        ) : null}
-      </div>
-      <p className="text-[13px] leading-snug text-muted-foreground">{t("moderationDesk.filters.countryNote")}</p>
-
-      {notice !== null ? (
-        <p ref={statusLine} tabIndex={-1} role="status" className="rounded-xl bg-muted p-3 text-sm focus-visible:shadow-focus">{notice}</p>
+        </div>
       ) : null}
 
-      {source === "reports" ? (
-        <ServicePager<DeskCaseView>
-          key={filtersKey}
-          read={(cursor) => desk.useQueue({ personId, zone, surface, teamId, status, cursor })}
-          keyOf={(row) => row.reportId}
-          empty={
-            <EmptyState
-              icon={<InboxIcon />}
-              title={t(narrowed ? "moderationDesk.queue.emptyFilteredTitle" : "moderationDesk.queue.emptyTitle")}
-              description={t(narrowed ? "moderationDesk.queue.emptyFilteredBody" : "moderationDesk.queue.emptyBody")}
-            />
-          }
-        >
-          {(rows) => (
-            <ul className="flex min-w-0 flex-col gap-3">
-              {rows.map((row) => <CaseCard key={row.reportId} row={row} onOpen={() => setOpenedCase(row)} onGone={focusQueue} />)}
-            </ul>
-          )}
-        </ServicePager>
-      ) : (
-        <ServicePager<DeskPendingView>
-          key={filtersKey}
-          read={(cursor) => desk.usePending({ personId, zone, surface, teamId, cursor })}
-          keyOf={(row) => row.key}
-          empty={
-            <EmptyState
-              icon={<ScanSearchIcon />}
-              title={t("moderationDesk.queue.emptyPendingTitle")}
-              description={t(narrowed ? "moderationDesk.queue.emptyFilteredBody" : "moderationDesk.queue.emptyPendingBody")}
-            />
-          }
-        >
-          {(rows) => (
-            <ul className="flex min-w-0 flex-col gap-3">
-              {rows.map((row) => <PendingCard key={row.key} row={row} onOpen={() => setOpenedPending(row)} onGone={focusQueue} />)}
-            </ul>
-          )}
-        </ServicePager>
-      )}
+      <ModerationDeskDeadlines
+        lane={deadlines}
+        view={props.view}
+        notice={noticeLine("deadlines")}
+        onOpen={(row) => setOpenedCase({ reportId: row.reportId, surface: row.surface, deadline: row })}
+      />
+
+      <section aria-labelledby={`${id}-titre`} className="flex min-w-0 flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h2 id={`${id}-titre`} ref={heading} tabIndex={-1} className="rounded-md font-display text-xl font-bold focus-visible:shadow-focus">{t("moderationDesk.queue.title")}</h2>
+          <p className="text-sm leading-relaxed text-muted-foreground">{t("moderationDesk.queue.lead")}</p>
+          {source === "reports" ? <p className="text-[13px] leading-snug text-muted-foreground">{t("moderationDesk.deadlines.ordinaryNote")}</p> : null}
+        </div>
+
+        <div role="group" aria-label={t("moderationDesk.filters.label")} className="grid min-w-0 gap-3 sm:grid-cols-2">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <label htmlFor={`${id}-source`} className="text-sm font-medium">{t("moderationDesk.filters.source")}</label>
+            <select
+              id={`${id}-source`}
+              className={deskSelectClass}
+              value={source}
+              onChange={(event) => setSource(DESK_SOURCES.find((value) => value === event.target.value) ?? "reports")}
+            >
+              {DESK_SOURCES.map((value) => <option key={value} value={value}>{t(`moderationDesk.filters.sourceOption.${value}`)}</option>)}
+            </select>
+          </div>
+          {source === "reports" ? (
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <label htmlFor={`${id}-etat`} className="text-sm font-medium">{t("moderationDesk.filters.status")}</label>
+              <select
+                id={`${id}-etat`}
+                className={deskSelectClass}
+                value={status}
+                onChange={(event) => setStatus(DESK_OPEN_STATUSES.find((value) => value === event.target.value) ?? "open")}
+              >
+                {DESK_OPEN_STATUSES.map((value) => <option key={value} value={value}>{t(`moderationDesk.filters.statusOption.${value}`)}</option>)}
+              </select>
+            </div>
+          ) : null}
+          <DeskZoneSelect id={`${id}-pays`} value={zoneKey} onChange={setZoneKey} />
+          <DeskSurfaceSelect id={`${id}-nature`} value={surface} onChange={setSurface} />
+        </div>
+        <p className="text-[13px] leading-snug text-muted-foreground">{t("moderationDesk.filters.countryNote")}</p>
+
+        {noticeLine("queue")}
+
+        {source === "reports" ? (
+          <ServicePager<DeskCaseView>
+            key={filtersKey}
+            read={(cursor) => desk.useQueue({ personId, zone, surface, teamId, status, lane: "ordinary", cursor })}
+            keyOf={(row) => row.reportId}
+            empty={
+              <EmptyState
+                icon={<InboxIcon />}
+                title={t(narrowed ? "moderationDesk.queue.emptyFilteredTitle" : deadlinesShown ? "moderationDesk.deadlines.ordinaryEmptyTitle" : "moderationDesk.queue.emptyTitle")}
+                description={t(narrowed ? "moderationDesk.queue.emptyFilteredBody" : deadlinesShown ? "moderationDesk.deadlines.ordinaryEmptyBody" : "moderationDesk.queue.emptyBody")}
+              />
+            }
+          >
+            {(rows) => (
+              <ul className="flex min-w-0 flex-col gap-3">
+                {rows.map((row) => (
+                  <CaseCard key={row.reportId} row={row} onOpen={() => setOpenedCase({ reportId: row.reportId, surface: row.surface, deadline: null })} onGone={focusQueue} />
+                ))}
+              </ul>
+            )}
+          </ServicePager>
+        ) : (
+          <ServicePager<DeskPendingView>
+            key={filtersKey}
+            read={(cursor) => desk.usePending({ personId, zone, surface, teamId, cursor })}
+            keyOf={(row) => row.key}
+            empty={
+              <EmptyState
+                icon={<ScanSearchIcon />}
+                title={t("moderationDesk.queue.emptyPendingTitle")}
+                description={t(narrowed ? "moderationDesk.queue.emptyFilteredBody" : "moderationDesk.queue.emptyPendingBody")}
+              />
+            }
+          >
+            {(rows) => (
+              <ul className="flex min-w-0 flex-col gap-3">
+                {rows.map((row) => <PendingCard key={row.key} row={row} onOpen={() => setOpenedPending(row)} onGone={focusQueue} />)}
+              </ul>
+            )}
+          </ServicePager>
+        )}
+      </section>
 
       <ModerationDeskCaseSheet
         desk={desk}
@@ -184,8 +212,9 @@ export function ModerationDeskQueue(props: { readonly desk: ModerationDeskCapabi
         row={openedCase}
         onClose={() => setOpenedCase(null)}
         onDecided={(decision: DeskDecision) => {
+          const part: DeskPart = openedCase?.deadline ? "deadlines" : "queue"
           setOpenedCase(null)
-          announce(t(`moderationDesk.decision.done.${decision}`))
+          announce(t(`moderationDesk.decision.done.${decision}`), part)
         }}
       />
       <ModerationDeskPendingSheet
@@ -195,23 +224,11 @@ export function ModerationDeskQueue(props: { readonly desk: ModerationDeskCapabi
         onClose={() => setOpenedPending(null)}
         onReviewed={(approved) => {
           setOpenedPending(null)
-          announce(t(approved ? "moderationDesk.pending.doneApproved" : "moderationDesk.pending.doneRejected"))
+          announce(t(approved ? "moderationDesk.pending.doneApproved" : "moderationDesk.pending.doneRejected"), "queue")
         }}
       />
-    </section>
+    </div>
   )
-}
-
-/** Rend le focus à la file quand l'élément quitte la liste alors qu'il l'avait. */
-function useFocusFallback(onGone: () => void) {
-  const item = useRef<HTMLLIElement>(null)
-  useLayoutEffect(() => {
-    const node = item.current
-    return () => {
-      if (node !== null && node.contains(document.activeElement)) onGone()
-    }
-  }, [onGone])
-  return item
 }
 
 function CaseCard(props: { readonly row: DeskCaseView; readonly onOpen: () => void; readonly onGone: () => void }) {

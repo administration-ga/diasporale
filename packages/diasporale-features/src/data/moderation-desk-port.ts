@@ -23,13 +23,17 @@
  *     visée, ancien décideur) ne le tranche pas : le moteur refuse ce qu'il
  *     garde, l'écran n'offre pas le geste (`party`) ;
  *   · les recours du réseau et la composition des équipes sont à
- *     l'administration du réseau seule.
+ *     l'administration du réseau seule ;
+ *   · SU01d du moteur (ordonnance n° 0011/PR/2026, art. 24, 32, 33) : les
+ *     dossiers à délai légal forment une voie À PART, l'échéance la plus proche
+ *     d'abord, que ni le pays ni la nature ne filtrent ; la file ordinaire ne les
+ *     reprend pas.
  *
  * Aucune donnée consulaire, aucune statistique : une fenêtre de file ne compte
  * rien, elle liste.
  */
 import { DECISION_REASON_MAX } from "@antsia/social-domain/audit"
-import type { ContentReportReason } from "@antsia/social-domain/moderation"
+import { REPORT_DEADLINES_ORDINANCE, REPORT_LEGAL_BASES, type ContentReportReason, type ReportLegalBasis } from "@antsia/social-domain/moderation"
 import { MODERATION_SURFACES, SANCTION_KINDS, type ModerationSurface, type SanctionKind } from "@antsia/social-domain/moderationPolicy"
 import { isCountryCode, normalizeCountryCode, type CountryCode } from "@diasporale/domain"
 
@@ -37,7 +41,8 @@ import type { ActionResult } from "./port"
 import type { ServiceReviewReportReason } from "./service-reviews-port"
 import type { Loadable, PostMediaView } from "./types"
 
-const DAY_MS = 24 * 60 * 60 * 1000
+const MINUTE_MS = 60 * 1000
+const DAY_MS = 24 * 60 * MINUTE_MS
 
 /** Codes de refus propres au chantier, traduits par errors.<code> dans son fragment. */
 export const MODERATION_DESK_ERROR_CODES = [
@@ -295,6 +300,12 @@ export interface DeskQueueRequest extends DeskQueueFilters {
   readonly cursor: string | null
   /** Signalements seulement : les dossiers ouverts (par défaut) ou ceux mis en examen. */
   readonly status?: DeskOpenStatus
+  /**
+   * Signalements seulement (SU01d) : `ordinary` écarte les dossiers que la voie des
+   * délais légaux présente à part, comme `lane: "ordinary"` de la file du moteur ;
+   * sans `lane`, la file entière.
+   */
+  readonly lane?: "ordinary"
 }
 
 export interface DeskPage<Row> {
@@ -413,6 +424,76 @@ export interface DeskCandidateView {
   readonly displayName: string
 }
 
+// ── Délais légaux (SU01d du moteur) ────────────────────────────────────────
+
+/** Le fondement d'un délai légal (`REPORT_LEGAL_BASES` du moteur). */
+export const DESK_LEGAL_BASES = REPORT_LEGAL_BASES
+export type DeskLegalBasis = ReportLegalBasis
+/** Le texte qui fixe ces délais, cité tel quel (`REPORT_DEADLINES_ORDINANCE` du moteur). */
+export const DESK_DEADLINES_ORDINANCE = REPORT_DEADLINES_ORDINANCE
+/** La voie montre au plus les cinquante échéances les plus proches (`DEADLINE_QUEUE_MAX` du moteur). */
+export const DESK_DEADLINES_MAX = 50
+
+/** Un dossier à délai légal, encore à trancher : ni pays, ni déclarant, ni auteur, ni contenu. */
+export interface DeskDeadlineView {
+  readonly reportId: string
+  readonly surface: DeskSurface
+  readonly ground: DeskGround
+  readonly status: DeskOpenStatus
+  readonly level: DeskCaseLevel
+  /** L'équipe du dossier ; son nom se lit dans le guichet (`ModerationDeskView.teams`). */
+  readonly teamId: string | null
+  readonly createdAt: number
+  readonly basis: DeskLegalBasis
+  /** L'échéance posée par le moteur à la transmission. */
+  readonly dueAt: number
+  /** L'accusé de réception remis au déclarant ; `null` : aucun. */
+  readonly acknowledgedAt: number | null
+}
+
+export interface DeskDeadlineLane {
+  /** L'échéance la plus proche d'abord. */
+  readonly items: readonly DeskDeadlineView[]
+  /** D'autres dossiers à délai légal attendent au-delà des plus proches. */
+  readonly truncated: boolean
+}
+
+export interface DeskDeadlinesRequest {
+  readonly personId: string
+  /** La file d'une équipe ; `null` : toute la file accessible (rôle réseau). */
+  readonly teamId: string | null
+}
+
+/** Ce qui reste avant l'échéance, ou le retard, à la minute. */
+export interface DeskCountdown {
+  readonly overdue: boolean
+  readonly hours: number
+  readonly minutes: number
+}
+
+/**
+ * Le chronomètre d'une échéance à l'instant `now`, comme celui du bureau
+ * d'antsia.ga : le reste s'arrondit à la minute inférieure, le retard à la
+ * minute supérieure, et l'échéance même n'est pas encore un retard.
+ */
+export function deskCountdown(dueAt: number, now: number): DeskCountdown {
+  const overdue = now > dueAt
+  const total = overdue ? Math.ceil((now - dueAt) / MINUTE_MS) : Math.floor((dueAt - now) / MINUTE_MS)
+  return { overdue, hours: Math.floor(total / 60), minutes: total % 60 }
+}
+
+/**
+ * La file ordinaire : la fenêtre sans les dossiers que la voie des délais légaux
+ * présente déjà (la même fenêtre s'il n'y a rien à écarter). Au-delà des
+ * `DESK_DEADLINES_MAX` plus proches, un dossier à délai légal reste donc dans la
+ * file ordinaire : il n'est jamais caché.
+ */
+export function withoutDeadlineCases(page: DeskPage<DeskCaseView>, lane: DeskDeadlineLane): DeskPage<DeskCaseView> {
+  const shown = new Set(lane.items.map((row) => row.reportId))
+  if (!page.items.some((row) => shown.has(row.reportId))) return page
+  return { ...page, items: page.items.filter((row) => !shown.has(row.reportId)) }
+}
+
 // ── Gestes ─────────────────────────────────────────────────────────────────
 
 export interface DeskDecisionInput extends DeskMeasureChoice {
@@ -466,6 +547,12 @@ export interface ModerationDeskCapability {
   useDesk(personId: string): Loadable<ModerationDeskView | null>
   /** Une fenêtre de la file des signalements ouverts, la plus ancienne d'abord. */
   useQueue(request: DeskQueueRequest): Loadable<DeskPage<DeskCaseView>>
+  /**
+   * SU01d : les dossiers à délai légal de la file lue (réseau ou équipe), ouverts
+   * ou en examen, l'échéance la plus proche d'abord, bornés aux `DESK_DEADLINES_MAX`
+   * plus proches ; ni le pays ni la nature ne les filtrent.
+   */
+  useDeadlines(request: DeskDeadlinesRequest): Loadable<DeskDeadlineLane>
   /** Un dossier encore ouvert et de ma compétence ; tranché entre-temps : `not_found`. */
   useCase(request: DeskCaseRequest): Loadable<DeskCaseDetailView>
   useCasePreview(request: DeskCaseRequest): Loadable<DeskPreviewView>

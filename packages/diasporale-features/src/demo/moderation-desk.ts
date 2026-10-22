@@ -9,6 +9,10 @@
  *     les personnes du magasin, répartis entre la France, la Belgique, le Canada
  *     et les cibles sans pays ; deux dossiers montrent la retenue d'une personne
  *     partie au dossier ;
+ *   · SU01d : un dossier porte un délai légal quand la règle du MOTEUR en pose un
+ *     pour son motif (`reportLegalBasis`, `reportDecisionDueAt`), échéance comptée
+ *     depuis sa transmission, accusé de réception remis à la transmission comme
+ *     le fait le moteur ; l'horloge de la page les fait échoir ;
  *   · une décision reste dans la mémoire de la page, liée au jeu en cours (une
  *     remise à zéro l'efface) : elle ne retire rien, ne sanctionne ni ne
  *     prévient personne ;
@@ -17,11 +21,13 @@
  *     membre qui n'agit pas.
  * Aucune statistique : une fenêtre liste, elle ne compte rien.
  */
+import { reportDecisionDueAt, reportLegalBasis } from "@antsia/social-domain/moderation"
 import type { CountryCode } from "@diasporale/domain"
 import { useMemo, useSyncExternalStore } from "react"
 
 import type { ActionErrorCode } from "../data/errors"
 import {
+  DESK_DEADLINES_MAX,
   deskReasonRefusal,
   deskSanctions,
   deskTeamNameRefusal,
@@ -30,8 +36,11 @@ import {
   isInDeskZone,
   type DeskCaseDetailView,
   type DeskCaseView,
+  type DeskDeadlineLane,
+  type DeskDeadlineView,
   type DeskDecision,
   type DeskGround,
+  type DeskLegalBasis,
   type DeskHistoryEntry,
   type DeskPage,
   type DeskParty,
@@ -61,11 +70,42 @@ const fail = (code: ActionErrorCode): ActionResult<never> => ({ ok: false, code 
 /** Un refus de lecture, valable pour toute lecture du guichet. */
 const refused = (code: ActionErrorCode) => ({ status: "error", code }) as const
 
+/** Le délai légal d'un dossier fictif, posé comme le moteur le pose à la transmission. */
+interface DemoDeadline {
+  readonly basis: DeskLegalBasis
+  readonly dueAt: number
+  readonly acknowledgedAt: number
+}
+
 interface DemoCase {
   readonly view: DeskCaseView
   readonly teamId: string | null
+  readonly deadline: DemoDeadline | null
   readonly preview: DeskPreviewView
   readonly history: readonly DeskHistoryEntry[]
+}
+
+/** La règle du moteur pour ce motif ; sans fondement, aucun délai. */
+function demoDeadline(ground: DeskGround, createdAt: number): DemoDeadline | null {
+  const basis = reportLegalBasis(ground)
+  const dueAt = reportDecisionDueAt(ground, createdAt)
+  return basis === null || dueAt === null ? null : { basis, dueAt, acknowledgedAt: createdAt }
+}
+
+function deadlineView(row: DemoCase, deadline: DemoDeadline): DeskDeadlineView {
+  const { view } = row
+  return {
+    reportId: view.reportId,
+    surface: view.surface,
+    ground: view.ground,
+    status: view.status,
+    level: view.level,
+    teamId: row.teamId,
+    createdAt: view.createdAt,
+    basis: deadline.basis,
+    dueAt: deadline.dueAt,
+    acknowledgedAt: deadline.acknowledgedAt,
+  }
 }
 
 interface DemoPending {
@@ -123,6 +163,7 @@ function demoCase(input: {
   readonly body: string
   readonly history?: readonly DeskHistoryEntry[]
 }): DemoCase {
+  const createdAt = input.world - input.age
   return {
     view: {
       reportId: input.id,
@@ -132,11 +173,12 @@ function demoCase(input: {
       status: "open",
       level: input.team ? "team" : "network",
       teamName: input.team ? "Équipe France (fictive)" : null,
-      createdAt: input.world - input.age,
+      createdAt,
       hasAuthor: input.hasAuthor,
       party: input.party ?? null,
     },
     teamId: input.team ? DEMO_DESK_TEAM_ID : null,
+    deadline: demoDeadline(input.ground, createdAt),
     preview: preview(input.title ?? null, input.body),
     history: input.history ?? [],
   }
@@ -148,6 +190,8 @@ function seedWorld(world: number): DeskWorld {
     demoCase({ id: "demo-dossier-1", surface: "post", country: "FR", ground: "harassment", age: 30 * HOUR, world, team: false, hasAuthor: true, body: "Exemple fictif : moqueries répétées adressées à une nouvelle arrivante dans le fil local de Paris." }),
     demoCase({ id: "demo-dossier-2", surface: "comment", country: "FR", ground: "hate", age: 26 * HOUR, world, team: true, hasAuthor: true, body: "Exemple fictif : commentaire dénigrant une communauté sous l'annonce d'une fête associative." }),
     demoCase({ id: "demo-dossier-3", surface: "page", country: "FR", ground: "misinformation", age: 22 * HOUR, world, team: false, hasAuthor: true, party: "page", title: "Association fictive des Gabonais de Lille", body: "Exemple fictif : page qui se présenterait comme la représentation officielle d'une association." }),
+    // SU01d : un hypertrucage (art. 33) se tranche sous 24 h, l'échéance la plus proche du jeu.
+    demoCase({ id: "demo-dossier-9", surface: "post", country: "FR", ground: "deepfake_of_me", age: 21 * HOUR, world, team: true, hasAuthor: true, body: "Exemple fictif : vidéo truquée qui prête à une membre des propos qu'elle n'a jamais tenus, signalée par l'intéressée." }),
     demoCase({ id: "demo-dossier-4", surface: "serviceReview", country: "FR", ground: "spam", age: 18 * HOUR, world, team: true, hasAuthor: true, body: "Exemple fictif : avis promotionnel copié sous plusieurs prestations." }),
     demoCase({ id: "demo-dossier-5", surface: "serviceReviewReply", country: "BE", ground: "harassment", age: 14 * HOUR, world, team: false, hasAuthor: false, body: "Exemple fictif : réponse d'une page qui interpelle l'auteur de l'avis sur un ton agressif." }),
     demoCase({ id: "demo-dossier-6", surface: "event", country: "CA", ground: "other", age: 10 * HOUR, world, team: false, hasAuthor: false, title: "Soirée fictive à Montréal", body: "Exemple fictif : évènement dont la description renvoie vers une cagnotte extérieure non expliquée." }),
@@ -193,6 +237,18 @@ function seedWorld(world: number): DeskWorld {
     removed: new Set<string>(),
   }
   return { world, cases, pending, appeals, decided: new Map(), reviewed: new Set(), settled: new Set(), teams: [team], teamSequence: 1 }
+}
+
+/**
+ * La voie des délais légaux, comme le moteur la sert : la file lue (réseau ou équipe), ni pays
+ * ni nature, l'échéance la plus proche d'abord, bornée aux plus proches.
+ */
+function deadlineLane(desk: DeskWorld, teamId: string | null): DeskDeadlineLane {
+  const rows = desk.cases
+    .filter((row) => !desk.decided.has(row.view.reportId) && (teamId === null || row.teamId === teamId))
+    .flatMap((row) => (row.deadline === null ? [] : [deadlineView(row, row.deadline)]))
+    .sort((a, b) => a.dueAt - b.dueAt || a.createdAt - b.createdAt)
+  return { items: rows.slice(0, DESK_DEADLINES_MAX), truncated: rows.length > DESK_DEADLINES_MAX }
 }
 
 function isTeamMember(team: DemoTeam, personId: string): boolean {
@@ -297,7 +353,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
       }, [version, personId])
     },
 
-    useQueue({ personId, zone, surface, teamId, status, cursor }) {
+    useQueue({ personId, zone, surface, teamId, status, lane, cursor }) {
       const version = useSnapshot()
       const zoneKey = deskZoneKey(zone)
       const wanted = status ?? "open"
@@ -308,12 +364,26 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
         const desk = deskWorld()
         if (teamOf(desk, teamId) === undefined) return refused("not_found")
         const filter = deskZoneFromKey(zoneKey)
+        // SU01d : la file ordinaire ne reprend pas les dossiers que la voie des délais légaux présente.
+        const shown = new Set(lane === "ordinary" ? deadlineLane(desk, teamId).items.map((row) => row.reportId) : [])
         const rows = desk.cases
-          .filter((row) => !desk.decided.has(row.view.reportId) && row.view.status === wanted)
+          .filter((row) => !desk.decided.has(row.view.reportId) && row.view.status === wanted && !shown.has(row.view.reportId))
           .filter((row) => (surface === null || row.view.surface === surface) && (teamId === null || row.teamId === teamId) && isInDeskZone(filter, row.view.country))
           .map((row) => row.view)
         return windowed(rows, cursor, desk.world)
-      }, [version, personId, zoneKey, surface, teamId, wanted, cursor])
+      }, [version, personId, zoneKey, surface, teamId, wanted, lane, cursor])
+    },
+
+    useDeadlines({ personId, teamId }) {
+      const version = useSnapshot()
+      return useMemo((): Loadable<DeskDeadlineLane> => {
+        if (version === null) return LOADING
+        const refusal = viewerRefusal(personId)
+        if (refusal !== null) return refused(refusal)
+        const desk = deskWorld()
+        if (teamOf(desk, teamId) === undefined) return refused("not_found")
+        return { status: "ready", data: deadlineLane(desk, teamId) }
+      }, [version, personId, teamId])
     },
 
     useCase({ personId, reportId }) {
