@@ -54,6 +54,7 @@ import enPageDecisions from "./locales/en/page-decisions.json"
 import enContextualConversations from "./locales/en/contextual-conversations.json"
 import enCommunityNotifications from "./locales/en/community-notifications.json"
 import enPostExplanation from "./locales/en/post-explanation.json"
+import enReporterNotices from "./locales/en/reporter-notices.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAssociations from "./locales/fr/associations.json"
 import frAssociationActivities from "./locales/fr/association-activities.json"
@@ -97,6 +98,7 @@ import frPageDecisions from "./locales/fr/page-decisions.json"
 import frContextualConversations from "./locales/fr/contextual-conversations.json"
 import frCommunityNotifications from "./locales/fr/community-notifications.json"
 import frPostExplanation from "./locales/fr/post-explanation.json"
+import frReporterNotices from "./locales/fr/reporter-notices.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -147,6 +149,7 @@ export const LOCALE_PARTS = {
     "contextual-conversations": frContextualConversations,
     "community-notifications": frCommunityNotifications,
     "post-explanation": frPostExplanation,
+    "reporter-notices": frReporterNotices,
     "appearance-themes": frAppearanceThemes,
   },
   en: {
@@ -192,6 +195,7 @@ export const LOCALE_PARTS = {
     "contextual-conversations": enContextualConversations,
     "community-notifications": enCommunityNotifications,
     "post-explanation": enPostExplanation,
+    "reporter-notices": enReporterNotices,
     "appearance-themes": enAppearanceThemes,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>

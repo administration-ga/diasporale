@@ -1,0 +1,40 @@
+{
+  "bell": {
+    "system": {
+      "report_received": "Votre signalement a bien été reçu. La décision vous sera communiquée.",
+      "report_decided": "Une décision a été prise sur votre signalement."
+    },
+    "openMyReports": "Voir mes signalements"
+  },
+  "report": {
+    "followUp": "Vous recevrez un accusé de réception, puis la décision, dans vos notifications et dans « Mes signalements » (Paramètres)."
+  },
+  "settings": {
+    "dataRights": {
+      "reports": {
+        "title": "Mes signalements",
+        "lead": "Les signalements que vous avez transmis, dans tous les réseaux de votre compte ANTSIA : accusé de réception, échéance légale et décision. L'auteur ne sait pas qui vous êtes.",
+        "empty": "Vous n'avez transmis aucun signalement.",
+        "emptyPage": "Aucun autre signalement.",
+        "loadError": "Vos signalements n'ont pas pu être chargés.",
+        "previous": "Signalements précédents",
+        "next": "Signalements suivants",
+        "reportedAt": "Signalé le {{date}}",
+        "acknowledgedAt": "Accusé de réception le {{date}}",
+        "due": "{{basis}} — échéance : {{date}}",
+        "decidedAt": "Décision le {{date}}",
+        "basis": {
+          "art24": "Art. 24 : décision notifiée sous {{hours}} h",
+          "art32": "Art. 32 : contenu d'IA interdit, retrait sous {{hours}} h",
+          "art33": "Art. 33 : retrait sous {{hours}} h"
+        },
+        "outcome": {
+          "pending": "En cours d'examen",
+          "removed": "Contenu retiré",
+          "actioned": "Mesure prise, contenu maintenu",
+          "dismissed": "Aucun manquement retenu"
+        }
+      }
+    }
+  }
+}

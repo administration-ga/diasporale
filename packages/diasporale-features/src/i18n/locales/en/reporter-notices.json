@@ -1,0 +1,40 @@
+{
+  "bell": {
+    "system": {
+      "report_received": "Your report has been received. You will be told the decision.",
+      "report_decided": "A decision has been made on your report."
+    },
+    "openMyReports": "See my reports"
+  },
+  "report": {
+    "followUp": "You will receive an acknowledgement, then the decision, in your notifications and in “My reports” (Settings)."
+  },
+  "settings": {
+    "dataRights": {
+      "reports": {
+        "title": "My reports",
+        "lead": "The reports you have sent, in every network of your ANTSIA account: acknowledgement, legal deadline and decision. The author does not know who you are.",
+        "empty": "You have not sent any report.",
+        "emptyPage": "No other report.",
+        "loadError": "Your reports could not be loaded.",
+        "previous": "Previous reports",
+        "next": "Next reports",
+        "reportedAt": "Reported on {{date}}",
+        "acknowledgedAt": "Acknowledged on {{date}}",
+        "due": "{{basis}} — deadline: {{date}}",
+        "decidedAt": "Decision on {{date}}",
+        "basis": {
+          "art24": "Art. 24: decision notified within {{hours}} h",
+          "art32": "Art. 32: prohibited AI content, removal within {{hours}} h",
+          "art33": "Art. 33: removal within {{hours}} h"
+        },
+        "outcome": {
+          "pending": "Under review",
+          "removed": "Content removed",
+          "actioned": "Action taken, content kept",
+          "dismissed": "No breach found"
+        }
+      }
+    }
+  }
+}

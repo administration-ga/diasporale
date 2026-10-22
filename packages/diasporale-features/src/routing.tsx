@@ -23,6 +23,8 @@ export interface FeatureRoutes {
   /** Avis de décision de modération (cloche) : mes décisions (« Mes données »), ou celles d'une page dont je signe. */
   myDecisions?(): string
   pageDecisions?(handle: string): string
+  /** Accusé de réception et avis de décision d'un signalement (cloche, SU01d) : « Mes signalements ». */
+  myReports?(): string
   /** Avis de la vie communautaire (cloche) : une question ou une mission d'entraide, mes mentorats, les candidatures reçues, mes candidatures, une ressource du kit. */
   mutualAidItem?(itemId: string): string
   myMentoring?(): string

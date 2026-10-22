@@ -1,7 +1,8 @@
 /**
  * Capacité « droits personnels » du port (DG-026) — export de ses données,
  * effacement avec délai de grâce et annulation, suivi, décisions de modération
- * et recours. PROPRIÉTAIRE : chantier « droits personnels » (vague G1).
+ * et recours ; « Mes signalements » (SU01d du moteur). PROPRIÉTAIRE : chantier
+ * « droits personnels » (vague G1).
  *
  * Reste accessible à un membre suspendu, sans lui rouvrir les surfaces sociales.
  *
@@ -23,7 +24,16 @@
  * (`exportableRecord`) : jamais une ligne d'autrui, jamais une URL de fichier.
  */
 import { DECISION_REASON_MAX } from "@antsia/social-domain/audit"
-import { CONTENT_REPORT_REASONS, CONTENT_REPORT_STATUSES, type ContentReportStatus } from "@antsia/social-domain/moderation"
+import {
+  CONTENT_REPORT_REASONS,
+  CONTENT_REPORT_STATUSES,
+  REPORT_LEGAL_BASES,
+  REPORT_OUTCOMES,
+  reportDecisionDelayHours,
+  type ContentReportStatus,
+  type ReportLegalBasis,
+  type ReportOutcome,
+} from "@antsia/social-domain/moderation"
 import { MODERATION_SURFACES, SANCTION_KINDS, type ModerationSurface, type SanctionKind } from "@antsia/social-domain/moderationPolicy"
 
 import type { ActionResult } from "./port"
@@ -210,6 +220,50 @@ export type DecisionsQuery = Loadable<ModerationDecisionsPage> & {
   readonly retry?: () => Promise<unknown>
 }
 
+// ── Mes signalements (SU01d du moteur) ─────────────────────────────────────
+
+/** Ce que le déclarant apprend d'un dossier : l'effet sur le contenu (`REPORT_OUTCOMES`), jamais la sanction. */
+export const PERSONAL_REPORT_OUTCOMES = REPORT_OUTCOMES
+export type PersonalReportOutcome = ReportOutcome
+/** Le fondement d'un délai légal de l'ordonnance n° 0011/PR/2026 (`REPORT_LEGAL_BASES`). */
+export const PERSONAL_REPORT_LEGAL_BASES = REPORT_LEGAL_BASES
+export type PersonalReportLegalBasis = ReportLegalBasis
+/** Le délai d'un fondement, en heures, tel que le moteur le pose (72 h ou 24 h). */
+export function personalReportDelayHours(basis: PersonalReportLegalBasis): number {
+  return reportDecisionDelayHours(basis)
+}
+
+/**
+ * Un signalement que j'ai transmis, dans tous les réseaux du compte commun : l'accusé de
+ * réception, l'échéance légale et l'issue pour le contenu. Ni l'auteur, ni la sanction, ni le
+ * motif écrit par la modération, ni de lien vers le contenu.
+ */
+export interface PersonalReportView {
+  readonly reportId: string
+  readonly surface: DecisionSurface
+  readonly ground: DecisionGround
+  /** Transmission du signalement. */
+  readonly createdAt: number
+  readonly acknowledgedAt: number | null
+  /** Fondement et échéance d'un délai légal ; `null` hors délai légal. */
+  readonly legal: { readonly basis: PersonalReportLegalBasis; readonly dueAt: number } | null
+  readonly outcome: PersonalReportOutcome
+  readonly decidedAt: number | null
+}
+
+export interface PersonalReportsPage {
+  readonly items: readonly PersonalReportView[]
+  readonly continueCursor: string | null
+  readonly isDone: boolean
+}
+
+export interface ReportsRequest {
+  readonly personId: string
+  readonly cursor: string | null
+}
+
+export type ReportsQuery = Loadable<PersonalReportsPage>
+
 export interface AppealInput {
   readonly personId: string
   readonly reportId: string
@@ -241,4 +295,10 @@ export interface DataRightsCapability {
   useDecisions(args: DecisionsRequest): DecisionsQuery
   /** Recours sur MA décision ; rejoué au même niveau, il rend le recours existant (`created: false`). */
   fileAppeal(input: AppealInput): Promise<ActionResult<{ readonly created: boolean }>>
+  /**
+   * Mes signalements (SU01d du moteur) : la destination de l'accusé de réception et de l'avis de
+   * décision. Absente du fournisseur de démonstration, qui ne transmet aucun signalement à une
+   * modération : la rubrique ne s'affiche pas.
+   */
+  useReports?(args: ReportsRequest): ReportsQuery
 }

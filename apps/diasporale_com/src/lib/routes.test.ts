@@ -107,6 +107,7 @@ describe("routes de l'arborescence — cinq destinations et espace personnel (DG
     expect(routes.settings()).toBe("/parametres")
     expect(routes.settingsFeed()).toBe("/parametres#mon-fil")
     expect(routes.settingsData()).toBe("/parametres#mes-donnees")
+    expect(routes.settingsReports()).toBe("/parametres#mes-signalements")
     expect(routes.sponsorHelp()).toBe("/parametres#parrainage")
     expect(routes.register()).toBe("/entrer?inscription=1")
   })

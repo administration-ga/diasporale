@@ -216,6 +216,8 @@ export const routes = {
   settingsImages: () => "/parametres#images",
   /** Mes données : export, effacement, décisions et recours (DG-026). */
   settingsData: () => "/parametres#mes-donnees",
+  /** Mes signalements : accusé de réception, échéance légale et issue (SU01d du moteur). */
+  settingsReports: () => "/parametres#mes-signalements",
   /** L'aide « obtenir un parrainage », dans les paramètres. */
   sponsorHelp: () => "/parametres#parrainage",
   sponsor: () => "/parrainer",

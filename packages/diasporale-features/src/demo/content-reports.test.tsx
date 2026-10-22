@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { CONTENT_REPORT_REASONS } from "@antsia/social-domain/moderation"
 import { act, cleanup, renderHook } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 
@@ -132,7 +133,8 @@ describe("signalements — démonstration", () => {
     expect(storage.getItem(DEMO_CONTENT_REPORTS_STORAGE_KEY)).toBeNull()
   })
 
-  it("la garde commune admet les neuf natures du contrat et les six motifs du moteur", () => {
+  it("la garde commune admet les neuf natures du contrat et tous les motifs du moteur, dans son ordre (SU01d)", () => {
+    expect(REPORT_REASONS).toEqual(CONTENT_REPORT_REASONS)
     for (const kind of CONTENT_REPORT_KINDS) {
       for (const reason of REPORT_REASONS) expect(contentReportRefusal({ kind, id: "cible-1", reason })).toBeNull()
     }

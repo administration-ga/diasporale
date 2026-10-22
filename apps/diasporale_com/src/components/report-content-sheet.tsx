@@ -198,6 +198,7 @@ function ReportForm(props: {
           </p>
         ) : null}
       </fieldset>
+      {props.capability.demonstration ? null : <p className="text-[13px] text-muted-foreground">{t("report.followUp")}</p>}
       {failure !== null ? <p role="alert" className="text-sm font-medium text-destructive">{t(errorKey(failure))}</p> : null}
       <div className="flex flex-wrap justify-end gap-2">
         <Button type="button" variant="ghost" disabled={busy} onClick={props.onClose}>

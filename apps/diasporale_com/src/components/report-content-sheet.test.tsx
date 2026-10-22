@@ -2,6 +2,7 @@
 import {
   contentReportKey,
   DataSourceProvider,
+  REPORT_REASONS,
   type ActionResult,
   type ContentReportInput,
   type ContentReportsCapability,
@@ -106,6 +107,10 @@ describe("signaler un contenu de la vague H — la feuille", () => {
     expect(within(dialog).getByText(plain(t("contentReports.description")))).toBeInTheDocument()
     await waitFor(() => expect(within(dialog).getByRole("radio", { name: t("report.reason.harassment") })).toHaveFocus())
     for (const radio of within(dialog).getAllByRole("radio")) expect(radio).not.toBeChecked()
+    // SU01d : les douze motifs du moteur, ceux de l'ordonnance n° 0011/PR/2026 compris, et la suite annoncée.
+    expect(within(dialog).getAllByRole("radio")).toHaveLength(REPORT_REASONS.length)
+    expect(within(dialog).getByRole("radio", { name: t("report.reason.deepfake_of_me") })).toBeInTheDocument()
+    expect(within(dialog).getByText(plain(t("report.followUp")))).toBeInTheDocument()
 
     await user.click(within(dialog).getByRole("button", { name: t("contentReports.confirm") }))
     expect(await within(dialog).findByText(plain(t("errors.report_reason_required")))).toBeInTheDocument()
@@ -234,6 +239,7 @@ describe("signaler un contenu de la vague H — la feuille", () => {
     expect(within(dialog).getByText(plain(t("contentReports.demoNotice")))).toBeInTheDocument()
     // Aucune équipe n'examine un signalement de démonstration : la feuille ne le promet pas.
     expect(within(dialog).getByText(plain(t("contentReports.descriptionDemo")))).toBeInTheDocument()
+    expect(within(dialog).queryByText(plain(t("report.followUp")))).not.toBeInTheDocument()
     expect(within(dialog).queryByText(plain(t("contentReports.description")))).not.toBeInTheDocument()
     await user.click(within(dialog).getByRole("radio", { name: t("report.reason.sexual_content") }))
     await user.click(within(dialog).getByRole("button", { name: t("contentReports.confirm") }))

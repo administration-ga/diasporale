@@ -12,6 +12,8 @@ import type {
   Loadable,
   MembershipView,
   ModerationDecisionView,
+  PersonalReportsPage,
+  PersonalReportView,
 } from "@diasporale/features/data"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
@@ -401,3 +403,68 @@ describe("Mes données — décisions et recours", () => {
     expect(screen.getByText(t("settings.dataRights.decisions.loadError"))).toBeInTheDocument()
   })
 })
+
+describe("Mes données — mes signalements (SU01d du moteur)", () => {
+  const HOUR = 60 * 60 * 1000
+  const REPORT: PersonalReportView = {
+    reportId: "report-7",
+    surface: "post",
+    ground: "deepfake_of_me",
+    createdAt: NOW - 2 * HOUR,
+    acknowledgedAt: NOW - 2 * HOUR,
+    legal: { basis: "art33", dueAt: NOW + 22 * HOUR },
+    outcome: "removed",
+    decidedAt: NOW - HOUR,
+  }
+  const at = (timestamp: number) => formatDate(timestamp, "fr", { dateStyle: "medium", timeStyle: "short" })
+  const reports = (query: Loadable<PersonalReportsPage>) => ({ ...fakeRights().rights, useReports: () => query }) satisfies DataRightsCapability
+  const region = () => screen.getByRole("region", { name: raw("settings.dataRights.reports.title") })
+
+  afterEach(() => {
+    window.location.hash = ""
+    Reflect.deleteProperty(Element.prototype, "scrollIntoView")
+  })
+
+  it("absente du fournisseur (démonstration) : aucune rubrique", () => {
+    mocks.rights = fakeRights().rights
+    render(tree())
+    expect(screen.queryByRole("region", { name: raw("settings.dataRights.reports.title") })).toBeNull()
+  })
+
+  it("montre l'issue, le motif, l'accusé, l'échéance légale lue depuis la règle et la décision, sans lien vers le contenu", () => {
+    mocks.rights = reports(ready({ items: [REPORT, { ...REPORT, reportId: "report-8", ground: "misinformation", legal: null, outcome: "pending", decidedAt: null }], continueCursor: null, isDone: true }))
+    render(tree())
+    const list = within(region())
+    expect(region()).toHaveAttribute("id", "mes-signalements")
+    expect(list.getByText(t("settings.dataRights.reports.outcome.removed"))).toBeInTheDocument()
+    expect(list.getByText(t("settings.dataRights.reports.outcome.pending"))).toBeInTheDocument()
+    expect(list.getByText(t("settings.dataRights.decisions.ground", { ground: raw("report.reason.deepfake_of_me") }))).toBeInTheDocument()
+    expect(list.getAllByText(t("settings.dataRights.reports.acknowledgedAt", { date: at(REPORT.acknowledgedAt!) }))).toHaveLength(2)
+    // L'échéance de l'article 33 : 24 h, lues depuis la règle du moteur.
+    expect(list.getByText(t("settings.dataRights.reports.due", { basis: raw("settings.dataRights.reports.basis.art33", { hours: 24 }), date: at(REPORT.legal!.dueAt) }))).toBeInTheDocument()
+    expect(list.getAllByText(/Art\./)).toHaveLength(1)
+    expect(list.getByText(t("settings.dataRights.reports.decidedAt", { date: at(REPORT.decidedAt!) }))).toBeInTheDocument()
+    expect(list.queryByRole("link")).toBeNull()
+  })
+
+  it("dit l'absence de signalement et une lecture refusée", () => {
+    mocks.rights = reports(ready({ items: [], continueCursor: null, isDone: true }))
+    const { unmount } = render(tree())
+    expect(within(region()).getByText(t("settings.dataRights.reports.empty"))).toBeInTheDocument()
+    unmount()
+    mocks.rights = reports({ status: "error", code: "unknown" })
+    render(tree())
+    expect(within(region()).getByText(t("settings.dataRights.reports.loadError"))).toBeInTheDocument()
+  })
+
+  it("ouverte depuis la cloche (#mes-signalements), elle se place et prend le focus une fois lue", () => {
+    const scroll = vi.fn()
+    Object.defineProperty(Element.prototype, "scrollIntoView", { value: scroll, configurable: true, writable: true })
+    window.location.hash = "#mes-signalements"
+    mocks.rights = reports(ready({ items: [REPORT], continueCursor: null, isDone: true }))
+    render(tree())
+    expect(region()).toHaveFocus()
+    expect(scroll).toHaveBeenCalledWith({ block: "start" })
+  })
+})
+

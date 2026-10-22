@@ -1,6 +1,6 @@
 "use client"
 
-import { Button, Card, Checkbox, Label, Sheet, SheetContent, formatDate } from "@diasporale/features"
+import { Button, Card, Checkbox, Label, Sheet, SheetContent, cn, formatDate } from "@diasporale/features"
 import {
   ERASURE_GRACE_DAYS,
   ERASURE_GRACE_MS,
@@ -26,11 +26,13 @@ import {
   useFeedback,
   useMounted,
 } from "./moderation-decisions"
+import { ReportResults } from "./my-reports"
 
 /**
  * « Mes données » (`#mes-donnees`, DG-026) : exporter les données de son compte
  * commun, demander puis annuler son effacement pendant la grâce, lire les
- * décisions de modération qui nous concernent et les contester.
+ * décisions de modération qui nous concernent et les contester, et suivre ses
+ * propres signalements (`#mes-signalements`, SU01d du moteur).
  *
  * Ouverte au membre SUSPENDU : la section ne lit aucune adhésion, aucune
  * capacité de publication, et ne renvoie vers aucune surface sociale (pas de
@@ -55,6 +57,7 @@ export function DataRightsSettings({ membership }: { membership: MembershipView 
             <ExportPanel rights={rights} personId={membership.personId} handle={membership.handle} />
             <ErasurePanel rights={rights} personId={membership.personId} />
             <DecisionsPanel rights={rights} personId={membership.personId} />
+            {rights.useReports ? <ReportsPanel useReports={rights.useReports} personId={membership.personId} /> : null}
           </div>
         )}
       </Card>
@@ -72,10 +75,15 @@ function useNow(): number {
   return now
 }
 
-function Panel(props: { title: string; lead?: string; children: ReactNode }) {
+function Panel(props: { title: string; lead?: string; anchor?: string; children: ReactNode }) {
   const id = useId()
   return (
-    <section aria-labelledby={id} className="flex min-w-0 flex-col gap-3 border-t border-border pt-5">
+    <section
+      id={props.anchor}
+      tabIndex={props.anchor ? -1 : undefined}
+      aria-labelledby={id}
+      className={cn("flex min-w-0 flex-col gap-3 border-t border-border pt-5", props.anchor && "scroll-mt-20 outline-none focus-visible:shadow-focus")}
+    >
       <h3 id={id} className="font-semibold">{props.title}</h3>
       {props.lead ? <p className="text-sm leading-relaxed text-muted-foreground">{props.lead}</p> : null}
       {props.children}
@@ -377,6 +385,36 @@ function DecisionsPanel({ rights, personId }: { rights: DataRightsCapability; pe
           loadError: "settings.dataRights.decisions.loadError",
         }}
       />
+    </Panel>
+  )
+}
+
+// ── Mes signalements (SU01d du moteur) ─────────────────────────────────────
+
+/** L'ancre de la rubrique : la route `settingsReports` de l'application y mène, depuis la cloche. */
+const REPORTS_ANCHOR = "mes-signalements"
+
+/**
+ * Mes signalements : la destination de l'accusé de réception et de l'avis de décision. La
+ * rubrique ne se remplit qu'après lecture : ouverte depuis la cloche, elle se place alors et
+ * prend le focus.
+ */
+function ReportsPanel(props: { useReports: NonNullable<DataRightsCapability["useReports"]>; personId: string }) {
+  const { t } = useDiasporaleT()
+  const navigation = useDecisionNavigation()
+  const page = props.useReports({ personId: props.personId, cursor: navigation.cursor })
+  const loaded = page.status !== "loading"
+  useEffect(() => {
+    if (!loaded || window.location.hash !== `#${REPORTS_ANCHOR}`) return
+    const section = document.getElementById(REPORTS_ANCHOR)
+    if (!section) return
+    section.scrollIntoView({ block: "start" })
+    section.focus({ preventScroll: true })
+  }, [loaded])
+
+  return (
+    <Panel anchor={REPORTS_ANCHOR} title={t("settings.dataRights.reports.title")} lead={t("settings.dataRights.reports.lead")}>
+      <ReportResults query={page} navigation={navigation} />
     </Panel>
   )
 }

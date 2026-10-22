@@ -7,7 +7,7 @@ import { getFunctionName } from "convex/server"
 import { ConvexError } from "convex/values"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { createEngineDataRights, DATA_EXPORT_FORMAT, dataRightsErrorCode, toDecisionView, toErasureView } from "./engine-data-rights"
+import { createEngineDataRights, DATA_EXPORT_FORMAT, dataRightsErrorCode, toDecisionView, toErasureView, toPersonalReportView } from "./engine-data-rights"
 
 /**
  * L'adaptateur des droits personnels sans moteur : lectures réactives jouées par
@@ -403,3 +403,47 @@ describe("Droits personnels — table des refus", () => {
     expect(dataRightsErrorCode(new Error("PRIVATE_SERVER_DETAIL"))).toBe("unknown")
   })
 })
+
+/** Un signalement tel que le moteur le rend au seul déclarant (SU01d) : jamais l'auteur, la sanction ni le motif de modération. */
+const REPORT_ROW = {
+  reportId: "report-9",
+  targetKind: "post",
+  reason: "deepfake_of_me",
+  createdAt: 100,
+  legalBasis: "art33",
+  dueAt: 100 + DAY,
+  acknowledgedAt: 100,
+  outcome: "removed",
+  decidedAt: 200,
+} as const
+
+describe("Droits personnels — mes signalements (SU01d du moteur)", () => {
+  it("projette accusé, échéance légale et issue, et pagine comme les décisions", () => {
+    respondWith({ "modules/moderation/cases:myReports": { page: [REPORT_ROW, { ...REPORT_ROW, reportId: "report-10", reason: "misinformation", legalBasis: null, dueAt: null, outcome: "pending", decidedAt: null }], isDone: false, continueCursor: "suite" } })
+    const { rights } = setup()
+    const { result } = renderHook(() => rights.useReports!({ personId: PERSON._id, cursor: null }))
+    expect(result.current).toEqual({
+      status: "ready",
+      data: {
+        items: [
+          { reportId: "report-9", surface: "post", ground: "deepfake_of_me", createdAt: 100, acknowledgedAt: 100, legal: { basis: "art33", dueAt: 100 + DAY }, outcome: "removed", decidedAt: 200 },
+          { reportId: "report-10", surface: "post", ground: "misinformation", createdAt: 100, acknowledgedAt: 100, legal: null, outcome: "pending", decidedAt: null },
+        ],
+        continueCursor: "suite",
+        isDone: false,
+      },
+    })
+    expect(mocks.read).toHaveBeenCalledWith("modules/moderation/cases:myReports", { paginationOpts: { cursor: null, numItems: 10 } })
+    expect(readNames()).not.toContain("modules/diaspora/membership:myMembership")
+  })
+
+  it("dit un motif inconnu « non précisé » et ferme les signalements d'une autre personne ou sans session", () => {
+    expect(toPersonalReportView({ ...REPORT_ROW, reason: "motif_futur" } as unknown as Parameters<typeof toPersonalReportView>[0]).ground).toBe("unspecified")
+    respondWith({ "modules/moderation/cases:myReports": { page: [REPORT_ROW], isDone: true, continueCursor: "" } })
+    const { rights } = setup()
+    expect(renderHook(() => rights.useReports!({ personId: "ancienne-personne", cursor: null })).result.current).toEqual({ status: "error", code: "not_found" })
+    mocks.auth = { isAuthenticated: false, isPending: false, isUnauthenticated: true }
+    expect(renderHook(() => rights.useReports!({ personId: PERSON._id, cursor: null })).result.current).toEqual({ status: "error", code: "not_signed_in" })
+  })
+})
+
