@@ -1,9 +1,10 @@
 /**
  * Comptes de démonstration — adaptateur MOTEUR de la capacité `demoAccounts`
- * (développement local seulement). Le catalogue et l'équipement vivent dans la
- * tranche `convex/modules/diaspora/demoAccounts` d'ANTSIA, sous la double garde
- * des outils de développement : ailleurs, le catalogue est vide et l'équipement
- * refusé. Le code à usage unique se relit par `devTools.latestOtp`, comme
+ * (développement local, ou déploiement de démonstration déclaré : ADR-0038 du
+ * moteur). Le catalogue et l'équipement vivent dans la tranche
+ * `convex/modules/diaspora/demoAccounts` d'ANTSIA, sous la garde
+ * `demoAccountsAllowed` : ailleurs, production comprise, le catalogue est vide et
+ * l'équipement refusé. Le code à usage unique se relit par `devTools.latestOtp`, comme
  * l'écran de connexion le fait déjà en développement local. L'accueil d'ANTSIA de
  * l'utilisateur extérieur passe par les mutations de l'écran d'accueil, comme `join`.
  */
