@@ -1,9 +1,9 @@
 {
   "demoAccounts": {
     "open": "Comptes de démonstration",
-    "openHint": "Développement local seulement",
+    "openHint": "Démonstration et développement local seulement",
     "title": "Comptes de démonstration",
-    "lead": "Chaque compte entre par le vrai code à usage unique, lu ici pour vous, puis son accueil et son équipement se font tout seuls. Personnes, pages et adresses sont fictives.",
+    "lead": "Chaque compte entre par le vrai code à usage unique, lu ici pour vous, puis son accueil et son équipement se font tout seuls. Personnes, pages et adresses sont fictives ; en ligne, chaque compte est partagé par tous les visiteurs.",
     "close": "Fermer",
     "groups": {
       "members": "Membres, statut par statut",

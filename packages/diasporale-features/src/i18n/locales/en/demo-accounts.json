@@ -1,9 +1,9 @@
 {
   "demoAccounts": {
     "open": "Demo accounts",
-    "openHint": "Local development only",
+    "openHint": "Demo and local development only",
     "title": "Demo accounts",
-    "lead": "Each account signs in with the real one-time code, read here for you; its onboarding and setup then happen on their own. People, pages and addresses are fictitious.",
+    "lead": "Each account signs in with the real one-time code, read here for you; its onboarding and setup then happen on their own. People, pages and addresses are fictitious; online, each account is shared by all visitors.",
     "close": "Close",
     "groups": {
       "members": "Members, status by status",
