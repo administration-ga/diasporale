@@ -6,6 +6,7 @@
  */
 export { DISPLAY_NAME_MAX_LENGTH, HEADLINE_MAX_LENGTH } from "@antsia/social-domain/content"
 import type { MediaWithheld } from "@antsia/social-contracts/media"
+import { CONTENT_REPORT_REASONS } from "@antsia/social-domain/moderation"
 import { PAGE_ASSOCIATION_TYPES, PAGE_COMPANY_SECTORS } from "@antsia/social-domain/pagePresentation"
 import type { PageAssociationType, PageCompanySector } from "@antsia/social-domain/pagePresentation"
 
@@ -173,8 +174,11 @@ export interface BookmarksPageQuery {
   readonly retry: () => Promise<BookmarksPageView | undefined> | BookmarksPageView | undefined
 }
 
-/** Les six motifs de signalement (EXF-DG-12), ceux du moteur (`CONTENT_REPORT_REASONS`). */
-export const REPORT_REASONS = ["harassment", "hate", "violence", "sexual_content", "misinformation", "other"] as const
+/**
+ * Les motifs de signalement (EXF-DG-12) : ceux du moteur (`CONTENT_REPORT_REASONS`), dans son
+ * ordre — les six de l'ordonnance n° 0011/PR/2026 compris (SU01d), « autre » en dernier.
+ */
+export const REPORT_REASONS = CONTENT_REPORT_REASONS
 export type ReportReason = (typeof REPORT_REASONS)[number]
 /** Longueur de la précision d'un signalement, règle du moteur (`CONTENT_REPORT_NOTE_MAX`). */
 export const REPORT_NOTE_MAX = 1000
@@ -480,6 +484,14 @@ export const CONTEXTUAL_NOTIFICATION_KINDS = ["contextual_message", "contextual_
 export type ContextualNotificationKind = (typeof CONTEXTUAL_NOTIFICATION_KINDS)[number]
 
 /**
+ * SU01d du moteur (ordonnance n° 0011/PR/2026, art. 24) : l'accusé de réception d'un signalement
+ * et l'avis de décision, au seul DÉCLARANT, dans la cloche du réseau où il a signalé ; ils mènent
+ * à « Mes signalements ».
+ */
+export const REPORTER_NOTIFICATION_KINDS = ["report_received", "report_decided"] as const
+export type ReporterNotificationKind = (typeof REPORTER_NOTIFICATION_KINDS)[number]
+
+/**
  * Les avis de la cloche que DIASPORALE sait dire. Tout autre genre du moteur se
  * dit « nouvelle activité » (`other`) : jamais un libellé inventé.
  */
@@ -501,6 +513,7 @@ export const NOTIFICATION_KINDS = [
   ...CONTEXTUAL_NOTIFICATION_KINDS,
   // P16 · G9 : une décision de modération qui me concerne, ou qui concerne une page dont je signe.
   "moderation_decision",
+  ...REPORTER_NOTIFICATION_KINDS,
   "other",
 ] as const
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number]

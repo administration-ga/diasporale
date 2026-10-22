@@ -12,6 +12,7 @@ import {
   CircleXIcon,
   FileTextIcon,
   FlagIcon,
+  GavelIcon,
   GraduationCapIcon,
   HandHeartIcon,
   HandshakeIcon,
@@ -44,6 +45,7 @@ import { useActions, useNotifications, useUnreadCount } from "../data/context"
 import {
   COMMUNITY_NOTIFICATION_KINDS,
   CONTEXTUAL_NOTIFICATION_KINDS,
+  REPORTER_NOTIFICATION_KINDS,
   SERVICE_NOTIFICATION_KINDS,
   type CommunityNoticeView,
   type NotificationKind,
@@ -103,6 +105,9 @@ const KIND_ICONS: Readonly<Record<NotificationKind, LucideIcon>> = {
   contextual_message: MessageCircleIcon,
   contextual_closed: MessageCircleOffIcon,
   moderation_decision: ScaleIcon,
+  // SU01d : l'accusé de réception et la décision, au déclarant.
+  report_received: FlagIcon,
+  report_decided: GavelIcon,
   other: BellIcon,
 }
 
@@ -141,9 +146,11 @@ export const BELL_SYSTEM_KINDS = [
   ...COMMUNITY_NOTIFICATION_KINDS,
   ...CONTEXTUAL_NOTIFICATION_KINDS,
   "moderation_decision",
+  ...REPORTER_NOTIFICATION_KINDS,
   "other",
 ] as const satisfies readonly NotificationKind[]
 type SystemKind = (typeof BELL_SYSTEM_KINDS)[number]
+const REPORTER_NOTICES: ReadonlySet<NotificationKind> = new Set(REPORTER_NOTIFICATION_KINDS)
 
 /** La clé d'une phrase du système : un genre nouveau, sans phrase ni nom devant, ne compile pas. */
 function systemSentence(kind: SystemKind): `bell.system.${SystemKind}` {
@@ -366,6 +373,8 @@ function NotificationRow(props: { item: NotificationView; now: number; onNavigat
   const communityLink = communityNotice ? communityNoticeLink(communityNotice, routes) : null
   // Conversation de mise en relation (CC-6) : le fil relu pour moi, par la route de l'application.
   const conversationHref = item.contextualThreadId ? routes.contextualConversation?.(item.contextualThreadId) : undefined
+  // SU01d : l'accusé et la décision mènent à « Mes signalements » ; sans route fournie, aucun lien.
+  const reportsHref = REPORTER_NOTICES.has(item.kind) ? routes.myReports?.() : undefined
 
   const run = async (action: () => Promise<ActionResult>) => {
     setBusy(true)
@@ -408,6 +417,11 @@ function NotificationRow(props: { item: NotificationView; now: number; onNavigat
           {conversationHref ? (
             <Link href={conversationHref} onClick={props.onNavigate} className="mt-1 inline-flex text-[13px] font-semibold text-[var(--esp-accent-deep)] hover:underline focus-visible:shadow-focus">
               {t("bell.openConversation")}
+            </Link>
+          ) : null}
+          {reportsHref ? (
+            <Link href={reportsHref} onClick={props.onNavigate} className="mt-1 inline-flex text-[13px] font-semibold text-[var(--esp-accent-deep)] hover:underline focus-visible:shadow-focus">
+              {t("bell.openMyReports")}
             </Link>
           ) : null}
           {item.postId ? (

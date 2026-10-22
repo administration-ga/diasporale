@@ -33,6 +33,7 @@ const featureRoutes: FeatureRoutes = {
   myAssociations: routes.myAssociations,
   // Avis de décision de modération : « Mes données », ou l'onglet des décisions de la page (droits relus).
   myDecisions: routes.settingsData,
+  myReports: routes.settingsReports,
   pageDecisions: routes.pageDecisions,
   // Avis de la vie communautaire (vague H) : chaque route relit les droits à l'ouverture.
   mutualAidItem: routes.mutualAidItem,

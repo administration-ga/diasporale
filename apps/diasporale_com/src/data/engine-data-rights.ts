@@ -11,7 +11,8 @@
  *     `cancelErasure` (pendant la grâce seulement), `exportMyData` (préparation,
  *     valable 24 h) et `exportMyDataPage` (une page d'une table, relue pour la
  *     personne de la session à chaque appel) ;
- *   · `moderation/cases` : `myDecisions` (sans déclarant ni contenu), `fileAppeal`.
+ *   · `moderation/cases` : `myDecisions` (sans déclarant ni contenu), `fileAppeal`, et
+ *     `myReports` (SU01d : mes signalements, sans auteur, sanction ni motif de modération).
  *
  * Aucune lecture d'adhésion : un membre suspendu exerce ses droits sans
  * qu'aucune surface sociale lui soit rouverte. Chaque écriture relit d'abord la
@@ -41,6 +42,9 @@ import {
   type LastExportView,
   type Loadable,
   type ModerationDecisionView,
+  type PersonalReportView,
+  type ReportsQuery,
+  type ReportsRequest,
 } from "@diasporale/features/data"
 import type { FunctionReturnType } from "convex/server"
 import { useSyncExternalStore } from "react"
@@ -50,6 +54,7 @@ import { type EngineSourceDeps, failed, LOADING, ready, Refusal, useLoaded, useN
 
 type ErasureRow = FunctionReturnType<typeof api.modules.people.erasure.myErasure>
 type DecisionRow = FunctionReturnType<typeof api.modules.moderation.cases.myDecisions>["page"][number]
+type ReportRow = FunctionReturnType<typeof api.modules.moderation.cases.myReports>["page"][number]
 
 /** Le document exporté : un objet JSON unique, assemblé dans ce navigateur. */
 export const DATA_EXPORT_FORMAT = "antsia-personal-export"
@@ -130,6 +135,20 @@ export function toDecisionView(row: DecisionRow, networks: { readonly diasporale
     appeals: row.appeals.map((appeal) => ({ level: appeal.level, status: appeal.status, decisionReason: appeal.decisionReason })),
   }
   return { ...view, appealLevel: nextAppealLevel(view) }
+}
+
+/** Un signalement que j'ai transmis, tel que le moteur le rend au seul déclarant (SU01d). */
+export function toPersonalReportView(row: ReportRow): PersonalReportView {
+  return {
+    reportId: row.reportId,
+    surface: row.targetKind,
+    ground: decisionGround(row.reason),
+    createdAt: row.createdAt,
+    acknowledgedAt: row.acknowledgedAt,
+    legal: row.legalBasis !== null && row.dueAt !== null ? { basis: row.legalBasis, dueAt: row.dueAt } : null,
+    outcome: row.outcome,
+    decidedAt: row.decidedAt,
+  }
 }
 
 /** La partie « compte » de la préparation (Better Auth et preuves IDN), relue telle que le moteur l'a projetée. */
@@ -311,6 +330,24 @@ export function createEngineDataRights(deps: EngineSourceDeps): EngineDataRights
       }
       return ready({
         items: page.value.page.map((row) => toDecisionView(row, networks)),
+        continueCursor: page.value.isDone ? null : page.value.continueCursor,
+        isDone: page.value.isDone,
+      })
+    },
+
+    useReports({ personId, cursor }: ReportsRequest): ReportsQuery {
+      const auth = useStableConvexAuth()
+      const signedIn = auth.isAuthenticated
+      const person = useLoaded(api.modules.people.persons.getMyPerson, signedIn ? {} : "skip")
+      const page = useLoaded(api.modules.moderation.cases.myReports, signedIn ? { paginationOpts: { cursor, numItems: DECISIONS_PAGE_SIZE } } : "skip")
+      if (auth.isUnauthenticated) return failed("not_signed_in")
+      if (!signedIn) return LOADING
+      if (person.state === "error") return failed(person.code)
+      if (page.state === "error") return failed(page.code)
+      if (person.state !== "ready" || page.state !== "ready" || person.value === null) return LOADING
+      if (person.value._id !== personId) return failed("not_found")
+      return ready({
+        items: page.value.page.map(toPersonalReportView),
         continueCursor: page.value.isDone ? null : page.value.continueCursor,
         isDone: page.value.isDone,
       })

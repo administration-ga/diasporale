@@ -8,7 +8,7 @@ import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
-import { useActions } from "../data/context"
+import { useActions, useOptionalDataSource } from "../data/context"
 import { REPORT_NOTE_MAX, REPORT_REASONS, type PostView } from "../data/types"
 import { POST_BODY_MAX } from "./composer"
 import { PostExplanationSheet } from "./post-explanation"
@@ -133,10 +133,14 @@ const reportSchema = z.object({
 })
 type ReportValues = z.infer<typeof reportSchema>
 
-/** Signaler : un motif parmi six, une précision facultative ; la publication se masque aussitôt pour soi. */
+/**
+ * Signaler : un motif parmi ceux du moteur, une précision facultative ; la publication se masque
+ * aussitôt pour soi. Servi par le moteur, l'envoi vaut accusé de réception, puis décision (SU01d).
+ */
 function ReportPostSheet(props: { postId: string; open: boolean; onOpenChange: (open: boolean) => void }) {
   const { t } = useDiasporaleT()
   const actions = useActions()
+  const engine = useOptionalDataSource()?.kind === "engine"
   const ids = useId()
   const form = useForm<ReportValues>({ resolver: zodResolver(reportSchema), defaultValues: { note: "" } })
   const reasonError = form.formState.errors.reason?.message
@@ -196,6 +200,7 @@ function ReportPostSheet(props: { postId: string; open: boolean; onOpenChange: (
               />
             )}
           </Field>
+          {engine ? <p className="text-[13px] text-muted-foreground">{t("report.followUp")}</p> : null}
           <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => props.onOpenChange(false)}>
               {t("report.cancel")}
