@@ -1,13 +1,29 @@
 ---
 title: "DIASPORALE.COM — Charte graphique « Sable de la diaspora »"
-version: "3.3"
-date: "2026-10-17"
+version: "4"
+date: "2026-10-20"
 statut: "Charte de travail v3 — arbitrage A7 (famille Consulaire / Sable) ; refonte demandée par le propriétaire le 15/10/2026 : épurée, contraste renforcé, couches du sombre renforcées (le fond reste le plus sombre), rayons resserrés, sans drapeau, avis en cartes flottantes ; v3 : palette confort (une teinte par thème, chroma basse, texte sans éblouissement, focus plein) ; v3.1 : avatars, teintes de statut, aplats ; v3.2 : bleu Gabon légèrement foncé (`#0167A8`, décision du propriétaire), sable posé, sélection sans contour"
 projet: "DIASPORALE"
 jetons: "ANTSIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diasporale-features/src/styles/extras.css (rôles propres) — [data-charte=\"diasporale\"]"
 ---
 
 # DIASPORALE.COM — Charte « Sable de la diaspora »
+
+> **Version 4 (20/10/2026, demande du propriétaire ; adoptée le 2/11/2026).** La maquette
+> « ANTSIA — sept thèmes, toutes les pages » (19/10/2026, thème n° 7) devient la charte de
+> DIASPORALE. Titres en Familjen Grotesk, texte en Inter, codes en DM Mono (polices chargées par
+> `@antsia/ui/styles.css`). Un angle par élément (pilule, badge 6, puce 10, page 12, champ 14,
+> média 16, Créer 18, carte 24, barre d'onglets 28), un contour seulement à couleur égale, seul
+> ce qui flotte porte une ombre. Une couleur par famille d'actions : bleu Gabon `#0167A8` pour
+> publier et écrire, sarcelle `#238090` pour suivre, sable doré `#D7AD63` pour réagir, participer
+> et acheter, vert pour valider, rouge pour supprimer, gris pour annuler. Palette de surfaces
+> inchangée : papier, sable, nuit brune.
+>
+> **Ce texte prime sur la suite**, qui décrit les versions 1 à 3.3 et reste comme historique :
+> IBM Plex, rayons de 6 et 8 px, une seule couleur d'action. Les variantes de bouton par famille
+> existent (`primitives/button.tsx`, page `/charte`), mais aucun composant ne les emploie encore.
+> Valeurs exactes : `packages/ui/src/themes/diasporale.css` d'ANTSIA. Décision et comparatif :
+> `docs/recette/charte-v4-2026-11-02/`.
 
 > **Décision.** Arbitrage A7 du cahier (`docs/00` §20) pris par défaut : **famille
 > Consulaire / Sable**, posée sur le **squelette de l'espace agent** (grille du fil, rail,
@@ -462,4 +478,4 @@ La charte vit en trois couches, importées dans cet ordre par
     antsia.ga propose Sable en septième thème (`antsia-sable.css`, mêmes trois couleurs, sur la
     géométrie et les polices du réseau).
 
-*Fin de la charte DIASPORALE — version 3.2 du 15 octobre 2026, thèmes au choix du 19 octobre 2026.*
+*Fin de la charte DIASPORALE — version 4 du 20 octobre 2026, adoptée le 2 novembre 2026.*

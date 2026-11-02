@@ -6,7 +6,7 @@ import { cn } from "../lib/cn"
  * État vide GÉNÉRATIF (P5) : ce qui manque, puis l'action qui le comble.
  * Jamais un écran muet — l'appelant fournit toujours un titre et, quand la
  * personne peut agir, une action. Charte v2 : un aplat discret, sans
- * pointillés ni contour ; le titre en Plex Sans (un seul display par écran).
+ * pointillés ni contour ; le titre en police de texte (un seul display par écran).
  */
 export function EmptyState(props: {
   icon: ReactNode

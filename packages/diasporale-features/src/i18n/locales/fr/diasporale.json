@@ -888,14 +888,14 @@
   },
   "charte": {
     "title": "Charte « Sable de la diaspora »",
-    "eyebrow": "Charte graphique · version 3.3 · 17 octobre 2026",
+    "eyebrow": "Charte graphique · version 4 · 20 octobre 2026",
     "heading": "Sable de la diaspora",
     "lead": "Les composants de DIASPORALE, montés avec des données fictives, pour relire et recetter l'interface dans les deux thèmes.",
     "tocLabel": "Sommaire de la charte",
     "section": {
       "color": {
         "title": "Couleur",
-        "lead": "Six couleurs nommées, une seule teinte chaude par thème, presque sans saturation : rien ne vire au beige ni au brun. En clair, le fond papier porte les cartes sable ; en sombre, les cartes s'éclaircissent sur le fond nuit."
+        "lead": "Six couleurs nommées pour les surfaces et le texte, une seule teinte chaude par thème : rien ne vire au beige ni au brun. S'y ajoute une couleur par famille d'actions : bleu pour publier et écrire, sarcelle pour suivre, sable doré pour réagir et acheter. En clair, le fond papier porte les cartes sable ; en sombre, les cartes s'éclaircissent sur le fond nuit."
       },
       "contrast": {
         "title": "Contraste",
@@ -903,11 +903,11 @@
       },
       "type": {
         "title": "Typographie",
-        "lead": "IBM Plex en trois largeurs : le caractère vient de la largeur, pas d'une police étrangère. Un seul titre en Condensed par écran ; les sous-titres en Plex Sans."
+        "lead": "Familjen Grotesk pour les titres, Inter pour le texte et l'interface, DM Mono pour les codes. Un seul grand titre par écran ; les sous-titres en Inter."
       },
       "shape": {
         "title": "Géométrie",
-        "lead": "Des rayons resserrés, et une seule exception : la pilule, réservée à ce qu'on fait basculer ou défiler."
+        "lead": "Un angle par élément, du badge à la barre d'onglets, et la pilule pour les boutons et tout ce qu'on fait basculer."
       },
       "tag": {
         "title": "Étiquette pays",
@@ -927,7 +927,7 @@
       },
       "controls": {
         "title": "Commandes",
-        "lead": "Les pilules pour basculer, les boutons pour agir. Un choix se lit sans contour : la pilule choisie passe à l'encre, l'option choisie prend la teinte de sélection, plus claire que la carte en sombre. Un seul bouton principal par zone ; des cibles de 44 pixels."
+        "lead": "Des pilules pour basculer comme pour agir, sans contour : la couleur suffit, une par famille d'actions. L'élément choisi prend une teinte de sélection. Un seul bouton principal par zone ; des cibles de 44 pixels."
       }
     },
     "theme": {
@@ -958,7 +958,7 @@
       },
       "bleu": {
         "name": "Bleu Gabon",
-        "role": "Action, lien, focus"
+        "role": "Publier, écrire, lien, focus"
       },
       "gres": {
         "name": "Grès",
@@ -993,57 +993,73 @@
     "type": {
       "display": {
         "role": "Display",
-        "spec": "Plex Sans Condensed · 700 · 40/44",
+        "spec": "Familjen Grotesk · 700 · 40/44",
         "sample": "La communauté de France"
       },
       "title": {
         "role": "Titre",
-        "spec": "Plex Sans · 600 · 20/26",
+        "spec": "Inter · 600 · 20/26",
         "sample": "Évènements à venir"
       },
       "subtitle": {
         "role": "Sous-titre",
-        "spec": "Plex Sans · 600 · 17/24",
+        "spec": "Inter · 600 · 17/24",
         "sample": "Soirée culturelle de la communauté"
       },
       "body": {
         "role": "Corps",
-        "spec": "Plex Sans · 400 · 15/23",
-        "sample": "IBM Plex Sans porte le texte et l'interface, à 15 pixels pour un public qui lit sur téléphone."
+        "spec": "Inter · 400 · 15/23",
+        "sample": "Inter porte le texte et l'interface, à 15 pixels pour un public qui lit sur téléphone."
       },
       "caption": {
         "role": "Légende",
-        "spec": "Plex Sans · 400 · 13/18",
+        "spec": "Inter · 400 · 13/18",
         "sample": "Il y a 5 heures · Lyon"
       },
       "code": {
         "role": "Code",
-        "spec": "Plex Mono · 600 · 11 · capitales",
+        "spec": "DM Mono · 11 · capitales",
         "sample": "FR · CA · 12/150"
       }
     },
     "shape": {
       "badge": {
-        "value": "4 px",
-        "use": "Badges, étiquette pays"
-      },
-      "control": {
         "value": "6 px",
-        "use": "Boutons, champs, options"
+        "use": "Badges"
+      },
+      "chip": {
+        "value": "10 px",
+        "use": "Puces"
+      },
+      "page": {
+        "value": "12 px",
+        "use": "Pages, en avatar"
+      },
+      "field": {
+        "value": "14 px",
+        "use": "Champs"
+      },
+      "media": {
+        "value": "16 px",
+        "use": "Images et vidéos"
+      },
+      "fab": {
+        "value": "18 px",
+        "use": "Bouton Créer"
       },
       "card": {
-        "value": "8 px",
-        "use": "Cartes, cartes flottantes"
+        "value": "24 px",
+        "use": "Cartes"
       },
-      "panel": {
-        "value": "12 px",
-        "use": "Panneaux, feuilles"
+      "dock": {
+        "value": "28 px",
+        "use": "Barre d'onglets du téléphone"
       },
       "pill": {
         "value": "Pilule",
-        "use": "Onglets, filtres, sélecteurs, interrupteur"
+        "use": "Boutons, onglets, filtres, sélecteurs"
       },
-      "relief": "Relief : aucun contour autour d'une carte ; une ombre à peine perceptible, un souffle de plus pour ce qui flotte."
+      "relief": "Relief : aucun contour ni aucune ombre autour d'une carte ; seul ce qui flotte porte une ombre."
     },
     "monumentCaption": "La communauté — France",
     "notices": {
@@ -1062,9 +1078,15 @@
     "button": {
       "primary": "Principal",
       "secondary": "Secondaire",
-      "outline": "Filet",
+      "outline": "Neutre",
       "ghost": "Discret",
       "destructive": "Destructif",
+      "social": "Suivre",
+      "message": "Écrire",
+      "send": "Envoyer",
+      "react": "Réagir",
+      "commerce": "Acheter",
+      "success": "Valider",
       "disabled": "Désactivé",
       "small": "Petit",
       "medium": "Moyen",

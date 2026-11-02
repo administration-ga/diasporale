@@ -63,7 +63,7 @@ import { contrastLevel, contrastRatio, type ContrastLevel } from "@/lib/contrast
 import { routes } from "@/lib/routes"
 
 /**
- * `/charte` — la charte « Sable de la diaspora », version 3.3 (17/10/2026) : chaque
+ * `/charte` — la charte « Sable de la diaspora », version 4 (20/10/2026) : chaque
  * composant de `@diasporale/features` monté avec des données d'EXEMPLE (fictives),
  * pour la relecture `web-design-guidelines` et la vérification réelle (320 px,
  * 375 px, 1 280 px, clair et sombre). Les contrastes sont MESURÉS sur la page,
@@ -129,11 +129,15 @@ const TYPE_ROWS = [
 ] as const
 
 const RADII = [
-  { value: "charte.shape.badge.value", use: "charte.shape.badge.use", radius: "rounded-[var(--radius-xs)]" },
-  { value: "charte.shape.control.value", use: "charte.shape.control.use", radius: "rounded-md" },
-  { value: "charte.shape.card.value", use: "charte.shape.card.use", radius: "rounded-xl" },
-  { value: "charte.shape.panel.value", use: "charte.shape.panel.use", radius: "rounded-2xl" },
-  { value: "charte.shape.pill.value", use: "charte.shape.pill.use", radius: "rounded-[var(--esp-r-chrome)]" },
+  { value: "charte.shape.badge.value", use: "charte.shape.badge.use", radius: "rounded-badge" },
+  { value: "charte.shape.chip.value", use: "charte.shape.chip.use", radius: "rounded-chip" },
+  { value: "charte.shape.page.value", use: "charte.shape.page.use", radius: "rounded-page" },
+  { value: "charte.shape.field.value", use: "charte.shape.field.use", radius: "rounded-field" },
+  { value: "charte.shape.media.value", use: "charte.shape.media.use", radius: "rounded-media" },
+  { value: "charte.shape.fab.value", use: "charte.shape.fab.use", radius: "rounded-fab" },
+  { value: "charte.shape.card.value", use: "charte.shape.card.use", radius: "rounded-card" },
+  { value: "charte.shape.dock.value", use: "charte.shape.dock.use", radius: "rounded-dock" },
+  { value: "charte.shape.pill.value", use: "charte.shape.pill.use", radius: "rounded-pill" },
 ] as const
 
 /** Les jetons relus sur la page : ceux des paires de contraste et des six couleurs. */
@@ -539,6 +543,12 @@ export function CharteScreen() {
               <Button variant="outline">{t("charte.button.outline")}</Button>
               <Button variant="ghost">{t("charte.button.ghost")}</Button>
               <Button variant="destructive">{t("charte.button.destructive")}</Button>
+              <Button variant="social">{t("charte.button.social")}</Button>
+              <Button variant="message">{t("charte.button.message")}</Button>
+              <Button variant="send">{t("charte.button.send")}</Button>
+              <Button variant="react">{t("charte.button.react")}</Button>
+              <Button variant="commerce">{t("charte.button.commerce")}</Button>
+              <Button variant="success">{t("charte.button.success")}</Button>
               <Button disabled>{t("charte.button.disabled")}</Button>
             </div>
             <div className="flex flex-wrap items-center gap-3">
