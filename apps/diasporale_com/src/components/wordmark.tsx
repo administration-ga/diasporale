@@ -4,7 +4,7 @@ import { cn } from "@diasporale/features"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 
 /**
- * Mot-symbole DIASPORALE (charte §8) : Plex Condensed 700, l'œillet de
+ * Mot-symbole DIASPORALE (charte §8) : police d'affichage 700, l'œillet de
  * l'étiquette pays en point d'ancrage. Aucune armoirie, aucun drapeau.
  */
 export function Wordmark(props: { className?: string }) {
