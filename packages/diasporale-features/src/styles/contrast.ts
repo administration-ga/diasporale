@@ -1,7 +1,7 @@
 /**
  * Outils des cliquets de contraste : lecture des déclarations d'un bloc CSS,
- * résolution des renvois `var(--…)`, ratio WCAG 2.1. Utilisés par les tests,
- * jamais par l'interface.
+ * résolution des renvois `var(--…)` et des mélanges `color-mix(in srgb, …)`,
+ * ratio WCAG 2.1. Utilisés par les tests, jamais par l'interface.
  */
 
 export type Declarations = Map<string, string>
@@ -37,7 +37,27 @@ export function resolveToken(theme: Declarations, name: string, depth = 0): stri
   const value = theme.get(name)
   if (value === undefined) throw new Error(`jeton absent : ${name}`)
   const reference = /^var\((--[\w-]+)\)$/.exec(value)
-  return reference ? resolveToken(theme, reference[1]!, depth + 1) : value
+  if (reference) return resolveToken(theme, reference[1]!, depth + 1)
+  const mix = /^color-mix\(in srgb,\s*(var\(--[\w-]+\)|#[0-9a-f]{6})\s+(\d+(?:\.\d+)?)%,\s*(var\(--[\w-]+\)|#[0-9a-f]{6})\)$/i.exec(value)
+  if (mix) return mixSrgb(resolveOperand(theme, mix[1]!, depth), resolveOperand(theme, mix[3]!, depth), Number(mix[2]) / 100)
+  return value
+}
+
+function resolveOperand(theme: Declarations, operand: string, depth: number): string {
+  const reference = /^var\((--[\w-]+)\)$/.exec(operand)
+  return reference ? resolveToken(theme, reference[1]!, depth + 1) : operand
+}
+
+/** `color-mix(in srgb, a p%, b)` de deux couleurs opaques : mélange canal par canal dans l'espace sRGB encodé. */
+function mixSrgb(first: string, second: string, weight: number): string {
+  const channels = (hex: string) => {
+    const match = /^#([0-9a-f]{6})$/i.exec(hex)
+    if (!match) throw new Error(`mélange d'une couleur non opaque ou non hexadécimale : ${hex}`)
+    return [0, 2, 4].map((offset) => Number.parseInt(match[1]!.slice(offset, offset + 2), 16))
+  }
+  const a = channels(first)
+  const b = channels(second)
+  return `#${a.map((channel, index) => Math.round(channel * weight + b[index]! * (1 - weight)).toString(16).padStart(2, "0")).join("")}`
 }
 
 function luminance(hex: string): number {

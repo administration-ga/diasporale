@@ -1,15 +1,82 @@
 /*
  * Couche Tailwind v4 PROPRE à DIASPORALE — à importer APRÈS `@antsia/ui/styles.css`
  * (qui relie déjà polices, famille shadcn, rayons, variante sombre et base du
- * moteur), le thème `@antsia/ui/themes/diasporale.css` et `extras.css`.
+ * moteur), les thèmes `@antsia/ui/themes/diasporale*.css` et `extras.css`.
  *
- * Ici seulement : les utilitaires des rôles propres (étiquette pays, badges,
- * tons des cartes flottantes, avatars), les reliefs nommés, le mouvement, et
- * trois écarts de base assumés, bornés au nœud DIASPORALE.
+ * Ici seulement : les utilitaires des couleurs par fonction et des angles du
+ * système épuré (charte v4, maquette « sept thèmes »), ceux des rôles propres
+ * (étiquette pays, badges, tons des cartes flottantes, avatars), les reliefs
+ * nommés, le mouvement, et quelques écarts de base assumés, bornés au nœud
+ * DIASPORALE.
  */
 
 @theme inline {
   --color-destructive-foreground: var(--destructive-foreground);
+
+  /* Une couleur par famille d'actions (maquette) : `bg-<fonction>-fill` et
+     `text-<fonction>-on` pour un bouton plein, `text-<fonction>-ink` pour une
+     encre en texte, `bg-<fonction>-soft` pour un bouton tonal ou un badge.
+     Publier : l'aplat d'identité. Suivre : social. Écrire : message (tonal ;
+     Envoyer à l'aplat). Réagir : react. Participer, acheter, candidater :
+     commerce. Valider : success. Supprimer : danger. Annuler : le creux. */
+  --color-primary-fill: var(--primary-fill);
+  --color-primary-fill-hover: var(--primary-fill-hover);
+  --color-primary-on: var(--primary-fill-on);
+  --color-primary-soft: var(--dg-primary-soft);
+  --color-social-fill: var(--role-social-fill);
+  --color-social-on: var(--role-social-on);
+  --color-social-ink: var(--role-social-ink);
+  --color-social-soft: var(--dg-social-soft);
+  --color-message-fill: var(--role-message-fill);
+  --color-message-on: var(--role-message-on);
+  --color-message-ink: var(--role-message-ink);
+  --color-message-soft: var(--role-message-soft);
+  --color-react-fill: var(--role-react-fill);
+  --color-react-on: var(--role-react-on);
+  --color-react-ink: var(--role-react-ink);
+  --color-react-soft: var(--role-react-soft);
+  --color-commerce-fill: var(--role-commerce-fill);
+  --color-commerce-on: var(--role-commerce-on);
+  --color-commerce-ink: var(--role-commerce-ink);
+  --color-commerce-soft: var(--dg-commerce-soft);
+  --color-success-fill: var(--role-success-fill);
+  --color-success-on: var(--role-success-on);
+  --color-success-ink: var(--role-success-ink);
+  --color-success-soft: var(--dg-success-soft);
+  --color-danger-fill: var(--role-danger-fill);
+  --color-danger-on: var(--role-danger-on);
+  --color-danger-ink: var(--role-danger-ink);
+  --color-danger-soft: var(--dg-danger-soft);
+  --color-social-fill-hover: var(--dg-social-fill-hover);
+  --color-message-fill-hover: var(--dg-message-fill-hover);
+  --color-message-soft-hover: var(--dg-message-soft-hover);
+  --color-react-fill-hover: var(--dg-react-fill-hover);
+  --color-commerce-fill-hover: var(--dg-commerce-fill-hover);
+  --color-success-fill-hover: var(--dg-success-fill-hover);
+  --color-danger-fill-hover: var(--dg-danger-fill-hover);
+  --color-primary-soft-hover: var(--dg-primary-soft-hover);
+  /* Le bouton neutre (Annuler) et son survol : le creux, sans filet. */
+  --color-neutral: var(--muted);
+  --color-neutral-hover: var(--dg-neutral-hover);
+  /* L'état actif d'une navigation (barre d'onglets, rail, volets) : pastille tonale. */
+  --color-tab-active: var(--esp-tab-active-bg);
+  --color-tab-active-foreground: var(--esp-tab-active-fg);
+
+  /* Un angle par élément (maquette) : badge 6, puce 10, page 12, champ 14,
+     média dans une carte 16, bouton Créer 18, carte 24, barre d'onglets 28 ;
+     boutons en pilule (`rounded-pill`), personnes en rond (`rounded-full`). Un
+     contenu posé dans une carte prend un angle plus petit qu'elle. */
+  --radius-badge: var(--ui2-badge-radius);
+  --radius-chip: var(--esp-chip-radius);
+  --radius-page: var(--esp-avatar-page-radius);
+  --radius-field: var(--esp-field-radius);
+  --radius-media: var(--esp-media-radius);
+  --radius-fab: var(--esp-fab-radius);
+  /* Cartes flottantes, carte du rail, options en tuile : 18 px, comme Créer. */
+  --radius-float: var(--esp-fab-radius);
+  --radius-card: var(--ui2-card-radius);
+  --radius-dock: var(--esp-mobilebar-radius);
+  --radius-pill: var(--ui2-button-radius);
 
   /* Rôles propres à DIASPORALE (charte §5 à §7) */
   --color-tag: var(--dg-tag-bg);
@@ -51,11 +118,14 @@
   --color-avatar-5: var(--esp-ava-5);
   --color-avatar-6: var(--esp-ava-6);
 
-  /* Reliefs nommés de la charte. */
+  /* Reliefs nommés de la charte : seul ce qui flotte porte une ombre (la carte
+     n'en a plus : `shadow-card` est transparent dans les deux thèmes). */
   --shadow-card: var(--esp-shadow-card);
   --shadow-card-hover: var(--esp-shadow-card-hover);
   --shadow-float: var(--esp-shadow-float);
+  --shadow-fab: var(--esp-fab-shadow);
   --shadow-sheet: var(--dg-shadow-sheet);
+  --shadow-thumb: var(--dg-shadow-thumb);
   --shadow-focus: var(--shadow-focus);
 
   /* Mouvement */
@@ -74,21 +144,17 @@
     text-decoration: none;
   }
 
-  :is([data-charte="diasporale"], [data-charte="diasporale-gaboma"]) body {
-    line-height: 1.55;
-  }
-
   :is([data-charte="diasporale"], [data-charte="diasporale-gaboma"]) :is(h1, h2, h3) {
     text-wrap: balance;
   }
 
-  /* Un seul titre en Plex Condensed par écran (charte §3) : la base du moteur
-     met tous les titres en display ; ici, les sous-titres reviennent à Plex Sans
-     600. Un titre qui doit rester en display le demande (`font-display`). */
-  :is([data-charte="diasporale"], [data-charte="diasporale-gaboma"]) :is(h2, h3, h4, h5, h6) {
+  /* Titres de la maquette : les grands titres (h1, h2) en Familjen Grotesk 700,
+     comme la base du moteur ; les intertitres (h3 et au-delà) en Inter 700. Un
+     intertitre qui doit rester en display le demande (`font-display`). */
+  :is([data-charte="diasporale"], [data-charte="diasporale-gaboma"]) :is(h3, h4, h5, h6) {
     font-family: var(--font-sans);
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    letter-spacing: -0.005em;
   }
 
   /* Focus : l'anneau de la charte (3 px, `--shadow-focus`), jamais le contour du navigateur. */
