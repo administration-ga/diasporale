@@ -1,12 +1,12 @@
 # Charte v4 de DIASPORALE : ce qu'elle changerait — 2 novembre 2026
 
-**Le propriétaire a adopté la v4 le 2 novembre 2026. Elle rejoint `main` sans être publiée : la démo en ligne sert la v3 jusqu'à sa prochaine publication.** Comparatif des écrans : `comparaison-v3-v4.jpg`.
+**Le propriétaire a adopté la v4 le 2 novembre 2026, et elle est en ligne sur https://diasporale-demo.vercel.app depuis 23 h 26.** Comparatif des écrans : `comparaison-v3-v4.jpg`. Rendu en ligne, sur le vrai moteur : `en-ligne-fil-1280.jpg`, `en-ligne-fil-390.jpg`.
 
 ## Où on en est
 
 | Question | Constat |
 | --- | --- |
-| Que sert `diasporale-demo.vercel.app` ? | **La v3** : 204 jetons égaux sur 210 avec la v3, 99 sur 137 avec la v4 ; IBM Plex (feuilles du déploiement `dpl_AHPTXYChXkVMRYwFtFwHhDVQaaTo`, relues le 2/11) |
+| Que servait `diasporale-demo.vercel.app` avant la publication ? | **La v3** : 204 jetons égaux sur 210 avec la v3, 99 sur 137 avec la v4 ; IBM Plex (feuilles du déploiement `dpl_AHPTXYChXkVMRYwFtFwHhDVQaaTo`, relues le 2/11) |
 | D'où vient la v4 ? | D'une demande du propriétaire du 20/10, écrite en tête de `diasporale.css` : la maquette « ANTSIA — sept thèmes, toutes les pages » devient la charte de DIASPORALE |
 | Où est-elle ? | Dans l'arbre local et dans la copie publiée d'ANTSIA, où elle n'a aucun effet visible (`data-charte="diasporale…"`) ; dans aucun `origin/main` |
 | Qu'en dit la documentation ? | `docs/03_CHARTE_DIASPORALE.md` et la page `/charte` en restent à la version 3.3 |
@@ -44,10 +44,30 @@ Relevés sur les captures :
 | Construction de `diasporale_com` | code 0 ; aucune police ni feuille IBM Plex dans le build, Familjen Grotesk présente |
 | Effet sur ANTSIA | aucun à l'écran : ses thèmes ne changent pas |
 
-**Non vérifié** : cinq écrans seulement, sur les données de démonstration et sans moteur ; la messagerie est indisponible dans ce mode ; le thème Gaboma de DIASPORALE n'a pas été capturé ; rien n'a été essayé sur un vrai téléphone.
+**Non vérifié** : le comparatif porte sur cinq écrans, sur les données de démonstration ; le thème Gaboma de DIASPORALE n'a pas été capturé ; rien n'a été essayé sur un vrai téléphone ; aucune conversation n'a été ouverte dans la messagerie.
 
 ## Fait à l'adoption
 
 - **Corrigé** : la page `/charte` (version, polices, angles, boutons par famille), `docs/03_CHARTE_DIASPORALE.md`, et le retrait des dépendances `@fontsource` d'IBM Plex.
 - **Fusion** : les deux PR ensemble, ANTSIA puis DIASPORALE.
-- **Publication** : décision à part. La démo DIASPORALE ne changera qu'à sa prochaine publication.
+- **Publication** : ci-dessous.
+
+## Publication du 2 novembre, 23 h 26
+
+| | |
+| --- | --- |
+| Site | https://diasporale-demo.vercel.app, le seul site DIASPORALE en ligne |
+| Version | `diasporale-77f518658024-antsia-26741caadd16-demo`, `dpl_4c5BjhiHqT66RwRvkAM7RdP85fKz` |
+| Retour arrière | promouvoir `dpl_AHPTXYChXkVMRYwFtFwHhDVQaaTo`, qui sert la v3 |
+| Non touchés | le moteur Convex ; `antsia.vercel.app`, toujours `main-8ba2da363777` |
+
+Par rapport au front précédent, le code applicatif ne change que par `globals.css`, la page `/charte` et des commentaires.
+
+| Contrôle | Constat |
+| --- | --- |
+| Avant promotion, sur l'URL privée | 9 routes en 200, moteur de démo seul dans la CSP |
+| Feuilles servies en public | bleu `#0167a8`, sarcelle `#238090`, Familjen Grotesk présents ; aucune mention d'IBM Plex |
+| Connexion réelle, compte fictif Patrice MBOUMBA, navigateur vierge | `/entrer`, `/bienvenue`, puis `/fil`, sur le moteur de démo |
+| Écrans en ligne | fil, page d'un pays, réglages ; messagerie iCom affichée sur le fil, comme prévu au bureau |
+| Téléphone, 390 px | aucun débordement horizontal |
+| Journaux Vercel, 30 min | aucune erreur |
