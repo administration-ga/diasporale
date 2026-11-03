@@ -177,7 +177,7 @@ function RequestSheet(props: { readonly associations: AssociationsCapability; re
   return (
     <Sheet open={open} onOpenChange={(next) => { if (!busy) { setOpen(next); setError(null) } }}>
       <div className="flex flex-wrap items-center gap-2">
-        <Button disabled={props.disabled} onClick={() => setOpen(true)}>{t("associations.entry.request")}</Button>
+        <Button variant="commerce" disabled={props.disabled} onClick={() => setOpen(true)}>{t("associations.entry.request")}</Button>
       </div>
       <SheetContent title={t("associations.requestSheet.title")} description={t("associations.requestSheet.description")} closeLabel={t("common.close")}>
         <form noValidate className="flex flex-col gap-4" onSubmit={submit}>
@@ -203,7 +203,7 @@ function RequestSheet(props: { readonly associations: AssociationsCapability; re
           {error ? <p role="alert" className="text-sm font-medium text-destructive">{t(error)}</p> : null}
           <div className="flex flex-wrap justify-end gap-2">
             <SheetClose asChild><Button variant="ghost" disabled={busy}>{t("common.cancel")}</Button></SheetClose>
-            <Button type="submit" disabled={busy}>{t(busy ? "common.pleaseWait" : "associations.requestSheet.submit")}</Button>
+            <Button variant="commerce" type="submit" disabled={busy}>{t(busy ? "common.pleaseWait" : "associations.requestSheet.submit")}</Button>
           </div>
         </form>
       </SheetContent>

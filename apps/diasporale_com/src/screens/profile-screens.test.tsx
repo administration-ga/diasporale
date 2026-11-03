@@ -340,6 +340,23 @@ describe("ProfileScreen — suivre et ne plus suivre selon l'adhésion", () => {
     }
   })
 
+  it("un seul bouton plein par zone : le geste de relation prime sur « Suivre »", () => {
+    mocks.relation = { status: "ready", data: { connection: "none", connectionId: null, following: false } }
+    const first = render(tree(otherProfile.handle))
+    expect(screen.getByRole("button", { name: t("relation.connect") })).toHaveClass("bg-social-fill")
+    expect(screen.getByRole("button", { name: t("relation.follow") })).toHaveClass("bg-neutral")
+    first.unmount()
+
+    mocks.relation = { status: "ready", data: { connection: "connected", connectionId: "connections_boris", following: false } }
+    const second = render(tree(otherProfile.handle))
+    expect(screen.getByRole("button", { name: t("relation.follow") })).toHaveClass("bg-social-fill")
+    second.unmount()
+
+    mocks.relation = { status: "ready", data: { connection: "connected", connectionId: "connections_boris", following: true } }
+    render(tree(otherProfile.handle))
+    expect(screen.getByRole("button", { name: t("relation.unfollow") })).toHaveClass("bg-neutral")
+  })
+
   it("verrouille immédiatement le désabonnement en vol et permet une reprise après refus", async () => {
     mocks.membership = { ...membership, status: "en_attente", canPublish: false }
     let finish!: (result: ActionResult) => void

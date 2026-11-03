@@ -263,10 +263,12 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
   }
 
   const locked = busy || !props.canCommunicate
+  // Un seul bouton plein par zone : le geste de relation prime sur « Suivre ».
+  const relationIsFilled = connection === "none" || (connection === "requested_by_them" && Boolean(connectionId))
   return (
     <div className="flex flex-wrap justify-end gap-2">
       {connection === "none" ? (
-        <Button size="sm" disabled={locked} aria-describedby={props.canCommunicate ? undefined : hintId} onClick={() => run(() => actions.connect(props.personId), t("relation.requestSent", { name }))}>
+        <Button variant="social" size="sm" disabled={locked} aria-describedby={props.canCommunicate ? undefined : hintId} onClick={() => run(() => actions.connect(props.personId), t("relation.requestSent", { name }))}>
           <UserPlusIcon aria-hidden />
           {t("relation.connect")}
         </Button>
@@ -277,7 +279,7 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
         </Button>
       ) : connection === "requested_by_them" && connectionId ? (
         <>
-          <Button size="sm" disabled={locked} onClick={() => run(() => actions.respondToConnection(connectionId, true), t("relation.accepted", { name }))}>
+          <Button variant="social" size="sm" disabled={locked} onClick={() => run(() => actions.respondToConnection(connectionId, true), t("relation.accepted", { name }))}>
             <UserCheckIcon aria-hidden />
             {t("relation.accept")}
           </Button>
@@ -293,7 +295,7 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
       ) : null}
       <Button
         size="sm"
-        variant="outline"
+        variant={following || relationIsFilled ? "outline" : "social"}
         aria-pressed={following}
         disabled={busy || (!following && !props.canCommunicate)}
         onClick={() => run(() => (following ? actions.unfollow(props.personId) : actions.follow(props.handle)))}

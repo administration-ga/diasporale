@@ -151,7 +151,7 @@ function ConnectionRow(props: Pick<ConnectionListProps, "kind" | "canRespond" | 
           <>
             {item.message ? <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">{item.message}</p> : null}
             <div className="flex flex-wrap gap-2">
-              <Button disabled={busy || !props.canRespond} onClick={() => void respond(true)}>{labels.accept}</Button>
+              <Button variant="social" disabled={busy || !props.canRespond} onClick={() => void respond(true)}>{labels.accept}</Button>
               <Button variant="outline" disabled={busy || !props.canRespond} onClick={() => void respond(false)}>{labels.decline}</Button>
             </div>
           </>

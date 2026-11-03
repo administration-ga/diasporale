@@ -33,7 +33,7 @@ export function ContactButton(props: { onContact?: () => void; recipientName: st
   const available = props.onContact !== undefined
   return (
     <Button
-      variant="primary"
+      variant="message"
       onClick={props.onContact}
       disabled={!available}
       aria-label={t("contact.writeTo", { name: props.recipientName })}

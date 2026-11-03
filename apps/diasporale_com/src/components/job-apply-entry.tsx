@@ -53,7 +53,7 @@ export function JobApplyEntry(props: { readonly offer: JobOfferDetailView }) {
   if (jobs === null) {
     return (
       <div className="flex flex-col items-start gap-2">
-        <Button disabled>{t("jobs.apply.cta")}</Button>
+        <Button variant="commerce" disabled>{t("jobs.apply.cta")}</Button>
         <p className="text-sm text-muted-foreground">{t("jobs.unavailable.body")}</p>
       </div>
     )
@@ -73,7 +73,7 @@ export function JobApplyEntry(props: { readonly offer: JobOfferDetailView }) {
   return (
     <div className="flex flex-col items-start gap-2">
       <Sheet open={open} onOpenChange={setOpen}>
-        <Button
+        <Button variant="commerce"
           disabled={!canPublish}
           aria-haspopup="dialog"
           onClick={() => {
@@ -240,7 +240,7 @@ function ApplyForm(props: { readonly jobs: JobsCapability; readonly offer: JobOf
         </div>
       ) : null}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={busy} aria-busy={busy}>{t(busy ? "jobs.apply.sending" : "jobs.apply.submit")}</Button>
+        <Button variant="commerce" type="submit" disabled={busy} aria-busy={busy}>{t(busy ? "jobs.apply.sending" : "jobs.apply.submit")}</Button>
         <Button type="button" variant="ghost" disabled={busy} onClick={props.onClose}>{t("common.cancel")}</Button>
       </div>
     </form>

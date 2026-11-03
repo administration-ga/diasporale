@@ -172,19 +172,19 @@ function PageServicesGrid(props: { readonly offers: readonly ServiceOfferCardVie
 }
 
 /** Le contact de page conduit aux prestations réellement lisibles, sans ouvrir une conversation personnelle. */
-export function PageServiceContactEntry(props: { readonly pageHandle: string }) {
+export function PageServiceContactEntry(props: { readonly pageHandle: string; readonly variant: "commerce" | "outline" }) {
   const services = useServices()
   if (services === null) return null
-  return <PageServiceContactLink key={props.pageHandle} services={services} pageHandle={props.pageHandle} />
+  return <PageServiceContactLink key={props.pageHandle} services={services} pageHandle={props.pageHandle} variant={props.variant} />
 }
 
-function PageServiceContactLink(props: { readonly services: ServicesCapability; readonly pageHandle: string }) {
+function PageServiceContactLink(props: { readonly services: ServicesCapability; readonly pageHandle: string; readonly variant: "commerce" | "outline" }) {
   const { t } = useDiasporaleT()
   const offers = props.services.usePageOffers({ pageHandle: props.pageHandle, cursor: null })
   // Une fenêtre vide, même avec une suite, ne prouve aucune offre disponible.
   if (offers.status !== "ready" || offers.data.items.length === 0) return null
   return (
-    <Button asChild className="h-auto min-h-11 max-w-full whitespace-normal text-center">
+    <Button variant={props.variant} asChild className="h-auto min-h-11 max-w-full whitespace-normal text-center">
       <NextLink href={routes.pageServices(props.pageHandle)}>
         <BriefcaseBusinessIcon aria-hidden className="shrink-0" />
         {t("pageServices.request")}

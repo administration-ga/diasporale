@@ -197,7 +197,7 @@ function InvitationItem(props: { readonly management: PageManagement; readonly i
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" disabled={busy} onClick={() => void respond(true)}>
+          <Button variant="success" size="sm" disabled={busy} onClick={() => void respond(true)}>
             <CheckIcon aria-hidden />
             {t("pageAdmin.invitations.accept")}
           </Button>

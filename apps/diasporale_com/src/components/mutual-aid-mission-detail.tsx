@@ -112,7 +112,7 @@ function SignupForm(props: { readonly capability: MutualAidCapability; readonly 
       </div>
       {missing ? <p id={`${id}-consentement-erreur`} role="alert" className="text-[13px] font-medium text-destructive">{t(errorKey("aid_signup_consent_required"))}</p> : null}
       <div>
-        <Button type="submit" disabled={props.busy !== null} aria-busy={props.busy === "signup"}>{t(props.busy === "signup" ? "common.pleaseWait" : "mutualAid.signup.submit")}</Button>
+        <Button variant="commerce" type="submit" disabled={props.busy !== null} aria-busy={props.busy === "signup"}>{t(props.busy === "signup" ? "common.pleaseWait" : "mutualAid.signup.submit")}</Button>
       </div>
     </form>
   )
