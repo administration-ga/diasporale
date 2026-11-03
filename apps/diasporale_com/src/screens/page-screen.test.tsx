@@ -249,6 +249,24 @@ describe("PageScreen — suivre et ne plus suivre", () => {
     expect(mocks.success).toHaveBeenCalledWith("Vous suivez Collectif de Lyon.")
   })
 
+  it("un seul bouton plein par zone : Suivre, puis le service une fois suivie ; qui tient un rôle a « Publier »", () => {
+    mocks.detail = { status: "ready", data: view({ following: false }) }
+    const first = render(tree())
+    expect(screen.getByRole("button", { name: "Suivre" })).toHaveClass("bg-social-fill")
+    expect(mocks.contact).toHaveBeenLastCalledWith(expect.objectContaining({ variant: "outline" }))
+    first.unmount()
+
+    mocks.detail = { status: "ready", data: view({ following: true }) }
+    const second = render(tree())
+    expect(screen.getByRole("button", { name: "Ne plus suivre" })).toHaveClass("bg-neutral")
+    expect(mocks.contact).toHaveBeenLastCalledWith(expect.objectContaining({ variant: "commerce" }))
+    second.unmount()
+
+    mocks.detail = { status: "ready", data: view({ following: false, role: "admin" }) }
+    render(tree())
+    expect(screen.getByRole("button", { name: "Suivre" })).toHaveClass("bg-neutral")
+  })
+
   it("l'état affiché suit la fiche relue : « Ne plus suivre » désabonne", async () => {
     mocks.detail = { status: "ready", data: view({ following: true }) }
     mocks.unfollow.mockResolvedValue({ ok: true, value: { following: false } })

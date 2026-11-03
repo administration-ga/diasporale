@@ -297,13 +297,13 @@ function RequestView(props: { readonly capability: ServiceRequestsCapability; re
             />
           ) : (
             <div className="flex flex-wrap gap-2">
-              {actions.has("accept") && current ? <Button onClick={() => setAcceptVersion(current.version)}>{t("serviceRequests.accept.cta")}</Button> : null}
+              {actions.has("accept") && current ? <Button variant="commerce" onClick={() => setAcceptVersion(current.version)}>{t("serviceRequests.accept.cta")}</Button> : null}
               {actions.has("propose") ? (
                 <Button onClick={() => setProposingFrom(detail.currentProposal ? detail.currentProposal.version : 0)}>
                   {t(detail.currentProposal ? "serviceRequests.propose.update" : "serviceRequests.propose.cta")}
                 </Button>
               ) : null}
-              {actions.has("complete") ? <Button onClick={() => setSheet("complete")}>{t("serviceRequests.complete.cta")}</Button> : null}
+              {actions.has("complete") ? <Button variant="success" onClick={() => setSheet("complete")}>{t("serviceRequests.complete.cta")}</Button> : null}
               {actions.has("no_show") ? <Button variant="outline" onClick={() => setSheet("no_show")}>{t("serviceRequests.noShow.cta")}</Button> : null}
               {actions.has("refuse") ? <Button variant="outline" onClick={() => setSheet("refuse")}>{t("serviceRequests.refuse.cta")}</Button> : null}
               {actions.has("cancel") ? (

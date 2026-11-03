@@ -74,7 +74,7 @@ function SuggestionRow(props: { suggestion: SuggestionView }) {
           <TrustBadges badges={suggestion.badges} size="sm" />
         </p>
         {why.length > 0 ? <p className="mt-0.5 text-[13px] text-muted-foreground">{why.join(" · ")}</p> : null}
-        <Button size="sm" variant="outline" className="mt-2" disabled={busy} onClick={() => run(() => actions.connect(suggestion.personId), t("suggestions.requested"))}>
+        <Button size="sm" variant="social" className="mt-2" disabled={busy} onClick={() => run(() => actions.connect(suggestion.personId), t("suggestions.requested"))}>
           <UserPlusIcon aria-hidden />
           {t("relation.connect")}
         </Button>

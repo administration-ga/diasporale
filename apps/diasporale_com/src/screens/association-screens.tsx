@@ -191,7 +191,7 @@ function MembersList(props: { readonly associations: AssociationsCapability; rea
               <MemberRow key={item.membershipId} item={item}>
                 {item.status === "requested" ? (
                   <>
-                    <Button
+                    <Button variant="success"
                       disabled={busy !== null}
                       aria-busy={busy === `accept:${item.membershipId}`}
                       onClick={() => void act(`accept:${item.membershipId}`, "accepted", () => props.associations.decide({ membershipId: item.membershipId, decision: "accept", expectedVersion: item.version, reason: "" }))}

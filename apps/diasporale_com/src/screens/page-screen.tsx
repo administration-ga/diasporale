@@ -191,9 +191,10 @@ function PageFiche(props: { view: PageDetailView; membership: MembershipView; ca
                 name={page.name}
                 following={view.viewer.following}
                 canFollow={props.membership.canPublish}
+                filled={view.viewer.role === null}
               />
             ) : null}
-            {serviceProvider ? view.viewer.role === null ? <PageServiceContactEntry pageHandle={page.handle} /> : null : <ContactButton recipientName={page.name} />}
+            {serviceProvider ? view.viewer.role === null ? <PageServiceContactEntry pageHandle={page.handle} variant={props.capability && !view.viewer.following ? "outline" : "commerce"} /> : null : <ContactButton recipientName={page.name} />}
             <PageAdminEntry pageId={page.id} handle={page.handle} viewerRole={view.viewer.role} claimable={page.claimable} />
             <AssociationMembershipEntry pageId={page.id} handle={page.handle} ownerKind={page.ownerKind} />
             <PagePublishButton page={page} membership={props.membership} role={view.viewer.role} />
@@ -266,7 +267,8 @@ function PageFiche(props: { view: PageDetailView; membership: MembershipView; ca
  * réactif) : jamais un état supposé. Un membre en attente lit, il ne suit pas
  * encore ; se désabonner reste toujours possible.
  */
-function FollowButton(props: { capability: PagesCapability; handle: string; name: string; following: boolean; canFollow: boolean }) {
+/** `filled` : un seul bouton plein par zone ; qui tient un rôle sur la page a « Publier » pour bouton plein. */
+function FollowButton(props: { capability: PagesCapability; handle: string; name: string; following: boolean; canFollow: boolean; filled: boolean }) {
   const { t } = useDiasporaleT()
   const hintId = useId()
   const [busy, setBusy] = useState(false)
@@ -298,7 +300,7 @@ function FollowButton(props: { capability: PagesCapability; handle: string; name
   return (
     <>
       <Button
-        variant={props.following ? "outline" : "primary"}
+        variant={props.following || !props.filled ? "outline" : "social"}
         disabled={busy || blocked}
         aria-busy={busy}
         aria-describedby={blocked ? hintId : undefined}

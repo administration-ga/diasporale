@@ -435,7 +435,7 @@ function NotificationRow(props: { item: NotificationView; now: number; onNavigat
           ) : null}
           {item.pendingConnectionId ? (
             <div className="mt-2 flex flex-wrap gap-2">
-              <Button size="sm" disabled={busy} onClick={() => run(() => actions.respondToConnection(item.pendingConnectionId ?? "", true))}>
+              <Button variant="social" size="sm" disabled={busy} onClick={() => run(() => actions.respondToConnection(item.pendingConnectionId ?? "", true))}>
                 <UserCheckIcon aria-hidden />
                 {t("relation.accept")}
               </Button>

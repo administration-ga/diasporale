@@ -20,8 +20,9 @@ jetons: "ANTSIA/packages/ui/src/themes/diasporale.css (contrat) + packages/diasp
 > inchangée : papier, sable, nuit brune.
 >
 > **Ce texte prime sur la suite**, qui décrit les versions 1 à 3.3 et reste comme historique :
-> IBM Plex, rayons de 6 et 8 px, une seule couleur d'action. Les variantes de bouton par famille
-> existent (`primitives/button.tsx`, page `/charte`), mais aucun composant ne les emploie encore.
+> IBM Plex, rayons de 6 et 8 px, une seule couleur d'action. Les composants portent la variante de
+> bouton de leur famille (`primitives/button.tsx`, page `/charte`), un seul bouton plein par zone :
+> correspondances et cas laissés sans famille dans `docs/recette/couleurs-par-famille-2026-11-03/`.
 > Valeurs exactes : `packages/ui/src/themes/diasporale.css` d'ANTSIA. Décision et comparatif :
 > `docs/recette/charte-v4-2026-11-02/`.
 

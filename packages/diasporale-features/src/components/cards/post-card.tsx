@@ -110,12 +110,12 @@ export function PostCard(props: {
               disabled={!props.canReact}
               className={cn(
                 "inline-flex min-h-10 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium transition-colors hover:bg-muted focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-55",
-                mine ? "text-primary" : "text-muted-foreground",
+                mine ? "text-foreground" : "text-muted-foreground",
               )}
               aria-label={mine ? t("post.reactedAs", { reaction: t(REACTIONS[mine].key) }) : t("post.react")}
               title={props.canReact ? undefined : t("post.reactDisabled")}
             >
-              <MineIcon className="size-4" aria-hidden fill={mine ? "currentColor" : "none"} />
+              <MineIcon className={cn("size-4", mine && "text-react-ink")} aria-hidden fill={mine ? "currentColor" : "none"} />
               <span>{post.reactionCount > 0 ? post.reactionCount : t("post.react")}</span>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>

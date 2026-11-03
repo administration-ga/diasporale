@@ -422,7 +422,7 @@ function CommentForm(props: { postId: string; replyTo: ReplyTarget | null; onCan
             {t("comments.counter", { count: body.length, max: COMMENT_MAX_LENGTH })}
           </p>
         )}
-        <Button type="submit" size="sm" disabled={busy}>
+        <Button variant="send" type="submit" size="sm" disabled={busy}>
           <SendIcon aria-hidden />
           {t("comments.send")}
         </Button>

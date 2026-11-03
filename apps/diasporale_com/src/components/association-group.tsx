@@ -77,7 +77,7 @@ function GroupContent(props: { readonly pageId: string; readonly capability: Ass
         {group.state === "closed" ? <p role="status">{t("associationActivities.group.closed")}</p> : null}
         {!group.isMember && !group.canJoin && group.state === "active" ? <p>{t("associationActivities.group.eligibility")}</p> : null}
         <div className="flex flex-wrap gap-2">
-          {group.canJoin ? <Button disabled={task.busy} aria-busy={task.busy} onClick={() => void task.run(() => props.capability.join(group.groupId), () => toast.success(t("associationActivities.group.joined")))}>{t("associationActivities.group.join")}</Button> : null}
+          {group.canJoin ? <Button variant="social" disabled={task.busy} aria-busy={task.busy} onClick={() => void task.run(() => props.capability.join(group.groupId), () => toast.success(t("associationActivities.group.joined")))}>{t("associationActivities.group.join")}</Button> : null}
           {group.isMember ? <Button variant="outline" onClick={() => setConfirmation("leave")}>{t("associationActivities.group.leave")}</Button> : null}
           {group.canManage && group.state === "active" ? <Button variant="ghost" onClick={() => setConfirmation("close")}>{t("associationActivities.group.close")}</Button> : null}
         </div>

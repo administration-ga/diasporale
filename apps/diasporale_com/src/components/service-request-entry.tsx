@@ -85,7 +85,7 @@ export function ServiceRequestEntry(props: {
   if (capability === null) {
     return (
       <div className="flex flex-col items-start gap-2">
-        <Button disabled>{t("serviceRequests.entry.cta")}</Button>
+        <Button variant="commerce" disabled>{t("serviceRequests.entry.cta")}</Button>
         <p className="text-sm text-muted-foreground">{t("serviceRequests.entry.unavailable")}</p>
       </div>
     )
@@ -101,7 +101,7 @@ export function ServiceRequestEntry(props: {
   return (
     <div className="flex flex-col items-start gap-2">
       <Sheet open={open} onOpenChange={setOpen}>
-        <Button
+        <Button variant="commerce"
           disabled={!canPublish}
           aria-haspopup="dialog"
           onClick={() => {
@@ -301,7 +301,7 @@ function RequestForm(props: {
         </div>
       ) : null}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={busy} aria-busy={busy}>{t(busy ? "serviceRequests.entry.sending" : "serviceRequests.entry.submit")}</Button>
+        <Button variant="commerce" type="submit" disabled={busy} aria-busy={busy}>{t(busy ? "serviceRequests.entry.sending" : "serviceRequests.entry.submit")}</Button>
         <Button type="button" variant="ghost" disabled={busy} onClick={props.onClose}>{t("serviceRequests.sheet.back")}</Button>
       </div>
     </form>

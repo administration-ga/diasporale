@@ -1,0 +1,3376 @@
+[
+{
+"file": "apps/diasporale_com/src/components/app-shell.tsx",
+"line": 710,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Publier"
+},
+{
+"file": "apps/diasporale_com/src/components/app-shell.tsx",
+"line": 729,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Publier"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-actions.tsx",
+"line": 82,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy === \"publish\" ? \"arrivalKit.actions.pleaseWait\" : \"arri}"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-actions.tsx",
+"line": 89,
+"tag": "Button",
+"variant": "outline",
+"label": "Renvoyer à l'auteur"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-actions.tsx",
+"line": 92,
+"tag": "Button",
+"variant": "outline",
+"label": "Marquer « à revoir »"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-actions.tsx",
+"line": 97,
+"tag": "Button",
+"variant": "outline",
+"label": "Modifier"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-actions.tsx",
+"line": 100,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy === \"submit\" ? \"arrivalKit.actions.pleaseWait\" : \"arriv}"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-actions.tsx",
+"line": 108,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer la ressource"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-actions.tsx",
+"line": 112,
+"tag": "Button",
+"variant": "outline",
+"label": "Signaler une information périmée"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-actions.tsx",
+"line": 239,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-actions.tsx",
+"line": 240,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy ? \"arrivalKit.actions.pleaseWait\" : \"arrivalKit.actions}"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-actions.tsx",
+"line": 285,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-actions.tsx",
+"line": 286,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy ? \"arrivalKit.actions.pleaseWait\" : \"arrivalKit.actions}"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-actions.tsx",
+"line": 322,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-actions.tsx",
+"line": 323,
+"tag": "Button",
+"variant": "destructive",
+"label": "{busy ? \"arrivalKit.actions.pleaseWait\" : \"arrivalKit.actions}"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-form.tsx",
+"line": 271,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-form.tsx",
+"line": 272,
+"tag": "Button",
+"variant": "outline",
+"label": "Enregistrer le brouillon"
+},
+{
+"file": "apps/diasporale_com/src/components/arrival-kit-form.tsx",
+"line": 273,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy ? \"arrivalKit.actions.pleaseWait\" : \"arrivalKit.form.su}"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-attendance.tsx",
+"line": 122,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{ticket ? \"associationAttendance.renew\" : \"associationAttenda}"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-attendance.tsx",
+"line": 127,
+"tag": "Button",
+"variant": "outline",
+"label": "Copier le code du billet"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-attendance.tsx",
+"line": 160,
+"tag": "Button",
+"variant": "outline",
+"label": "Corriger ce pointage"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-attendance.tsx",
+"line": 165,
+"tag": "Button",
+"variant": "destructive",
+"label": "Retirer ce pointage"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-attendance.tsx",
+"line": 165,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-attendance.tsx",
+"line": 199,
+"tag": "Button",
+"variant": "outline",
+"label": "Démarrer la caméra"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-attendance.tsx",
+"line": 199,
+"tag": "Button",
+"variant": "ghost",
+"label": "Arrêter la caméra"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-attendance.tsx",
+"line": 206,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Prévisualiser le billet"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-attendance.tsx",
+"line": 208,
+"tag": "Button",
+"variant": "success",
+"label": "Confirmer la présence"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-attendance.tsx",
+"line": 208,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-calendar.tsx",
+"line": 92,
+"tag": "Button",
+"variant": "outline",
+"label": "Télécharger iCal"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-form.tsx",
+"line": 122,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{task.busy ? \"associationActivities.working\" : \"associationAc}"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-form.tsx",
+"line": 122,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-gallery.tsx",
+"line": 51,
+"tag": "Button",
+"variant": "outline",
+"label": "Actualiser la galerie"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-gallery.tsx",
+"line": 68,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Ajouter des photos ou une vidéo"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-gallery.tsx",
+"line": 96,
+"tag": "Button",
+"variant": "outline",
+"label": "Retirer cet ajout"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-gallery.tsx",
+"line": 103,
+"tag": "Button",
+"variant": "destructive",
+"label": "Confirmer le retrait"
+},
+{
+"file": "apps/diasporale_com/src/components/association-event-gallery.tsx",
+"line": 103,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/association-events.tsx",
+"line": 36,
+"tag": "Button",
+"variant": "outline",
+"label": "Créer un événement"
+},
+{
+"file": "apps/diasporale_com/src/components/association-events.tsx",
+"line": 135,
+"tag": "Button",
+"variant": "commerce",
+"label": "{full ? \"associationActivities.event.joinWaitlist\" : \"associa}"
+},
+{
+"file": "apps/diasporale_com/src/components/association-events.tsx",
+"line": 136,
+"tag": "Button",
+"variant": "outline",
+"label": "Actualiser ma place"
+},
+{
+"file": "apps/diasporale_com/src/components/association-events.tsx",
+"line": 137,
+"tag": "Button",
+"variant": "outline",
+"label": "{waitlisted ? \"associationActivities.event.withdrawWaitlist\" }"
+},
+{
+"file": "apps/diasporale_com/src/components/association-events.tsx",
+"line": 138,
+"tag": "Button",
+"variant": "outline",
+"label": "Modifier l’événement"
+},
+{
+"file": "apps/diasporale_com/src/components/association-events.tsx",
+"line": 138,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler l’événement"
+},
+{
+"file": "apps/diasporale_com/src/components/association-group.tsx",
+"line": 38,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Ouvrir le groupe"
+},
+{
+"file": "apps/diasporale_com/src/components/association-group.tsx",
+"line": 41,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Créer le groupe de l’association"
+},
+{
+"file": "apps/diasporale_com/src/components/association-group.tsx",
+"line": 80,
+"tag": "Button",
+"variant": "social",
+"label": "Rejoindre volontairement le groupe"
+},
+{
+"file": "apps/diasporale_com/src/components/association-group.tsx",
+"line": 81,
+"tag": "Button",
+"variant": "outline",
+"label": "Quitter le groupe"
+},
+{
+"file": "apps/diasporale_com/src/components/association-group.tsx",
+"line": 82,
+"tag": "Button",
+"variant": "ghost",
+"label": "Fermer le groupe"
+},
+{
+"file": "apps/diasporale_com/src/components/association-group.tsx",
+"line": 111,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer cette publication"
+},
+{
+"file": "apps/diasporale_com/src/components/association-group.tsx",
+"line": 133,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{task.busy ? \"associationActivities.working\" : \"associationAc}"
+},
+{
+"file": "apps/diasporale_com/src/components/association-membership-entry.tsx",
+"line": 99,
+"tag": "Button",
+"variant": "outline",
+"label": "{busy === \"cancelled\" ? \"common.pleaseWait\" : \"associations.c}"
+},
+{
+"file": "apps/diasporale_com/src/components/association-membership-entry.tsx",
+"line": 180,
+"tag": "Button",
+"variant": "commerce",
+"label": "Devenir adhérent"
+},
+{
+"file": "apps/diasporale_com/src/components/association-membership-entry.tsx",
+"line": 205,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/association-membership-entry.tsx",
+"line": 206,
+"tag": "Button",
+"variant": "commerce",
+"label": "{busy ? \"common.pleaseWait\" : \"associations.requestSheet.subm}"
+},
+{
+"file": "apps/diasporale_com/src/components/association-parts.tsx",
+"line": 81,
+"tag": "Button",
+"variant": "outline",
+"label": "Précédents"
+},
+{
+"file": "apps/diasporale_com/src/components/association-parts.tsx",
+"line": 85,
+"tag": "Button",
+"variant": "outline",
+"label": "Suivants"
+},
+{
+"file": "apps/diasporale_com/src/components/association-parts.tsx",
+"line": 99,
+"tag": "Button",
+"variant": "outline",
+"label": "Quitter l'association"
+},
+{
+"file": "apps/diasporale_com/src/components/association-parts.tsx",
+"line": 109,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/association-parts.tsx",
+"line": 110,
+"tag": "Button",
+"variant": "destructive",
+"label": "{props.busy ? \"common.pleaseWait\" : \"associations.leaveConfir}"
+},
+{
+"file": "apps/diasporale_com/src/components/connection-list.tsx",
+"line": 62,
+"tag": "Button",
+"variant": "outline",
+"label": null
+},
+{
+"file": "apps/diasporale_com/src/components/connection-list.tsx",
+"line": 85,
+"tag": "Button",
+"variant": "outline",
+"label": null
+},
+{
+"file": "apps/diasporale_com/src/components/connection-list.tsx",
+"line": 102,
+"tag": "Button",
+"variant": "outline",
+"label": null
+},
+{
+"file": "apps/diasporale_com/src/components/connection-list.tsx",
+"line": 154,
+"tag": "Button",
+"variant": "social",
+"label": null
+},
+{
+"file": "apps/diasporale_com/src/components/connection-list.tsx",
+"line": 155,
+"tag": "Button",
+"variant": "outline",
+"label": null
+},
+{
+"file": "apps/diasporale_com/src/components/content-preferences-settings.tsx",
+"line": 146,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/components/content-preferences-settings.tsx",
+"line": 164,
+"tag": "Button",
+"variant": "outline",
+"label": "Précédent"
+},
+{
+"file": "apps/diasporale_com/src/components/content-preferences-settings.tsx",
+"line": 168,
+"tag": "Button",
+"variant": "outline",
+"label": "Suivant"
+},
+{
+"file": "apps/diasporale_com/src/components/content-preferences-settings.tsx",
+"line": 195,
+"tag": "Button",
+"variant": "ghost",
+"label": "Voir la publication"
+},
+{
+"file": "apps/diasporale_com/src/components/content-preferences-settings.tsx",
+"line": 196,
+"tag": "Button",
+"variant": "outline",
+"label": "{busyId === entry.choiceId ? \"settings.contentPreferences.res}"
+},
+{
+"file": "apps/diasporale_com/src/components/contextual-conversations.tsx",
+"line": 93,
+"tag": "Button",
+"variant": "{thread.writable ? message : outline}",
+"label": "{thread.writable ? \"conversationEntry.open\" : \"conversationEn} / Nouveau message"
+},
+{
+"file": "apps/diasporale_com/src/components/contextual-conversations.tsx",
+"line": 118,
+"tag": "Button",
+"variant": "message",
+"label": "{busy ? \"conversationEntry.opening\" : \"conversationEntry.writ}"
+},
+{
+"file": "apps/diasporale_com/src/components/data-rights-settings.tsx",
+"line": 192,
+"tag": "Button",
+"variant": "outline",
+"label": "Télécharger mes données"
+},
+{
+"file": "apps/diasporale_com/src/components/data-rights-settings.tsx",
+"line": 197,
+"tag": "Button",
+"variant": "ghost",
+"label": "Interrompre"
+},
+{
+"file": "apps/diasporale_com/src/components/data-rights-settings.tsx",
+"line": 282,
+"tag": "Button",
+"variant": "destructive",
+"label": "Effacer mon compte"
+},
+{
+"file": "apps/diasporale_com/src/components/data-rights-settings.tsx",
+"line": 293,
+"tag": "Button",
+"variant": "outline",
+"label": "Un instant… / Annuler ma demande d'effacement"
+},
+{
+"file": "apps/diasporale_com/src/components/data-rights-settings.tsx",
+"line": 358,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/data-rights-settings.tsx",
+"line": 359,
+"tag": "Button",
+"variant": "destructive",
+"label": "Un instant… / Demander l'effacement"
+},
+{
+"file": "apps/diasporale_com/src/components/dismissed-suggestions.tsx",
+"line": 172,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/components/dismissed-suggestions.tsx",
+"line": 182,
+"tag": "Button",
+"variant": "outline",
+"label": "{loadingMore ? \"relations.dismissed.loading\" : \"relations.dis}"
+},
+{
+"file": "apps/diasporale_com/src/components/dismissed-suggestions.tsx",
+"line": 212,
+"tag": "Button",
+"variant": "outline",
+"label": "{props.busy ? \"relations.dismissed.restoring\" : \"relations.di} / Retirer le masquage de {{name}} / Suggestion masquée"
+},
+{
+"file": "apps/diasporale_com/src/components/door-vision.tsx",
+"line": 100,
+"tag": "Button",
+"variant": "outline",
+"label": "Rejoindre DIASPORALE"
+},
+{
+"file": "apps/diasporale_com/src/components/feed-pages.tsx",
+"line": 168,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/components/feed-pages.tsx",
+"line": 290,
+"tag": "Button",
+"variant": "outline",
+"label": "{loadingMore ? \"feed.pagination.loading\" : \"feed.pagination.l}"
+},
+{
+"file": "apps/diasporale_com/src/components/feed-pages.tsx",
+"line": 387,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/components/job-apply-entry.tsx",
+"line": 56,
+"tag": "Button",
+"variant": "commerce",
+"label": "Candidater"
+},
+{
+"file": "apps/diasporale_com/src/components/job-apply-entry.tsx",
+"line": 67,
+"tag": "Button",
+"variant": "outline",
+"label": "Voir mes candidatures"
+},
+{
+"file": "apps/diasporale_com/src/components/job-apply-entry.tsx",
+"line": 76,
+"tag": "Button",
+"variant": "commerce",
+"label": "Candidater"
+},
+{
+"file": "apps/diasporale_com/src/components/job-apply-entry.tsx",
+"line": 162,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Mes candidatures"
+},
+{
+"file": "apps/diasporale_com/src/components/job-apply-entry.tsx",
+"line": 165,
+"tag": "Button",
+"variant": "ghost",
+"label": "Fermer"
+},
+{
+"file": "apps/diasporale_com/src/components/job-apply-entry.tsx",
+"line": 235,
+"tag": "Button",
+"variant": "outline",
+"label": "Mes candidatures"
+},
+{
+"file": "apps/diasporale_com/src/components/job-apply-entry.tsx",
+"line": 239,
+"tag": "Button",
+"variant": "outline",
+"label": "Relire l'offre"
+},
+{
+"file": "apps/diasporale_com/src/components/job-apply-entry.tsx",
+"line": 243,
+"tag": "Button",
+"variant": "commerce",
+"label": "{busy ? \"jobs.apply.sending\" : \"jobs.apply.submit\"}"
+},
+{
+"file": "apps/diasporale_com/src/components/job-apply-entry.tsx",
+"line": 244,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/job-hub-tab.tsx",
+"line": 30,
+"tag": "Button",
+"variant": "outline",
+"label": "Toutes les offres — {{country}}"
+},
+{
+"file": "apps/diasporale_com/src/components/job-hub-tab.tsx",
+"line": 33,
+"tag": "Button",
+"variant": "ghost",
+"label": "Mes candidatures"
+},
+{
+"file": "apps/diasporale_com/src/components/job-offer-form.tsx",
+"line": 372,
+"tag": "Button",
+"variant": "outline",
+"label": "Recharger la dernière version"
+},
+{
+"file": "apps/diasporale_com/src/components/job-offer-form.tsx",
+"line": 380,
+"tag": "Button",
+"variant": "outline",
+"label": "{busy ? \"common.pleaseWait\" : \"jobs.form.saveDraft\"}"
+},
+{
+"file": "apps/diasporale_com/src/components/job-offer-form.tsx",
+"line": 381,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Publier"
+},
+{
+"file": "apps/diasporale_com/src/components/job-offer-form.tsx",
+"line": 384,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy ? \"common.pleaseWait\" : \"jobs.form.save\"}"
+},
+{
+"file": "apps/diasporale_com/src/components/job-offer-form.tsx",
+"line": 386,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/job-recruiter-panel.tsx",
+"line": 121,
+"tag": "Button",
+"variant": "link",
+"label": "Voir la page"
+},
+{
+"file": "apps/diasporale_com/src/components/job-recruiter-panel.tsx",
+"line": 124,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Nouvelle offre"
+},
+{
+"file": "apps/diasporale_com/src/components/job-recruiter-panel.tsx",
+"line": 226,
+"tag": "Button",
+"variant": "outline",
+"label": "Modifier"
+},
+{
+"file": "apps/diasporale_com/src/components/job-recruiter-panel.tsx",
+"line": 229,
+"tag": "Button",
+"variant": "outline",
+"label": "{`jobs.recruiter.action.${action}`}"
+},
+{
+"file": "apps/diasporale_com/src/components/job-recruiter-panel.tsx",
+"line": 233,
+"tag": "Button",
+"variant": "ghost",
+"label": "Clore"
+},
+{
+"file": "apps/diasporale_com/src/components/job-recruiter-panel.tsx",
+"line": 237,
+"tag": "Button",
+"variant": "link",
+"label": "{showApplications ? \"jobs.recruiter.hideApplications\" : \"jobs}"
+},
+{
+"file": "apps/diasporale_com/src/components/job-recruiter-panel.tsx",
+"line": 360,
+"tag": "Button",
+"variant": "outline",
+"label": "Marquer comme vue"
+},
+{
+"file": "apps/diasporale_com/src/components/job-recruiter-panel.tsx",
+"line": 363,
+"tag": "Button",
+"variant": "outline",
+"label": "Présélectionner"
+},
+{
+"file": "apps/diasporale_com/src/components/job-recruiter-panel.tsx",
+"line": 366,
+"tag": "Button",
+"variant": "ghost",
+"label": "Ne pas retenir"
+},
+{
+"file": "apps/diasporale_com/src/components/job-recruiter-panel.tsx",
+"line": 427,
+"tag": "Button",
+"variant": "destructive",
+"label": "{gesture.busy ? \"common.pleaseWait\" : \"jobs.recruiter.confirm}"
+},
+{
+"file": "apps/diasporale_com/src/components/job-recruiter-panel.tsx",
+"line": 428,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/job-talent-profile.tsx",
+"line": 140,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Créer mon profil de talent"
+},
+{
+"file": "apps/diasporale_com/src/components/job-talent-profile.tsx",
+"line": 188,
+"tag": "Button",
+"variant": "outline",
+"label": "Modifier"
+},
+{
+"file": "apps/diasporale_com/src/components/job-talent-profile.tsx",
+"line": 190,
+"tag": "Button",
+"variant": "outline",
+"label": "{profile.status === \"active\" ? \"jobs.profile.hide\" : \"jobs.pr}"
+},
+{
+"file": "apps/diasporale_com/src/components/job-talent-profile.tsx",
+"line": 193,
+"tag": "Button",
+"variant": "ghost",
+"label": "Supprimer"
+},
+{
+"file": "apps/diasporale_com/src/components/job-talent-profile.tsx",
+"line": 364,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy ? \"common.pleaseWait\" : creating ? \"jobs.profile.submit}"
+},
+{
+"file": "apps/diasporale_com/src/components/job-talent-profile.tsx",
+"line": 365,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-profile-form.tsx",
+"line": 258,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy ? \"mentoring.form.saving\" : creating ? \"mentoring.form.}"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-profile-form.tsx",
+"line": 261,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retour"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-profile-panel.tsx",
+"line": 44,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Devenir mentor"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-profile-panel.tsx",
+"line": 179,
+"tag": "Button",
+"variant": "outline",
+"label": "{editing ? \"mentoring.panel.closeEdit\" : \"mentoring.panel.edi}"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-profile-panel.tsx",
+"line": 184,
+"tag": "Button",
+"variant": "outline",
+"label": "{paused ? \"mentoring.panel.resume\" : \"mentoring.panel.pause\"}"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-profile-panel.tsx",
+"line": 188,
+"tag": "Button",
+"variant": "destructive",
+"label": "Retirer mon profil"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-profile-panel.tsx",
+"line": 190,
+"tag": "Button",
+"variant": "link",
+"label": "Voir mon profil public"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
+"line": 82,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Demander un mentorat"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
+"line": 184,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Suivre mes demandes"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
+"line": 187,
+"tag": "Button",
+"variant": "ghost",
+"label": "Fermer"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
+"line": 244,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer le créneau {{index}}"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
+"line": 254,
+"tag": "Button",
+"variant": "outline",
+"label": "Ajouter un créneau"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
+"line": 289,
+"tag": "Button",
+"variant": "outline",
+"label": "Suivre mes demandes"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
+"line": 296,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy ? \"mentoring.request.sending\" : \"mentoring.request.subm}"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
+"line": 297,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retour"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-requests.tsx",
+"line": 51,
+"tag": "Button",
+"variant": "outline",
+"label": "Trouver un mentor"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-requests.tsx",
+"line": 90,
+"tag": "Button",
+"variant": "{status === filter.value ? primary : outline}",
+"label": "{filter.label}"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-requests.tsx",
+"line": 159,
+"tag": "Button",
+"variant": "outline",
+"label": "{open ? \"mentoring.requestCard.hide\" : \"mentoring.requestCard}"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-requests.tsx",
+"line": 245,
+"tag": "Button",
+"variant": "success",
+"label": "Accepter"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-requests.tsx",
+"line": 247,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{detail.slot ? \"mentoring.slot.update\" : \"mentoring.slot.cta\"}"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-requests.tsx",
+"line": 256,
+"tag": "Button",
+"variant": "outline",
+"label": "Décliner"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-requests.tsx",
+"line": 257,
+"tag": "Button",
+"variant": "outline",
+"label": "Retirer ma demande"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-requests.tsx",
+"line": 258,
+"tag": "Button",
+"variant": "outline",
+"label": "Clore le mentorat"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-sheets.tsx",
+"line": 64,
+"tag": "Button",
+"variant": "{props.destructive ? destructive : primary}",
+"label": "Envoi…"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-sheets.tsx",
+"line": 67,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retour"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-ui.tsx",
+"line": 95,
+"tag": "Button",
+"variant": "outline",
+"label": "Voir le profil de {{name}}"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-ui.tsx",
+"line": 227,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/components/mentoring-ui.tsx",
+"line": 233,
+"tag": "Button",
+"variant": "outline",
+"label": "{loadingMore ? \"mentoring.list.loadingMore\" : \"mentoring.list}"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-decisions.tsx",
+"line": 157,
+"tag": "Button",
+"variant": "outline",
+"label": "Décisions précédentes"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-decisions.tsx",
+"line": 161,
+"tag": "Button",
+"variant": "outline",
+"label": "Décisions suivantes"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-decisions.tsx",
+"line": 282,
+"tag": "Button",
+"variant": "outline",
+"label": "Contester cette décision"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-decisions.tsx",
+"line": 380,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / Envoyer le recours"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-decisions.tsx",
+"line": 381,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-appeals.tsx",
+"line": 159,
+"tag": "Button",
+"variant": "outline",
+"label": "{row.party === null ? \"moderationDesk.appeals.open\" : \"modera}"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-appeals.tsx",
+"line": 318,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / Enregistrer l'examen"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-case.tsx",
+"line": 445,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / Enregistrer la décision"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-case.tsx",
+"line": 613,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / Enregistrer la décision"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-deadlines.tsx",
+"line": 145,
+"tag": "Button",
+"variant": "outline",
+"label": "Examiner le dossier"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-parts.tsx",
+"line": 261,
+"tag": "Button",
+"variant": "destructive",
+"label": "Un instant…"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-parts.tsx",
+"line": 264,
+"tag": "Button",
+"variant": "ghost",
+"label": "Revenir à la décision"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-queue.tsx",
+"line": 253,
+"tag": "Button",
+"variant": "outline",
+"label": "{row.party === null ? \"moderationDesk.case.open\" : \"moderatio}"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-queue.tsx",
+"line": 279,
+"tag": "Button",
+"variant": "outline",
+"label": "{row.party === null ? \"moderationDesk.pending.open\" : \"modera}"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-team.tsx",
+"line": 169,
+"tag": "Button",
+"variant": "outline",
+"label": "Retirer"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-team.tsx",
+"line": 262,
+"tag": "Button",
+"variant": "{props.destructive ? destructive : primary}",
+"label": "Un instant…"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-team.tsx",
+"line": 265,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-team.tsx",
+"line": 323,
+"tag": "Button",
+"variant": "outline",
+"label": "Un instant… / Chercher le membre"
+},
+{
+"file": "apps/diasporale_com/src/components/moderation-desk-team.tsx",
+"line": 422,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / Créer l'équipe"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-mission-detail.tsx",
+"line": 77,
+"tag": "Button",
+"variant": "ghost",
+"label": "Garder la mission"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-mission-detail.tsx",
+"line": 78,
+"tag": "Button",
+"variant": "destructive",
+"label": "{busy ? \"common.pleaseWait\" : \"mutualAid.mission.cancelSheet.}"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-mission-detail.tsx",
+"line": 115,
+"tag": "Button",
+"variant": "commerce",
+"label": "{props.busy === \"signup\" ? \"common.pleaseWait\" : \"mutualAid.s}"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-mission-detail.tsx",
+"line": 254,
+"tag": "Button",
+"variant": "outline",
+"label": "Modifier"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-mission-detail.tsx",
+"line": 266,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler la mission"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-mission-form.tsx",
+"line": 238,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{task.busy ? \"common.pleaseWait\" : initial ? \"mutualAid.missi}"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-mission-form.tsx",
+"line": 241,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-parts.tsx",
+"line": 131,
+"tag": "Button",
+"variant": "{props.destructive ? ghost : outline}",
+"label": null
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-parts.tsx",
+"line": 141,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-parts.tsx",
+"line": 142,
+"tag": "Button",
+"variant": "{props.destructive ? destructive : primary}",
+"label": "Un instant…"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-question-detail.tsx",
+"line": 75,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant…"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-question-detail.tsx",
+"line": 76,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-question-detail.tsx",
+"line": 125,
+"tag": "Button",
+"variant": "outline",
+"label": "Retenir cette réponse"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-question-detail.tsx",
+"line": 135,
+"tag": "Button",
+"variant": "outline",
+"label": "Ne plus retenir"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-question-detail.tsx",
+"line": 144,
+"tag": "Button",
+"variant": "ghost",
+"label": "Modifier"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-question-detail.tsx",
+"line": 213,
+"tag": "Button",
+"variant": "outline",
+"label": "Modifier"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-question-form.tsx",
+"line": 139,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{task.busy ? \"common.pleaseWait\" : initial ? \"mutualAid.quest}"
+},
+{
+"file": "apps/diasporale_com/src/components/mutual-aid-question-form.tsx",
+"line": 142,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 40,
+"tag": "Button",
+"variant": "outline",
+"label": "Retrouver mes pages suivies"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 72,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Créer une page d'association"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 78,
+"tag": "Button",
+"variant": "outline",
+"label": "Créer une page d'entreprise"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 84,
+"tag": "Button",
+"variant": "ghost",
+"label": "Autre nature de page"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 112,
+"tag": "Button",
+"variant": "ghost",
+"label": "Publications"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 116,
+"tag": "Button",
+"variant": "ghost",
+"label": "Services"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 117,
+"tag": "Button",
+"variant": "ghost",
+"label": "Demandes reçues"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 118,
+"tag": "Button",
+"variant": "ghost",
+"label": "Avis"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 120,
+"tag": "Button",
+"variant": "outline",
+"label": "Gérer {{name}} / Gérer"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 126,
+"tag": "Button",
+"variant": "ghost",
+"label": "Équipe de {{name}} / Équipe"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 200,
+"tag": "Button",
+"variant": "success",
+"label": "Accepter"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 204,
+"tag": "Button",
+"variant": "ghost",
+"label": "Décliner"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 261,
+"tag": "Button",
+"variant": "outline",
+"label": "Suivre ma demande"
+},
+{
+"file": "apps/diasporale_com/src/components/my-pages-panel.tsx",
+"line": 264,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer ma demande"
+},
+{
+"file": "apps/diasporale_com/src/components/my-reports.tsx",
+"line": 41,
+"tag": "Button",
+"variant": "outline",
+"label": "Signalements précédents"
+},
+{
+"file": "apps/diasporale_com/src/components/my-reports.tsx",
+"line": 45,
+"tag": "Button",
+"variant": "outline",
+"label": "Signalements suivants"
+},
+{
+"file": "apps/diasporale_com/src/components/page-about.tsx",
+"line": 38,
+"tag": "Button",
+"variant": "outline",
+"label": "Modifier la présentation"
+},
+{
+"file": "apps/diasporale_com/src/components/page-admin-entry.tsx",
+"line": 51,
+"tag": "Button",
+"variant": "outline",
+"label": "Gérer la page"
+},
+{
+"file": "apps/diasporale_com/src/components/page-admin-entry.tsx",
+"line": 67,
+"tag": "Button",
+"variant": "outline",
+"label": "{props.viewerRole === \"admin\" ? \"pageAdmin.entry.verify\" : \"p}"
+},
+{
+"file": "apps/diasporale_com/src/components/page-admin-parts.tsx",
+"line": 84,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/page-admin-parts.tsx",
+"line": 87,
+"tag": "Button",
+"variant": "destructive",
+"label": "Un instant…"
+},
+{
+"file": "apps/diasporale_com/src/components/page-claim-form.tsx",
+"line": 135,
+"tag": "Button",
+"variant": "outline",
+"label": "Retirer ma demande"
+},
+{
+"file": "apps/diasporale_com/src/components/page-claim-form.tsx",
+"line": 249,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer {{name}}"
+},
+{
+"file": "apps/diasporale_com/src/components/page-claim-form.tsx",
+"line": 281,
+"tag": "Button",
+"variant": "outline",
+"label": "Ajouter des pièces"
+},
+{
+"file": "apps/diasporale_com/src/components/page-claim-form.tsx",
+"line": 355,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Envoi des pièces… / {props.verification ? \"pageAdmin.claim.submitVerify\" : \"pageA}"
+},
+{
+"file": "apps/diasporale_com/src/components/page-claim-review.tsx",
+"line": 75,
+"tag": "Button",
+"variant": "outline",
+"label": "Revendications suivantes"
+},
+{
+"file": "apps/diasporale_com/src/components/page-claim-review.tsx",
+"line": 80,
+"tag": "Button",
+"variant": "ghost",
+"label": "Revenir au début"
+},
+{
+"file": "apps/diasporale_com/src/components/page-claim-review.tsx",
+"line": 116,
+"tag": "Button",
+"variant": "outline",
+"label": "Instruire"
+},
+{
+"file": "apps/diasporale_com/src/components/page-claim-review.tsx",
+"line": 241,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / Enregistrer la décision"
+},
+{
+"file": "apps/diasporale_com/src/components/page-create-form.tsx",
+"line": 260,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / Créer la page"
+},
+{
+"file": "apps/diasporale_com/src/components/page-create-form.tsx",
+"line": 263,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/page-create-form.tsx",
+"line": 276,
+"tag": "Button",
+"variant": "outline",
+"label": "Vérifier mon inscription consulaire"
+},
+{
+"file": "apps/diasporale_com/src/components/page-create-form.tsx",
+"line": 282,
+"tag": "Button",
+"variant": "ghost",
+"label": "Obtenir un parrainage"
+},
+{
+"file": "apps/diasporale_com/src/components/page-directory.tsx",
+"line": 275,
+"tag": "Button",
+"variant": "ghost",
+"label": "Choisir un pays"
+},
+{
+"file": "apps/diasporale_com/src/components/page-directory.tsx",
+"line": 282,
+"tag": "Button",
+"variant": "ghost",
+"label": "Réinitialiser les filtres"
+},
+{
+"file": "apps/diasporale_com/src/components/page-directory.tsx",
+"line": 376,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/components/page-directory.tsx",
+"line": 385,
+"tag": "Button",
+"variant": "outline",
+"label": "Découvrir les pages"
+},
+{
+"file": "apps/diasporale_com/src/components/page-directory.tsx",
+"line": 388,
+"tag": "Button",
+"variant": "outline",
+"label": "Réinitialiser les filtres"
+},
+{
+"file": "apps/diasporale_com/src/components/page-directory.tsx",
+"line": 408,
+"tag": "Button",
+"variant": "outline",
+"label": "{loadingMore ? \"page.directory.loadingMore\" : \"page.directory}"
+},
+{
+"file": "apps/diasporale_com/src/components/page-directory.tsx",
+"line": 559,
+"tag": "Button",
+"variant": "ghost",
+"label": "Ne plus suivre / Ne plus suivre {{name}}"
+},
+{
+"file": "apps/diasporale_com/src/components/page-identity-form.tsx",
+"line": 180,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / Enregistrer l'identité"
+},
+{
+"file": "apps/diasporale_com/src/components/page-identity-form.tsx",
+"line": 295,
+"tag": "Button",
+"variant": "ghost",
+"label": "{keys.remove}"
+},
+{
+"file": "apps/diasporale_com/src/components/page-post-editor.tsx",
+"line": 66,
+"tag": "Button",
+"variant": "ghost",
+"label": "Modifier le texte"
+},
+{
+"file": "apps/diasporale_com/src/components/page-post-editor.tsx",
+"line": 185,
+"tag": "Button",
+"variant": "outline",
+"label": "Remplacer mon brouillon par le texte actuel"
+},
+{
+"file": "apps/diasporale_com/src/components/page-post-editor.tsx",
+"line": 195,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/page-post-editor.tsx",
+"line": 196,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy ? \"common.pleaseWait\" : \"pagePostEditing.save\"}"
+},
+{
+"file": "apps/diasporale_com/src/components/page-post-pin.tsx",
+"line": 56,
+"tag": "Button",
+"variant": "ghost",
+"label": "{pinned ? \"pagePinning.unpin\" : \"pagePinning.pin\"}"
+},
+{
+"file": "apps/diasporale_com/src/components/page-post-pin.tsx",
+"line": 134,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/page-post-pin.tsx",
+"line": 135,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{pending ? \"common.pleaseWait\" : unpinning ? \"pagePinning.con}"
+},
+{
+"file": "apps/diasporale_com/src/components/page-publications.tsx",
+"line": 30,
+"tag": "Button",
+"variant": "outline",
+"label": "Publier au nom de {{name}}"
+},
+{
+"file": "apps/diasporale_com/src/components/page-publications.tsx",
+"line": 80,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer de la page"
+},
+{
+"file": "apps/diasporale_com/src/components/page-publications.tsx",
+"line": 87,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/page-publications.tsx",
+"line": 88,
+"tag": "Button",
+"variant": "destructive",
+"label": "Retirer la publication"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-manager.tsx",
+"line": 65,
+"tag": "Button",
+"variant": "ghost",
+"label": "Fermer l’édition"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-manager.tsx",
+"line": 66,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Nouvelle offre"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-manager.tsx",
+"line": 89,
+"tag": "Button",
+"variant": "ghost",
+"label": "Effacer le filtre"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-manager.tsx",
+"line": 107,
+"tag": "Button",
+"variant": "outline",
+"label": "Effacer le filtre"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-manager.tsx",
+"line": 204,
+"tag": "Button",
+"variant": "outline",
+"label": "Modifier"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-manager.tsx",
+"line": 206,
+"tag": "Button",
+"variant": "outline",
+"label": "{`services.manage.action.${action}`}"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-manager.tsx",
+"line": 208,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-manager.tsx",
+"line": 216,
+"tag": "Button",
+"variant": "destructive",
+"label": "Retirer définitivement"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-manager.tsx",
+"line": 217,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-section.tsx",
+"line": 97,
+"tag": "Button",
+"variant": "ghost",
+"label": "Effacer les filtres"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-section.tsx",
+"line": 117,
+"tag": "Button",
+"variant": "outline",
+"label": "Effacer les filtres"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-section.tsx",
+"line": 151,
+"tag": "Button",
+"variant": "outline",
+"label": "Gérer les services"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-section.tsx",
+"line": 154,
+"tag": "Button",
+"variant": "outline",
+"label": "Demandes reçues"
+},
+{
+"file": "apps/diasporale_com/src/components/page-services-section.tsx",
+"line": 187,
+"tag": "Button",
+"variant": "{props.variant}",
+"label": "Demander un service"
+},
+{
+"file": "apps/diasporale_com/src/components/page-share-button.tsx",
+"line": 91,
+"tag": "Button",
+"variant": "outline",
+"label": "{content === undefined ? \"pageSharing.open\" : \"pageContentLin}"
+},
+{
+"file": "apps/diasporale_com/src/components/page-share-button.tsx",
+"line": 125,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Copier le lien"
+},
+{
+"file": "apps/diasporale_com/src/components/page-share-button.tsx",
+"line": 129,
+"tag": "Button",
+"variant": "secondary",
+"label": "Autres options de partage"
+},
+{
+"file": "apps/diasporale_com/src/components/page-team-panel.tsx",
+"line": 163,
+"tag": "Button",
+"variant": "outline",
+"label": "Retirer / Retirer {{name}} de l'équipe"
+},
+{
+"file": "apps/diasporale_com/src/components/page-team-panel.tsx",
+"line": 171,
+"tag": "Button",
+"variant": "outline",
+"label": "Quitter l'équipe"
+},
+{
+"file": "apps/diasporale_com/src/components/page-team-panel.tsx",
+"line": 252,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / Envoyer l'invitation"
+},
+{
+"file": "apps/diasporale_com/src/components/profile-identity-settings.tsx",
+"line": 53,
+"tag": "Button",
+"variant": "outline",
+"label": "Modifier le nom et l’accroche"
+},
+{
+"file": "apps/diasporale_com/src/components/profile-identity-settings.tsx",
+"line": 107,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy ? \"settings.profilePublication.working\" : \"settings.pro}"
+},
+{
+"file": "apps/diasporale_com/src/components/profile-identity-settings.tsx",
+"line": 108,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/profile-images-editor.tsx",
+"line": 178,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy ? \"profile.images.saving\" : isAvatar ? \"profile.images.}"
+},
+{
+"file": "apps/diasporale_com/src/components/profile-images-editor.tsx",
+"line": 188,
+"tag": "Button",
+"variant": "outline",
+"label": "{isAvatar ? \"profile.images.removeAvatar\" : \"profile.images.r}"
+},
+{
+"file": "apps/diasporale_com/src/components/profile-images-editor.tsx",
+"line": 189,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/profile-images-editor.tsx",
+"line": 192,
+"tag": "Button",
+"variant": "ghost",
+"label": "{isAvatar ? \"profile.images.removeAvatar\" : \"profile.images.r}"
+},
+{
+"file": "apps/diasporale_com/src/components/profile-images-settings.tsx",
+"line": 39,
+"tag": "Button",
+"variant": "outline",
+"label": "Recharger le profil"
+},
+{
+"file": "apps/diasporale_com/src/components/profile-publication-settings.tsx",
+"line": 141,
+"tag": "Button",
+"variant": "outline",
+"label": "Recharger le profil"
+},
+{
+"file": "apps/diasporale_com/src/components/profile-publication-settings.tsx",
+"line": 158,
+"tag": "Button",
+"variant": "outline",
+"label": "{busy ? \"settings.profilePublication.working\" : own.private ?}"
+},
+{
+"file": "apps/diasporale_com/src/components/profile-publication-settings.tsx",
+"line": 168,
+"tag": "Button",
+"variant": "{own.published ? destructive : primary}",
+"label": "{own.published ? \"settings.profilePublication.withdraw\" : \"se}"
+},
+{
+"file": "apps/diasporale_com/src/components/profile-publication-settings.tsx",
+"line": 180,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/profile-publication-settings.tsx",
+"line": 181,
+"tag": "Button",
+"variant": "{command === withdraw ? destructive : primary}",
+"label": "{busy ? \"settings.profilePublication.working\" : `settings.pro}"
+},
+{
+"file": "apps/diasporale_com/src/components/report-content-sheet.tsx",
+"line": 204,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/report-content-sheet.tsx",
+"line": 207,
+"tag": "Button",
+"variant": "destructive",
+"label": "{busy ? \"common.pleaseWait\" : \"contentReports.confirm\"}"
+},
+{
+"file": "apps/diasporale_com/src/components/report-content-sheet.tsx",
+"line": 248,
+"tag": "Button",
+"variant": "ghost",
+"label": "{`contentReports.action.${props.target.kind}`}"
+},
+{
+"file": "apps/diasporale_com/src/components/service-inbox.tsx",
+"line": 51,
+"tag": "Button",
+"variant": "link",
+"label": "Voir la page"
+},
+{
+"file": "apps/diasporale_com/src/components/service-offer-form.tsx",
+"line": 354,
+"tag": "Button",
+"variant": "outline",
+"label": "Recharger la dernière version"
+},
+{
+"file": "apps/diasporale_com/src/components/service-offer-form.tsx",
+"line": 362,
+"tag": "Button",
+"variant": "outline",
+"label": "{busy ? \"common.pleaseWait\" : \"services.form.saveDraft\"}"
+},
+{
+"file": "apps/diasporale_com/src/components/service-offer-form.tsx",
+"line": 363,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Publier"
+},
+{
+"file": "apps/diasporale_com/src/components/service-offer-form.tsx",
+"line": 366,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy ? \"common.pleaseWait\" : \"services.form.save\"}"
+},
+{
+"file": "apps/diasporale_com/src/components/service-offer-form.tsx",
+"line": 368,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/service-pager.tsx",
+"line": 112,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/components/service-pager.tsx",
+"line": 118,
+"tag": "Button",
+"variant": "outline",
+"label": "{loadingMore ? \"services.results.loadingMore\" : \"services.res}"
+},
+{
+"file": "apps/diasporale_com/src/components/service-proposal-form.tsx",
+"line": 242,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy ? \"serviceRequests.form.sending\" : \"serviceRequests.for}"
+},
+{
+"file": "apps/diasporale_com/src/components/service-proposal-form.tsx",
+"line": 243,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retour"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-entry.tsx",
+"line": 88,
+"tag": "Button",
+"variant": "commerce",
+"label": "Demander ce service"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-entry.tsx",
+"line": 95,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Se connecter pour demander ce service"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-entry.tsx",
+"line": 104,
+"tag": "Button",
+"variant": "commerce",
+"label": "Demander ce service"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-entry.tsx",
+"line": 129,
+"tag": "Button",
+"variant": "link",
+"label": "Suivre mes demandes"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-entry.tsx",
+"line": 214,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Voir ma demande"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-entry.tsx",
+"line": 217,
+"tag": "Button",
+"variant": "ghost",
+"label": "Fermer"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-entry.tsx",
+"line": 251,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer la disponibilité {{index}}"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-entry.tsx",
+"line": 262,
+"tag": "Button",
+"variant": "outline",
+"label": "Ajouter une disponibilité"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-entry.tsx",
+"line": 297,
+"tag": "Button",
+"variant": "outline",
+"label": "Suivre mes demandes"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-entry.tsx",
+"line": 304,
+"tag": "Button",
+"variant": "commerce",
+"label": "{busy ? \"serviceRequests.entry.sending\" : \"serviceRequests.en}"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-entry.tsx",
+"line": 305,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retour"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-sheets.tsx",
+"line": 78,
+"tag": "Button",
+"variant": "{props.destructive ? destructive : primary}",
+"label": "Envoi…"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-sheets.tsx",
+"line": 88,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retour"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-sheets.tsx",
+"line": 156,
+"tag": "Button",
+"variant": "destructive",
+"label": "Envoi…"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-sheets.tsx",
+"line": 159,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retour"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-ui.tsx",
+"line": 278,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-ui.tsx",
+"line": 294,
+"tag": "Button",
+"variant": "outline",
+"label": "{loadingMore ? \"serviceRequests.list.loadingMore\" : \"serviceR}"
+},
+{
+"file": "apps/diasporale_com/src/components/service-request-ui.tsx",
+"line": 328,
+"tag": "Button",
+"variant": "outline",
+"label": "Ouvrir"
+},
+{
+"file": "apps/diasporale_com/src/components/service-review-editor.tsx",
+"line": 100,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{task.busy ? \"serviceReviews.working\" : initial ? \"serviceRev}"
+},
+{
+"file": "apps/diasporale_com/src/components/service-review-editor.tsx",
+"line": 101,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/service-review-editor.tsx",
+"line": 133,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{task.busy ? \"serviceReviews.working\" : \"serviceReviews.reply}"
+},
+{
+"file": "apps/diasporale_com/src/components/service-review-editor.tsx",
+"line": 134,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/service-reviews-section.tsx",
+"line": 90,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Donner mon avis"
+},
+{
+"file": "apps/diasporale_com/src/components/service-reviews-section.tsx",
+"line": 91,
+"tag": "Button",
+"variant": "outline",
+"label": "Modifier mon avis"
+},
+{
+"file": "apps/diasporale_com/src/components/service-reviews-section.tsx",
+"line": 143,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer mon avis"
+},
+{
+"file": "apps/diasporale_com/src/components/service-reviews-section.tsx",
+"line": 144,
+"tag": "Button",
+"variant": "ghost",
+"label": "Signaler cet avis"
+},
+{
+"file": "apps/diasporale_com/src/components/service-reviews-section.tsx",
+"line": 145,
+"tag": "Button",
+"variant": "outline",
+"label": "{reply ? \"serviceReviews.reply.edit\" : \"serviceReviews.reply.}"
+},
+{
+"file": "apps/diasporale_com/src/components/service-reviews-section.tsx",
+"line": 153,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer la réponse"
+},
+{
+"file": "apps/diasporale_com/src/components/service-reviews-section.tsx",
+"line": 154,
+"tag": "Button",
+"variant": "ghost",
+"label": "Signaler la réponse"
+},
+{
+"file": "apps/diasporale_com/src/components/service-reviews-section.tsx",
+"line": 187,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{task.busy ? \"serviceReviews.working\" : \"serviceReviews.repor}"
+},
+{
+"file": "apps/diasporale_com/src/components/service-reviews-section.tsx",
+"line": 188,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/components/sign-out-settings.tsx",
+"line": 55,
+"tag": "Button",
+"variant": "outline",
+"label": "{busy ? \"settings.signingOut\" : \"settings.signOutEverywhere\"}"
+},
+{
+"file": "apps/diasporale_com/src/components/site-chrome.tsx",
+"line": 74,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Entrer"
+},
+{
+"file": "apps/diasporale_com/src/screens/arrival-kit-screens.tsx",
+"line": 177,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Proposer une ressource"
+},
+{
+"file": "apps/diasporale_com/src/screens/arrival-kit-screens.tsx",
+"line": 246,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Afficher"
+},
+{
+"file": "apps/diasporale_com/src/screens/arrival-kit-screens.tsx",
+"line": 331,
+"tag": "Button",
+"variant": "outline",
+"label": "Proposer une ressource"
+},
+{
+"file": "apps/diasporale_com/src/screens/arrival-kit-screens.tsx",
+"line": 511,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/screens/association-activities-screens.tsx",
+"line": 25,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retour à l’association"
+},
+{
+"file": "apps/diasporale_com/src/screens/association-screens.tsx",
+"line": 194,
+"tag": "Button",
+"variant": "success",
+"label": "{busy === `accept:${item.membershipId}` ? \"common.pleaseWait\"}"
+},
+{
+"file": "apps/diasporale_com/src/screens/association-screens.tsx",
+"line": 201,
+"tag": "Button",
+"variant": "outline",
+"label": "Refuser"
+},
+{
+"file": "apps/diasporale_com/src/screens/association-screens.tsx",
+"line": 205,
+"tag": "Button",
+"variant": "outline",
+"label": "{item.role === \"animator\" ? \"associations.members.makeMember\"}"
+},
+{
+"file": "apps/diasporale_com/src/screens/association-screens.tsx",
+"line": 213,
+"tag": "Button",
+"variant": "ghost",
+"label": "Exclure"
+},
+{
+"file": "apps/diasporale_com/src/screens/association-screens.tsx",
+"line": 216,
+"tag": "Button",
+"variant": "outline",
+"label": "Autoriser une nouvelle demande"
+},
+{
+"file": "apps/diasporale_com/src/screens/association-screens.tsx",
+"line": 351,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/screens/association-screens.tsx",
+"line": 352,
+"tag": "Button",
+"variant": "{removal ? destructive : primary}",
+"label": "{busy ? \"common.pleaseWait\" : removal ? \"associations.removeS}"
+},
+{
+"file": "apps/diasporale_com/src/screens/association-screens.tsx",
+"line": 416,
+"tag": "Button",
+"variant": "outline",
+"label": "Voir le hub de mon pays"
+},
+{
+"file": "apps/diasporale_com/src/screens/association-screens.tsx",
+"line": 429,
+"tag": "Button",
+"variant": "outline",
+"label": "Annuler ma demande"
+},
+{
+"file": "apps/diasporale_com/src/screens/bookmarks-screen.tsx",
+"line": 158,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/screens/bookmarks-screen.tsx",
+"line": 172,
+"tag": "Button",
+"variant": "outline",
+"label": "{loadingMore ? \"bookmarks.loadingMore\" : \"bookmarks.loadMore\"}"
+},
+{
+"file": "apps/diasporale_com/src/screens/bookmarks-screen.tsx",
+"line": 223,
+"tag": "Button",
+"variant": "outline",
+"label": "Ouvrir"
+},
+{
+"file": "apps/diasporale_com/src/screens/bookmarks-screen.tsx",
+"line": 226,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 467,
+"tag": "Button",
+"variant": "secondary",
+"label": "Réafficher les cartes"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 471,
+"tag": "Button",
+"variant": "outline",
+"label": "Voir une carte en situation"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 534,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Publier"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 541,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Principal"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 542,
+"tag": "Button",
+"variant": "secondary",
+"label": "Secondaire"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 543,
+"tag": "Button",
+"variant": "outline",
+"label": "Neutre"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 544,
+"tag": "Button",
+"variant": "ghost",
+"label": "Discret"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 545,
+"tag": "Button",
+"variant": "destructive",
+"label": "Destructif"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 546,
+"tag": "Button",
+"variant": "social",
+"label": "Suivre"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 547,
+"tag": "Button",
+"variant": "message",
+"label": "Écrire"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 548,
+"tag": "Button",
+"variant": "send",
+"label": "Envoyer"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 549,
+"tag": "Button",
+"variant": "react",
+"label": "Réagir"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 550,
+"tag": "Button",
+"variant": "commerce",
+"label": "Acheter"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 551,
+"tag": "Button",
+"variant": "success",
+"label": "Valider"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 552,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Désactivé"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 555,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Petit"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 556,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Moyen"
+},
+{
+"file": "apps/diasporale_com/src/screens/charte-screen.tsx",
+"line": 557,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Grand"
+},
+{
+"file": "apps/diasporale_com/src/screens/demo-screen.tsx",
+"line": 58,
+"tag": "Button",
+"variant": "outline",
+"label": "Remettre la démonstration à zéro"
+},
+{
+"file": "apps/diasporale_com/src/screens/demo-screen.tsx",
+"line": 110,
+"tag": "Button",
+"variant": "outline",
+"label": "Utiliser ce compte"
+},
+{
+"file": "apps/diasporale_com/src/screens/enter-screens.tsx",
+"line": 217,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / Autoriser et continuer"
+},
+{
+"file": "apps/diasporale_com/src/screens/enter-screens.tsx",
+"line": 355,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / {props.compact && !props.signUp ? \"landing.signIn\" : \"code.se}"
+},
+{
+"file": "apps/diasporale_com/src/screens/enter-screens.tsx",
+"line": 385,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / Valider le code"
+},
+{
+"file": "apps/diasporale_com/src/screens/enter-screens.tsx",
+"line": 388,
+"tag": "Button",
+"variant": "ghost",
+"label": "Changer d'adresse"
+},
+{
+"file": "apps/diasporale_com/src/screens/explore-screen.tsx",
+"line": 103,
+"tag": "Button",
+"variant": "outline",
+"label": "Associations"
+},
+{
+"file": "apps/diasporale_com/src/screens/explore-screen.tsx",
+"line": 104,
+"tag": "Button",
+"variant": "outline",
+"label": "Entreprises"
+},
+{
+"file": "apps/diasporale_com/src/screens/explore-screen.tsx",
+"line": 105,
+"tag": "Button",
+"variant": "ghost",
+"label": "Pages suivies"
+},
+{
+"file": "apps/diasporale_com/src/screens/explore-screen.tsx",
+"line": 130,
+"tag": "Button",
+"variant": "outline",
+"label": null
+},
+{
+"file": "apps/diasporale_com/src/screens/explore-screen.tsx",
+"line": 172,
+"tag": "Button",
+"variant": "outline",
+"label": "Recharger la page"
+},
+{
+"file": "apps/diasporale_com/src/screens/explore-screen.tsx",
+"line": 182,
+"tag": "Button",
+"variant": "outline",
+"label": "Voir ma communauté"
+},
+{
+"file": "apps/diasporale_com/src/screens/hub-screen.tsx",
+"line": 94,
+"tag": "Button",
+"variant": "outline",
+"label": null
+},
+{
+"file": "apps/diasporale_com/src/screens/hub-screen.tsx",
+"line": 208,
+"tag": "Button",
+"variant": "outline",
+"label": "Recharger la page"
+},
+{
+"file": "apps/diasporale_com/src/screens/hub-screen.tsx",
+"line": 273,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Publier"
+},
+{
+"file": "apps/diasporale_com/src/screens/hub-screen.tsx",
+"line": 410,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/screens/jobs-screens.tsx",
+"line": 249,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Rechercher"
+},
+{
+"file": "apps/diasporale_com/src/screens/jobs-screens.tsx",
+"line": 250,
+"tag": "Button",
+"variant": "ghost",
+"label": "Effacer les filtres"
+},
+{
+"file": "apps/diasporale_com/src/screens/jobs-screens.tsx",
+"line": 316,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/screens/jobs-screens.tsx",
+"line": 326,
+"tag": "Button",
+"variant": "outline",
+"label": "Toutes les offres"
+},
+{
+"file": "apps/diasporale_com/src/screens/jobs-screens.tsx",
+"line": 380,
+"tag": "Button",
+"variant": "outline",
+"label": "Gérer les emplois de la page"
+},
+{
+"file": "apps/diasporale_com/src/screens/jobs-screens.tsx",
+"line": 417,
+"tag": "Button",
+"variant": "outline",
+"label": "Voir les offres"
+},
+{
+"file": "apps/diasporale_com/src/screens/jobs-screens.tsx",
+"line": 481,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer ma candidature"
+},
+{
+"file": "apps/diasporale_com/src/screens/jobs-screens.tsx",
+"line": 580,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Chercher"
+},
+{
+"file": "apps/diasporale_com/src/screens/landing-screen.tsx",
+"line": 85,
+"tag": "Button",
+"variant": "outline",
+"label": "J’ai déjà un compte : me connecter"
+},
+{
+"file": "apps/diasporale_com/src/screens/landing-screen.tsx",
+"line": 91,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Créer un compte"
+},
+{
+"file": "apps/diasporale_com/src/screens/landing-screen.tsx",
+"line": 109,
+"tag": "Button",
+"variant": "outline",
+"label": "Continuer avec IDN"
+},
+{
+"file": "apps/diasporale_com/src/screens/landing-screen.tsx",
+"line": 119,
+"tag": "Button",
+"variant": "outline",
+"label": "Continuer avec IDN"
+},
+{
+"file": "apps/diasporale_com/src/screens/members-screen.tsx",
+"line": 68,
+"tag": "Button",
+"variant": "outline",
+"label": "Mes relations"
+},
+{
+"file": "apps/diasporale_com/src/screens/members-screen.tsx",
+"line": 69,
+"tag": "Button",
+"variant": "outline",
+"label": "Suggestions masquées"
+},
+{
+"file": "apps/diasporale_com/src/screens/mentoring-screens.tsx",
+"line": 114,
+"tag": "Button",
+"variant": "outline",
+"label": "Mes mentorats"
+},
+{
+"file": "apps/diasporale_com/src/screens/mentoring-screens.tsx",
+"line": 174,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Chercher"
+},
+{
+"file": "apps/diasporale_com/src/screens/mentoring-screens.tsx",
+"line": 227,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retour au mentorat"
+},
+{
+"file": "apps/diasporale_com/src/screens/mentoring-screens.tsx",
+"line": 259,
+"tag": "Button",
+"variant": "outline",
+"label": null
+},
+{
+"file": "apps/diasporale_com/src/screens/mentoring-screens.tsx",
+"line": 280,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Demander un mentorat"
+},
+{
+"file": "apps/diasporale_com/src/screens/mutual-aid-screens.tsx",
+"line": 203,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Afficher"
+},
+{
+"file": "apps/diasporale_com/src/screens/mutual-aid-screens.tsx",
+"line": 204,
+"tag": "Button",
+"variant": "ghost",
+"label": "Tout le pays"
+},
+{
+"file": "apps/diasporale_com/src/screens/mutual-aid-screens.tsx",
+"line": 227,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Poser une question"
+},
+{
+"file": "apps/diasporale_com/src/screens/mutual-aid-screens.tsx",
+"line": 321,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Proposer une mission"
+},
+{
+"file": "apps/diasporale_com/src/screens/mutual-aid-screens.tsx",
+"line": 421,
+"tag": "Button",
+"variant": "outline",
+"label": "Retour à l'entraide"
+},
+{
+"file": "apps/diasporale_com/src/screens/page-admin-screens.tsx",
+"line": 132,
+"tag": "Button",
+"variant": "ghost",
+"label": "Voir la fiche"
+},
+{
+"file": "apps/diasporale_com/src/screens/page-admin-screens.tsx",
+"line": 218,
+"tag": "Button",
+"variant": "outline",
+"label": "Voir la fiche"
+},
+{
+"file": "apps/diasporale_com/src/screens/page-admin-screens.tsx",
+"line": 305,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Demander la vérification"
+},
+{
+"file": "apps/diasporale_com/src/screens/page-screen.tsx",
+"line": 130,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/screens/page-screen.tsx",
+"line": 163,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retour à l’annuaire"
+},
+{
+"file": "apps/diasporale_com/src/screens/page-screen.tsx",
+"line": 302,
+"tag": "Button",
+"variant": "{props.following || !props.filled ? outline : social}",
+"label": "{props.following ? \"page.unfollow\" : \"page.follow\"}"
+},
+{
+"file": "apps/diasporale_com/src/screens/pages-screen.tsx",
+"line": 52,
+"tag": "Button",
+"variant": "outline",
+"label": "Créer une page d'association"
+},
+{
+"file": "apps/diasporale_com/src/screens/pages-screen.tsx",
+"line": 53,
+"tag": "Button",
+"variant": "outline",
+"label": "Créer une page d'entreprise"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 63,
+"tag": "Button",
+"variant": "outline",
+"label": "Recharger le profil"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 74,
+"tag": "Button",
+"variant": "outline",
+"label": "Gérer la publication de mon profil"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 96,
+"tag": "Button",
+"variant": "ghost",
+"label": "Revenir à mon profil"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 101,
+"tag": "Button",
+"variant": "outline",
+"label": "Modifier"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 108,
+"tag": "Button",
+"variant": "outline",
+"label": "Modifier mes images"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 112,
+"tag": "Button",
+"variant": "ghost",
+"label": "Revenir à mon profil / Me voir comme les autres"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 118,
+"tag": "Button",
+"variant": "ghost",
+"label": "Mes enregistrements"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 125,
+"tag": "Button",
+"variant": "ghost",
+"label": "Mes relations"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 235,
+"tag": "Button",
+"variant": "outline",
+"label": "Débloquer"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 246,
+"tag": "Button",
+"variant": "destructive",
+"label": "Bloquer"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 258,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 271,
+"tag": "Button",
+"variant": "social",
+"label": "Se connecter"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 276,
+"tag": "Button",
+"variant": "outline",
+"label": "Demande envoyée"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 282,
+"tag": "Button",
+"variant": "social",
+"label": "Accepter"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 286,
+"tag": "Button",
+"variant": "ghost",
+"label": "Refuser"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 296,
+"tag": "Button",
+"variant": "{following || relationIsFilled ? outline : social}",
+"label": "Ne plus suivre / Suivre"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 305,
+"tag": "Button",
+"variant": "ghost",
+"label": "Bloquer"
+},
+{
+"file": "apps/diasporale_com/src/screens/profile-screens.tsx",
+"line": 349,
+"tag": "Button",
+"variant": "outline",
+"label": "Appeler / Appeler {{name}}"
+},
+{
+"file": "apps/diasporale_com/src/screens/service-request-screens.tsx",
+"line": 105,
+"tag": "Button",
+"variant": "outline",
+"label": "Parcourir les services"
+},
+{
+"file": "apps/diasporale_com/src/screens/service-request-screens.tsx",
+"line": 139,
+"tag": "Button",
+"variant": "ghost",
+"label": "{props.label}"
+},
+{
+"file": "apps/diasporale_com/src/screens/service-request-screens.tsx",
+"line": 212,
+"tag": "Button",
+"variant": "link",
+"label": "Voir la page"
+},
+{
+"file": "apps/diasporale_com/src/screens/service-request-screens.tsx",
+"line": 280,
+"tag": "Button",
+"variant": "outline",
+"label": "Contester l’absence"
+},
+{
+"file": "apps/diasporale_com/src/screens/service-request-screens.tsx",
+"line": 300,
+"tag": "Button",
+"variant": "commerce",
+"label": "Accepter cette proposition"
+},
+{
+"file": "apps/diasporale_com/src/screens/service-request-screens.tsx",
+"line": 302,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{detail.currentProposal ? \"serviceRequests.propose.update\" : }"
+},
+{
+"file": "apps/diasporale_com/src/screens/service-request-screens.tsx",
+"line": 306,
+"tag": "Button",
+"variant": "success",
+"label": "Prestation réalisée"
+},
+{
+"file": "apps/diasporale_com/src/screens/service-request-screens.tsx",
+"line": 307,
+"tag": "Button",
+"variant": "outline",
+"label": "Constater une absence"
+},
+{
+"file": "apps/diasporale_com/src/screens/service-request-screens.tsx",
+"line": 308,
+"tag": "Button",
+"variant": "outline",
+"label": "Décliner la demande"
+},
+{
+"file": "apps/diasporale_com/src/screens/service-request-screens.tsx",
+"line": 310,
+"tag": "Button",
+"variant": "outline",
+"label": "{confirmed ? \"serviceRequests.cancel.bookingCta\" : \"serviceRe}"
+},
+{
+"file": "apps/diasporale_com/src/screens/services-screens.tsx",
+"line": 268,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Rechercher"
+},
+{
+"file": "apps/diasporale_com/src/screens/services-screens.tsx",
+"line": 269,
+"tag": "Button",
+"variant": "ghost",
+"label": "Effacer les filtres"
+},
+{
+"file": "apps/diasporale_com/src/screens/services-screens.tsx",
+"line": 351,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "apps/diasporale_com/src/screens/services-screens.tsx",
+"line": 362,
+"tag": "Button",
+"variant": "outline",
+"label": "Tous les services"
+},
+{
+"file": "apps/diasporale_com/src/screens/services-screens.tsx",
+"line": 406,
+"tag": "Button",
+"variant": "outline",
+"label": "Gérer les services de la page"
+},
+{
+"file": "apps/diasporale_com/src/screens/services-screens.tsx",
+"line": 488,
+"tag": "Button",
+"variant": "outline",
+"label": "Voir mes pages"
+},
+{
+"file": "apps/diasporale_com/src/screens/settings-screen.tsx",
+"line": 145,
+"tag": "Button",
+"variant": "outline",
+"label": "Vérifier mon inscription consulaire"
+},
+{
+"file": "apps/diasporale_com/src/screens/settings-screen.tsx",
+"line": 251,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / Enregistrer"
+},
+{
+"file": "apps/diasporale_com/src/screens/settings-screen.tsx",
+"line": 343,
+"tag": "Button",
+"variant": "outline",
+"label": "Quitter DIASPORALE"
+},
+{
+"file": "apps/diasporale_com/src/screens/settings-screen.tsx",
+"line": 375,
+"tag": "Button",
+"variant": "outline",
+"label": "Copier mon identifiant"
+},
+{
+"file": "apps/diasporale_com/src/screens/settings-screen.tsx",
+"line": 392,
+"tag": "Button",
+"variant": "ghost",
+"label": "Parrainer quelqu'un"
+},
+{
+"file": "apps/diasporale_com/src/screens/settings-screen.tsx",
+"line": 433,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "apps/diasporale_com/src/screens/settings-screen.tsx",
+"line": 436,
+"tag": "Button",
+"variant": "{props.destructive ? destructive : primary}",
+"label": "Un instant…"
+},
+{
+"file": "apps/diasporale_com/src/screens/sponsor-attestation-screens.tsx",
+"line": 95,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Un instant… / Parrainer"
+},
+{
+"file": "apps/diasporale_com/src/screens/sponsor-attestation-screens.tsx",
+"line": 125,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer"
+},
+{
+"file": "apps/diasporale_com/src/screens/sponsor-attestation-screens.tsx",
+"line": 251,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Vérification en cours… / Vérifier mon inscription consulaire"
+},
+{
+"file": "apps/diasporale_com/src/screens/welcome-screen.tsx",
+"line": 315,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retour"
+},
+{
+"file": "apps/diasporale_com/src/screens/welcome-screen.tsx",
+"line": 322,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Continuer / Un instant… / Entrer dans DIASPORALE"
+},
+{
+"file": "packages/diasporale-features/src/components/comments.tsx",
+"line": 192,
+"tag": "Button",
+"variant": "ghost",
+"label": "[comments.showReplies]"
+},
+{
+"file": "packages/diasporale-features/src/components/comments.tsx",
+"line": 279,
+"tag": "Button",
+"variant": "ghost",
+"label": "Répondre"
+},
+{
+"file": "packages/diasporale-features/src/components/comments.tsx",
+"line": 283,
+"tag": "Button",
+"variant": "ghost",
+"label": "Modifier"
+},
+{
+"file": "packages/diasporale-features/src/components/comments.tsx",
+"line": 289,
+"tag": "Button",
+"variant": "ghost",
+"label": "Retirer"
+},
+{
+"file": "packages/diasporale-features/src/components/comments.tsx",
+"line": 295,
+"tag": "Button",
+"variant": "destructive",
+"label": "Retirer définitivement"
+},
+{
+"file": "packages/diasporale-features/src/components/comments.tsx",
+"line": 298,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "packages/diasporale-features/src/components/comments.tsx",
+"line": 347,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "{busy ? \"common.pleaseWait\" : \"common.save\"}"
+},
+{
+"file": "packages/diasporale-features/src/components/comments.tsx",
+"line": 348,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "packages/diasporale-features/src/components/comments.tsx",
+"line": 395,
+"tag": "Button",
+"variant": "ghost",
+"label": "Ne plus répondre"
+},
+{
+"file": "packages/diasporale-features/src/components/comments.tsx",
+"line": 425,
+"tag": "Button",
+"variant": "send",
+"label": "Envoyer"
+},
+{
+"file": "packages/diasporale-features/src/components/community-controls.tsx",
+"line": 35,
+"tag": "Button",
+"variant": "message",
+"label": "Écrire / Écrire à {{name}}"
+},
+{
+"file": "packages/diasporale-features/src/components/community-controls.tsx",
+"line": 92,
+"tag": "Button",
+"variant": "ghost",
+"label": "Plus de filtres"
+},
+{
+"file": "packages/diasporale-features/src/components/composer.tsx",
+"line": 462,
+"tag": "Button",
+"variant": "outline",
+"label": "Joindre des photos ou une vidéo"
+},
+{
+"file": "packages/diasporale-features/src/components/composer.tsx",
+"line": 551,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "packages/diasporale-features/src/components/composer.tsx",
+"line": 554,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Publication… / Publier"
+},
+{
+"file": "packages/diasporale-features/src/components/discovery/feed-discovery.tsx",
+"line": 432,
+"tag": "Button",
+"variant": "{state.pending.length > 0 ? secondary : ghost}",
+"label": "Actualiser / [discovery.refresh.pending]"
+},
+{
+"file": "packages/diasporale-features/src/components/discovery/feed-discovery.tsx",
+"line": 443,
+"tag": "Button",
+"variant": "ghost",
+"label": "Précédente"
+},
+{
+"file": "packages/diasporale-features/src/components/discovery/feed-discovery.tsx",
+"line": 447,
+"tag": "Button",
+"variant": "ghost",
+"label": "Suivante"
+},
+{
+"file": "packages/diasporale-features/src/components/discovery/feed-discovery.tsx",
+"line": 462,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "packages/diasporale-features/src/components/discovery/feed-discovery.tsx",
+"line": 516,
+"tag": "Button",
+"variant": "outline",
+"label": "Réessayer"
+},
+{
+"file": "packages/diasporale-features/src/components/discovery/feed-discovery.tsx",
+"line": 519,
+"tag": "Button",
+"variant": "outline",
+"label": "Voir plus de publications"
+},
+{
+"file": "packages/diasporale-features/src/components/discovery/feed-discovery.tsx",
+"line": 525,
+"tag": "Button",
+"variant": "outline",
+"label": "Revenir à la première publication"
+},
+{
+"file": "packages/diasporale-features/src/components/discovery/feed-discovery.tsx",
+"line": 526,
+"tag": "Button",
+"variant": "ghost",
+"label": "Revenir à la liste"
+},
+{
+"file": "packages/diasporale-features/src/components/notification-bell.tsx",
+"line": 314,
+"tag": "Button",
+"variant": "ghost",
+"label": "Tout marquer comme lu"
+},
+{
+"file": "packages/diasporale-features/src/components/notification-bell.tsx",
+"line": 438,
+"tag": "Button",
+"variant": "social",
+"label": "Accepter"
+},
+{
+"file": "packages/diasporale-features/src/components/notification-bell.tsx",
+"line": 442,
+"tag": "Button",
+"variant": "ghost",
+"label": "Refuser"
+},
+{
+"file": "packages/diasporale-features/src/components/notification-bell.tsx",
+"line": 449,
+"tag": "Button",
+"variant": "ghost",
+"label": "Marquer comme lue"
+},
+{
+"file": "packages/diasporale-features/src/components/post-explanation.tsx",
+"line": 69,
+"tag": "Button",
+"variant": "outline",
+"label": "Fermer"
+},
+{
+"file": "packages/diasporale-features/src/components/post-menu.tsx",
+"line": 205,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "packages/diasporale-features/src/components/post-menu.tsx",
+"line": 208,
+"tag": "Button",
+"variant": "destructive",
+"label": "Envoyer le signalement"
+},
+{
+"file": "packages/diasporale-features/src/components/post-menu.tsx",
+"line": 259,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "packages/diasporale-features/src/components/post-menu.tsx",
+"line": 262,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Enregistrer la modification"
+},
+{
+"file": "packages/diasporale-features/src/components/post-menu.tsx",
+"line": 295,
+"tag": "Button",
+"variant": "ghost",
+"label": "Annuler"
+},
+{
+"file": "packages/diasporale-features/src/components/post-menu.tsx",
+"line": 298,
+"tag": "Button",
+"variant": "destructive",
+"label": "Retirer"
+},
+{
+"file": "packages/diasporale-features/src/components/post-share.tsx",
+"line": 86,
+"tag": "Button",
+"variant": "(défaut)",
+"label": "Copier le lien"
+},
+{
+"file": "packages/diasporale-features/src/components/post-share.tsx",
+"line": 90,
+"tag": "Button",
+"variant": "secondary",
+"label": "Partager dans mon fil"
+},
+{
+"file": "packages/diasporale-features/src/components/suggestions.tsx",
+"line": 77,
+"tag": "Button",
+"variant": "social",
+"label": "Se connecter"
+},
+{
+"file": "packages/diasporale-features/src/components/suggestions.tsx",
+"line": 82,
+"tag": "Button",
+"variant": "ghost",
+"label": "Ne plus me proposer {{name}}"
+},
+{
+"file": "packages/diasporale-features/src/primitives/button.tsx",
+"line": 65,
+"tag": "buttonVariants",
+"variant": "{ variant, size }",
+"label": "className={cn(buttonVariants({ variant, size }), className)}"
+}
+]

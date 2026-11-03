@@ -242,7 +242,7 @@ function RequestDetailBody(props: { readonly capability: MentoringCapability; re
 
       {actions.size > 0 ? (
         <div className="flex flex-wrap gap-2">
-          {actions.has("accept") ? <Button onClick={() => setSheet("accept")}>{t("mentoring.accept.cta")}</Button> : null}
+          {actions.has("accept") ? <Button variant="success" onClick={() => setSheet("accept")}>{t("mentoring.accept.cta")}</Button> : null}
           {actions.has("propose_slot") ? (
             <Button
               onClick={() => {

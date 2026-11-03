@@ -90,7 +90,7 @@ function ObjectConversationLoaded(props: { readonly capability: ConversationsCap
   const thread = query.data
   if (thread !== null) {
     return (
-      <Button asChild variant="outline" size="sm" className="min-h-11">
+      <Button asChild variant={thread.writable ? "message" : "outline"} size="sm" className="min-h-11">
         <NextLink href={routes.contextualConversation(thread.threadId)}>
           <MessageCircleIcon aria-hidden />
           {t(thread.writable ? "conversationEntry.open" : "conversationEntry.review")}
@@ -115,7 +115,7 @@ function ObjectConversationLoaded(props: { readonly capability: ConversationsCap
     }
   }
   return (
-    <Button variant="outline" size="sm" className="min-h-11" disabled={busy} aria-busy={busy} onClick={() => void open()}>
+    <Button variant="message" size="sm" className="min-h-11" disabled={busy} aria-busy={busy} onClick={() => void open()}>
       <MessageCircleIcon aria-hidden />
       {t(busy ? "conversationEntry.opening" : "conversationEntry.write")}
     </Button>
