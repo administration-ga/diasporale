@@ -90,3 +90,22 @@ describe("démonstration de la mesure du pilote", () => {
     for (const forbidden of ["p-mireille", "p-prisca", "p-steeve", "Mireille", "Paris"]) expect(json).not.toContain(forbidden)
   })
 })
+
+describe("démonstration de la mesure du pilote — l'entraide (ET-10)", () => {
+  it("le groupe de l'entraide se présente par les règles du domaine : aides abouties avec leur base, délai, kit relevé", () => {
+    const view = demoPilotMetricsView(Date.UTC(2026, 9, 18, 10), "FR", 30)
+    if (!view.measured) throw new Error("Mesure fictive attendue")
+    const aid = view.indicators.filter((indicator) => indicator.group === "mutual_aid")
+    expect(aid.map((indicator) => indicator.id)).toEqual([
+      "aid_questions_asked", "aid_questions_answered", "aid_first_answer_hours", "aid_questions_resolved", "aid_signups",
+      "mentoring_requested", "mentoring_accepted", "kit_resources_listed", "kit_resources_to_review",
+    ])
+    const resolved = aid.find((indicator) => indicator.id === "aid_questions_resolved")
+    expect(resolved).toMatchObject({ kind: "ratio", denominatorId: "aid_questions_asked", denominator: { kind: "value" } })
+    expect(aid.find((indicator) => indicator.id === "aid_first_answer_hours")).toMatchObject({ kind: "duration", sample: { kind: "value" } })
+    expect(aid.find((indicator) => indicator.id === "kit_resources_listed")).toEqual({ id: "kit_resources_listed", group: "mutual_aid", kind: "snapshot", value: { kind: "value", value: 9 } })
+    // Deux ressources à revoir sur neuf : sous le seuil, la part ne se publie pas.
+    expect(aid.find((indicator) => indicator.id === "kit_resources_to_review")).toMatchObject({ kind: "ratio", value: { kind: "below_threshold" }, rate: { kind: "withheld" } })
+    expect(view.fictional).toBe(true)
+  })
+})

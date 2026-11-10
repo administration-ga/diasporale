@@ -2,7 +2,8 @@
  * Démonstration de la capacité « mesure du pilote » (DG-027 · G11). PROPRIÉTAIRE : ce chantier.
  *
  * Agrégats FICTIFS, signalés comme tels (`fictional: true`) : des journées
- * types inventées et déterministes pour la France, la Belgique et le Canada,
+ * types inventées et déterministes pour la France, la Belgique et le Canada
+ * (services, associations, évènements, avis et, ET-10, entraide et kit),
  * présentées par LES règles du domaine (seuil « moins de 5 », bases, parts
  * masquées, classes de délai), exactement comme le moteur présente ses
  * agrégats matérialisés. Rien n'est lu du jeu de démonstration : aucune
@@ -37,11 +38,11 @@ import type { DemoStore } from "./store"
 /** Les responsables FICTIFS du réseau de démonstration : seules ces personnes ouvrent le tableau. */
 export const DEMO_PILOT_RESPONSIBLES: readonly string[] = ["p-mireille", "p-nadia"]
 
-/** L'activité inventée par pays : un poids de journée type et des offres actives. */
-const DEMO_ACTIVITY: readonly { readonly country: CountryCode; readonly weight: number; readonly offers: number }[] = [
-  { country: "FR", weight: 3, offers: 14 },
-  { country: "BE", weight: 1, offers: 3 },
-  { country: "CA", weight: 1, offers: 2 },
+/** L'activité inventée par pays : un poids de journée type, des offres actives et (ET-10) un kit d'arrivée relevé. */
+const DEMO_ACTIVITY: readonly { readonly country: CountryCode; readonly weight: number; readonly offers: number; readonly kitListed: number; readonly kitToReview: number }[] = [
+  { country: "FR", weight: 3, offers: 14, kitListed: 9, kitToReview: 2 },
+  { country: "BE", weight: 1, offers: 3, kitListed: 0, kitToReview: 0 },
+  { country: "CA", weight: 1, offers: 2, kitListed: 3, kitToReview: 1 },
 ]
 
 const LOADING = { status: "loading" } as const
@@ -78,6 +79,17 @@ function demoCountryDay(dayStartAt: number, weight: number): PilotDayTotals {
     for (let seat = 0; seat < 4 * weight; seat += 1) day = tallyPilotDay(day, seat % 4 === 0 ? ["eventRegistrations"] : ["eventRegistrations", "eventAttendances"])
   }
   if (index % 3 === 0) day = tallyPilotDay(day, ["reviewsPublished"])
+  // ET-10 : des questions d'entraide inventées (répondues, résolues, délai de première réponse), des inscriptions, du mentorat.
+  const questions = weight * ((index % 2) + 1)
+  for (let rank = 0; rank < questions; rank += 1) {
+    const pattern = (index + rank) % 10
+    const counters: PilotDailyCounter[] = ["aidQuestionsAsked"]
+    if (pattern < 8) counters.push("aidQuestionsAnswered")
+    if (pattern < 5) counters.push("aidQuestionsResolved")
+    day = tallyPilotDay(day, counters, null, pattern < 8 ? (index + rank) % 11 : null)
+  }
+  if (index % 4 === 0) for (let seat = 0; seat < 2 * weight; seat += 1) day = tallyPilotDay(day, ["aidSignups"])
+  if (index % 5 === 0) day = tallyPilotDay(day, weight > 1 ? ["mentoringRequested", "mentoringAccepted"] : ["mentoringRequested"])
   return day
 }
 
@@ -105,7 +117,12 @@ export function demoPilotMetricsView(now: number, country: CountryCode | null, d
     windowEndAt: window.endAt,
     computedAt,
     daysMeasured: days,
-    indicators: presentPilotIndicators({ days: rows, offersActive: scopes.reduce((sum, scope) => sum + scope.offers, 0) }),
+    indicators: presentPilotIndicators({
+      days: rows,
+      offersActive: scopes.reduce((sum, scope) => sum + scope.offers, 0),
+      kitListed: scopes.reduce((sum, scope) => sum + scope.kitListed, 0),
+      kitToReview: scopes.reduce((sum, scope) => sum + scope.kitToReview, 0),
+    }),
     fictional: true,
   }
 }

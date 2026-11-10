@@ -75,6 +75,7 @@ import enMessagesUnread from "./locales/en/messages-unread.json"
 import enIdnEntry from "./locales/en/idn-entry.json"
 import enAidFinding from "./locales/en/aid-finding.json"
 import enAidOnTheWay from "./locales/en/aid-on-the-way.json"
+import enAidUsefulness from "./locales/en/aid-usefulness.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -139,6 +140,7 @@ import frMessagesUnread from "./locales/fr/messages-unread.json"
 import frIdnEntry from "./locales/fr/idn-entry.json"
 import frAidFinding from "./locales/fr/aid-finding.json"
 import frAidOnTheWay from "./locales/fr/aid-on-the-way.json"
+import frAidUsefulness from "./locales/fr/aid-usefulness.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -211,6 +213,7 @@ export const LOCALE_PARTS = {
     "idn-entry": frIdnEntry,
     "aid-finding": frAidFinding,
     "aid-on-the-way": frAidOnTheWay,
+    "aid-usefulness": frAidUsefulness,
   },
   en: {
     diasporale: enDiasporale,
@@ -277,6 +280,7 @@ export const LOCALE_PARTS = {
     "idn-entry": enIdnEntry,
     "aid-finding": enAidFinding,
     "aid-on-the-way": enAidOnTheWay,
+    "aid-usefulness": enAidUsefulness,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 
