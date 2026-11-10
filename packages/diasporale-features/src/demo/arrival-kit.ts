@@ -16,8 +16,10 @@
  */
 import { isProfilePublished } from "@antsia/social-domain/content"
 import {
+  aidSearchWordsMatch,
   arrivalKitReviewCause,
   arrivalKitReviewDueAt,
+  arrivalKitSearchText,
   checkArrivalKitFlag,
   checkArrivalKitReviewer,
   checkArrivalKitVersion,
@@ -33,6 +35,7 @@ import {
   pageBadge,
   parseArrivalKitCountry,
   parseArrivalKitListing,
+  parseArrivalKitQuery,
   parseArrivalKitReason,
   parseArrivalKitResource,
   transitionArrivalKit,
@@ -642,7 +645,7 @@ export function createDemoArrivalKit(store: DemoStore, options: DemoArrivalKitOp
 
     useResources(request) {
       const key = useRevision()
-      const { country, city, nationalOnly, category, cursor } = request
+      const { country, city, nationalOnly, category, query, cursor } = request
       return useMemo((): Loadable<ArrivalKitListPage<ArrivalKitResourceCardView>> => {
         if (key === "") return LOADING
         const state = store.getState()
@@ -651,17 +654,20 @@ export function createDemoArrivalKit(store: DemoStore, options: DemoArrivalKitOp
         if (refusal) return { status: "error", code: refusal }
         const listing = parseArrivalKitListing({ country, city, nationalOnly, category })
         if (!listing.ok) return { status: "error", code: listing.code }
+        // ET-04 : les mots cherchés dans le titre et le résumé, même règle que le moteur.
+        const words = parseArrivalKitQuery(query)
+        if (!words.ok) return { status: "error", code: words.code }
         const base = current()
         const pages = teams.pagesOf(state)
         const items = base.resources
-          .filter((row) => isArrivalKitListed(row.status) && matchesArrivalKitListing(row, listing.value))
+          .filter((row) => isArrivalKitListed(row.status) && matchesArrivalKitListing(row, listing.value) && aidSearchWordsMatch(arrivalKitSearchText(row), words.value))
           .sort(byVerified)
           .flatMap((row) => {
             const carrier = carrierOf(state, pages, row, now)
             return carrier === null ? [] : [toCard(row, carrier, flagCount(base, row), now)]
           })
-        return windowOf(items, cursor, JSON.stringify([country, city ?? "", nationalOnly, category ?? ""]))
-      }, [key, country, city, nationalOnly, category, cursor])
+        return windowOf(items, cursor, JSON.stringify([country, city ?? "", nationalOnly, category ?? "", words.value ?? ""]))
+      }, [key, country, city, nationalOnly, category, query, cursor])
     },
 
     useResource(resourceId) {

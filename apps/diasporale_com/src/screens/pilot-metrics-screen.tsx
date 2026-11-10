@@ -26,6 +26,7 @@ import {
   type PilotHours,
   type PilotIndicator,
   type PilotMetricGroup,
+  type PilotMetricId,
   type PilotPart,
   type PilotWindowDays,
 } from "@diasporale/domain"
@@ -228,17 +229,43 @@ function PilotGroupTable(props: { readonly group: PilotMetricGroup; readonly ind
   )
 }
 
+/**
+ * Les textes de chaque délai, cités en toutes lettres (le cliquet des clés les lit) : la
+ * première réponse à une demande de service, et (ET-10) à une question d'entraide.
+ */
+const DURATION_TEXTS = {
+  first_response_hours: {
+    median: "pilotMetrics.duration.median",
+    p75: "pilotMetrics.duration.p75",
+    hint: "pilotMetrics.duration.hint",
+    sample: "pilotMetrics.duration.sample",
+    sampleBelow: "pilotMetrics.duration.sampleBelow",
+  },
+  aid_first_answer_hours: {
+    median: "pilotMetrics.durationAid.median",
+    p75: "pilotMetrics.durationAid.p75",
+    hint: "pilotMetrics.durationAid.hint",
+    sample: "pilotMetrics.durationAid.sample",
+    sampleBelow: "pilotMetrics.durationAid.sampleBelow",
+  },
+} as const
+
+function durationTexts(id: PilotMetricId) {
+  return id === "aid_first_answer_hours" ? DURATION_TEXTS.aid_first_answer_hours : DURATION_TEXTS.first_response_hours
+}
+
 function IndicatorRows(props: { readonly indicator: PilotIndicator }) {
   const { t, locale } = useDiasporaleT()
   const { indicator } = props
   if (indicator.kind === "duration") {
+    const texts = durationTexts(indicator.id)
     const sample = indicator.sample.kind === "value"
-      ? t("pilotMetrics.duration.sample", { value: formatNumber(indicator.sample.value, locale) })
-      : t("pilotMetrics.duration.sampleBelow", { threshold: indicator.sample.threshold })
+      ? t(texts.sample, { value: formatNumber(indicator.sample.value, locale) })
+      : t(texts.sampleBelow, { threshold: indicator.sample.threshold })
     return (
       <>
-        <IndicatorRow label={t("pilotMetrics.duration.median")} hint={t("pilotMetrics.duration.hint")} detail={sample} value={hoursText(t, indicator.median)} />
-        <IndicatorRow label={t("pilotMetrics.duration.p75")} hint={sample} detail={null} value={hoursText(t, indicator.p75)} />
+        <IndicatorRow label={t(texts.median)} hint={t(texts.hint)} detail={sample} value={hoursText(t, indicator.median)} />
+        <IndicatorRow label={t(texts.p75)} hint={sample} detail={null} value={hoursText(t, indicator.p75)} />
       </>
     )
   }

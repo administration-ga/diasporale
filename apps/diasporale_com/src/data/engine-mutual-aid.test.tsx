@@ -44,6 +44,7 @@ const Q = {
   pages: "modules/diaspora/mutualAid:missionPages",
   pageMissions: "modules/diaspora/mutualAid:pageMissions",
   volunteers: "modules/diaspora/mutualAid:missionVolunteers",
+  upcoming: "modules/diaspora/mutualAid:upcomingPageMissions",
 }
 
 const AUTHOR = { displayName: "Personne fictive", handle: "personne.fictive" }
@@ -97,6 +98,7 @@ beforeEach(() => {
     [Q.signups, { page: [{ ...MISSION_CARD, signedUp: true }], isDone: true, continueCursor: "end" }],
     [Q.pages, [{ pageId: "page-1", handle: "collectif", name: "Collectif fictif", country: "FR", city: null }]],
     [Q.pageMissions, { page: [MISSION_CARD], isDone: false, continueCursor: "page-next" }],
+    [Q.upcoming, [MISSION_CARD]],
     [Q.volunteers, { page: [{ signupId: "signup-1", person: AUTHOR, signedUpAt: 50 }], isDone: true, continueCursor: "end" }],
   ])
 })
@@ -108,7 +110,7 @@ describe("entraide — lectures du moteur", () => {
     expect(Object.keys(source.mutualAid ?? {}).sort()).toEqual([
       "acceptAnswer", "answer", "askQuestion", "cancelMission", "closeMission", "closeQuestion", "createMission", "signUp",
       "unacceptAnswer", "updateAnswer", "updateMission", "updateQuestion", "useAnswers", "useItem", "useMissionPages", "useMissions",
-      "useMyQuestions", "useMySignups", "usePageMissions", "useQuestions", "useVolunteers", "withdrawAnswer", "withdrawQuestion", "withdrawSignup",
+      "useMyQuestions", "useMySignups", "usePageMissions", "useQuestions", "useUpcomingPageMissions", "useVolunteers", "withdrawAnswer", "withdrawQuestion", "withdrawSignup",
     ])
   })
 
@@ -133,6 +135,11 @@ describe("entraide — lectures du moteur", () => {
 
     renderHook(() => aid.useQuestions({ country: "BE", city: " Liège ", status: "resolved", cursor: "opaque-next" }))
     expect(calls(Q.questions)).toContainEqual({ networkId: NETWORK, country: "BE", city: "Liège", status: "resolved", paginationOpts: { cursor: "opaque-next", numItems: 20 } })
+    // ET-04 : thème, mots et « sans réponse » partent quand ils restreignent ; vides ou faux, rien n'est envoyé.
+    renderHook(() => aid.useQuestions({ country: "FR", status: "open", theme: "housing", query: " colocation ", unanswered: true, cursor: null }))
+    expect(calls(Q.questions)).toContainEqual({ networkId: NETWORK, country: "FR", status: "open", theme: "housing", query: "colocation", unanswered: true, paginationOpts: { cursor: null, numItems: 20 } })
+    renderHook(() => aid.useQuestions({ country: "CA", status: "closed", theme: null, query: "  ", unanswered: false, cursor: null }))
+    expect(calls(Q.questions)).toContainEqual({ networkId: NETWORK, country: "CA", status: "closed", paginationOpts: { cursor: null, numItems: 20 } })
     const mine = renderHook(() => aid.useMyQuestions({ cursor: null })).result.current
     expect(mine).toMatchObject({ status: "ready", data: { continueCursor: null, isDone: true, items: [{ id: "question-1", isMine: true }] } })
   })
@@ -238,6 +245,13 @@ describe("entraide — lectures du moteur", () => {
     expect(renderHook(() => aid.useMissionPages()).result.current).toEqual({ status: "ready", data: [{ id: "page-1", handle: "collectif", name: "Collectif fictif", country: "FR", city: null }] })
     expect(renderHook(() => aid.usePageMissions({ pageId: "page-1", cursor: null })).result.current).toMatchObject({ status: "ready", data: { continueCursor: "page-next", isDone: false } })
     expect(calls(Q.pageMissions)).toContainEqual({ networkId: NETWORK, pageId: "page-1", paginationOpts: { cursor: null, numItems: 20 } })
+    // ET-09 : les prochaines missions de la fiche d'une association, et une fenêtre courte de questions pour le hub.
+    expect(renderHook(() => aid.useUpcomingPageMissions({ pageId: "page-1" })).result.current).toMatchObject({ status: "ready", data: [{ id: "mission-1", page: { id: "page-1" } }] })
+    expect(calls(Q.upcoming)).toContainEqual({ networkId: NETWORK, pageId: "page-1" })
+    renderHook(() => aid.useQuestions({ country: "FR", status: "open", limit: 3, cursor: null }))
+    expect(calls(Q.questions)).toContainEqual({ networkId: NETWORK, country: "FR", status: "open", paginationOpts: { cursor: null, numItems: 3 } })
+    renderHook(() => aid.useQuestions({ country: "BE", status: "open", limit: 500, cursor: null }))
+    expect(calls(Q.questions)).toContainEqual({ networkId: NETWORK, country: "BE", status: "open", paginationOpts: { cursor: null, numItems: 20 } })
     expect(renderHook(() => aid.useVolunteers({ missionId: "mission-1", cursor: null })).result.current).toEqual({
       status: "ready", data: { items: [{ id: "signup-1", person: AUTHOR, signedUpAt: 50 }], continueCursor: null, isDone: true },
     })

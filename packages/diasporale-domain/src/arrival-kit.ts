@@ -16,7 +16,7 @@ import type { PageOwnerKind } from "./badges"
 import { HOME_COUNTRY, isCountryCode, normalizeCountryCode, type CountryCode } from "./countries"
 import { hasCapability, type MembershipStatus } from "./eligibility"
 import { ok, refuse, type Result } from "./result"
-import { cityKeyOf, containsContactDetails } from "./services"
+import { cityKeyOf, containsContactDetails, serviceSearchWords } from "./services"
 import { DAY_MS } from "./time"
 
 // ═══════════════════════════════════════════════════════════════
@@ -107,6 +107,9 @@ export const ARRIVAL_KIT_OUTDATED_FLAG_THRESHOLD = 3
 export const ARRIVAL_KIT_RESOURCES_PER_PROPOSER_MAX = 30
 /** Taille d'une page de lecture (kit, file de relecture, mes propositions), plafond dur du moteur. */
 export const ARRIVAL_KIT_PAGE_SIZE = 20
+/** Les mots cherchés dans le kit (ET-04) : deux caractères repliés au moins, cent au plus. */
+export const ARRIVAL_KIT_QUERY_MIN_LENGTH = 2
+export const ARRIVAL_KIT_QUERY_MAX_LENGTH = 100
 
 // ═══════════════════════════════════════════════════════════════
 // Refus — codes FERMÉS, traduits par l'écran
@@ -154,6 +157,8 @@ export const ARRIVAL_KIT_REFUSALS = [
   "arrival_kit_already_flagged",
   "arrival_kit_resource_limit_reached",
   "arrival_kit_page_kind_not_allowed",
+  /** La recherche par mots (ET-04) : au plus cent caractères. */
+  "arrival_kit_query_too_long",
 ] as const
 export type ArrivalKitRefusal = (typeof ARRIVAL_KIT_REFUSALS)[number]
 
@@ -613,4 +618,24 @@ export function matchesArrivalKitListing(
   if (listing.zone.kind === "national") return resource.cityKey === ""
   if (listing.zone.kind === "city") return resource.cityKey === listing.zone.cityKey
   return true
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Chercher dans le kit (ET-04) : le titre et le résumé, en mots repliés
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Le texte INDEXÉ d'une ressource : son titre et son résumé, en mots repliés (sans
+ * accents, ponctuation comptée pour une espace) — la même découpe que la requête.
+ * Ni le contenu entier, ni la source, ni qui l'a écrite.
+ */
+export function arrivalKitSearchText(resource: { readonly title: string; readonly summary: string }): string {
+  return serviceSearchWords(`${resource.title} ${resource.summary}`)
+}
+
+/** Les mots d'une recherche dans le kit : repliés ; `null` sous deux caractères ; refus au-delà de cent. */
+export function parseArrivalKitQuery(raw: string | null | undefined): Result<string | null, ArrivalKitRefusal> {
+  const query = serviceSearchWords(raw ?? "")
+  if (query.length > ARRIVAL_KIT_QUERY_MAX_LENGTH) return refuse("arrival_kit_query_too_long")
+  return ok(query.length >= ARRIVAL_KIT_QUERY_MIN_LENGTH ? query : null)
 }

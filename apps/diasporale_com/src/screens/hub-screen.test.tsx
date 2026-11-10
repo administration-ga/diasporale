@@ -1,13 +1,15 @@
 // @vitest-environment jsdom
 import { COUNTRY_OPENING_REQUIREMENTS, DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
 import { formatDate } from "@diasporale/features"
-import type { CountryHubView, Loadable, MembershipView } from "@diasporale/features/data"
+import { DataSourceProvider, type CountryHubView, type DiasporaleDataSource, type Loadable, type MembershipView, type MutualAidCapability } from "@diasporale/features/data"
 import { I18nProvider } from "@diasporale/features/i18n/client"
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { FeedPagesProps } from "@/components/feed-pages"
+
+import { routes } from "@/lib/routes"
 
 import { HubScreen } from "./hub-screen"
 
@@ -320,5 +322,30 @@ describe("HubScreen — à propos du hub (HB-05)", () => {
     expect(summary).toHaveTextContent("About the hub — Canada")
     expect(details).toHaveTextContent("Open country: members who live there can post in this hub.")
     expect(within(details).getByRole("link", { name: "Read the community rules", hidden: true })).toHaveAttribute("href", "/regles-communaute")
+  })
+})
+
+describe("HubScreen — ET-09 : l'entraide du pays", () => {
+  it("les dernières questions ouvertes du pays du hub, trois au plus, et le lien vers son entraide ; sans fournisseur d'entraide, rien", () => {
+    const read = vi.fn((_request: { readonly country: string; readonly limit?: number }) => ({
+      status: "ready" as const,
+      data: {
+        items: [{
+          id: "question-1", title: "Trouver un logement à Montréal", detail: "", theme: "housing" as const, country: "CA" as const, city: null, status: "open" as const,
+          answerCount: 0, hasAcceptedAnswer: false, author: { displayName: null, handle: null }, isMine: false, createdAt: 1,
+        }],
+        continueCursor: null,
+        isDone: true,
+      },
+    }))
+    const source = { kind: "engine", mutualAid: { useQuestions: read } as unknown as MutualAidCapability } as unknown as DiasporaleDataSource
+    render(<DataSourceProvider source={source}>{tree("ca")}</DataSourceProvider>)
+    expect(read).toHaveBeenCalledWith(expect.objectContaining({ country: "CA", status: "open", limit: 3 }))
+    const block = screen.getByRole("region", { name: /Entraide.*Canada/ })
+    expect(within(block).getByRole("link", { name: "Trouver un logement à Montréal" })).toHaveAttribute("href", routes.mutualAidItem("question-1"))
+    expect(within(block).getByRole("link", { name: "Voir toute l'entraide" })).toHaveAttribute("href", routes.mutualAid("CA"))
+    cleanup()
+    render(tree("ca"))
+    expect(screen.queryByRole("region", { name: /Entraide.*Canada/ })).not.toBeInTheDocument()
   })
 })

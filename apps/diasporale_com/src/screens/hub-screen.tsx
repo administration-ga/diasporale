@@ -38,6 +38,7 @@ import NextLink from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { type ReactNode, useLayoutEffect, useRef, useState } from "react"
 
+import { HubMutualAidBlock } from "@/components/aid-on-the-way"
 import { AppShell, useComposer } from "@/components/app-shell"
 import { CommunityShortcuts } from "@/components/community-shortcuts"
 import { FeedPages } from "@/components/feed-pages"
@@ -210,6 +211,9 @@ function HubBody(props: HubContentProps & { readonly pages: HubPagesQuery | null
           {t("hub.notOpenNotice", { country: name })}
         </FloatingNotice>
       ) : null}
+
+      {/* ET-09 : l'entraide du pays du hub — ses dernières questions ouvertes, quand il y en a. */}
+      <HubMutualAidBlock country={props.country} countryLabel={name} />
 
       {hub.status === "loading" ? (
         <Skeleton className="h-64 w-full rounded-xl" />

@@ -5,6 +5,7 @@
  *
  *   · `/kit-arrivee?pays&ville` : les ressources d'un pays et d'une ville saisie (sans
  *     GPS), par rubrique, avec leur date de vérification et l'avertissement « à revoir » ;
+ *     des mots cherchés dans le titre et le résumé (ET-04) ; rubrique et mots dans l'adresse ;
  *     « Mes propositions » ; la file de relecture pour les relecteurs habilités ;
  *     « Proposer une ressource » ;
  *   · `/kit-arrivee/<id>` : la fiche — contenu, source (lien externe sûr), qui la porte
@@ -21,6 +22,7 @@
 import {
   ARRIVAL_KIT_CATEGORIES,
   ARRIVAL_KIT_CITY_MAX_LENGTH,
+  ARRIVAL_KIT_QUERY_MAX_LENGTH,
   isArrivalKitCategory,
   isArrivalKitListed,
   parseResidenceCountry,
@@ -87,6 +89,7 @@ import { errorKey } from "@/components/association-parts"
 import { Gate } from "@/components/gate"
 import { ReportedContent } from "@/components/report-content-sheet"
 import { ServicePager } from "@/components/service-pager"
+import { useUrlState } from "@/components/url-state"
 import { routes } from "@/lib/routes"
 
 const selectClass = "h-11 w-full rounded-md border border-input bg-card px-3 text-[15px] focus-visible:shadow-focus aria-invalid:border-destructive"
@@ -130,12 +133,28 @@ export function zoneFromParams(params: Pick<URLSearchParams, "get">, fallback: C
   return { country: country.ok ? country.value : fallback, city: city.length > 0 && city.length <= ARRIVAL_KIT_CITY_MAX_LENGTH ? city : null }
 }
 
+/** ET-04 — la rubrique et les mots cherchés, portés par l'adresse ; une rubrique inconnue est ignorée. */
+export interface ArrivalKitFiltersView {
+  readonly category: ArrivalKitCategory | null
+  readonly query: string
+}
+
+export function kitFiltersFromParams(params: Pick<URLSearchParams, "get">): ArrivalKitFiltersView {
+  const category = params.get("categorie") ?? ""
+  return { category: isArrivalKitCategory(category) ? category : null, query: (params.get("q") ?? "").trim().slice(0, ARRIVAL_KIT_QUERY_MAX_LENGTH) }
+}
+
+/** L'adresse du kit : la zone, la rubrique et les mots cherchés. */
+export function kitHrefOf(view: { readonly zone: ArrivalKitZoneView; readonly filters: ArrivalKitFiltersView }): string {
+  return routes.arrivalKit(view.zone.country, view.zone.city ?? undefined, { category: view.filters.category, q: view.filters.query })
+}
+
 function ArrivalKitHome(props: { readonly membership: MembershipView }) {
   const { t } = useDiasporaleT()
   const kit = useArrivalKit()
   const params = useSearchParams()
-  const router = useRouter()
-  const zone = zoneFromParams(params, props.membership.facet.countryOfResidence)
+  const fromUrl = useMemo(() => ({ zone: zoneFromParams(params, props.membership.facet.countryOfResidence), filters: kitFiltersFromParams(params) }), [params, props.membership.facet.countryOfResidence])
+  const [{ zone, filters }, setView] = useUrlState(fromUrl, kitHrefOf)
   return (
     <>
       <header className="flex flex-col gap-2">
@@ -150,14 +169,22 @@ function ArrivalKitHome(props: { readonly membership: MembershipView }) {
           key={`${zone.country}:${zone.city ?? ""}`}
           kit={kit}
           zone={zone}
-          onZone={(next) => router.replace(routes.arrivalKit(next.country, next.city ?? undefined))}
+          filters={filters}
+          onZone={(next) => setView({ zone: next, filters })}
+          onFilters={(next) => setView({ zone, filters: next })}
         />
       )}
     </>
   )
 }
 
-function ArrivalKitBoard(props: { readonly kit: ArrivalKitCapability; readonly zone: ArrivalKitZoneView; readonly onZone: (zone: ArrivalKitZoneView) => void }) {
+function ArrivalKitBoard(props: {
+  readonly kit: ArrivalKitCapability
+  readonly zone: ArrivalKitZoneView
+  readonly filters: ArrivalKitFiltersView
+  readonly onZone: (zone: ArrivalKitZoneView) => void
+  readonly onFilters: (filters: ArrivalKitFiltersView) => void
+}) {
   const { t } = useDiasporaleT()
   const { kit, zone } = props
   const standing = kit.useStanding()
@@ -192,7 +219,7 @@ function ArrivalKitBoard(props: { readonly kit: ArrivalKitCapability; readonly z
           ))}
         </FolderTabsList>
         <FolderTabsContent value="resources">
-          <ResourcesPanel kit={kit} zone={zone} onPropose={propose} />
+          <ResourcesPanel kit={kit} zone={zone} filters={props.filters} onFilters={props.onFilters} onPropose={propose} />
         </FolderTabsContent>
         <FolderTabsContent value="mine">
           <MyResourcesPanel kit={kit} />
@@ -249,14 +276,44 @@ function ZoneForm(props: { readonly zone: ArrivalKitZoneView; readonly onSubmit:
   )
 }
 
-/** Les ressources de la zone : la ville saisie et tout le pays, ou tout le pays seul ; une rubrique restreint. */
-function ResourcesPanel(props: { readonly kit: ArrivalKitCapability; readonly zone: ArrivalKitZoneView; readonly onPropose: (() => void) | null }) {
+const kitSearchSchema = z.object({ q: z.string().trim().max(ARRIVAL_KIT_QUERY_MAX_LENGTH, "arrival_kit_query_too_long") })
+type KitSearchValues = z.infer<typeof kitSearchSchema>
+
+/** ET-04 — chercher par mots dans le titre et le résumé des ressources ; la saisie part dans l'adresse. */
+function KitSearch(props: { readonly query: string; readonly onSearch: (query: string) => void }) {
+  const { t } = useDiasporaleT()
+  const id = useId()
+  const form = useForm<KitSearchValues>({ resolver: zodResolver(kitSearchSchema), defaultValues: { q: props.query } })
+  const error = form.formState.errors.q?.message
+  const submit = form.handleSubmit((values) => props.onSearch(values.q))
+  return (
+    <form noValidate role="search" aria-label={t("arrivalKit.search.label")} className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end" onSubmit={submit}>
+      <Field id={`${id}-q`} label={t("arrivalKit.search.query")} hint={t("arrivalKit.search.hint")} error={typeof error === "string" ? t(errorKey(error)) : undefined} className="min-w-0 flex-1">
+        {(field) => <Input id={field.id} type="search" maxLength={ARRIVAL_KIT_QUERY_MAX_LENGTH} aria-invalid={field.invalid || undefined} aria-describedby={field.describedBy} {...form.register("q")} />}
+      </Field>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" variant="outline">{t("arrivalKit.search.submit")}</Button>
+        {props.query ? <Button type="button" variant="ghost" onClick={() => props.onSearch("")}>{t("arrivalKit.search.clear")}</Button> : null}
+      </div>
+    </form>
+  )
+}
+
+/** Les ressources de la zone : la ville saisie et tout le pays, ou tout le pays seul ; une rubrique et des mots restreignent. */
+function ResourcesPanel(props: {
+  readonly kit: ArrivalKitCapability
+  readonly zone: ArrivalKitZoneView
+  readonly filters: ArrivalKitFiltersView
+  readonly onFilters: (filters: ArrivalKitFiltersView) => void
+  readonly onPropose: (() => void) | null
+}) {
   const { t, locale } = useDiasporaleT()
   const id = useId()
-  const [category, setCategory] = useState<ArrivalKitCategory | null>(null)
-  const { zone } = props
+  const { zone, filters } = props
+  const { category, query } = filters
   const country = countryName(zone.country, locale)
-  const base = { country: zone.country, category } as const
+  const base = { country: zone.country, category, ...(query ? { query } : {}) } as const
+  const sectionKey = `${category ?? ""}:${query}`
   return (
     <div className="flex min-w-0 flex-col gap-5">
       <div className="flex min-w-0 max-w-sm flex-col gap-1.5">
@@ -265,7 +322,7 @@ function ResourcesPanel(props: { readonly kit: ArrivalKitCapability; readonly zo
           id={`${id}-category`}
           className={selectClass}
           value={category ?? ""}
-          onChange={(event) => setCategory(isArrivalKitCategory(event.target.value) ? event.target.value : null)}
+          onChange={(event) => props.onFilters({ ...filters, category: isArrivalKitCategory(event.target.value) ? event.target.value : null })}
         >
           <option value="">{t("arrivalKit.filter.anyCategory")}</option>
           {ARRIVAL_KIT_CATEGORIES.map((item) => (
@@ -273,17 +330,18 @@ function ResourcesPanel(props: { readonly kit: ArrivalKitCapability; readonly zo
           ))}
         </select>
       </div>
+      <KitSearch key={query} query={query} onSearch={(next) => props.onFilters({ ...filters, query: next })} />
       {zone.city !== null ? (
         <>
           <ResourceSection
-            key={`ville:${category ?? ""}`}
+            key={`ville:${sectionKey}`}
             kit={props.kit}
             title={t("arrivalKit.list.cityTitle", { city: zone.city })}
             request={{ ...base, city: zone.city, nationalOnly: false }}
             onPropose={props.onPropose}
           />
           <ResourceSection
-            key={`national:${category ?? ""}`}
+            key={`national:${sectionKey}`}
             kit={props.kit}
             title={t("arrivalKit.list.nationalTitle", { country })}
             request={{ ...base, city: null, nationalOnly: true }}
@@ -292,7 +350,7 @@ function ResourcesPanel(props: { readonly kit: ArrivalKitCapability; readonly zo
         </>
       ) : (
         <ResourceSection
-          key={`pays:${category ?? ""}`}
+          key={`pays:${sectionKey}`}
           kit={props.kit}
           title={t("arrivalKit.list.countryTitle", { country })}
           request={{ ...base, city: null, nationalOnly: false }}
@@ -326,6 +384,7 @@ function ResourceSection(props: {
               <>
                 {t("arrivalKit.list.emptyBody")}
                 {request.category !== null ? <> {t("arrivalKit.list.emptyCategory")}</> : null}
+                {request.query ? <> {t("arrivalKit.search.emptyQuery")}</> : null}
               </>
             }
             action={props.onPropose !== null ? <Button variant="outline" onClick={props.onPropose}>{t("arrivalKit.list.emptyAction")}</Button> : undefined}
