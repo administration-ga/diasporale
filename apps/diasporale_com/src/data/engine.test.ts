@@ -1087,6 +1087,21 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
       vi.unstubAllGlobals()
     }
   })
+
+  it("FD-02 : un .mov est refusé avec la marche à suivre avant toute URL de dépôt ; la durée refusée par le serveur se dit par le même code", async () => {
+    const { convex, calls } = fakeConvex({ ...NETWORK, "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement" })
+    const deposit = vi.fn()
+    vi.stubGlobal("fetch", deposit)
+    try {
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage() })
+      expect(await actions.uploadMedia(new File(["mov"], "IMG_0412.MOV", { type: "video/quicktime" }))).toEqual({ ok: false, code: "media_video_format" })
+      expect(calls.some((call) => call.name === "modules/media/media:generateUploadUrl")).toBe(false)
+      expect(deposit).not.toHaveBeenCalled()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+    expect(engineActionErrorCode(engineError({ code: "invalidArgument", rule: "POST_VIDEO_TOO_LONG", params: { maxMinutes: 5 } }))).toBe("media_video_too_long")
+  })
 })
 
 describe("partage cité par le moteur (EXF-DG-10)", () => {

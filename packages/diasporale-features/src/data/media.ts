@@ -12,17 +12,28 @@
  * appareil). Un échec refuse la photo par un code fermé ; l'original n'est
  * jamais rendu. Le type, le poids et les dimensions déclarés sont ceux du
  * fichier PRÉPARÉ.
+ *
+ * Une VIDÉO (FD-02, lot SD-03 du moteur) : MP4 ou WebM seulement, la liste
+ * d'envoi du moteur (`POST_VIDEO_UPLOAD_MIME_TYPES`) — le .mov de l'iPhone ne se
+ * lit pas partout. Il est refusé AVANT tout envoi, avec la marche à suivre
+ * (`media_video_format`) ; aucune conversion n'est promise : celle du moteur
+ * (`prepareVideoForUpload`) joue la vidéo en temps réel, onglet visible, avec
+ * progression et annulation, et rend ses refus en phrases — DIASPORALE ne la
+ * branchera qu'avec cet écran. La durée mesurée est jugée par la règle du
+ * moteur (`assertPostVideoDuration`), puis déclarée avec la vidéo.
  */
 import {
   assertPostMedia,
+  assertPostVideoDuration,
   POST_IMAGE_MIME_TYPES,
   POST_MEDIA_ALT_MAX_LENGTH,
   POST_MEDIA_MAX_COUNT,
-  POST_VIDEO_MIME_TYPES,
+  POST_VIDEO_UPLOAD_MIME_TYPES,
   type PostMediaInput,
   type PostMediaKind,
 } from "@antsia/social-domain/content"
 import { isDomainViolation } from "@antsia/social-domain/violation"
+import { isVideoCandidateType } from "@antsia/social-features/features/video-upload/video-upload-policy"
 import {
   IMAGE_UPLOAD_MAX_DIMENSION,
   IMAGE_UPLOAD_QUALITY,
@@ -43,8 +54,8 @@ import type { ActionResult } from "./port"
 export { POST_MEDIA_ALT_MAX_LENGTH, POST_MEDIA_MAX_COUNT }
 export type { PostMediaInput, PostMediaKind }
 
-/** Les types qu'accepte le sélecteur de fichiers du composeur. */
-export const POST_MEDIA_ACCEPT = [...POST_IMAGE_MIME_TYPES, ...POST_VIDEO_MIME_TYPES].join(",")
+/** Les types qu'accepte le sélecteur de fichiers du composeur : les photos, et les vidéos de la liste d'envoi du moteur. */
+export const POST_MEDIA_ACCEPT = [...POST_IMAGE_MIME_TYPES, ...POST_VIDEO_UPLOAD_MIME_TYPES].join(",")
 
 /**
  * Les règles des médias du moteur, et de son dépôt de fichiers, dites par
@@ -57,15 +68,37 @@ export const MEDIA_RULE_CODES: Readonly<Record<string, ActionErrorCode>> = {
   POST_MEDIA_MIME_INVALID: "media_type_invalid",
   POST_MEDIA_TOO_LARGE: "media_too_large",
   POST_MEDIA_ALT_TOO_LONG: "media_alt_too_long",
+  POST_VIDEO_TOO_LONG: "media_video_too_long",
   UPLOAD_TYPE_NOT_ALLOWED: "media_type_invalid",
   UPLOAD_SIZE_OUT_OF_RANGE: "media_too_large",
   UPLOAD_MISMATCH: "media_upload_failed",
 }
 
+/** Le genre d'un fichier qu'une NOUVELLE publication peut porter ; `null` : refusé (le .mov compris). */
 export function postMediaKindOf(mimeType: string): PostMediaKind | null {
   if ((POST_IMAGE_MIME_TYPES as readonly string[]).includes(mimeType)) return "image"
-  if ((POST_VIDEO_MIME_TYPES as readonly string[]).includes(mimeType)) return "video"
+  if ((POST_VIDEO_UPLOAD_MIME_TYPES as readonly string[]).includes(mimeType)) return "video"
   return null
+}
+
+/**
+ * Le refus d'un fichier hors des types admis : une vidéo d'un autre conteneur
+ * (le .mov de l'iPhone, un .avi…) reçoit la marche à suivre
+ * (`media_video_format`) ; tout autre fichier, le refus de type.
+ */
+export function unsupportedMediaRefusal(mimeType: string): ActionErrorCode {
+  return isVideoCandidateType(mimeType) ? "media_video_format" : "media_type_invalid"
+}
+
+/** La durée d'une vidéo, jugée par la règle du moteur (`assertPostVideoDuration`) ; `null` : dans la borne, ou inconnue. */
+export function postVideoDurationRefusal(durationMs: number | undefined): ActionErrorCode | null {
+  try {
+    assertPostVideoDuration([{ kind: "video", durationMs }])
+    return null
+  } catch (error) {
+    if (isDomainViolation(error)) return MEDIA_RULE_CODES[error.code] ?? "unknown"
+    throw error
+  }
 }
 
 /** Le refus des médias d'une publication, jugés ENSEMBLE par la règle du moteur ; `null` : recevables. */
@@ -91,15 +124,19 @@ export interface MediaFileFacts {
 
 /**
  * Juge un fichier seul (type, poids), puis mesure ce que le navigateur sait en
- * dire. Une mesure impossible n'empêche rien : le moteur ne l'exige pas.
+ * dire. Une mesure impossible n'empêche rien : le moteur ne l'exige pas. Une
+ * vidéo mesurée au-delà de la borne de durée est refusée ici, avant tout envoi.
  */
 export async function describeMediaFile(file: File): Promise<ActionResult<MediaFileFacts>> {
   const kind = postMediaKindOf(file.type)
-  if (!kind) return { ok: false, code: "media_type_invalid" }
+  if (!kind) return { ok: false, code: unsupportedMediaRefusal(file.type) }
   const refusal = postMediaRefusal([{ kind, mimeType: file.type, sizeBytes: file.size }])
   if (refusal) return { ok: false, code: refusal }
-  const measured = kind === "image" ? await measureImage(file) : await measureVideo(file)
-  return { ok: true, value: { kind, mimeType: file.type, sizeBytes: file.size, ...measured } }
+  if (kind === "image") return { ok: true, value: { kind, mimeType: file.type, sizeBytes: file.size, ...(await measureImage(file)) } }
+  const video = await measureVideo(file)
+  const tooLong = postVideoDurationRefusal(video.durationMs)
+  if (tooLong) return { ok: false, code: tooLong }
+  return { ok: true, value: { kind, mimeType: file.type, sizeBytes: file.size, ...video } }
 }
 
 /**
@@ -165,8 +202,9 @@ export async function fileForDeposit(file: File, prepare?: PrepareImage): Promis
  *     jugées sur le fichier PRÉPARÉ, celui que le serveur recevra et relira ;
  *     ses dimensions sont celles de la sortie (mesurées, pour un GIF animé
  *     laissé tel quel) ;
- *   · une VIDÉO part telle quelle (`describeMediaFile` : type, poids, durée
- *     mesurée). Sa conversion attend le lot SD-03 du moteur.
+ *   · une VIDÉO MP4 ou WebM part telle quelle (`describeMediaFile` : type,
+ *     poids, durée mesurée et bornée) ; un autre conteneur est refusé avec la
+ *     marche à suivre, sans conversion (voir l'en-tête).
  *
  * Le poids du fichier CHOISI est jugé avant, par le composeur (règles du
  * moteur sur l'ensemble des médias, avant tout envoi).
@@ -176,7 +214,7 @@ export async function prepareMediaFile(
   prepare?: PrepareImage,
 ): Promise<ActionResult<{ readonly file: File; readonly facts: MediaFileFacts }>> {
   const kind = postMediaKindOf(file.type)
-  if (!kind) return { ok: false, code: "media_type_invalid" }
+  if (!kind) return { ok: false, code: unsupportedMediaRefusal(file.type) }
   if (kind === "video") {
     const facts = await describeMediaFile(file)
     return facts.ok ? { ok: true, value: { file, facts: facts.value } } : facts

@@ -8,7 +8,7 @@
  * noms de formats) : l'instance change de langue sans être recréée, et l'unité
  * (« Mo », « MB ») est dans la phrase de chaque langue.
  */
-import { POST_IMAGE_MAX_BYTES, POST_IMAGE_MIME_TYPES, POST_VIDEO_MAX_BYTES, POST_VIDEO_MIME_TYPES } from "@antsia/social-domain/content"
+import { POST_IMAGE_MAX_BYTES, POST_IMAGE_MIME_TYPES, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS, POST_VIDEO_UPLOAD_MIME_TYPES } from "@antsia/social-domain/content"
 import { UPLOAD_USAGES } from "@antsia/social-domain/uploadPolicy"
 
 /** Base 1 024, comme les bornes du moteur (« 20 Mo » = 20 × 1 024 × 1 024 octets). */
@@ -35,12 +35,20 @@ export function megabytes(bytes: number): string {
   return String(Math.floor(bytes / MEBIBYTE))
 }
 
+/** Une durée en minutes entières, arrondie vers le bas : jamais une borne plus large que celle du moteur. */
+export function minutes(durationMs: number): string {
+  return String(Math.floor(durationMs / 60_000))
+}
+
 /** Les variables par défaut des textes de DIASPORALE qui disent une borne ou des formats. */
 export const MEDIA_LIMIT_VARIABLES = {
   postImageMaxMegabytes: megabytes(POST_IMAGE_MAX_BYTES),
   postVideoMaxMegabytes: megabytes(POST_VIDEO_MAX_BYTES),
   postImageFormats: formatNames(POST_IMAGE_MIME_TYPES),
-  postVideoFormats: formatNames(POST_VIDEO_MIME_TYPES),
+  // FD-02 : la liste d'ENVOI (MP4, WebM) ; le .mov des publications anciennes se lit encore, il ne s'envoie plus.
+  postVideoFormats: formatNames(POST_VIDEO_UPLOAD_MIME_TYPES),
+  // FD-02 : la durée maximale d'une vidéo de publication, proposée par le moteur (SD-03), à valider par le propriétaire.
+  postVideoMaxMinutes: minutes(POST_VIDEO_MAX_DURATION_MS),
   profileImageFormats: formatNames(UPLOAD_USAGES.avatar.mimeTypes),
   profileAvatarMaxMegabytes: megabytes(UPLOAD_USAGES.avatar.maxBytes),
   profileCoverMaxMegabytes: megabytes(UPLOAD_USAGES.cover.maxBytes),

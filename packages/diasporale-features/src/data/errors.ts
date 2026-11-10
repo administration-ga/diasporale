@@ -81,6 +81,9 @@ export const DATA_ERROR_CODES = [
   "media_metadata_remaining",
   // Une image animée ne se recadre pas (refus « not-croppable » du module du moteur).
   "media_not_croppable",
+  // Vidéo d'une publication (FD-02, SD-03 du moteur) : MP4 ou WebM seulement, durée bornée.
+  "media_video_format",
+  "media_video_too_long",
   // Partage cité : seule une publication publique et publiée se partage ; un partage ne joint pas de média.
   "share_not_allowed",
   "share_with_media",

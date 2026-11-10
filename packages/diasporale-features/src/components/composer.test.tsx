@@ -142,6 +142,20 @@ describe("Composeur — les fichiers choisis rejoignent réellement la publicati
     expect(onClose).toHaveBeenCalledOnce()
   })
 
+  it("FD-02 : un .mov choisi est refusé avant tout envoi, avec la marche à suivre et sans promesse de conversion", async () => {
+    render(<Composer />)
+    choose([new File(["video fictive"], "IMG_0412.MOV", { type: "video/quicktime" })])
+    const alert = await screen.findByRole("alert")
+    expect(alert.textContent).toContain(t("errors.media_video_format"))
+    expect(alert).not.toHaveTextContent(/convert/i)
+    expect(uploadMedia).not.toHaveBeenCalled()
+    // Un autre fichier garde le refus de type, qui ne cite plus le .mov parmi les formats admis.
+    choose([new File(["%PDF"], "dossier.pdf", { type: "application/pdf" })])
+    expect((await screen.findByRole("alert")).textContent).toContain(t("errors.media_type_invalid"))
+    expect(t("errors.media_type_invalid")).not.toContain("MOV")
+    expect(uploadMedia).not.toHaveBeenCalled()
+  })
+
   it("un refus de publication rend les contrôles et conserve les deux dépôts pour réessayer avec la même clé", async () => {
     publish.mockResolvedValueOnce({ ok: false, code: "unknown" })
     const user = userEvent.setup()
