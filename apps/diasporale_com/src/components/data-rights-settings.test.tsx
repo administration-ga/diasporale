@@ -1,5 +1,4 @@
 // @vitest-environment jsdom
-import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
 import { formatDate } from "@diasporale/features"
 import type {
   ActionResult,
@@ -10,7 +9,6 @@ import type {
   ErasureView,
   LastExportView,
   Loadable,
-  MembershipView,
   ModerationDecisionView,
   PersonalReportsPage,
   PersonalReportView,
@@ -21,7 +19,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { useSyncExternalStore } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { DataRightsSettings } from "./data-rights-settings"
+import { DataRightsSettings, type DataRightsPerson } from "./data-rights-settings"
 
 const mocks = vi.hoisted(() => ({ rights: null as unknown }))
 vi.mock("@diasporale/features/data", async (original) => ({
@@ -39,22 +37,8 @@ const t = (key: string, values?: Record<string, unknown>) => String(translate(ke
 const NOW = Date.UTC(2026, 9, 17, 12)
 const DAY = 24 * 60 * 60 * 1000
 
-const membership: MembershipView = {
-  personId: "person_lecture",
-  handle: "lecture.demo",
-  displayName: "Lecteur fictif",
-  status: "declaree",
-  badges: [],
-  facet: { countryOfResidence: "FR", associationIds: [], helpAvailable: false, visibility: DEFAULT_FACET_VISIBILITY },
-  joinedAt: 1,
-  verifiedSince: null,
-  sponsoredBy: null,
-  attestation: { outcome: "none", postSlug: null, requestedAt: null },
-  root: { network: "antsia", status: "declaree", derivedFrom: "diasporale" },
-  canPublish: true,
-  rateTier: "standard",
-  directoryVisibility: "hidden",
-}
+/** La personne affichée : un membre, qui peut donc aussi « quitter DIASPORALE ». */
+const person: DataRightsPerson = { personId: "person_lecture", handle: "lecture.demo", canLeave: true }
 
 const DECISION: ModerationDecisionView = {
   reportId: "report-1",
@@ -107,7 +91,7 @@ function fakeRights(initial: { erasure?: Loadable<ErasureView>; decisions?: Deci
   return { rights, update, reads }
 }
 
-const tree = (member: MembershipView = membership) => <I18nProvider locale="fr"><DataRightsSettings membership={member} /></I18nProvider>
+const tree = (who: DataRightsPerson = person, heading?: "h1" | "h2") => <I18nProvider locale="fr"><DataRightsSettings person={who} heading={heading} /></I18nProvider>
 const section = () => screen.getByRole("region", { name: raw("settings.data") })
 
 let clicked: { download: string; href: string }[] = []
@@ -142,15 +126,31 @@ describe("Mes données — section et accès", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument()
   })
 
-  it("ouvre les trois volets à un membre suspendu, sans lien vers une surface sociale", () => {
+  it("ouvre les trois volets à une personne sans adhésion (NP-02), sans lien vers une surface sociale", () => {
     const { rights, reads } = fakeRights({ decisions: page([DECISION]) })
     mocks.rights = rights
-    render(tree({ ...membership, status: "suspendue", canPublish: false, root: { ...membership.root, status: "suspendue" } }))
+    render(tree({ personId: "person_lecture", handle: null, canLeave: false }))
     expect(screen.getByRole("button", { name: raw("settings.export") })).toBeEnabled()
     expect(screen.getByRole("button", { name: raw("settings.delete") })).toBeEnabled()
     expect(screen.getByRole("button", { name: raw("settings.dataRights.decisions.appeal") })).toBeEnabled()
     expect(within(section()).queryAllByRole("link")).toEqual([])
     expect(new Set(reads)).toEqual(new Set(["last:person_lecture", "erasure:person_lecture", "decisions:person_lecture:"]))
+  })
+
+  it("devenue la page elle-même (`/mes-donnees`), la section porte le titre de niveau 1", () => {
+    render(tree(person, "h1"))
+    expect(screen.getByRole("heading", { level: 1, name: raw("settings.data") })).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { level: 2, name: raw("settings.data") })).toBeNull()
+  })
+
+  it("sans adhésion à quitter, l'effacement ne propose pas « Quitter DIASPORALE », ni sur la page ni dans la confirmation", () => {
+    mocks.rights = fakeRights().rights
+    render(tree({ personId: "person_lecture", handle: null, canLeave: false }))
+    expect(within(section()).queryByText(t("settings.dataRights.erasure.leaveInstead"))).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: raw("settings.delete") }))
+    const dialog = within(screen.getByRole("dialog"))
+    expect(dialog.getByText(t("settings.deleteConfirmBody"))).toBeInTheDocument()
+    expect(dialog.queryByText(t("settings.dataRights.erasure.leaveInstead"))).toBeNull()
   })
 })
 
@@ -178,6 +178,15 @@ describe("Mes données — export", () => {
     await waitFor(() => expect(revokeObjectURL).toHaveBeenCalledWith("blob:local-1"))
     act(() => update({ last: { exportedAt: NOW } }))
     expect(screen.getByText(t("settings.dataRights.export.last", { date: formatDate(NOW, "fr", { dateStyle: "long", timeStyle: "short" }) }))).toBeInTheDocument()
+  })
+
+  it("sans identifiant public (jamais entré), le fichier ne porte que la date", async () => {
+    const { rights } = fakeRights()
+    mocks.rights = rights
+    render(tree({ personId: "person_lecture", handle: null, canLeave: false }))
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: raw("settings.export") })) })
+    expect(rights.prepareExport).toHaveBeenCalledWith("person_lecture", expect.anything())
+    expect(clicked).toEqual([{ download: "diasporale-2026-10-17.json", href: "blob:local-1" }])
   })
 
   it("s'interrompt au geste de la personne, sans fichier", async () => {
@@ -303,7 +312,7 @@ describe("Mes données — effacement", () => {
     fireEvent.click(screen.getByRole("button", { name: raw("settings.delete") }))
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("checkbox"))
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: raw("settings.dataRights.erasure.confirm") }))
-    view.rerender(tree({ ...membership, personId: "nouvelle-personne", handle: "nouveau.demo" }))
+    view.rerender(tree({ ...person, personId: "nouvelle-personne", handle: "nouveau.demo" }))
     await act(async () => { pending.resolve({ ok: true, value: { dueAt: NOW + 30 * DAY } }) })
     expect(screen.queryByRole("status")).not.toBeInTheDocument()
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
@@ -425,7 +434,7 @@ describe("Mes données — mes signalements (SU01d du moteur)", () => {
     Reflect.deleteProperty(Element.prototype, "scrollIntoView")
   })
 
-  it("absente du fournisseur (démonstration) : aucune rubrique", () => {
+  it("absente du fournisseur : aucune rubrique", () => {
     mocks.rights = fakeRights().rights
     render(tree())
     expect(screen.queryByRole("region", { name: raw("settings.dataRights.reports.title") })).toBeNull()

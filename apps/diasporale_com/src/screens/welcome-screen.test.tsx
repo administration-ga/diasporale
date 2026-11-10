@@ -150,4 +150,12 @@ describe("/bienvenue — la sortie d'un compte connecté sans adhésion", () => 
     await user.click(screen.getByRole("button", { name: t("settings.signOutEverywhere") }))
     await vi.waitFor(() => expect(signOutEverywhere).toHaveBeenCalledTimes(2))
   })
+
+  it("mène à « Mes données » sans adhésion, à côté de la déconnexion et depuis le pied de page (NP-02, EA-05)", async () => {
+    await signedInAwa()
+    const link = await screen.findByRole("link", { name: t("welcome.myData") })
+    expect(link).toHaveAttribute("href", routes.myData())
+    const footer = within(screen.getByRole("navigation", { name: t("footer.label") }))
+    expect(footer.getByRole("link", { name: t("footer.myData") })).toHaveAttribute("href", routes.myData())
+  })
 })

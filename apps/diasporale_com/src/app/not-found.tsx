@@ -3,7 +3,9 @@ import NextLink from "next/link"
 import { getAppT } from "@/i18n/server"
 import { routes } from "@/lib/routes"
 
-/** Page introuvable — un message, et le chemin du retour. */
+const linkClass = "inline-flex min-h-11 items-center font-semibold text-primary underline underline-offset-4 focus-visible:shadow-focus"
+
+/** Page introuvable — un message, et deux chemins du retour : le fil (UX-01), puis l'accueil. */
 export default async function NotFound() {
   const { t } = await getAppT()
   return (
@@ -11,9 +13,14 @@ export default async function NotFound() {
       <p aria-hidden className="font-mono text-6xl font-semibold text-tag-code">404</p>
       <h1 className="font-display text-3xl font-bold">{t("notFound.title")}</h1>
       <p className="text-muted-foreground">{t("notFound.body")}</p>
-      <NextLink href={routes.home()} className="font-semibold text-primary underline underline-offset-4 focus-visible:shadow-focus">
-        {t("notFound.back")}
-      </NextLink>
+      <div className="flex flex-wrap gap-x-6 gap-y-1">
+        <NextLink href={routes.feed()} className={linkClass}>
+          {t("appError.backToFeed")}
+        </NextLink>
+        <NextLink href={routes.home()} className={linkClass}>
+          {t("notFound.back")}
+        </NextLink>
+      </div>
     </main>
   )
 }

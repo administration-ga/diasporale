@@ -39,7 +39,7 @@ Plan : [`01_ENTREE_ADHESION_CONFIANCE.md`](01_ENTREE_ADHESION_CONFIANCE.md)
 | EA-02 | Entrée par IDN branchée dans DIASPORALE | P0 | M | S2 | variables IDN et origines sur le déploiement (propriétaire) ; recette avec un vrai compte IDN | nouveau | à faire |
 | EA-03 | Statut relu quand l'identité change | P0 | S | S2 | aucune | nouveau | à faire |
 | EA-04 | Accueil qui respecte un profil existant | P0 | S | S2 | aucune | nouveau | à faire |
-| EA-05 | Droits personnels et sortie sans adhésion | P0 | S | S2 | aucune | nouveau | à faire |
+| EA-05 | Droits personnels et sortie sans adhésion | P0 | S | S2 | aucune | nouveau | fusionné (#40) |
 | EA-06 | Recette réelle de l'entrée de DIASPORALE | P0 | S | S2 + propriétaire | clés d'envoi et domaine (propriétaire) ; accord écrit sur le déploiement visé | nouveau | à faire |
 | EA-07 | Âge et identification dans l'accueil de DIASPORALE | P0 | M | S2 | juriste (seuil d'âge pour des résidents de France et d'ailleurs, identification) ; D-G11 | nouveau | à faire |
 | EA-08 | Porte fiable : durée vraie, renvoi du code, reprise après rechargement | P1 | S | S2 | aucune | nouveau | à faire |
@@ -66,9 +66,9 @@ Plan : [`02_COQUE_NAVIGATION_CHARTE_ACCESSIBILITE.md`](02_COQUE_NAVIGATION_CHART
 | DS-02 | Six boutons à trancher | P1 | S | S2 | publication de la démonstration sur accord | plan 15 | fusionné (#36) |
 | DS-03 | Écrans jamais vus, refus en mode moteur, textes | P1 | S | S2 | aucune | plan 15 | à faire |
 | DS-08 | Accessibilité AA et budget 3G | P1 | M | S2 | aucune | plan 15 | à faire |
-| UX-01 | Pages d'erreur de l'application | P0 | S | S2 | aucune | nouveau | à faire |
+| UX-01 | Pages d'erreur de l'application | P0 | S | S2 | aucune | nouveau | fusionné (#41) |
 | UX-02 | Revenir à la page demandée après la connexion | P0 | S | S2 | aucune | nouveau | à faire |
-| UX-03 | Menu du compte complet : informations, aide, déconnexion | P0 | S | S2 | aucune | nouveau | à faire |
+| UX-03 | Menu du compte complet : informations, aide, déconnexion | P0 | S | S2 | aucune | nouveau | fusionné (#41) |
 | UX-04 | Aide et assistance | P1 | M | S2 | adresse d'assistance fournie par le propriétaire | nouveau | à faire |
 | UX-05 | La barre dit toujours où l'on est | P1 | S | S2 | aucune | nouveau | à faire |
 | UX-06 | Pastille de non-lus sur « Messages » | P1 | S | S2 | aucune | nouveau | à faire |
@@ -315,7 +315,7 @@ Plan : [`11_ENTRAIDE_MENTORAT_KIT_ARRIVEE.md`](11_ENTRAIDE_MENTORAT_KIT_ARRIVEE.
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| ET-01 | Bénévoles prévenus, promesses vraies | P0 | S | S2 | issue `[S1]` | nouveau | à faire |
+| ET-01 | Bénévoles prévenus, promesses vraies | P0 | S | S2 | issue `[S1]` | nouveau | fusionné (#39) ; avis aux bénévoles en attente d'antsia#101 |
 | ET-02 | Conversation entre l'équipe et chaque bénévole | P1 | M | S2 | politique contextuelle ouverte par un opérateur ; issue `[S1]` | nouveau | à faire |
 | ET-03 | Garde sur les conseils sensibles | P1 | S | S2 | relecture du texte ; question posée au juriste (plan 14) | nouveau | à faire |
 | ET-04 | Retrouver : thème, mots, sans réponse | P1 | M | S2 | aucune | nouveau | à faire |
@@ -366,8 +366,8 @@ Plan : [`13_NOTIFICATIONS_REGLAGES_DONNEES.md`](13_NOTIFICATIONS_REGLAGES_DONNEE
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| NP-01 | Consentements : portée et retrait effectifs | P0 | S | S2 | aucune | nouveau | à faire |
-| NP-02 | « Mes données » ouverte hors adhésion, et en démonstration | P0 | S | S2 | aucune | nouveau | à faire |
+| NP-01 | Consentements : portée et retrait effectifs | P0 | S | S2 | aucune | nouveau | fusionné (#40) ; correctif de la tranche du moteur : antsia#106 |
+| NP-02 | « Mes données » ouverte hors adhésion, et en démonstration | P0 | S | S2 | aucune | nouveau | fusionné (#40) |
 | NP-03 | Export complet des mises en relation | P1 | S | S2 + S1 | avis du juriste conseillé | nouveau | à faire |
 | NP-04 | Cloche complète : page, suite, filtre, genres nommés | P1 | M | S2 | aucune | nouveau | à faire |
 | NP-05 | Matrice des avis et genres manquants | P1 | S | S2 + S1 | aucune | nouveau | à faire |

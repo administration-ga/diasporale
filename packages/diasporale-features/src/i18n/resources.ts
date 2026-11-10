@@ -12,6 +12,8 @@
  * lève une erreur à l'import, donc au premier test.
  */
 import enAppearanceThemes from "./locales/en/appearance-themes.json"
+import enAccountMenu from "./locales/en/account-menu.json"
+import enAppErrors from "./locales/en/app-errors.json"
 import enAssociations from "./locales/en/associations.json"
 import enAssociationActivities from "./locales/en/association-activities.json"
 import enEventReminderNotices from "./locales/en/event-reminder-notices.json"
@@ -62,6 +64,8 @@ import enPostPublicationState from "./locales/en/post-publication-state.json"
 import enCommentPages from "./locales/en/comment-pages.json"
 import enObjectReports from "./locales/en/object-reports.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
+import frAccountMenu from "./locales/fr/account-menu.json"
+import frAppErrors from "./locales/fr/app-errors.json"
 import frAssociations from "./locales/fr/associations.json"
 import frAssociationActivities from "./locales/fr/association-activities.json"
 import frEventReminderNotices from "./locales/fr/event-reminder-notices.json"
@@ -168,6 +172,8 @@ export const LOCALE_PARTS = {
     "functional-health": frFunctionalHealth,
     "post-publication-state": frPostPublicationState,
     "comment-pages": frCommentPages,
+    "app-errors": frAppErrors,
+    "account-menu": frAccountMenu,
     "object-reports": frObjectReports,
   },
   en: {
@@ -220,6 +226,8 @@ export const LOCALE_PARTS = {
     "functional-health": enFunctionalHealth,
     "post-publication-state": enPostPublicationState,
     "comment-pages": enCommentPages,
+    "app-errors": enAppErrors,
+    "account-menu": enAccountMenu,
     "object-reports": enObjectReports,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>

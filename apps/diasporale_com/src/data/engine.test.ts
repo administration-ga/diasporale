@@ -266,9 +266,34 @@ describe("écritures de la source « moteur »", () => {
       "modules/people/consents:recordConsent",
       "modules/diaspora/membership:joinDiasporale",
     ])
-    expect(calls[3]?.args).toEqual({ purpose: "notifications", origin: "onboarding" })
+    // Le profil social vaut pour la personne ; les notifications, pour le réseau EXACT que le
+    // moteur relit avant tout envoi (`notificationConsent`).
+    expect(calls[2]?.args).toEqual({ purpose: "social_profile", origin: "onboarding" })
+    expect(calls[3]?.args).toEqual({ purpose: "notifications", origin: "onboarding", networkId: "n-diasporale" })
     // Sans consentement à l'annuaire, aucun niveau visible n'est demandé.
     expect(calls[4]?.args).toMatchObject({ networkId: "n-diasporale", directoryVisibility: "hidden", facet: { countryOfResidence: "fr", city: "Lyon" } })
+  })
+
+  it("entrer : l'annuaire et les notifications acceptés sont tous deux posés pour le réseau (NP-01)", async () => {
+    const { convex, calls } = fakeConvex({
+      ...NETWORK,
+      "modules/people/profile:publishMyProfile": () => ({ handle: "ada" }),
+      "modules/people/consents:recordConsent": () => null,
+      "modules/diaspora/membership:joinDiasporale": () => ({ status: "en_attente", rootStatus: "declaree" }),
+    })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    await actions.join({
+      facet: { countryOfResidence: "FR" },
+      handle: "ada",
+      displayName: "Ada",
+      consents: { social_profile: true, directory: true, notifications: true },
+      directoryVisibility: "network",
+    })
+    expect(calls.filter((call) => call.name === "modules/people/consents:recordConsent").map((call) => call.args)).toEqual([
+      { purpose: "social_profile", origin: "onboarding" },
+      { purpose: "directory", origin: "onboarding", networkId: "n-diasporale" },
+      { purpose: "notifications", origin: "onboarding", networkId: "n-diasporale" },
+    ])
   })
 
   it("entrer : refus avant toute écriture (consentement, pays), et un refus du moteur traduit", async () => {
@@ -329,8 +354,64 @@ describe("écritures de la source « moteur »", () => {
     expect(await actions.setConsent("directory", false)).toEqual({ ok: true, value: null })
     expect(calls.slice(1)).toEqual([
       { name: "modules/people/consents:revokeConsent", args: { purpose: "directory", networkId: "n-diasporale" } },
+      { name: "modules/people/consents:revokeConsent", args: { purpose: "directory" } },
       { name: "modules/diaspora/facet:setDirectoryVisibility", args: { networkId: "n-diasporale", level: "hidden" } },
     ])
+  })
+
+  describe("portée d'un consentement, à l'accord comme au retrait (NP-01)", () => {
+    function consentConvex() {
+      return fakeConvex({
+        ...NETWORK,
+        "modules/people/consents:recordConsent": () => null,
+        "modules/people/consents:revokeConsent": () => null,
+        "modules/diaspora/facet:setDirectoryVisibility": () => null,
+      })
+    }
+
+    it.each(["directory", "notifications", "consular_attestation"] as const)("%s : l'accord est posé pour le réseau DIASPORALE", async (purpose) => {
+      const { convex, calls } = consentConvex()
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+      expect(await actions.setConsent(purpose, true)).toEqual({ ok: true, value: null })
+      expect(calls.slice(1)).toEqual([
+        { name: "modules/people/consents:recordConsent", args: { purpose, origin: "settings", networkId: "n-diasporale" } },
+      ])
+    })
+
+    it.each(["notifications", "consular_attestation"] as const)(
+      "%s : le retrait révoque la ligne du réseau, puis l'ancienne ligne posée sans réseau",
+      async (purpose) => {
+        const { convex, calls } = consentConvex()
+        const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+        expect(await actions.setConsent(purpose, false)).toEqual({ ok: true, value: null })
+        expect(calls.slice(1)).toEqual([
+          { name: "modules/people/consents:revokeConsent", args: { purpose, networkId: "n-diasporale" } },
+          { name: "modules/people/consents:revokeConsent", args: { purpose } },
+        ])
+      },
+    )
+
+    it("le profil social vaut pour la personne : posé et retiré sans réseau", async () => {
+      const { convex, calls } = consentConvex()
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+      await actions.setConsent("social_profile", true)
+      await actions.setConsent("social_profile", false)
+      expect(calls.filter((call) => call.name.startsWith("modules/people/consents")).map((call) => call.args)).toEqual([
+        { purpose: "social_profile", origin: "settings" },
+        { purpose: "social_profile" },
+      ])
+    })
+
+    it("un retrait refusé par le moteur se dit, sans annoncer de succès", async () => {
+      const { convex } = fakeConvex({
+        ...NETWORK,
+        "modules/people/consents:revokeConsent": () => {
+          throw engineError({ code: "rateLimited", retryAfterMs: 1000 })
+        },
+      })
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+      expect(await actions.setConsent("notifications", false)).toEqual({ ok: false, code: "rate_limited" })
+    })
   })
 })
 

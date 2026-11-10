@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
-import type { ActionResult, MembershipView } from "@diasporale/features/data"
+import type { ActionResult, ConsentView, MembershipView } from "@diasporale/features/data"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
@@ -11,6 +11,7 @@ import { SettingsScreen } from "./settings-screen"
 
 const mocks = vi.hoisted(() => ({
   membership: null as MembershipView | null,
+  consents: [] as readonly ConsentView[],
   leave: vi.fn<() => Promise<ActionResult>>(),
   consent: vi.fn(),
   push: vi.fn(),
@@ -26,7 +27,7 @@ vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error }
 vi.mock("@diasporale/features/data", async (original) => ({
   ...(await original<typeof import("@diasporale/features/data")>()),
   useActions: () => ({ leaveDiasporale: mocks.leave, setConsent: mocks.consent }),
-  useMyConsents: () => ({ status: "ready", data: [] }),
+  useMyConsents: () => ({ status: "ready", data: mocks.consents }),
   useOpenCountries: () => ({ status: "ready", data: [] }),
   useSession: () => mocks.session,
 }))
@@ -45,8 +46,8 @@ vi.mock("@/components/sign-out-settings", () => ({ SignOutSettings: () => null }
 // Sections branchées sur leur propre capacité, éprouvées par leurs tests : ici, seulement leur montage.
 vi.mock("@/components/content-preferences-settings", () => ({ ContentPreferencesSettings: () => null }))
 vi.mock("@/components/data-rights-settings", () => ({
-  DataRightsSettings: (props: { membership: MembershipView }) => {
-    mocks.dataRights(props.membership)
+  DataRightsSettings: (props: { person: { personId: string; handle: string | null; canLeave: boolean } }) => {
+    mocks.dataRights(props.person)
     return <section id="mes-donnees" aria-label="Mes données" />
   },
 }))
@@ -74,6 +75,7 @@ const tree = () => <I18nProvider locale="fr"><SettingsScreen /></I18nProvider>
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.membership = membership
+  mocks.consents = []
   mocks.leave.mockResolvedValue({ ok: true, value: null })
 })
 afterEach(cleanup)
@@ -127,12 +129,53 @@ describe("Réglages — profil commun et départ distinct", () => {
   })
 })
 
+describe("Réglages — registre des consentements (NP-01)", () => {
+  const consent = (purpose: ConsentView["purpose"], granted: boolean): ConsentView => ({ purpose, granted, recordedAt: 1, textVersion: "2026-10-14" })
+  const consentsRegion = () => screen.getByRole("region", { name: t("settings.consents") })
+  /** Le texte tel que Testing Library le lit dans le DOM (espaces insécables normalisées). */
+  const text = (key: string) => String(t(key)).replace(/\s+/g, " ")
+
+  it("la ligne « talents » ne dit plus « Bientôt » : elle renvoie au profil de talent, sans interrupteur", () => {
+    render(tree())
+    const region = within(consentsRegion())
+    expect(region.getByText(text("consentPurpose.talents.body"))).toBeInTheDocument()
+    expect(region.queryByText(/Bientôt/)).toBeNull()
+    expect(region.getByRole("link", { name: t("consentPurpose.talents.link") })).toHaveAttribute("href", "/talents")
+    expect(region.queryByRole("switch", { name: t("consentPurpose.talents.title") })).toBeNull()
+    // Les quatre autres finalités gardent leur interrupteur.
+    expect(region.getAllByRole("switch")).toHaveLength(4)
+  })
+
+  it("l'attestation consulaire dit l'effet réel du retrait, et son retrait passe par l'adaptateur", async () => {
+    mocks.consents = [consent("consular_attestation", true), consent("notifications", true)]
+    mocks.consent.mockResolvedValue({ ok: true, value: null })
+    render(tree())
+    const region = within(consentsRegion())
+    expect(region.getByText(text("consentPurpose.consular_attestation.body"))).toBeInTheDocument()
+    expect(t("consentPurpose.consular_attestation.body")).toMatch(/arrête une demande en cours/)
+    const attestation = region.getByRole("switch", { name: t("consentPurpose.consular_attestation.title") })
+    expect(attestation).toBeEnabled()
+    await act(async () => { fireEvent.click(attestation) })
+    expect(mocks.consent).toHaveBeenCalledWith("consular_attestation", false)
+    expect(mocks.success).toHaveBeenCalledWith(t("settings.consentRevoked"))
+    await act(async () => { fireEvent.click(region.getByRole("switch", { name: t("consentPurpose.notifications.title") })) })
+    expect(mocks.consent).toHaveBeenLastCalledWith("notifications", false)
+  })
+
+  it("sans accord en vigueur, l'attestation ne se donne pas ici (elle se donne au geste de vérification)", () => {
+    mocks.consents = [consent("consular_attestation", false)]
+    render(tree())
+    expect(within(consentsRegion()).getByRole("switch", { name: t("consentPurpose.consular_attestation.title") })).toBeDisabled()
+  })
+})
+
 describe("Réglages — « Mes données » (DG-026)", () => {
   const suspended: MembershipView = { ...membership, status: "suspendue", canPublish: false, root: { ...membership.root, status: "suspendue" } }
 
   it("monte la section des droits pour la personne affichée, à la place de l'ancien export immédiat", () => {
     render(tree())
-    expect(mocks.dataRights).toHaveBeenLastCalledWith(membership)
+    // La section reçoit la personne, jamais l'adhésion (NP-02) ; un membre peut aussi « quitter ».
+    expect(mocks.dataRights).toHaveBeenLastCalledWith({ personId: membership.personId, handle: membership.handle, canLeave: true })
     expect(screen.getByRole("region", { name: "Mes données" })).toHaveAttribute("id", "mes-donnees")
     expect(screen.queryByRole("button", { name: t("settings.export") })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: t("settings.delete") })).not.toBeInTheDocument()
@@ -147,6 +190,6 @@ describe("Réglages — « Mes données » (DG-026)", () => {
     cleanup()
     mocks.membership = suspended
     render(tree())
-    expect(mocks.dataRights).toHaveBeenLastCalledWith(suspended)
+    expect(mocks.dataRights).toHaveBeenLastCalledWith({ personId: suspended.personId, handle: suspended.handle, canLeave: true })
   })
 })

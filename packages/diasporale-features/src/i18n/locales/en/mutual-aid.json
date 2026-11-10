@@ -57,7 +57,7 @@
     },
     "edited": "edited",
     "noContactReminder": "No phone number, email address, link or exact address: answers stay here, then go through messages if needed.",
-    "privateContact": "To continue privately, use messages from the person's profile. No contact details are shown here.",
+    "privateContact": "To continue privately, first ask to connect from the person's profile: messages open once the request is accepted. No contact details are shown here.",
     "backToList": "Back to mutual aid",
     "askedBy": "Asked by",
     "askedOn": "on {{date}}",
@@ -195,7 +195,7 @@
       "cancelledWithReason": "This mission is cancelled. Reason: {{reason}}",
       "cancelSheet": {
         "title": "Cancel this mission?",
-        "description": "Volunteers will see the cancellation and its reason. This cannot be undone.",
+        "description": "The cancellation shows on the mission page, with its reason, and in each volunteer's “My sign-ups”; no notification is sent to them. This cannot be undone.",
         "reason": "Reason (optional)",
         "reasonHint": "{{max}} characters at most, no contact details.",
         "keep": "Keep the mission",
@@ -236,13 +236,13 @@
         "body": "Your place will be freed. You can sign up again while a place is left.",
         "confirm": "Withdraw"
       },
-      "privacy": "No contact details are shared: the team will write to you through messages."
+      "privacy": "No contact details are shared: the team can only write to you if you are connected. A change or a cancellation shows on this page and in “My sign-ups”; no notification is sent to you."
     },
     "team": {
       "title": "Manage the mission",
       "edit": "Edit",
       "editTitle": "Edit the mission",
-      "editDescription": "Volunteers keep their place; a rescheduled mission must start in the future.",
+      "editDescription": "Volunteers keep their place; a rescheduled mission must start in the future. Changes show on the mission page; no notification is sent to volunteers.",
       "close": "Close sign-ups",
       "closeConfirm": {
         "title": "Close sign-ups?",
@@ -253,7 +253,7 @@
     },
     "volunteers": {
       "title": "Signed-up volunteers",
-      "lead": "This list is reserved for the association's team. Each volunteer agreed to show their published name here; to reach them, use messages.",
+      "lead": "This list is reserved for the association's team. Each volunteer agreed to show their published name here, with no contact details. To write to a volunteer, first ask to connect from their profile: messages open once the request is accepted.",
       "emptyTitle": "No volunteer yet",
       "emptyBody": "Sign-ups will appear here in order of arrival.",
       "since": "signed up on {{date}}"
