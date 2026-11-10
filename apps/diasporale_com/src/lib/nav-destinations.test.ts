@@ -36,6 +36,7 @@ const OUTSIDE_SHELL: readonly RouteKey[] = [
   "privacy",
   "terms",
   "communityRules",
+  "communityRule",
   "contact",
   "health",
   "healthApi",
