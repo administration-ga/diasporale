@@ -2,27 +2,46 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { SPONSORSHIPS_PER_WINDOW } from "@diasporale/domain"
-import { Button, Card, Checkbox, EmptyState, Field, FloatingNotice, Input, Label, Skeleton, formatDate, normalizeHandle } from "@diasporale/features"
+import { Button, Card, Checkbox, EmptyState, Field, FloatingNotice, Input, Label, Skeleton, formatDate, handleRefusal, normalizeHandle } from "@diasporale/features"
 import { useActions, useSponsorDashboard, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { BadgeCheckIcon, CircleCheckIcon, CircleDashedIcon, HandshakeIcon, InfoIcon, ShieldCheckIcon, XIcon } from "lucide-react"
 import NextLink from "next/link"
+import { useSearchParams } from "next/navigation"
 import { useId, useState, type ReactNode } from "react"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
 import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
-import { routes } from "@/lib/routes"
+import { SPONSOR_REQUEST_PARAM, routes } from "@/lib/routes"
 
 // ═══════════════════════════════════════════════════════════════
 // Parrainer (EXF-DG-04, PD2 point 3)
 // ═══════════════════════════════════════════════════════════════
 
-const sponsorSchema = z.object({ handle: z.string().trim().min(1, "handle_required") })
+const sponsorSchema = z.object({
+  handle: z.string().trim().min(1, "handle_required"),
+  // EA-10 : on ne parraine qu'une personne que l'on connaît ; la case n'est jamais cochée d'avance.
+  knows: z.boolean().refine((value) => value, "sponsor_acquaintance_required"),
+})
 
-/** `/parrainer` — parrainer par handle, journal des parrainages donnés, retrait, quotas affichés. */
+/**
+ * L'identifiant d'une demande de parrainage reçue par lien (EA-10), s'il respecte la charte des
+ * identifiants ; sinon rien n'est prérempli. Aucune lecture n'en est tirée : ni profil, ni statut.
+ */
+export function requestedSponsorHandle(raw: string | null): string | null {
+  if (raw === null) return null
+  const handle = normalizeHandle(raw)
+  return handleRefusal(handle) === null ? handle : null
+}
+
+/**
+ * `/parrainer` — parrainer par handle, journal des parrainages donnés, retrait, quotas affichés.
+ * Ouvert par le lien d'une demande (`?pour=<identifiant>`, EA-10), le formulaire est prérempli ;
+ * un membre qui ne peut pas parrainer lit son propre refus, et rien de la personne visée.
+ */
 export function SponsorScreen() {
   return (
     <Gate require="member">
@@ -42,7 +61,9 @@ function Sponsor() {
   const dashboard = useSponsorDashboard()
   const actions = useActions()
   const ids = useId()
-  const form = useForm<z.infer<typeof sponsorSchema>>({ resolver: zodResolver(sponsorSchema), defaultValues: { handle: "" } })
+  const params = useSearchParams()
+  const requested = requestedSponsorHandle(params.get(SPONSOR_REQUEST_PARAM))
+  const form = useForm<z.infer<typeof sponsorSchema>>({ resolver: zodResolver(sponsorSchema), defaultValues: { handle: requested ?? "", knows: false } })
 
   if (dashboard.status !== "ready") return <Skeleton className="h-64 w-full rounded-xl" />
   const view = dashboard.data
@@ -53,9 +74,10 @@ function Sponsor() {
       return
     }
     toast.success(t("sponsor.done", { handle: normalizeHandle(handle) }))
-    form.reset({ handle: "" })
+    form.reset({ handle: "", knows: false })
   })
   const error = form.formState.errors.handle?.message
+  const knowsError = form.formState.errors.knows !== undefined
 
   return (
     <>
@@ -77,8 +99,9 @@ function Sponsor() {
           <p className="font-mono text-sm">
             {t("sponsor.quota", { remaining: view.remaining, total: SPONSORSHIPS_PER_WINDOW, days: view.windowDays })}
           </p>
-          <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4 sm:flex-row sm:items-end">
-            <Field id={`${ids}-handle`} label={t("sponsor.handleLabel")} hint={t("sponsor.handleHint")} error={error ? t(`errors.${error}`) : undefined} className="flex-1">
+          <form noValidate onSubmit={onSubmit} className="flex flex-col gap-4">
+            {requested ? <p className="text-[13px] leading-snug text-muted-foreground">{t("sponsorRequest.prefilled")}</p> : null}
+            <Field id={`${ids}-handle`} label={t("sponsor.handleLabel")} hint={t("sponsor.handleHint")} error={error ? t(`errors.${error}`) : undefined}>
               {(control) => (
                 <Input
                   id={control.id}
@@ -92,7 +115,33 @@ function Sponsor() {
                 />
               )}
             </Field>
-            <Button type="submit" variant="social" disabled={form.formState.isSubmitting || view.remaining === 0}>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-start gap-3">
+                <Controller
+                  control={form.control}
+                  name="knows"
+                  render={({ field }) => (
+                    <Checkbox
+                      id={`${ids}-connaissance`}
+                      checked={field.value}
+                      onCheckedChange={(checked) => field.onChange(checked === true)}
+                      aria-invalid={knowsError || undefined}
+                      aria-describedby={knowsError ? `${ids}-connaissance-erreur` : undefined}
+                      className="mt-0.5"
+                    />
+                  )}
+                />
+                <Label htmlFor={`${ids}-connaissance`} className="leading-snug">
+                  {t("sponsorRequest.knows")}
+                </Label>
+              </div>
+              {knowsError ? (
+                <p id={`${ids}-connaissance-erreur`} role="alert" className="text-[13px] font-medium text-destructive">
+                  {t("errors.sponsor_acquaintance_required")}
+                </p>
+              ) : null}
+            </div>
+            <Button type="submit" variant="social" className="self-start" disabled={form.formState.isSubmitting || view.remaining === 0}>
               <HandshakeIcon aria-hidden />
               {form.formState.isSubmitting ? t("common.pleaseWait") : t("sponsor.submit")}
             </Button>

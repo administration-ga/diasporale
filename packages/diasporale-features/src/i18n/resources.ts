@@ -76,6 +76,7 @@ import enReportEmergency from "./locales/en/report-emergency.json"
 import enMessagesUnread from "./locales/en/messages-unread.json"
 import enIdnEntry from "./locales/en/idn-entry.json"
 import enEntryReliability from "./locales/en/entry-reliability.json"
+import enSponsorshipRequest from "./locales/en/sponsorship-request.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -141,6 +142,7 @@ import frReportEmergency from "./locales/fr/report-emergency.json"
 import frMessagesUnread from "./locales/fr/messages-unread.json"
 import frIdnEntry from "./locales/fr/idn-entry.json"
 import frEntryReliability from "./locales/fr/entry-reliability.json"
+import frSponsorshipRequest from "./locales/fr/sponsorship-request.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -214,6 +216,7 @@ export const LOCALE_PARTS = {
     "messages-unread": frMessagesUnread,
     "idn-entry": frIdnEntry,
     "entry-reliability": frEntryReliability,
+    "sponsorship-request": frSponsorshipRequest,
   },
   en: {
     diasporale: enDiasporale,
@@ -281,6 +284,7 @@ export const LOCALE_PARTS = {
     "messages-unread": enMessagesUnread,
     "idn-entry": enIdnEntry,
     "entry-reliability": enEntryReliability,
+    "sponsorship-request": enSponsorshipRequest,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

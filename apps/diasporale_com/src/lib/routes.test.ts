@@ -109,6 +109,12 @@ describe("routes de l'arborescence — cinq destinations et espace personnel (DG
     expect(routes.settingsData()).toBe("/parametres#mes-donnees")
     expect(routes.settingsReports()).toBe("/parametres#mes-signalements")
     expect(routes.sponsorHelp()).toBe("/parametres#parrainage")
+    // EA-10 : la demande de parrainage ne porte que l'identifiant public, encodé ; rien ne s'y injecte.
+    expect(routes.sponsorFor("eloise.ndong")).toBe("/parrainer?pour=eloise.ndong")
+    const forged = new URL(routes.sponsorFor("x&jeton=secret#ancre"), "https://exemple.test")
+    expect([...forged.searchParams.keys()]).toEqual(["pour"])
+    expect(forged.searchParams.get("pour")).toBe("x&jeton=secret#ancre")
+    expect(forged.hash).toBe("")
     expect(routes.register()).toBe("/entrer?inscription=1")
   })
 })

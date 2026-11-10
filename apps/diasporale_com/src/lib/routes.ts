@@ -121,6 +121,9 @@ export const COMMUNITY_RULE_ANCHORS: Readonly<Record<CommunityRule, string>> = {
   measures: "mesures-et-recours",
 }
 
+/** Le paramètre de `/parrainer` qui porte l'identifiant public à parrainer (EA-10). */
+export const SPONSOR_REQUEST_PARAM = "pour"
+
 export const routes = {
   home: () => "/",
   enter: () => "/entrer",
@@ -245,6 +248,11 @@ export const routes = {
   /** L'aide « obtenir un parrainage », dans les paramètres. */
   sponsorHelp: () => "/parametres#parrainage",
   sponsor: () => "/parrainer",
+  /**
+   * La demande de parrainage d'un compte en attente (EA-10) : `/parrainer` prérempli par son
+   * identifiant PUBLIC, seul porté par le lien (ni jeton, ni adresse, ni nom).
+   */
+  sponsorFor: (handle: string) => `/parrainer?${new URLSearchParams({ [SPONSOR_REQUEST_PARAM]: handle })}`,
   attestation: () => "/verification",
   demo: () => "/demo",
   charte: () => "/charte",
@@ -283,6 +291,8 @@ export const ROUTE_FILTER_KEYS = [
   "modifier",
   "nouveau",
   "auteur",
+  // L'identifiant public d'une demande de parrainage (EA-10) : il survit à l'entrée, rien d'autre.
+  "pour",
 ] as const
 
 /** Ancres internes de la vitrine. */

@@ -1,0 +1,29 @@
+{
+  "pendingRoom": {
+    "title": "Your account is pending",
+    "lead": "Meanwhile, you can read your hub, the feed and the network's pages. Posting, commenting, reacting, sending messages and browsing the directory open as soon as your account is sponsored or verified.",
+    "pathsTitle": "Your paths",
+    "sponsorTitle": "Get sponsored by a member you know",
+    "sponsorLink": "Send them your link: it opens sponsorship with your handle already filled in.",
+    "linkLabel": "Your sponsorship request link",
+    "linkPrivacy": "This link carries only your public handle, @{{handle}}: no address, no code, no token.",
+    "copy": "Copy the link",
+    "copied": "Link copied.",
+    "copyFailed": "Copy failed: select the link by hand.",
+    "share": "Share the link",
+    "shareTitle": "Sponsor me on DIASPORALE",
+    "shareFailed": "Sharing did not go through. Copy the link instead.",
+    "showQr": "Show the QR code",
+    "qrTitle": "QR code of your sponsorship request link",
+    "qrHint": "Someone next to you can read it with their phone's camera.",
+    "attestationTitle": "Have your consular registration verified",
+    "attestationBody": "Registered with a consular post? Ask for it to be verified, with your consent."
+  },
+  "sponsorRequest": {
+    "prefilled": "This handle comes from a sponsorship request link. Only sponsor someone you know.",
+    "knows": "I know this person."
+  },
+  "errors": {
+    "sponsor_acquaintance_required": "Tick this box: you only sponsor someone you know."
+  }
+}

@@ -105,6 +105,8 @@ export const FORM_ERROR_CODES = [
   "code_format",
   "attestation_consent_required",
   "clipboard_unavailable",
+  // « Je connais cette personne » (EA-10) : on ne parraine qu'une personne que l'on connaît.
+  "sponsor_acquaintance_required",
 ] as const
 
 export const ACTION_ERROR_CODES = [
