@@ -33,7 +33,6 @@ import {
   type AttestationOutcome,
   type ConsentPurpose,
   type ContentModerationState,
-  type CountryCode,
   type DirectoryVisibility,
   type FacetInput,
   type MembershipEvent,
@@ -44,7 +43,7 @@ import type { ActionErrorCode } from "../data/errors"
 import { postMediaRefusal } from "../data/media"
 import type { ManagedPageDetailView } from "../data/page-admin-port"
 import type { PagePublicationInput } from "../data/page-publications-port"
-import type { ActionResult, CodeDestination, CommentInput, ContentPreferenceKind, IdnSignInInput, JoinInput, PublishInput, PublishMediaInput, PublishOutcome, ReportInput, UploadedMedia } from "../data/port"
+import type { ActionResult, CodeDestination, CommentInput, ContentPreferenceKind, IdnSignInInput, JoinInput, JoinedView, PublishInput, PublishMediaInput, PublishOutcome, ReportInput, UploadedMedia } from "../data/port"
 import { COMMENT_MAX_LENGTH, REPORT_NOTE_MAX, type ReactionKind } from "../data/types"
 import { handleRefusal, handleToken, normalizeHandle } from "../lib/handle"
 import { emailHash, fakeConsularAttestation } from "./attestation-provider"
@@ -371,7 +370,7 @@ export class DemoStore {
     return { ok: true, value: { available: !taken } }
   }
 
-  async join(input: JoinInput): Promise<ActionResult<{ country: CountryCode }>> {
+  async join(input: JoinInput): Promise<ActionResult<JoinedView>> {
     await this.pause()
     const viewer = this.viewer()
     if (!viewer) return fail("not_signed_in")
@@ -379,11 +378,22 @@ export class DemoStore {
     if (viewer.membership && deriveMembershipStatus(viewer.membership.grounds, now) !== "partie") return fail("already_member")
     const facet = parseFacetInput(input.facet, now)
     if (!facet.ok) return fail(facet.code)
-    const handleCheck = await this.checkHandle(input.handle)
-    if (!handleCheck.ok) return fail(handleCheck.code)
-    if (!handleCheck.value.available) return fail("handle_taken")
-    const displayName = input.displayName.trim().replace(/\s+/g, " ")
-    if (displayName.length < DISPLAY_NAME_MIN || displayName.length > DISPLAY_NAME_MAX) return fail("display_name_invalid")
+    // EA-04, comme le moteur : un profil commun publié n'est ni redemandé ni réécrit (nom,
+    // identifiant, accroche) ; retiré, il se republie d'abord par le geste de la personne.
+    const existing = viewer.person.profile
+    let profile = existing
+    if (existing === null) {
+      const handle = input.handle ?? ""
+      if (!handle.trim()) return fail("handle_required")
+      const handleCheck = await this.checkHandle(handle)
+      if (!handleCheck.ok) return fail(handleCheck.code)
+      if (!handleCheck.value.available) return fail("handle_taken")
+      const displayName = (input.displayName ?? "").trim().replace(/\s+/g, " ")
+      if (displayName.length < DISPLAY_NAME_MIN || displayName.length > DISPLAY_NAME_MAX) return fail("display_name_invalid")
+      profile = { handle: normalizeHandle(handle), displayName, headline: null }
+    } else if (!isProfilePublished(viewer.person)) {
+      return fail("profile_republish_required")
+    }
     if (!canCompleteOnboarding(input.consents)) return fail("consent_social_profile_required")
 
     const grounds: MembershipGrounds = {
@@ -406,10 +416,8 @@ export class DemoStore {
       directoryVisibility,
       attestation: { outcome: "none", postSlug: null, requestedAt: null },
     }
-    const person: DemoPerson = {
-      ...viewer.person,
-      profile: { handle: normalizeHandle(input.handle), displayName, headline: null },
-    }
+    // Le profil existant est repris tel quel, par référence : rien n'y est recopié ni effacé.
+    const person: DemoPerson = profile === existing ? viewer.person : { ...viewer.person, profile }
     this.commit({
       ...this.state,
       persons: { ...this.state.persons, [person.id]: person },
@@ -419,7 +427,7 @@ export class DemoStore {
         ...onboardingConsentRecords(input.consents, now).map((record) => ({ ...record, personId: person.id })),
       ],
     })
-    return { ok: true, value: { country: facet.value.countryOfResidence } }
+    return { ok: true, value: { country: facet.value.countryOfResidence, status } }
   }
 
   // ── Contenus ───────────────────────────────────────────────────────────
