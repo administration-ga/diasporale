@@ -45,6 +45,28 @@ export const CONSENT_TEXT_VERSIONS: Readonly<Record<ConsentPurpose, string>> = O
   talents: "2026-10-14",
 })
 
+/**
+ * La portée d'une finalité dans la table `consents` du moteur : le RÉSEAU DIASPORALE, ou la
+ * personne entière. Le moteur relit une finalité de réseau à la portée EXACTE — l'accord aux
+ * notifications avant tout envoi (`notificationConsent`), l'accord à l'attestation avant la
+ * suite d'une demande — : un accord posé sans réseau n'y compte pas, et un retrait sans réseau
+ * ne retire pas l'accord du réseau. Seul le profil social vaut pour la personne : il ouvre le
+ * compte commun à tous les réseaux du moteur.
+ */
+export type ConsentScope = "network" | "person"
+
+export const CONSENT_SCOPES: Readonly<Record<ConsentPurpose, ConsentScope>> = Object.freeze({
+  social_profile: "person",
+  directory: "network",
+  notifications: "network",
+  consular_attestation: "network",
+  talents: "network",
+})
+
+export function consentScope(purpose: ConsentPurpose): ConsentScope {
+  return CONSENT_SCOPES[purpose]
+}
+
 export type OnboardingConsentChoices = Readonly<Record<OnboardingConsentPurpose, boolean>>
 
 /** L'état initial des cases : tout à « non ». C'est le contrat « aucune case précochée ». */

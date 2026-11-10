@@ -180,11 +180,12 @@
     },
     "consular_attestation": {
       "title": "Attestation consulaire",
-      "body": "Donné au moment de la vérification. Le retirer empêche toute nouvelle demande."
+      "body": "Donné au moment de la vérification. Le retirer arrête une demande en cours ; un statut déjà obtenu reste acquis. Une nouvelle vérification vous demandera un nouvel accord."
     },
     "talents": {
       "title": "Profil professionnel visible",
-      "body": "Bientôt : l'annuaire des talents arrive avec l'emploi."
+      "body": "Votre profil de talent porte son propre accord : vous le publiez, le masquez ou le supprimez depuis la page Talents.",
+      "link": "Gérer mon profil de talent"
     }
   },
   "status": {

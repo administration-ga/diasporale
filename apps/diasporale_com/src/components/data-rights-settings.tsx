@@ -10,7 +10,6 @@ import {
   type ActionErrorCode,
   type DataExportProgress,
   type DataRightsCapability,
-  type MembershipView,
 } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { CircleStopIcon, DownloadIcon, Trash2Icon, Undo2Icon } from "lucide-react"
@@ -34,35 +33,55 @@ import { ReportResults } from "./my-reports"
  * décisions de modération qui nous concernent et les contester, et suivre ses
  * propres signalements (`#mes-signalements`, SU01d du moteur).
  *
- * Ouverte au membre SUSPENDU : la section ne lit aucune adhésion, aucune
- * capacité de publication, et ne renvoie vers aucune surface sociale (pas de
- * lien vers le contenu d'une décision). Chaque geste porte sur la personne
- * affichée : les panneaux renaissent avec elle, une réponse tardive est ignorée.
+ * Elle reçoit la PERSONNE, jamais l'adhésion (NP-02) : la même section sert
+ * les réglages d'un membre et la page `/mes-donnees`, ouverte à toute personne
+ * connectée — suspendue, partie ou sans adhésion. Elle ne lit aucune capacité
+ * de publication et ne renvoie vers aucune surface sociale (pas de lien vers le
+ * contenu d'une décision). Chaque geste porte sur la personne affichée : les
+ * panneaux renaissent avec elle, une réponse tardive est ignorée.
  */
-export function DataRightsSettings({ membership }: { membership: MembershipView }) {
+export function DataRightsSettings(props: {
+  person: DataRightsPerson
+  /** `h1` quand la section est la page elle-même (`/mes-donnees`), `h2` dans les réglages. */
+  heading?: "h1" | "h2"
+}) {
   const { t } = useDiasporaleT()
   const rights = useDataRights()
   const titleId = useId()
+  const { person } = props
+  const Heading = props.heading ?? "h2"
   return (
     <section id="mes-donnees" aria-labelledby={titleId} className="scroll-mt-20">
       <Card className="flex min-w-0 flex-col gap-5 p-5">
         <div>
-          <h2 id={titleId} className="font-display text-xl font-bold">{t("settings.data")}</h2>
+          <Heading id={titleId} className={cn("font-display font-bold", Heading === "h1" ? "text-3xl" : "text-xl")}>{t("settings.data")}</Heading>
           <p className="mt-1 text-[13px] leading-snug text-muted-foreground">{t("settings.dataRights.lead")}</p>
         </div>
         {rights === null ? (
           <p className="rounded-lg bg-muted px-3 py-2 text-sm">{t("settings.dataRights.unavailable")}</p>
         ) : (
-          <div key={membership.personId} className="flex min-w-0 flex-col gap-5">
-            <ExportPanel rights={rights} personId={membership.personId} handle={membership.handle} />
-            <ErasurePanel rights={rights} personId={membership.personId} />
-            <DecisionsPanel rights={rights} personId={membership.personId} />
-            {rights.useReports ? <ReportsPanel useReports={rights.useReports} personId={membership.personId} /> : null}
+          <div key={person.personId} className="flex min-w-0 flex-col gap-5">
+            <ExportPanel rights={rights} personId={person.personId} handle={person.handle} />
+            <ErasurePanel rights={rights} personId={person.personId} canLeave={person.canLeave} />
+            <DecisionsPanel rights={rights} personId={person.personId} />
+            {rights.useReports ? <ReportsPanel useReports={rights.useReports} personId={person.personId} /> : null}
           </div>
         )}
       </Card>
     </section>
   )
+}
+
+/** La personne de la session qui exerce ses droits, membre de DIASPORALE ou non. */
+export interface DataRightsPerson {
+  readonly personId: string
+  /** Son identifiant public, s'il en a un : il nomme le fichier exporté. */
+  readonly handle: string | null
+  /**
+   * Une adhésion vivante à quitter : l'effacement propose alors « Quitter DIASPORALE » comme
+   * alternative. Faux pour qui est parti ou n'est jamais entré : il n'y a rien à quitter.
+   */
+  readonly canLeave: boolean
 }
 
 /** L'heure de l'appareil, relue chaque minute : le compte à rebours se tient sans relecture du serveur. */
@@ -93,8 +112,10 @@ function Panel(props: { title: string; lead?: string; anchor?: string; children:
 
 // ── Export ─────────────────────────────────────────────────────────────────
 
-function exportFileName(handle: string, exportedAt: number): string {
-  return `diasporale-${handle}-${new Date(exportedAt).toISOString().slice(0, 10)}.json`
+/** Le nom du fichier : l'identifiant public s'il existe, sinon la seule date (aucune donnée de plus). */
+function exportFileName(handle: string | null, exportedAt: number): string {
+  const day = new Date(exportedAt).toISOString().slice(0, 10)
+  return handle === null ? `diasporale-${day}.json` : `diasporale-${handle}-${day}.json`
 }
 
 /**
@@ -122,7 +143,7 @@ function saveJsonFile(name: string, json: string): boolean {
   }
 }
 
-function ExportPanel({ rights, personId, handle }: { rights: DataRightsCapability; personId: string; handle: string }) {
+function ExportPanel({ rights, personId, handle }: { rights: DataRightsCapability; personId: string; handle: string | null }) {
   const { t, locale } = useDiasporaleT()
   const last = rights.useLastExport(personId)
   const mounted = useMounted()
@@ -206,7 +227,7 @@ function ExportPanel({ rights, personId, handle }: { rights: DataRightsCapabilit
 
 // ── Effacement ─────────────────────────────────────────────────────────────
 
-function ErasurePanel({ rights, personId }: { rights: DataRightsCapability; personId: string }) {
+function ErasurePanel({ rights, personId, canLeave }: { rights: DataRightsCapability; personId: string; canLeave: boolean }) {
   const { t, locale } = useDiasporaleT()
   const erasure = rights.useErasure(personId)
   const now = useNow()
@@ -278,7 +299,7 @@ function ErasurePanel({ rights, personId }: { rights: DataRightsCapability; pers
           <p role="alert" className="text-sm text-destructive">{t("settings.dataRights.erasure.loadError")}</p>
         ) : erasure.data.state === "none" ? (
           <>
-            <p className="text-sm leading-relaxed">{t("settings.dataRights.erasure.leaveInstead")}</p>
+            {canLeave ? <p className="text-sm leading-relaxed">{t("settings.dataRights.erasure.leaveInstead")}</p> : null}
             <Button variant="destructive" className="self-start" disabled={busy} onClick={() => setOpen(true)}>
               <Trash2Icon aria-hidden />
               {t("settings.delete")}
@@ -300,13 +321,19 @@ function ErasurePanel({ rights, personId }: { rights: DataRightsCapability; pers
         )}
       </div>
       <FeedbackLine feedback={feedback} />
-      <ErasureSheet open={open && state === "none"} onOpenChange={setOpen} now={now} request={request} />
+      <ErasureSheet open={open && state === "none"} onOpenChange={setOpen} now={now} request={request} canLeave={canLeave} />
     </Panel>
   )
 }
 
-/** La confirmation forte : portée, grâce, échéance sans retour, alternative du départ, case à cocher. */
-function ErasureSheet(props: { open: boolean; onOpenChange: (open: boolean) => void; now: number; request: () => Promise<ActionErrorCode | null> }) {
+/** La confirmation forte : portée, grâce, échéance sans retour, alternative du départ (s'il y a une adhésion), case à cocher. */
+function ErasureSheet(props: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  now: number
+  request: () => Promise<ActionErrorCode | null>
+  canLeave: boolean
+}) {
   const { t, locale } = useDiasporaleT()
   const mounted = useMounted()
   const running = useRef(false)
@@ -346,7 +373,7 @@ function ErasureSheet(props: { open: boolean; onOpenChange: (open: boolean) => v
           <p>{t("settings.deleteConfirmBody")}</p>
           <p>{t("settings.dataRights.erasure.grace", { days: ERASURE_GRACE_DAYS, date: formatDate(props.now + ERASURE_GRACE_MS, locale) })}</p>
           <p>{t("settings.dataRights.erasure.final")}</p>
-          <p>{t("settings.dataRights.erasure.leaveInstead")}</p>
+          {props.canLeave ? <p>{t("settings.dataRights.erasure.leaveInstead")}</p> : null}
           <p className="text-muted-foreground">{t("settings.dataRights.erasure.exportFirst")}</p>
         </div>
         <div className="mt-5 flex items-start gap-3">

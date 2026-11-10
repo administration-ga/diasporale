@@ -1,7 +1,7 @@
 {
   "settings": {
     "dataRights": {
-      "lead": "Export the data of your ANTSIA account, shared by all its networks, request its erasure and review the moderation decisions that concern you. These remain available if your membership is suspended.",
+      "lead": "Export the data of your ANTSIA account, shared by all its networks, request its erasure and review the moderation decisions that concern you. These remain available without a DIASPORALE membership, after leaving, or if your membership is suspended.",
       "unavailable": "These actions are not available here yet.",
       "loading": "Loading…",
       "export": {
@@ -123,6 +123,17 @@
         }
       }
     }
+  },
+  "footer": {
+    "myData": "My data"
+  },
+  "welcome": {
+    "myDataLead": "Member or not:",
+    "myData": "export or erase my data"
+  },
+  "myData": {
+    "backToSettings": "Back to settings",
+    "backToWelcome": "Back to welcome"
   },
   "errors": {
     "erasure_not_cancellable": "The cancellation period has passed: erasure can no longer be cancelled.",

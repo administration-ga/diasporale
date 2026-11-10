@@ -218,6 +218,12 @@ export const routes = {
   settingsData: () => "/parametres#mes-donnees",
   /** Mes signalements : accusé de réception, échéance légale et issue (SU01d du moteur). */
   settingsReports: () => "/parametres#mes-signalements",
+  /**
+   * « Mes données » hors de la coque de membre (NP-02, EA-05) : export, effacement, décisions,
+   * recours et signalements pour toute personne connectée — membre, partie, suspendue ou sans
+   * adhésion. Aucune surface sociale n'y est montée.
+   */
+  myData: () => "/mes-donnees",
   /** L'aide « obtenir un parrainage », dans les paramètres. */
   sponsorHelp: () => "/parametres#parrainage",
   sponsor: () => "/parrainer",

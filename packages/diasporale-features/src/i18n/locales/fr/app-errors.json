@@ -1,0 +1,13 @@
+{
+  "appError": {
+    "title": "Cet écran n’a pas pu s’afficher.",
+    "body": "Une erreur inattendue l’a interrompu. Vous pouvez réessayer, ou revenir au fil.",
+    "retry": "Réessayer",
+    "backToFeed": "Revenir au fil",
+    "stale": {
+      "title": "Une nouvelle version du site est disponible.",
+      "body": "{{brand}} a été mis à jour pendant votre visite. Rechargez la page pour continuer.",
+      "reload": "Recharger"
+    }
+  }
+}
