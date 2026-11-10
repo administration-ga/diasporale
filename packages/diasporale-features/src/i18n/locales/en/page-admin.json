@@ -225,39 +225,6 @@
     "claims": {
       "title": "My claims",
       "sentOn": "Sent on {{date}}"
-    },
-    "review": {
-      "title": "Claims to review",
-      "lead": "Reserved for DIASPORALE moderation. Every decision is reasoned and logged.",
-      "demoNote": "Demo: Mireille reviews claims on behalf of moderation.",
-      "empty": "No claim is awaiting a decision.",
-      "claimant": "Request from {{name}}",
-      "receivedOn": "received on {{date}}",
-      "evidenceCount_one": "{{count}} document",
-      "evidenceCount_other": "{{count}} documents",
-      "open": "Review",
-      "more": "Next claims",
-      "first": "Back to the start",
-      "sheetTitle": "Claim for {{page}}",
-      "sheetDescription": "Read the note and the documents, then rule with a reasoned decision.",
-      "claimantLabel": "Claimant",
-      "page": "Page",
-      "note": "Claimant's note",
-      "noNote": "No note.",
-      "evidence": "Documents",
-      "evidenceOpen": "Open document {{index}}",
-      "evidencePending": "Document {{index}}: scan in progress.",
-      "evidenceBlocked": "Document {{index}}: blocked by the scan.",
-      "evidenceKept": "Document {{index}}: received, not viewable here.",
-      "decisionLegend": "Decision",
-      "decision": {
-        "approved": "Approve: the claimant becomes an administrator and the page becomes “Verified”",
-        "rejected": "Reject: nothing changes for the page"
-      },
-      "reason": "Reason for the decision",
-      "reasonHint": "It is shared with the claimant ({{min}} to {{max}} characters).",
-      "submit": "Record the decision",
-      "decided": "Decision recorded."
     }
   },
   "errors": {
@@ -291,8 +258,6 @@
     "page_claim_mandate_required": "State your mandate.",
     "page_claim_consent_required": "Tick the statement to send your request.",
     "page_claim_closed": "This claim is no longer awaiting a decision: already decided, or its author is no longer an active member.",
-    "page_decision_required": "Choose a decision.",
-    "page_decision_reason_length": "The reason has 3 to 500 characters.",
     "page_image_type_invalid": "Accepted images: JPEG, PNG or WebP.",
     "page_image_too_large": "Image too heavy: 5 MB at most for the logo, 10 MB for the banner."
   }

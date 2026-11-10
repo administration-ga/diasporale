@@ -9,6 +9,8 @@
  *     signalements ouverts et la relecture préalable, filtrés par le pays de la
  *     cible, la nature et l'équipe ; un dossier s'examine dans une feuille
  *     (aperçu borné, décisions antérieures, décision motivée) ;
+ *   · « Pages à vérifier » (AS-01) : les revendications de page en attente, par
+ *     pays de la page, tranchées par la modération du réseau ;
  *   · « Recours » : les recours du réseau, à l'administration du réseau seule ;
  *   · « Équipe » : ses équipes ; leur composition pour l'administration du réseau ;
  *   · « Réglages » (MD-04) : relecture, liens, cadence et mots bloqués, à
@@ -30,6 +32,7 @@ import { useSearchParams } from "next/navigation"
 import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
 import { ModerationDeskAppeals } from "@/components/moderation-desk-appeals"
+import { ModerationDeskClaims } from "@/components/moderation-desk-claims"
 import { DESK_ACCESS_ERRORS, DeskErrorLine, deskList } from "@/components/moderation-desk-parts"
 import { ModerationDeskQueue } from "@/components/moderation-desk-queue"
 import { ModerationDeskSettings } from "@/components/moderation-desk-settings"
@@ -37,7 +40,7 @@ import { ModerationDeskTeam } from "@/components/moderation-desk-team"
 import { routes } from "@/lib/routes"
 
 /** Les onglets du guichet, mêmes valeurs que `routes.moderationDesk(tab)`. */
-export const DESK_TABS = ["file", "recours", "equipe", "reglages"] as const
+export const DESK_TABS = ["file", "pages", "recours", "equipe", "reglages"] as const
 export type DeskTab = (typeof DESK_TABS)[number]
 
 /** L'onglet demandé par l'adresse ; inconnu ou absent : « File ». */
@@ -47,13 +50,15 @@ export function parseDeskTab(raw: string | null): DeskTab {
 
 const TAB_LABELS: Readonly<Record<DeskTab, string>> = {
   file: "moderationDesk.tab.file",
+  pages: "moderationDesk.tab.claims",
   recours: "moderationDesk.tab.appeals",
   equipe: "moderationDesk.tab.team",
   reglages: "moderationDesk.tab.settings",
 }
 
-/** Un onglet offert à ce rôle : les recours et les réglages sont à l'administration du réseau seule. */
+/** Un onglet offert à ce rôle : les recours et les réglages à l'administration du réseau, les pages à vérifier aux rôles de réseau. */
 function offersTab(tab: DeskTab, view: ModerationDeskView): boolean {
+  if (tab === "pages") return view.canReviewClaims
   if (tab === "recours") return view.canReviewAppeals
   if (tab === "reglages") return view.canManagePolicy
   return true
@@ -137,7 +142,11 @@ function DeskBody(props: { readonly desk: ModerationDeskCapability; readonly vie
           <NextLink key={item.id} href={item.href} className={className} aria-current={item.active ? "page" : undefined}>{children}</NextLink>
         )}
       />
-      {props.tab === "recours" ? (
+      {props.tab === "pages" ? (
+        view.canReviewClaims
+          ? <ModerationDeskClaims desk={props.desk} personId={props.personId} />
+          : <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">{t("moderationDesk.claims.restricted")}</p>
+      ) : props.tab === "recours" ? (
         view.canReviewAppeals
           ? <ModerationDeskAppeals desk={props.desk} personId={props.personId} />
           : <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">{t("moderationDesk.appeals.restricted")}</p>

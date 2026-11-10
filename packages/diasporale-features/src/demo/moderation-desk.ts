@@ -3,7 +3,7 @@
  *
  * EXPLICITEMENT FICTIVE, et cohérente avec le magasin de démonstration :
  *   · la personne de la session, membre active du jeu de démonstration, reçoit un
- *     rôle FICTIF d'administration du réseau pour parcourir les trois onglets ;
+ *     rôle FICTIF d'administration du réseau pour parcourir tous les onglets ;
  *     elle fait partie de l'équipe fictive de départ ;
  *   · MD-01 : les responsables du réseau se nomment, se changent et se retirent
  *     comme dans le moteur (administration seule, motif, membre active
@@ -30,7 +30,12 @@
  *     défauts sont ceux du moteur (`MODERATION_POLICY_DEFAULTS`) et la règle
  *     « sans réglage » celle de `moderationWithoutPolicy` du moteur. Un réglage
  *     ou un mot posé ici (administration seule, motif, bornes du moteur) reste
- *     dans la mémoire de la page : il ne retient ni ne publie rien.
+ *     dans la mémoire de la page : il ne retient ni ne publie rien ;
+ *   · AS-01 : « Pages à vérifier » lit les VRAIES revendications de la
+ *     démonstration, déposées depuis « Mon activité » (`demoPageClaimsDesk`) ; le
+ *     rôle de réseau fictif les instruit, jamais leur demandeur ni une personne
+ *     qui a une ligne de signataire sur la page (refus indistinct), et une
+ *     validation rend la page « Vérifié » dans ce navigateur, comme le moteur.
  * Aucune statistique : une fenêtre liste, elle ne compte rien.
  */
 import { reportDecisionDueAt, reportLegalBasis } from "@antsia/social-domain/moderation"
@@ -52,6 +57,8 @@ import {
   deskZoneKey,
   isInDeskZone,
   type DeskBlockedTermView,
+  type DeskClaimDetailView,
+  type DeskClaimView,
   type DeskCaseDetailView,
   type DeskCaseView,
   type DeskDeadlineLane,
@@ -80,6 +87,7 @@ import {
 } from "../data/moderation-desk-port"
 import type { ActionResult } from "../data/port"
 import type { Loadable } from "../data/types"
+import { demoPageClaimsDesk } from "./page-admin"
 import { statusOf } from "./selectors"
 import type { DemoStore } from "./store"
 
@@ -330,6 +338,8 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
   const listeners = new Set<() => void>()
   let revision = 0
   let current: DeskWorld | null = null
+  // AS-01 : les revendications vivent dans l'état de démonstration des pages (déposées depuis « Mon activité »).
+  const claims = demoPageClaimsDesk(store)
 
   const emit = () => {
     revision += 1
@@ -338,12 +348,14 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
   const subscribe = (listener: () => void) => {
     listeners.add(listener)
     const unsubscribe = store.subscribe(listener)
+    const unsubscribeClaims = claims.subscribe(listener)
     return () => {
       listeners.delete(listener)
       unsubscribe()
+      unsubscribeClaims()
     }
   }
-  const snapshot = () => `${store.getVersion()}:${revision}`
+  const snapshot = () => `${store.getVersion()}:${revision}:${claims.getVersion()}`
   /** `null` au rendu serveur : la démonstration ne se lit qu'au navigateur. */
   const useSnapshot = () => useSyncExternalStore(subscribe, snapshot, () => null)
 
@@ -450,6 +462,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
             canReviewAppeals: capacity.admin,
             canManageTeams: capacity.admin,
             canManagePolicy: capacity.admin,
+            canReviewClaims: capacity.networkWide,
             teams,
           },
         }
@@ -775,6 +788,42 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
       }
       emit()
       return { ok: true, value: null }
+    },
+
+    useClaims({ personId, zone, cursor }) {
+      const version = useSnapshot()
+      const zoneKey = deskZoneKey(zone)
+      return useMemo((): Loadable<DeskPage<DeskClaimView>> => {
+        if (version === null) return LOADING
+        const refusal = viewerRefusal(personId)
+        if (refusal !== null) return refused(refusal)
+        const desk = deskWorld()
+        // Comme `pages/claims` : le rôle de réseau seul instruit.
+        if (!capacityOf(desk, personId).networkWide) return refused("not_found")
+        const filter = deskZoneFromKey(zoneKey)
+        return windowed(claims.pending(personId).filter((row) => isInDeskZone(filter, row.country)), cursor, desk.world)
+      }, [version, personId, zoneKey, cursor])
+    },
+
+    useClaim({ personId, claimId }) {
+      const version = useSnapshot()
+      return useMemo((): Loadable<DeskClaimDetailView> => {
+        if (version === null) return LOADING
+        const refusal = viewerRefusal(personId)
+        if (refusal !== null) return refused(refusal)
+        if (!capacityOf(deskWorld(), personId).networkWide) return refused("not_found")
+        const detail = claims.detail(personId, claimId)
+        return detail === null ? refused("not_found") : { status: "ready", data: detail }
+      }, [version, personId, claimId])
+    },
+
+    async decideClaim(input) {
+      const refusal = viewerRefusal(input.personId)
+      if (refusal !== null) return fail(refusal)
+      if (!capacityOf(deskWorld(), input.personId).networkWide) return fail("not_found")
+      const reasonRefusal = deskReasonRefusal(input.reason)
+      if (reasonRefusal !== null) return fail(reasonRefusal)
+      return claims.decide({ deciderId: input.personId, claimId: input.claimId, decision: input.decision, reason: input.reason })
     },
   }
 }

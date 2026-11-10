@@ -22,6 +22,7 @@ import {
   type Loadable,
 } from "../data"
 import { createDemoModerationDesk, DEMO_DESK_TEAM_ID, DEMO_DESK_WINDOW } from "./moderation-desk"
+import { createDemoPageAdmin, demoManagedPage } from "./page-admin"
 import { createDemoSeed, type DemoState } from "./state"
 import { DEMO_STORAGE_KEY, DemoStore } from "./store"
 
@@ -320,7 +321,7 @@ describe("Guichet de démonstration — responsables du réseau (MD-01)", () => 
     await act(async () => { await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-steeve", role: "network_admin", reason: REASON }) })
     await act(async () => { await desk.setResponsibleRole({ personId: PERSON, memberPersonId: PERSON, role: "member", reason: REASON }) })
     expect(capacity(desk)).toEqual({
-      role: "team_member", networkWide: false, canReviewAppeals: false, canManageTeams: false, canManagePolicy: false,
+      role: "team_member", networkWide: false, canReviewAppeals: false, canManageTeams: false, canManagePolicy: false, canReviewClaims: false,
       teams: [{ teamId: DEMO_DESK_TEAM_ID, name: "Équipe France (fictive)", scope: null, isMember: true }],
     })
     const queue = (teamId: string | null) => renderHook(() => desk.useQueue({ personId: PERSON, zone: { kind: "all" }, surface: null, teamId, cursor: null })).result.current
@@ -378,6 +379,76 @@ describe("Guichet de démonstration — réglages de modération (MD-04)", () =>
     expect(await desk.setBlockedTerm({ personId: PERSON, term: "un-de-trop", active: true, reason: REASON })).toEqual({ ok: false, code: "moderation_desk_terms_full" })
     // Débloquer reste possible au plafond.
     await act(async () => { expect(await desk.setBlockedTerm({ personId: PERSON, term: "motfictif0", active: false, reason: REASON })).toEqual({ ok: true, value: null }) })
+  })
+})
+
+describe("Guichet de démonstration — pages à vérifier (AS-01)", () => {
+  const evidence = [new File([new Uint8Array(16)], "statuts.pdf", { type: "application/pdf" })]
+  /** Une revendication déposée par la personne de la session, comme depuis « Mon activité ». */
+  async function requestClaim(store: DemoStore, pageId: string): Promise<string> {
+    const management = createDemoPageAdmin(store, { storage: null }).management
+    let claimId = ""
+    await act(async () => {
+      const result = await management?.requestClaim({ pageId, note: "Mandat déclaré : présidence.", evidence })
+      if (result?.ok) claimId = result.value.claimId
+    })
+    return claimId
+  }
+  const claims = (desk: ReturnType<typeof setup>["desk"], personId: string, zone: DeskQueueRequest["zone"] = { kind: "all" }) =>
+    ready(renderHook(() => desk.useClaims({ personId, zone, cursor: null })).result.current).items
+
+  it("lit les vraies revendications de la démonstration, par pays de la page ; la demandeuse ne tranche pas la sienne", async () => {
+    const { store, desk } = setup()
+    expect(ready(renderHook(() => desk.useDesk(PERSON)).result.current)?.canReviewClaims).toBe(true)
+    expect(claims(desk, PERSON)).toEqual([])
+    const claimId = await requestClaim(store, "page-asso-bordeaux")
+    expect(claims(desk, PERSON)).toMatchObject([{ claimId, country: "FR", evidenceCount: 1, party: "author", page: { id: "page-asso-bordeaux", badge: "community" } }])
+    expect(claims(desk, PERSON, { kind: "country", country: "BE" })).toEqual([])
+    expect(ready(renderHook(() => desk.useClaim({ personId: PERSON, claimId })).result.current)).toMatchObject({ claimant: { handle: "prisca.abanga" }, evidence: [{ url: null, withheld: null }], canDecide: false })
+    expect(await desk.decideClaim({ personId: PERSON, claimId, decision: "approved", reason: REASON })).toEqual({ ok: false, code: "not_found" })
+    expect(renderHook(() => desk.useClaims({ personId: OTHER, zone: { kind: "all" }, cursor: null })).result.current).toEqual({ status: "error", code: "not_found" })
+  })
+
+  it("un autre responsable tranche par une décision motivée : la page devient « Vérifié », la file se vide", async () => {
+    const { store, desk } = setup()
+    const claimId = await requestClaim(store, "page-asso-bordeaux")
+    await act(async () => { await store.switchTo("p-steeve") })
+    expect(claims(desk, "p-steeve")).toMatchObject([{ claimId, party: null }])
+    expect(ready(renderHook(() => desk.useClaim({ personId: "p-steeve", claimId })).result.current).canDecide).toBe(true)
+    expect(await desk.decideClaim({ personId: "p-steeve", claimId, decision: "approved", reason: "Court" })).toEqual({ ok: false, code: "moderation_desk_reason_length" })
+    await act(async () => {
+      expect(await desk.decideClaim({ personId: "p-steeve", claimId, decision: "approved", reason: REASON })).toEqual({ ok: true, value: { status: "approved" } })
+    })
+    expect(claims(desk, "p-steeve")).toEqual([])
+    expect(demoManagedPage(store, "etudiants-bordeaux-demo")?.badge).toBe("verified")
+    expect(await desk.decideClaim({ personId: "p-steeve", claimId, decision: "rejected", reason: REASON })).toEqual({ ok: false, code: "moderation_desk_conflict" })
+  })
+
+  it("un signataire de la page, même invité, ne tranche pas ; sans rôle de réseau, plus de file", async () => {
+    const { store, desk } = setup()
+    // Mireille (vérifiée) crée une page, y invite Steeve, puis en demande la vérification.
+    await act(async () => { await store.switchTo("p-mireille") })
+    const management = createDemoPageAdmin(store, { storage: null }).management
+    let pageId = ""
+    await act(async () => {
+      const created = await management?.createPage({ ownerKind: "association", name: "Amicale de Lille", country: "FR" })
+      if (created?.ok) pageId = created.value.pageId
+    })
+    await act(async () => { expect(await management?.grantRole(pageId, "steeve.ngounie", "signatory")).toMatchObject({ ok: true, value: { invited: true } }) })
+    const claimId = await requestClaim(store, pageId)
+    expect(claims(desk, "p-mireille")).toMatchObject([{ claimId, party: "author" }])
+    // Steeve n'a pas répondu à l'invitation : sa ligne de signataire suffit à l'écarter.
+    await act(async () => { await store.switchTo("p-steeve") })
+    expect(claims(desk, "p-steeve")).toMatchObject([{ claimId, party: "page" }])
+    expect(ready(renderHook(() => desk.useClaim({ personId: "p-steeve", claimId })).result.current).canDecide).toBe(false)
+    expect(await desk.decideClaim({ personId: "p-steeve", claimId, decision: "approved", reason: REASON })).toEqual({ ok: false, code: "not_found" })
+
+    await act(async () => { await store.switchTo(PERSON) })
+    expect(claims(desk, PERSON)).toMatchObject([{ claimId, party: null }])
+    await act(async () => { await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-steeve", role: "network_admin", reason: REASON }) })
+    await act(async () => { await desk.setResponsibleRole({ personId: PERSON, memberPersonId: PERSON, role: "member", reason: REASON }) })
+    expect(ready(renderHook(() => desk.useDesk(PERSON)).result.current)?.canReviewClaims).toBe(false)
+    expect(renderHook(() => desk.useClaims({ personId: PERSON, zone: { kind: "all" }, cursor: null })).result.current).toEqual({ status: "error", code: "not_found" })
   })
 })
 

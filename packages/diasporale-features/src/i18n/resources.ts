@@ -77,6 +77,7 @@ import enMessagesUnread from "./locales/en/messages-unread.json"
 import enIdnEntry from "./locales/en/idn-entry.json"
 import enNetworkResponsibles from "./locales/en/network-responsibles.json"
 import enModerationSettings from "./locales/en/moderation-settings.json"
+import enPageClaimsDesk from "./locales/en/page-claims-desk.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -143,6 +144,7 @@ import frMessagesUnread from "./locales/fr/messages-unread.json"
 import frIdnEntry from "./locales/fr/idn-entry.json"
 import frNetworkResponsibles from "./locales/fr/network-responsibles.json"
 import frModerationSettings from "./locales/fr/moderation-settings.json"
+import frPageClaimsDesk from "./locales/fr/page-claims-desk.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -217,6 +219,7 @@ export const LOCALE_PARTS = {
     "idn-entry": frIdnEntry,
     "network-responsibles": frNetworkResponsibles,
     "moderation-settings": frModerationSettings,
+    "page-claims-desk": frPageClaimsDesk,
   },
   en: {
     diasporale: enDiasporale,
@@ -285,6 +288,7 @@ export const LOCALE_PARTS = {
     "idn-entry": enIdnEntry,
     "network-responsibles": enNetworkResponsibles,
     "moderation-settings": enModerationSettings,
+    "page-claims-desk": enPageClaimsDesk,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

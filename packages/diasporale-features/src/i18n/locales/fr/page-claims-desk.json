@@ -1,0 +1,58 @@
+{
+  "moderationDesk": {
+    "tab": {
+      "claims": "Pages à vérifier"
+    },
+    "claims": {
+      "title": "Pages à vérifier",
+      "lead": "Les demandes de vérification des pages d'association et d'entreprise, pièces à l'appui. Validée, une demande fait de son auteur un administrateur de la page, qui devient « Vérifié » — jamais « Officiel ». Chaque décision est motivée, son motif est lu par le demandeur, et elle est inscrite au journal des décisions du moteur.",
+      "countryNote": "Le pays est celui de la page. Pour l'instant, seuls les responsables du réseau tranchent ces demandes ; leur demandeur et les signataires de la page, jamais.",
+      "restricted": "Les demandes de vérification des pages sont tranchées par les responsables du réseau.",
+      "emptyTitle": "Aucune page à vérifier",
+      "emptyBody": "Aucune demande de vérification n'attend de décision.",
+      "emptyFilteredBody": "Aucune demande de vérification n'attend de décision pour ce choix de pays.",
+      "receivedLine": "Reçue le {{date}}",
+      "evidenceCount_one": "{{count}} pièce",
+      "evidenceCount_other": "{{count}} pièces",
+      "open": "Instruire",
+      "view": "Consulter",
+      "sheetTitle": "Vérification de {{page}}",
+      "sheetDescription": "Lisez la note et les pièces, puis tranchez par une décision motivée.",
+      "page": "Page",
+      "received": "Reçue le",
+      "claimant": "Demandeur",
+      "loading": "Chargement de la demande…",
+      "note": "Note du demandeur",
+      "noNote": "Aucune note.",
+      "evidence": "Pièces",
+      "evidencePrivate": "Lues par la modération du réseau et par le demandeur seuls.",
+      "noEvidence": "Aucune pièce n'est jointe à cette demande.",
+      "evidenceOpen": "Ouvrir la pièce {{index}}",
+      "evidencePending": "Pièce {{index}} : analyse en cours.",
+      "evidenceUnavailable": "Pièce {{index}} : l'analyse n'a pas pu se faire, la pièce reste retenue.",
+      "evidenceBlocked": "Pièce {{index}} : bloquée par l'analyse.",
+      "evidenceKept": "Pièce {{index}} : reçue, non consultable ici.",
+      "party": {
+        "title": "Vous ne tranchez pas cette demande",
+        "author": "Vous avez déposé cette demande.",
+        "page": "Vous avez une ligne de signataire sur cette page, même en invitation.",
+        "server": "Le serveur ne vous laisse pas trancher cette demande.",
+        "handOver": "Un autre responsable du réseau doit la trancher."
+      },
+      "decisionTitle": "Décision",
+      "decisionLegend": "Votre décision",
+      "decision": {
+        "approved": "Valider",
+        "approvedHint": "Le demandeur devient administrateur de la page, qui devient « Vérifié ».",
+        "rejected": "Refuser",
+        "rejectedHint": "Rien ne change pour la page ; le demandeur lit le motif."
+      },
+      "reasonHint": "Lu par le demandeur et inscrit au journal des décisions ({{min}} à {{max}} caractères).",
+      "submit": "Enregistrer la décision",
+      "decided": {
+        "approved": "Vérification validée : {{page}}.",
+        "rejected": "Demande refusée : {{page}}."
+      }
+    }
+  }
+}

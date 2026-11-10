@@ -1,0 +1,58 @@
+{
+  "moderationDesk": {
+    "tab": {
+      "claims": "Pages to verify"
+    },
+    "claims": {
+      "title": "Pages to verify",
+      "lead": "Verification requests for association and business pages, with supporting documents. Once approved, a request makes its author an administrator of the page, which becomes “Verified”, never “Official”. Every decision carries a reason, read by the requester, and is written to the engine's decision log.",
+      "countryNote": "The country is the page's. For now, only the network's responsibles decide these requests; never their requester nor the page's signatories.",
+      "restricted": "Page verification requests are decided by the network's responsibles.",
+      "emptyTitle": "No page to verify",
+      "emptyBody": "No verification request is waiting for a decision.",
+      "emptyFilteredBody": "No verification request is waiting for a decision for this country choice.",
+      "receivedLine": "Received on {{date}}",
+      "evidenceCount_one": "{{count}} document",
+      "evidenceCount_other": "{{count}} documents",
+      "open": "Review",
+      "view": "View",
+      "sheetTitle": "Verification of {{page}}",
+      "sheetDescription": "Read the note and the documents, then decide with a reasoned decision.",
+      "page": "Page",
+      "received": "Received on",
+      "claimant": "Requester",
+      "loading": "Loading the request…",
+      "note": "Requester's note",
+      "noNote": "No note.",
+      "evidence": "Documents",
+      "evidencePrivate": "Read only by the network moderation and the requester.",
+      "noEvidence": "No document is attached to this request.",
+      "evidenceOpen": "Open document {{index}}",
+      "evidencePending": "Document {{index}}: scan in progress.",
+      "evidenceUnavailable": "Document {{index}}: the scan could not run, the document stays withheld.",
+      "evidenceBlocked": "Document {{index}}: blocked by the scan.",
+      "evidenceKept": "Document {{index}}: received, not viewable here.",
+      "party": {
+        "title": "You do not decide this request",
+        "author": "You submitted this request.",
+        "page": "You have a signatory entry on this page, even as an invitation.",
+        "server": "The server does not let you decide this request.",
+        "handOver": "Another network responsible must decide it."
+      },
+      "decisionTitle": "Decision",
+      "decisionLegend": "Your decision",
+      "decision": {
+        "approved": "Approve",
+        "approvedHint": "The requester becomes an administrator of the page, which becomes “Verified”.",
+        "rejected": "Reject",
+        "rejectedHint": "Nothing changes for the page; the requester reads the reason."
+      },
+      "reasonHint": "Read by the requester and written to the decision log ({{min}} to {{max}} characters).",
+      "submit": "Save the decision",
+      "decided": {
+        "approved": "Verification approved: {{page}}.",
+        "rejected": "Request rejected: {{page}}."
+      }
+    }
+  }
+}

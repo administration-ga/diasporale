@@ -13,6 +13,12 @@
  * statut (créer exige `verifiee`, revendiquer `declaree`) → droit sur la page
  * (rôle VIVANT relu à chaque geste). Aucune pièce n'est gardée : la
  * démonstration ne conserve que le type et le poids des fichiers choisis.
+ *
+ * AS-01 : l'instruction des revendications vit au bureau de modération de
+ * démonstration, qui porte la compétence (son rôle fictif) ; ce module lui
+ * prête l'état et les règles des pages (`demoPageClaimsDesk`) : file en
+ * attente, conflit d'intérêts (demandeur, toute ligne de signataire même
+ * invitée), effet d'une décision validée.
  */
 import { isProfilePublished } from "@antsia/social-domain/content"
 import { normalizePageAssociationType, normalizePageCity, normalizePageSector } from "@antsia/social-domain/pagePresentation"
@@ -20,10 +26,10 @@ import { hasCapability, isCountryCode, type CountryCode, type MembershipStatus, 
 import { useMemo, useSyncExternalStore } from "react"
 
 import type { ActionErrorCode } from "../data/errors"
+import type { DeskClaimDecision, DeskClaimDetailView, DeskClaimParty, DeskClaimView } from "../data/moderation-desk-port"
 import {
   isMemberPageKind,
   pageClaimNoteRefusal,
-  pageDecisionReasonRefusal,
   pageDescriptionRefusal,
   pageEvidenceSetRefusal,
   pageHandleFor,
@@ -36,8 +42,6 @@ import {
   type ManagedPageView,
   type MemberPageKind,
   type PageAdminCapability,
-  type PageClaimDetailView,
-  type PageClaimQueueView,
   type PageClaimStatus,
   type PageClaimView,
   type PageInvitationView,
@@ -54,11 +58,10 @@ import type { DemoPage, DemoState } from "./state"
 import { DEMO_STORAGE_KEY, type DemoStore } from "./store"
 
 export const DEMO_PAGE_ADMIN_STORAGE_KEY = "diasporale:demonstration:page-admin:v1"
-const OVERLAY_VERSION = 1
+/** 2 (AS-01) : la liste fictive des instructeurs quitte l'état ; un état antérieur repart de l'équipe fictive. */
+const OVERLAY_VERSION = 2
 const DAY = 24 * 60 * 60 * 1000
-const CLAIM_QUEUE_PAGE = 20
 const MY_CLAIMS_MAX = 50
-const CURSOR_TAG = "demo-page-claims"
 
 type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">
 
@@ -120,16 +123,15 @@ export interface DemoPageAdminState {
   readonly identity: Readonly<Record<string, DemoIdentity>>
   /** Pages devenues « Vérifié » par une revendication validée (jamais « Officiel »). */
   readonly verified: readonly string[]
-  /** Qui instruit les revendications au nom de la modération du réseau (démonstration seulement). */
-  readonly reviewers: readonly string[]
 }
 
 /**
- * L'équipe fictive des pages du jeu : Mireille gère le traiteur parisien et
- * instruit les revendications ; Steeve administre l'association lyonnaise et y
- * a invité Mireille ; l'entreprise bruxelloise a déjà son administratrice (elle
- * ne se revendique donc pas). Les associations de Bordeaux et de Montréal
- * restent sans administrateur : revendicables.
+ * L'équipe fictive des pages du jeu : Mireille gère le traiteur parisien ;
+ * Steeve administre l'association lyonnaise et y a invité Mireille ;
+ * l'entreprise bruxelloise a déjà son administratrice (elle ne se revendique
+ * donc pas). Les associations de Bordeaux et de Montréal restent sans
+ * administrateur : revendicables. Les revendications s'instruisent au bureau
+ * de modération de démonstration, avec son rôle fictif.
  */
 export function seedPageAdmin(state: DemoState): DemoPageAdminState {
   const at = state.createdAt
@@ -151,7 +153,6 @@ export function seedPageAdmin(state: DemoState): DemoPageAdminState {
     created: [],
     identity: {},
     verified: [],
-    reviewers: state.persons["p-mireille"] ? ["p-mireille"] : [],
   }
 }
 
@@ -160,7 +161,7 @@ function isOverlay(value: unknown, seedCreatedAt: number): value is DemoPageAdmi
   const candidate = value as Partial<DemoPageAdminState>
   return candidate.version === OVERLAY_VERSION && candidate.seedCreatedAt === seedCreatedAt && typeof candidate.sequence === "number"
     && Array.isArray(candidate.signatories) && Array.isArray(candidate.claims) && Array.isArray(candidate.created)
-    && Array.isArray(candidate.verified) && Array.isArray(candidate.reviewers) && typeof candidate.identity === "object" && candidate.identity !== null
+    && Array.isArray(candidate.verified) && typeof candidate.identity === "object" && candidate.identity !== null
 }
 
 /** L'état propre à la capacité, à côté d'UN magasin ; il suit ses remises à zéro. */
@@ -398,7 +399,11 @@ function claimView(state: DemoState, overlay: DemoPageAdminState, claim: DemoCla
   }
 }
 
-const isReviewer = (overlay: DemoPageAdminState, personId: string) => overlay.reviewers.includes(personId)
+/** AS-01 : le conflit d'intérêts du moteur — le demandeur, ou toute personne qui a une ligne de signataire sur la page, même invitée. */
+function claimParty(overlay: DemoPageAdminState, claim: DemoClaim, personId: string): DeskClaimParty | null {
+  if (claim.claimantId === personId) return "author"
+  return rowOf(overlay, claim.pageId, personId) !== undefined ? "page" : null
+}
 
 // ═══════════════════════════════════════════════════════════════
 // Vues — pures, testables sans React
@@ -483,42 +488,6 @@ export function myClaimsView(state: DemoState, overlay: DemoPageAdminState, now:
   return { status: "ready", data: claims }
 }
 
-export function claimQueueView(
-  state: DemoState,
-  overlay: DemoPageAdminState,
-  args: { readonly status: PageClaimStatus; readonly cursor: string | null },
-  now: number,
-): Loadable<PageClaimQueueView | null> {
-  const viewer = readerOf(state, now)
-  if (typeof viewer === "string") return { status: "error", code: viewer }
-  if (!isReviewer(overlay, viewer.id)) return { status: "ready", data: null }
-  let offset = 0
-  if (args.cursor !== null) {
-    const match = new RegExp(`^${CURSOR_TAG}:(\\d{1,6})$`).exec(args.cursor)
-    if (!match) return { status: "error", code: "unknown" }
-    offset = Number(match[1])
-  }
-  // Les plus anciennes d'abord : une file se vide par le bas.
-  const queue = overlay.claims.filter((claim) => claim.status === args.status).sort((left, right) => left.createdAt - right.createdAt || (left.id < right.id ? -1 : 1))
-  const window = queue.slice(offset, offset + CLAIM_QUEUE_PAGE)
-  const next = offset + CLAIM_QUEUE_PAGE
-  return {
-    status: "ready",
-    data: { items: window.flatMap((claim) => claimView(state, overlay, claim) ?? []), continueCursor: next < queue.length ? `${CURSOR_TAG}:${next}` : null },
-  }
-}
-
-export function claimDetailView(state: DemoState, overlay: DemoPageAdminState, claimId: string, now: number): Loadable<PageClaimDetailView | null> {
-  const viewer = readerOf(state, now)
-  if (typeof viewer === "string") return { status: "error", code: viewer }
-  const claim = overlay.claims.find((candidate) => candidate.id === claimId)
-  // Son demandeur ou la modération seuls ; pour tout autre, le même refus qu'un identifiant inventé.
-  if (!claim || (claim.claimantId !== viewer.id && !isReviewer(overlay, viewer.id))) return { status: "error", code: "not_found" }
-  const view = claimView(state, overlay, claim)
-  if (!view) return { status: "error", code: "not_found" }
-  // La démonstration ne garde aucun fichier : chaque pièce est dite reçue, jamais servie.
-  return { status: "ready", data: { ...view, evidence: claim.evidence.map(() => ({ url: null, withheld: null })) } }
-}
 
 // ═══════════════════════════════════════════════════════════════
 // La capacité
@@ -527,7 +496,6 @@ export function claimDetailView(state: DemoState, overlay: DemoPageAdminState, c
 const fail = (code: ActionErrorCode): ActionResult<never> => ({ ok: false, code })
 const ok = <T>(value: T): ActionResult<T> => ({ ok: true, value })
 const LOADING = { status: "loading" } as const
-const NOTHING: Loadable<null> = { status: "ready", data: null }
 const NO_SIGNATORIES: Loadable<readonly PageSignatoryView[]> = { status: "ready", data: [] }
 
 export function createDemoPageAdmin(store: DemoStore, options: { readonly storage?: StorageLike | null } = {}): PageAdminCapability {
@@ -563,17 +531,6 @@ export function createDemoPageAdmin(store: DemoStore, options: { readonly storag
     useMyClaims() {
       const version = useVersions()
       return useMemo(() => (version === null ? LOADING : myClaimsView(store.getState(), overlay.current(), store.now())), [version])
-    },
-    useClaimQueue({ status, cursor }) {
-      const version = useVersions()
-      return useMemo(() => (version === null ? LOADING : claimQueueView(store.getState(), overlay.current(), { status, cursor }, store.now())), [version, status, cursor])
-    },
-    useClaim(claimId) {
-      const version = useVersions()
-      return useMemo(() => {
-        if (version === null) return LOADING
-        return claimId === null ? NOTHING : claimDetailView(store.getState(), overlay.current(), claimId, store.now())
-      }, [version, claimId])
     },
 
     async createPage(input) {
@@ -764,36 +721,6 @@ export function createDemoPageAdmin(store: DemoStore, options: { readonly storag
       overlay.commit({ ...current, claims: current.claims.map((candidate) => (candidate === claim ? { ...claim, status: "withdrawn", evidence: [], decidedAt: null } : candidate)) })
       return ok({ withdrawn: true })
     },
-
-    async decideClaim(claimId, decision, reason) {
-      const state = store.getState()
-      const now = store.now()
-      const writer = writerOf(state, now, "declaree")
-      if (typeof writer === "string") return fail(writer)
-      const current = overlay.current()
-      if (!isReviewer(current, writer.id)) return fail("not_found")
-      const claim = current.claims.find((candidate) => candidate.id === claimId)
-      if (!claim) return fail("not_found")
-      if (claim.status !== "pending") return fail("page_claim_closed")
-      const refusal = pageDecisionReasonRefusal(reason)
-      if (refusal) return fail(refusal)
-      const page = pageById(state, current, claim.pageId)
-      if (!page) return fail("not_found")
-      let signatories = current.signatories
-      let verified = current.verified
-      if (decision === "approved") {
-        if (page.badge === "official") return fail("page_not_claimable")
-        if (!isActiveMember(state, claim.claimantId, now)) return fail("page_claim_closed")
-        const row = rowOf(current, page.id, claim.claimantId)
-        signatories = row
-          ? signatories.map((candidate) => (candidate === row ? { ...row, role: "admin" as const, acceptedAt: row.acceptedAt ?? now } : candidate))
-          : [...signatories, { pageId: page.id, personId: claim.claimantId, role: "admin", acceptedAt: now, createdAt: now }]
-        if (page.badge === "community" && !verified.includes(page.id)) verified = [...verified, page.id]
-      }
-      const decided: DemoClaim = { ...claim, status: decision, decisionReason: reason.trim(), decidedAt: now }
-      overlay.commit({ ...current, signatories, verified, claims: current.claims.map((candidate) => (candidate === claim ? decided : candidate)) })
-      return ok({ status: decision })
-    },
   }
 
   return {
@@ -813,6 +740,75 @@ export function createDemoPageAdmin(store: DemoStore, options: { readonly storag
 export function demoManagedPage(store: DemoStore, handle: string): ManagedPageDetailView | null {
   const view = managedPageView(store.getState(), overlayOf(store).current(), handle, store.now())
   return view.status === "ready" ? view.data : null
+}
+
+/**
+ * AS-01 — les revendications vues du bureau de modération de démonstration. Le
+ * bureau porte la compétence (son rôle fictif) et le motif ; ce module garde
+ * l'état et les règles des pages, celles du moteur : le conflit d'intérêts
+ * (demandeur, toute ligne de signataire même invitée, refus indistinct), une
+ * demande close (`moderation_desk_conflict`), une page officielle jamais
+ * revendiquée, et l'effet d'une validation (administrateur, « Vérifié »).
+ */
+export function demoPageClaimsDesk(store: DemoStore) {
+  const overlay = overlayOf(store)
+  return {
+    subscribe: overlay.subscribe,
+    getVersion: overlay.getVersion,
+    /** Les revendications en attente, la plus ancienne d'abord, avec le conflit d'intérêts de `viewerId`. */
+    pending(viewerId: string): readonly DeskClaimView[] {
+      const state = store.getState()
+      const current = overlay.current()
+      return current.claims
+        .filter((claim) => claim.status === "pending")
+        .sort((left, right) => left.createdAt - right.createdAt || (left.id < right.id ? -1 : 1))
+        .flatMap((claim) => {
+          const page = pageById(state, current, claim.pageId)
+          if (!page) return []
+          return [{ claimId: claim.id, page: refOf(page), country: page.country, evidenceCount: claim.evidence.length, createdAt: claim.createdAt, party: claimParty(current, claim, viewerId) }]
+        })
+    },
+    /** La fiche d'une revendication en attente ; `null` sinon. La démonstration ne garde aucun fichier : chaque pièce est dite reçue, jamais servie. */
+    detail(viewerId: string, claimId: string): DeskClaimDetailView | null {
+      const state = store.getState()
+      const current = overlay.current()
+      const claim = current.claims.find((candidate) => candidate.id === claimId)
+      if (!claim || claim.status !== "pending" || !pageById(state, current, claim.pageId)) return null
+      return {
+        claimId: claim.id,
+        claimant: personLabel(state, claim.claimantId),
+        note: claim.note,
+        evidence: claim.evidence.map(() => ({ url: null, withheld: null })),
+        canDecide: claimParty(current, claim, viewerId) === null,
+      }
+    },
+    /** Trancher (motif déjà jugé par le bureau) ; mêmes règles et même ordre que `decidePageClaim`. */
+    decide(input: { readonly deciderId: string; readonly claimId: string; readonly decision: DeskClaimDecision; readonly reason: string }): ActionResult<{ readonly status: DeskClaimDecision }> {
+      const state = store.getState()
+      const now = store.now()
+      const current = overlay.current()
+      const claim = current.claims.find((candidate) => candidate.id === input.claimId)
+      if (!claim) return fail("not_found")
+      if (claimParty(current, claim, input.deciderId) !== null) return fail("not_found")
+      if (claim.status !== "pending") return fail("moderation_desk_conflict")
+      const page = pageById(state, current, claim.pageId)
+      if (!page) return fail("not_found")
+      let signatories = current.signatories
+      let verified = current.verified
+      if (input.decision === "approved") {
+        if (page.badge === "official") return fail("page_not_claimable")
+        if (!isActiveMember(state, claim.claimantId, now)) return fail("moderation_desk_conflict")
+        const row = rowOf(current, page.id, claim.claimantId)
+        signatories = row
+          ? signatories.map((candidate) => (candidate === row ? { ...row, role: "admin" as const, acceptedAt: row.acceptedAt ?? now } : candidate))
+          : [...signatories, { pageId: page.id, personId: claim.claimantId, role: "admin", acceptedAt: now, createdAt: now }]
+        if (page.badge === "community" && !verified.includes(page.id)) verified = [...verified, page.id]
+      }
+      const decided: DemoClaim = { ...claim, status: input.decision, decisionReason: input.reason.trim(), decidedAt: now }
+      overlay.commit({ ...current, signatories, verified, claims: current.claims.map((candidate) => (candidate === claim ? decided : candidate)) })
+      return ok({ status: input.decision })
+    },
+  }
 }
 
 /** Équipes vivantes partagées avec les demandes et les avis, sans copie de rôles. */

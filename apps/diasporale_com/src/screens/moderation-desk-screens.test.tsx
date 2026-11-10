@@ -8,6 +8,10 @@ import type {
   DeskBlockedTermView,
   DeskCandidateView,
   DeskCaseDetailView,
+  DeskClaimDecisionInput,
+  DeskClaimDetailView,
+  DeskClaimsRequest,
+  DeskClaimView,
   DeskCaseView,
   DeskDeadlineLane,
   DeskDeadlinesRequest,
@@ -102,6 +106,7 @@ const MODERATOR: ModerationDeskView = {
   canReviewAppeals: false,
   canManageTeams: false,
   canManagePolicy: false,
+  canReviewClaims: true,
   teams: [{ teamId: "team-fr", name: "Équipe France (fixture)", scope: null, isMember: true }],
 }
 const ADMIN: ModerationDeskView = { ...MODERATOR, role: "network_admin", canReviewAppeals: true, canManageTeams: true, canManagePolicy: true }
@@ -116,6 +121,22 @@ const SETTINGS: DeskSettingsView = {
   ],
 }
 const TERM: DeskBlockedTermView = { termId: "term-1", term: "consulat", updatedAt: NOW - HOUR }
+
+/** AS-01 : une demande libre, une demande dont la personne signe la page, et leurs fiches. */
+const CLAIM: DeskClaimView = {
+  claimId: "claim-1",
+  page: { id: "page-1", handle: "amicale-lyon", name: "Amicale de Lyon (fixture)", ownerKind: "association", badge: "community", country: "FR" },
+  country: "FR", evidenceCount: 3, createdAt: NOW - HOUR, party: null,
+}
+const PARTY_CLAIM: DeskClaimView = { ...CLAIM, claimId: "claim-2", page: { ...CLAIM.page, id: "page-2", handle: "cercle-bordeaux", name: "Cercle de Bordeaux (fixture)" }, party: "page" }
+const SERVER_REFUSED_CLAIM: DeskClaimView = { ...CLAIM, claimId: "claim-3", page: { ...CLAIM.page, id: "page-3", handle: "union-lille", name: "Union de Lille (fixture)" } }
+const CLAIM_DETAIL: DeskClaimDetailView = {
+  claimId: "claim-1",
+  claimant: { personId: "person-awa", handle: "awa.fixture", displayName: "Awa Fixture" },
+  note: "Mandat déclaré : présidence (fixture).",
+  evidence: [{ url: null, withheld: "fileScanPending" }, { url: "https://depot.exemple.test/piece", withheld: null }, { url: null, withheld: "fileQuarantined" }],
+  canDecide: null,
+}
 
 const CASE: DeskCaseView = {
   reportId: "report-1", surface: "post", country: "FR", ground: "harassment", status: "open", level: "network",
@@ -188,6 +209,16 @@ function fakeDesk(options: {
   const settingsReads: string[] = []
   const setPolicy = vi.fn(async (_input: DeskPolicyInput): Promise<ActionResult> => OK)
   const setBlockedTerm = vi.fn(async (_input: DeskBlockedTermInput): Promise<ActionResult> => OK)
+  const claims = windowOf([CLAIM, PARTY_CLAIM, SERVER_REFUSED_CLAIM])
+  const claimReads: DeskClaimsRequest[] = []
+  const claimDetails = new Map<string, Loadable<DeskClaimDetailView>>([
+    [CLAIM.claimId, ready(CLAIM_DETAIL)],
+    [PARTY_CLAIM.claimId, ready({ ...CLAIM_DETAIL, claimId: PARTY_CLAIM.claimId })],
+    // Le serveur (PG-01 du moteur) dit que la personne ne peut pas trancher, sans conflit connu de la file.
+    [SERVER_REFUSED_CLAIM.claimId, ready({ ...CLAIM_DETAIL, claimId: SERVER_REFUSED_CLAIM.claimId, canDecide: false })],
+  ])
+  const missingClaim: Loadable<DeskClaimDetailView> = { status: "error", code: "not_found" }
+  const decideClaim = vi.fn(async (input: DeskClaimDecisionInput): Promise<ActionResult<{ readonly status: "approved" | "rejected" }>> => ({ ok: true, value: { status: input.decision } }))
   const desk: ModerationDeskCapability = {
     demonstration: options.demonstration ?? false,
     useDesk: () => view,
@@ -220,8 +251,14 @@ function fakeDesk(options: {
     useBlockedTerms: () => terms,
     setPolicy,
     setBlockedTerm,
+    useClaims: (request) => {
+      claimReads.push(request)
+      return claims
+    },
+    useClaim: ({ claimId }) => claimDetails.get(claimId) ?? missingClaim,
+    decideClaim,
   }
-  return { desk, queueReads, deadlineReads, decide, decideAppeal, setTeamMember, findMember, setResponsibleRole, settingsReads, setPolicy, setBlockedTerm }
+  return { desk, queueReads, deadlineReads, decide, decideAppeal, setTeamMember, findMember, setResponsibleRole, settingsReads, setPolicy, setBlockedTerm, claimReads, decideClaim }
 }
 
 const tree = () => <I18nProvider locale="fr"><ModerationDesk membership={MEMBER} /></I18nProvider>
@@ -264,6 +301,8 @@ describe("Guichet — accès sans divulgation", () => {
     expect(parseDeskTab(null)).toBe("file")
     expect(parseDeskTab("recours")).toBe("recours")
     expect(parseDeskTab("equipe")).toBe("equipe")
+    expect(parseDeskTab("pages")).toBe("pages")
+    expect(parseDeskTab("reglages")).toBe("reglages")
     expect(parseDeskTab("inconnu")).toBe("file")
   })
 })
@@ -277,7 +316,7 @@ describe("Guichet — la file par pays", () => {
     expect(screen.getByText(text("moderationDesk.capacity.role.network_moderator"))).toBeInTheDocument()
     const nav = screen.getByRole("navigation", { name: text("moderationDesk.tabsLabel") })
     // Un modérateur réseau n'a pas l'onglet des recours.
-    expect(within(nav).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/moderation?onglet=file", "/moderation?onglet=equipe"])
+    expect(within(nav).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/moderation?onglet=file", "/moderation?onglet=pages", "/moderation?onglet=equipe"])
     expect(screen.getByRole("heading", { name: text("moderationDesk.surface.post") })).toBeInTheDocument()
     expect(fake.queueReads.at(-1)).toMatchObject({ personId: ME, zone: { kind: "all" }, surface: null, teamId: null, cursor: null })
 
@@ -637,6 +676,91 @@ describe("Guichet — responsables du réseau (MD-01)", () => {
   })
 })
 
+describe("Guichet — pages à vérifier (AS-01)", () => {
+  /** La carte d'une demande dans la file, par le nom de sa page. */
+  function cardOf(name: string): HTMLElement {
+    const card = screen.getByRole("heading", { name }).closest("li")
+    if (!card) throw new Error(`carte absente : ${name}`)
+    return card
+  }
+
+  it("n'offre pas l'onglet à un membre d'équipe sans rôle de réseau, et ne lit rien pour lui même par l'adresse", () => {
+    mocks.params = new URLSearchParams("onglet=pages")
+    const fake = fakeDesk({ view: ready({ ...MODERATOR, role: "team_member", networkWide: false, canReviewClaims: false }) })
+    mocks.desk = fake.desk
+    render(tree())
+    const nav = screen.getByRole("navigation", { name: text("moderationDesk.tabsLabel") })
+    expect(within(nav).queryByRole("link", { name: text("moderationDesk.tab.claims") })).toBeNull()
+    expect(screen.getByText(text("moderationDesk.claims.restricted"))).toBeInTheDocument()
+    expect(fake.claimReads).toEqual([])
+  })
+
+  it("liste les demandes par pays de la page et transmet le filtre ; le conflit d'intérêts se dit sur la carte", async () => {
+    mocks.params = new URLSearchParams("onglet=pages")
+    const fake = fakeDesk()
+    mocks.desk = fake.desk
+    const user = userEvent.setup()
+    render(tree())
+    const nav = screen.getByRole("navigation", { name: text("moderationDesk.tabsLabel") })
+    expect(within(nav).getByRole("link", { name: text("moderationDesk.tab.claims") })).toHaveAttribute("aria-current", "page")
+    expect(fake.claimReads.at(-1)).toMatchObject({ personId: ME, zone: { kind: "all" }, cursor: null })
+    const free = cardOf(CLAIM.page.name)
+    expect(within(free).getByText(text("moderationDesk.claims.evidenceCount", { count: 3 }), { exact: false })).toBeInTheDocument()
+    expect(within(free).getByRole("button", { name: text("moderationDesk.claims.open") })).toBeInTheDocument()
+    const party = cardOf(PARTY_CLAIM.page.name)
+    expect(within(party).getByText(text("moderationDesk.claims.party.page"))).toBeInTheDocument()
+    expect(within(party).getByRole("button", { name: text("moderationDesk.claims.view") })).toBeInTheDocument()
+    await user.selectOptions(screen.getByLabelText(text("moderationDesk.filters.zone")), "FR")
+    expect(fake.claimReads.at(-1)).toMatchObject({ zone: { kind: "country", country: "FR" } })
+  })
+
+  it("instruit une demande : pièces servies par la garde, issue et motif exigés, décision transmise", async () => {
+    mocks.params = new URLSearchParams("onglet=pages")
+    const fake = fakeDesk()
+    mocks.desk = fake.desk
+    const user = userEvent.setup()
+    render(tree())
+    await user.click(within(cardOf(CLAIM.page.name)).getByRole("button", { name: text("moderationDesk.claims.open") }))
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).getByText("Awa Fixture (@awa.fixture)")).toBeInTheDocument()
+    expect(within(dialog).getByText(CLAIM_DETAIL.note ?? "")).toBeInTheDocument()
+    expect(within(dialog).getByText(text("moderationDesk.claims.evidencePending", { index: 1 }))).toBeInTheDocument()
+    expect(within(dialog).getByRole("link", { name: text("moderationDesk.claims.evidenceOpen", { index: 2 }) })).toHaveAttribute("href", "https://depot.exemple.test/piece")
+    expect(within(dialog).getByText(text("moderationDesk.claims.evidenceBlocked", { index: 3 }))).toBeInTheDocument()
+    await user.click(within(dialog).getByRole("button", { name: text("moderationDesk.claims.submit") }))
+    expect(await within(dialog).findByText(text("errors.moderation_desk_outcome_required"))).toBeInTheDocument()
+    expect(within(dialog).getByText(text("errors.moderation_desk_reason_length", DESK_ERROR_VALUES))).toBeInTheDocument()
+    expect(fake.decideClaim).not.toHaveBeenCalled()
+    await user.click(within(dialog).getByRole("radio", { name: named("moderationDesk.claims.decision.approved") }))
+    await user.type(within(dialog).getByLabelText(text("moderationDesk.decision.reason")), "Statuts et procès-verbal conformes.")
+    await act(async () => {
+      await user.click(within(dialog).getByRole("button", { name: text("moderationDesk.claims.submit") }))
+    })
+    await waitFor(() => expect(fake.decideClaim).toHaveBeenCalledExactlyOnceWith({ personId: ME, claimId: CLAIM.claimId, decision: "approved", reason: "Statuts et procès-verbal conformes." }))
+    expect(mocks.success).toHaveBeenCalledWith(translate("moderationDesk.claims.decided.approved", { page: CLAIM.page.name }))
+  })
+
+  it("n'offre aucun formulaire à un signataire de la page, ni quand le serveur dit que la personne ne peut pas trancher", async () => {
+    mocks.params = new URLSearchParams("onglet=pages")
+    const fake = fakeDesk()
+    mocks.desk = fake.desk
+    const user = userEvent.setup()
+    render(tree())
+    await user.click(within(cardOf(PARTY_CLAIM.page.name)).getByRole("button", { name: text("moderationDesk.claims.view") }))
+    let dialog = await screen.findByRole("dialog")
+    expect(within(dialog).getByText(text("moderationDesk.claims.party.title"))).toBeInTheDocument()
+    expect(within(dialog).queryByRole("button", { name: text("moderationDesk.claims.submit") })).toBeNull()
+    await user.keyboard("{Escape}")
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+
+    await user.click(within(cardOf(SERVER_REFUSED_CLAIM.page.name)).getByRole("button", { name: text("moderationDesk.claims.open") }))
+    dialog = await screen.findByRole("dialog")
+    expect(within(dialog).getByText(text("moderationDesk.claims.party.server"))).toBeInTheDocument()
+    expect(within(dialog).queryByRole("radio")).toBeNull()
+    expect(fake.decideClaim).not.toHaveBeenCalled()
+  })
+})
+
 describe("Guichet — réglages de modération (MD-04)", () => {
   it("n'offre pas l'onglet « Réglages » à un modérateur, et ne lit rien pour lui même par l'adresse", () => {
     mocks.params = new URLSearchParams("onglet=reglages")
@@ -764,13 +888,13 @@ describe("Guichet — rôle posé puis retiré, effet au rendu suivant (LX-03)",
     mocks.desk = { ...fake.desk, useDesk: () => current } satisfies ModerationDeskCapability
     const { rerender } = render(tree())
     const links = () => within(screen.getByRole("navigation", { name: text("moderationDesk.tabsLabel") })).getAllByRole("link").map((link) => link.getAttribute("href"))
-    expect(links()).toEqual(["/moderation?onglet=file", "/moderation?onglet=recours", "/moderation?onglet=equipe", "/moderation?onglet=reglages"])
+    expect(links()).toEqual(["/moderation?onglet=file", "/moderation?onglet=pages", "/moderation?onglet=recours", "/moderation?onglet=equipe", "/moderation?onglet=reglages"])
     expect(screen.getByRole("heading", { name: text("moderationDesk.responsibles.title") })).toBeInTheDocument()
 
     // Rétrogradé à la modération du réseau : plus de recours, plus de nomination ; la file reste.
     current = ready(MODERATOR)
     rerender(tree())
-    expect(links()).toEqual(["/moderation?onglet=file", "/moderation?onglet=equipe"])
+    expect(links()).toEqual(["/moderation?onglet=file", "/moderation?onglet=pages", "/moderation?onglet=equipe"])
     expect(screen.queryByRole("heading", { name: text("moderationDesk.responsibles.title") })).toBeNull()
 
     // Retiré, sans équipe : le refus indistinct du guichet, rien n'est révélé.

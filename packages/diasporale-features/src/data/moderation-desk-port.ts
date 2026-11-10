@@ -35,11 +35,18 @@
  *     bloqués — se lisent et se posent par les fonctions du moteur, réservées à
  *     l'administration du réseau, motif obligatoire, journalisés par le moteur.
  *     Ce qui vaut sans réglage se lit dans les constantes du moteur, jamais dans
- *     un nombre écrit à la main.
+ *     un nombre écrit à la main ;
+ *   · AS-01 : les revendications de page en attente (« Pages à vérifier ») se
+ *     lisent par pays de la page, avec la garde du moteur (rôle de réseau) ; la
+ *     fiche, les pièces (servies par la garde des fichiers) et la décision
+ *     motivée passent par `pages/claims`. Le demandeur et toute personne qui a
+ *     une ligne de signataire sur la page ne tranchent jamais : l'écran n'offre
+ *     pas le geste, le moteur refuse de façon indistincte.
  *
  * Aucune donnée consulaire, aucune statistique : une fenêtre de file ne compte
  * rien, elle liste.
  */
+import type { MediaWithheld } from "@antsia/social-contracts/media"
 import { DECISION_REASON_MAX } from "@antsia/social-domain/audit"
 import { REPORT_DEADLINES_ORDINANCE, REPORT_LEGAL_BASES, type ContentReportReason, type ReportLegalBasis } from "@antsia/social-domain/moderation"
 import {
@@ -54,8 +61,10 @@ import {
   type ModerationSurface,
   type SanctionKind,
 } from "@antsia/social-domain/moderationPolicy"
+import { PAGE_CLAIM_DECISIONS } from "@antsia/social-domain/pages"
 import { isCountryCode, normalizeCountryCode, type CountryCode } from "@diasporale/domain"
 
+import type { PageRefView } from "./page-admin-port"
 import type { ActionResult } from "./port"
 import type { ServiceReviewReportReason } from "./service-reviews-port"
 import type { Loadable, PostMediaView } from "./types"
@@ -319,6 +328,8 @@ export interface ModerationDeskView {
   readonly canManageTeams: boolean
   /** MD-04 : règle la modération du réseau (administration du réseau seule). */
   readonly canManagePolicy: boolean
+  /** AS-01 : instruit les revendications de page (`pages/claims` n'admet que le rôle de réseau). */
+  readonly canReviewClaims: boolean
   /** Toutes les équipes vivantes pour l'administration du réseau ; les siennes sinon. */
   readonly teams: readonly DeskTeamView[]
 }
@@ -677,6 +688,65 @@ export function deskWindowMsOf(minutes: number): number {
   return minutes * MINUTE_MS
 }
 
+// ── Pages à vérifier (AS-01) ───────────────────────────────────────────────
+
+/** Les deux issues d'une revendication (celles du moteur) : valider, refuser. */
+export const DESK_CLAIM_DECISIONS = PAGE_CLAIM_DECISIONS
+export type DeskClaimDecision = (typeof DESK_CLAIM_DECISIONS)[number]
+
+/** Pourquoi la personne ne tranche pas une revendication : elle l'a déposée, ou elle a une ligne de signataire sur la page. */
+export const DESK_CLAIM_PARTIES = ["author", "page"] as const
+export type DeskClaimParty = (typeof DESK_CLAIM_PARTIES)[number]
+
+/** Une revendication en attente, telle que la file la montre : ni note, ni pièce, ni demandeur. */
+export interface DeskClaimView {
+  readonly claimId: string
+  readonly page: PageRefView
+  /** Le pays de la PAGE ; `null` : sans pays. */
+  readonly country: CountryCode | null
+  readonly evidenceCount: number
+  readonly createdAt: number
+  readonly party: DeskClaimParty | null
+}
+
+export interface DeskClaimsRequest {
+  readonly personId: string
+  readonly zone: DeskZone
+  readonly cursor: string | null
+}
+
+export interface DeskClaimRequest {
+  readonly personId: string
+  readonly claimId: string
+}
+
+/** Une pièce servie par la garde des fichiers : sans adresse tant que l'analyse n'a pas parlé, ou si elle a bloqué. */
+export interface DeskClaimEvidenceView {
+  readonly url: string | null
+  readonly withheld: MediaWithheld | null
+}
+
+/** La fiche d'une revendication : demandeur (profil publié), note, pièces. */
+export interface DeskClaimDetailView {
+  readonly claimId: string
+  readonly claimant: { readonly personId: string; readonly handle: string | null; readonly displayName: string | null }
+  readonly note: string | null
+  readonly evidence: readonly DeskClaimEvidenceView[]
+  /**
+   * Le serveur dit si la personne peut trancher MAINTENANT (`canDecide` de
+   * `getPageClaim`, PG-01 du moteur) ; `null` : il ne le dit pas, l'écran s'en
+   * tient alors au conflit d'intérêts de la file.
+   */
+  readonly canDecide: boolean | null
+}
+
+export interface DeskClaimDecisionInput {
+  readonly personId: string
+  readonly claimId: string
+  readonly decision: DeskClaimDecision
+  readonly reason: string
+}
+
 // ── Délais légaux (SU01d du moteur) ────────────────────────────────────────
 
 /** Le fondement d'un délai légal (`REPORT_LEGAL_BASES` du moteur). */
@@ -840,4 +910,10 @@ export interface ModerationDeskCapability {
   setPolicy(input: DeskPolicyInput): Promise<ActionResult>
   /** MD-04 : bloquer ou débloquer un mot, motif obligatoire ; le moteur le journalise. */
   setBlockedTerm(input: DeskBlockedTermInput): Promise<ActionResult>
+  /** AS-01 : une fenêtre des revendications en attente, filtrée par le pays de la page, la plus ancienne d'abord (rôle de réseau ; sinon `not_found`). */
+  useClaims(request: DeskClaimsRequest): Loadable<DeskPage<DeskClaimView>>
+  /** AS-01 : la fiche d'une revendication et ses pièces. */
+  useClaim(request: DeskClaimRequest): Loadable<DeskClaimDetailView>
+  /** AS-01 : trancher, motif obligatoire ; le demandeur et les signataires de la page reçoivent le refus indistinct (`not_found`). */
+  decideClaim(input: DeskClaimDecisionInput): Promise<ActionResult<{ readonly status: DeskClaimDecision }>>
 }
