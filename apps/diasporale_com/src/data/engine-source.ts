@@ -10,9 +10,11 @@
  *   serveur devient un état `error` à code fermé, jamais un écran blanc.
  * - Écritures : client Convex et client Better Auth (codes à usage unique) ;
  *   chacune rend un résultat à code FERMÉ (`errors.<code>`), jamais une exception.
- * - Ce que le moteur ne sert pas encore rend `feature_unavailable` : IDN et SMS
+ * - Ce que le moteur ne sert pas encore rend `feature_unavailable` : le SMS
  *   (PA4) — jamais une donnée inventée. L'attestation consulaire (PD3) rend
  *   `attestation_unavailable` tant que le déploiement n'a pas sa clé de service.
+ * - IDN (EA-02) : le départ et la lecture des portes ouvertes vivent dans
+ *   `engine-idn.ts`.
  * - Les capacités du plan global (docs/14 : pages, gestion des pages, services,
  *   demandes, droits personnels, associations, avis) vivent chacune dans son
  *   fichier `engine-<capacité>.ts`, sur les briques communes de `engine-kit.ts`.
@@ -40,6 +42,8 @@ import type {
   BookmarksPageQuery,
   BookmarksPageRequest,
   BookmarksPageView,
+  CommentPageQuery,
+  CommentsPageRequest,
   CommentThreadView,
   CommentView,
   ConsentView,
@@ -61,12 +65,13 @@ import type {
   ProfilePostsPageRequest,
   ReactionKind,
   RelationView,
+  RepliesPageRequest,
   SessionView,
   SponsorDashboardView,
   SuggestionView,
   UnreadCountView,
 } from "@diasporale/features/data"
-import { BOOKMARKS_PAGE_SIZE, COMMENTS_PAGE, describeMediaFile, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
+import { BOOKMARKS_PAGE_SIZE, COMMENT_REPLIES_PAGE, COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH, prepareMediaFile } from "@diasporale/features/data"
 import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
@@ -81,6 +86,7 @@ import {
   failed,
   LOADING,
   type Loaded,
+  memberReadError,
   PAGE_ACCESS_ERRORS,
   ready,
   Refusal,
@@ -109,6 +115,8 @@ import { createEnginePilotMetrics } from "./engine-pilot-metrics"
 import { createEngineConversations } from "./engine-conversations"
 import { createEngineDemoAccounts } from "./engine-demo-accounts"
 import { createEnginePageDecisions } from "./engine-page-decisions"
+import { startIdnSignIn, useEngineEntryDoors } from "./engine-idn"
+import { createEngineCallSettings } from "./engine-call-settings"
 import {
   toAccountView,
   toConsentViews,
@@ -127,6 +135,7 @@ import {
   toOwnProfileView,
   toPostView,
   toProfileView,
+  toPublishOutcome,
   toRelationView,
   toSuggestionView,
   toSponsorDashboardView,
@@ -154,8 +163,6 @@ export function feedRequest(scope: FeedScope, country: CountryCode) {
 }
 /** La première page de la cloche. */
 const BELL_PAGE = 30
-/** Les réponses d'une racine, lues d'un coup à la demande. */
-const REPLIES_PAGE = 50
 /** Les signets lus d'un coup (première page). */
 const BOOKMARKS_PAGE = BOOKMARKS_PAGE_SIZE
 
@@ -192,7 +199,7 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
 
   return {
     kind: "engine",
-    profileImages: createEngineProfileImagesActions({ convex: deps.convex }),
+    profileImages: createEngineProfileImagesActions({ convex: deps.convex, prepareImage: deps.prepareImage }),
     // Capacités des chantiers du plan global (docs/14), chacune dans son fichier.
     // Les publications lues dans une fiche de page alimentent aussi « retirer ma réaction ».
     pages: createEnginePages(deps, { onPosts: (posts) => { for (const post of posts) myReactions.set(post.id, post.myReaction) } }),
@@ -218,6 +225,8 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
     conversations: createEngineConversations(deps),
     // Comptes de démonstration par acteur : développement local du moteur seulement.
     demoAccounts: createEngineDemoAccounts(deps),
+    // IM-02 : réglages d'appel et de présence de la personne, valables aussi dans ANTSIA.
+    callSettings: createEngineCallSettings(deps),
     contentPreferences: {
       usePage(args: ContentPreferencesRequest): ContentPreferencesQuery {
         const { auth, networkId, membership } = useMember()
@@ -341,6 +350,9 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
         membership: membership.value ? toMembershipView(person.value, membership.value) : null,
       })
     },
+
+    // EA-02 : les portes que ce déploiement sait servir, lues sans session.
+    useEntryDoors: useEngineEntryDoors,
 
     useOpenCountries(): Loadable<readonly OpenCountryView[]> {
       const networkId = useNetworkId()
@@ -573,34 +585,50 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       return list.state === "ready" ? ready(list.value.map(toSuggestionView)) : LOADING
     },
 
-    useComments(postId: string): Loadable<readonly CommentThreadView[]> {
-      const { networkId } = useMember()
-      const id = networkId.state === "ready" ? networkId.value : null
-      const page = useLoaded(
+    // FD-03 : les commentaires se lisent page après page, sur le curseur du moteur (`paginateComments`).
+    // Une panne garde la page déjà lue pendant la reprise ; un refus d'accès ne sert aucun cache.
+    useCommentsPage(args: CommentsPageRequest): CommentPageQuery<CommentThreadView> {
+      const member = useMember()
+      const id = member.networkId.state === "ready" ? member.networkId.value : null
+      const row = member.membership.state === "ready" ? member.membership.value : null
+      const canRead = member.auth.isAuthenticated && id !== null && row?.capabilities.includes("read_network") === true
+      const query = useAuthenticatedConvexQuery(
         api.modules.engagement.engagement.paginateComments,
-        id ? { networkId: id, postId: postId as Id<"posts">, paginationOpts: { numItems: COMMENTS_PAGE, cursor: null } } : "skip",
+        canRead && id ? { networkId: id, postId: args.postId as Id<"posts">, paginationOpts: { numItems: COMMENTS_PAGE, cursor: args.cursor ?? null } } : "skip",
       )
-      for (const loaded of [networkId, page]) if (loaded.state === "error") return failed(loaded.code)
-      return page.state === "ready" ? ready(page.value.page.map(toCommentThreadView)) : LOADING
+      const error = memberReadError(member) ?? (query.isError ? engineActionErrorCode(query.error) : null)
+      const page = useReadablePostsQuery(query, JSON.stringify(["comments", id, args.postId, args.cursor ?? null]), canRead, error)
+      const data = useMemo(() => page.data === undefined ? undefined : {
+        items: page.data.page.map(toCommentThreadView),
+        continueCursor: page.data.continueCursor,
+        isDone: page.data.isDone,
+      }, [page.data])
+      return { data, isLoading: page.isLoading, error: page.error, retry: page.retry }
     },
 
-    useReplies(args: { postId: string; commentId: string | null }): Loadable<readonly CommentView[]> {
-      const { networkId } = useMember()
-      const id = networkId.state === "ready" ? networkId.value : null
-      const page = useLoaded(
+    // FD-03 : les réponses d'une racine, page après page (`paginateReplies`), mêmes règles de reprise.
+    useRepliesPage(args: RepliesPageRequest): CommentPageQuery<CommentView> {
+      const member = useMember()
+      const id = member.networkId.state === "ready" ? member.networkId.value : null
+      const row = member.membership.state === "ready" ? member.membership.value : null
+      const canRead = member.auth.isAuthenticated && id !== null && row?.capabilities.includes("read_network") === true
+      const query = useAuthenticatedConvexQuery(
         api.modules.engagement.engagement.paginateReplies,
-        id && args.commentId
-          ? {
-              networkId: id,
-              postId: args.postId as Id<"posts">,
-              commentId: args.commentId as Id<"postComments">,
-              paginationOpts: { numItems: REPLIES_PAGE, cursor: null },
-            }
-          : "skip",
+        canRead && id ? {
+          networkId: id,
+          postId: args.postId as Id<"posts">,
+          commentId: args.commentId as Id<"postComments">,
+          paginationOpts: { numItems: COMMENT_REPLIES_PAGE, cursor: args.cursor ?? null },
+        } : "skip",
       )
-      if (args.commentId === null) return ready([])
-      for (const loaded of [networkId, page]) if (loaded.state === "error") return failed(loaded.code)
-      return page.state === "ready" ? ready(page.value.page.map(toCommentView)) : LOADING
+      const error = memberReadError(member) ?? (query.isError ? engineActionErrorCode(query.error) : null)
+      const page = useReadablePostsQuery(query, JSON.stringify(["replies", id, args.postId, args.commentId, args.cursor ?? null]), canRead, error)
+      const data = useMemo(() => page.data === undefined ? undefined : {
+        items: page.data.page.map(toCommentView),
+        continueCursor: page.data.continueCursor,
+        isDone: page.data.isDone,
+      }, [page.data])
+      return { data, isLoading: page.isLoading, error: page.error, retry: page.retry }
     },
 
     useNotifications(): Loadable<readonly NotificationView[]> {
@@ -684,11 +712,9 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     }
   }
 
-  const unavailable = async (): Promise<ActionResult<never>> => ({ ok: false, code: "feature_unavailable" })
-
   return {
-    // IDN entre par Better Auth avec l'identité du moteur (PA4).
-    signInWithIdn: unavailable,
+    // EA-02 : départ vers IDN par le client du moteur ; l'identité simulée de la démonstration est ignorée.
+    signInWithIdn: () => startIdnSignIn(deps),
 
     async requestCode(destination) {
       // Le SMS arrive avec l'identité du moteur (PA4).
@@ -739,7 +765,21 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         const country = parseResidenceCountry(input.facet.countryOfResidence)
         if (!country.ok) throw new Refusal(country.code)
         const id = await diasporale()
-        await deps.convex.mutation(api.modules.people.profile.publishMyProfile, { handle: input.handle, displayName: input.displayName })
+        // EA-04 : le profil commun est relu à chaque essai. Publié (membre d'ANTSIA, retour après
+        // un départ), il n'est ni réécrit ni renommé ; retiré, il attend le geste de la personne ;
+        // absent, il naît de l'accueil. Une entrée interrompue reprend ainsi sans double écriture.
+        const person = await deps.convex.query(api.modules.people.persons.getMyPerson, {})
+        if (!person) throw new Refusal("not_signed_in")
+        if (!person.handle || !person.displayName) {
+          const handle = input.handle ?? ""
+          const displayName = input.displayName ?? ""
+          if (!handle.trim()) throw new Refusal("handle_required")
+          if (!displayName.trim()) throw new Refusal("display_name_invalid")
+          await deps.convex.mutation(api.modules.people.profile.publishMyProfile, { handle, displayName })
+        } else if (!person.published) {
+          throw new Refusal("profile_republish_required")
+        }
+        // Idempotent côté moteur : un accord déjà en vigueur n'est pas réécrit.
         await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "social_profile", origin: "onboarding", ...consentScopeArgs("social_profile", id) })
         // L'annuaire et les notifications valent pour le réseau : le moteur ne relit que l'accord
         // du réseau exact avant tout envoi (`notificationConsent`).
@@ -749,32 +789,36 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         if (input.consents.notifications) {
           await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "notifications", origin: "onboarding", ...consentScopeArgs("notifications", id) })
         }
-        await deps.convex.mutation(api.modules.diaspora.membership.joinDiasporale, {
+        const joined = await deps.convex.mutation(api.modules.diaspora.membership.joinDiasporale, {
           networkId: id,
           facet: toFacetArgs(input.facet),
           directoryVisibility: input.consents.directory ? input.directoryVisibility : "hidden",
         })
-        return { country: country.value }
+        return { country: country.value, status: joined.status }
       }),
 
     // Dépôt en deux temps (garde des fichiers du moteur) : URL de dépôt pour l'usage
     // `media_social`, puis envoi du fichier ; il n'existe pour personne tant
-    // qu'une publication ne l'a pas vérifié et embarqué.
+    // qu'une publication ne l'a pas vérifié et embarqué. Une photo part PRÉPARÉE
+    // (FD-01) : ré-encodée, 2 048 px au plus, sans métadonnées ; un échec la
+    // refuse avant toute URL de dépôt, et l'original ne part jamais. Ce même
+    // dépôt sert le fil, les publications de page et la galerie d'évènement.
     uploadMedia: (file) =>
       attempt(async () => {
-        const facts = await describeMediaFile(file)
-        if (!facts.ok) throw new Refusal(facts.code)
+        const prepared = await prepareMediaFile(file, deps.prepareImage)
+        if (!prepared.ok) throw new Refusal(prepared.code)
+        const { file: upload, facts } = prepared.value
         const networkId = await diasporale()
         const url = await deps.convex.mutation(api.modules.media.media.generateUploadUrl, { networkId, usage: "media_social" })
         let storageId: string
         try {
-          const response = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file })
+          const response = await fetch(url, { method: "POST", headers: { "Content-Type": upload.type }, body: upload })
           if (!response.ok) throw new Refusal("media_upload_failed")
           storageId = ((await response.json()) as { storageId: string }).storageId
         } catch (error) {
           throw error instanceof Refusal ? error : new Refusal("media_upload_failed")
         }
-        return { ref: storageId, ...facts.value }
+        return { ref: storageId, ...facts }
       }),
 
     publish: (input) =>
@@ -782,15 +826,16 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         const scope = parseContentScope({ reach: input.reach, country: input.country ?? null })
         if (!scope.ok) throw new Refusal(scope.code)
         const networkId = await diasporale()
-        // Relecture avant publication (invariant 10) : tant que le moteur ne retient pas un contenu
-        // (PA5), un pays qui n'est pas ouvert ne reçoit pas de publication locale. Garde d'écran
-        // seulement : la garde serveur viendra avec le crochet de politique de la tranche.
+        // Un pays qui n'est pas ouvert ne reçoit pas de publication locale tant qu'aucune relecture
+        // par pays n'existe (HB-11) : le refus dit ce que dit le composeur (FD-04). Garde d'écran
+        // seulement : la garde serveur est demandée au moteur (issue [S1] de FD-04).
         if (scope.value.reach === "local") {
           const local = scope.value.country
           const open = await deps.convex.query(api.modules.diaspora.hubs.listOpenCountries, { networkId })
-          if (!open.some((hub) => hub.country === local)) throw new Refusal("feature_unavailable")
+          if (!open.some((hub) => hub.country === local)) throw new Refusal("hub_not_open")
         }
-        await deps.convex.mutation(api.modules.posts.posts.publish, {
+        // L'état que le moteur rend (publiée, ou retenue en relecture) ; jamais « publiée » d'office.
+        const published = await deps.convex.mutation(api.modules.posts.posts.publish, {
           networkId,
           body: input.body,
           audience: input.audience,
@@ -802,18 +847,19 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           ...(input.sharedPostId ? { sharedPostId: input.sharedPostId as Id<"posts"> } : {}),
           ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
         })
-        return { moderation: "published" as const }
+        return toPublishOutcome(published)
       }),
 
     comment: (input) =>
       attempt(async () => {
-        await deps.convex.mutation(api.modules.engagement.engagement.comment, {
+        const created = await deps.convex.mutation(api.modules.engagement.engagement.comment, {
           networkId: await diasporale(),
           postId: input.postId as Id<"posts">,
           body: input.body,
           ...(input.parentCommentId !== undefined ? { parentCommentId: input.parentCommentId as Id<"postComments"> } : {}),
         })
-        return null
+        // L'identifiant du commentaire créé : l'écran le montre aussitôt, même hors des pages lues (FD-03).
+        return { commentId: created.commentId }
       }),
 
     editComment: (commentId, body) =>

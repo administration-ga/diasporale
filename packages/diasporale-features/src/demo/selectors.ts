@@ -38,6 +38,7 @@ import { CONSENT_PURPOSES, CONSENT_TEXT_VERSIONS, isConsentActive } from "@diasp
 import type {
   AuthorView,
   BookmarkView,
+  CommentPageView,
   CommentThreadView,
   CommentView,
   ConsentView,
@@ -61,7 +62,7 @@ import type {
   SuggestionView,
   UnreadCountView,
 } from "../data/types"
-import { COMMENT_REPLIES_PREVIEW, COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH } from "../data/types"
+import { COMMENT_REPLIES_PAGE, COMMENT_REPLIES_PREVIEW, COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH } from "../data/types"
 import { maskDestination } from "../data/mask"
 import { PAGE_DIRECTORY_QUERY_MIN_LENGTH, type HubPagesView, type PageDirectoryEntry, type PageDirectoryRequest } from "../data/pages-port"
 import type { DemoAccountView } from "../data/port"
@@ -464,37 +465,75 @@ function commentView(state: DemoState, item: DemoComment, viewerId: string): Com
   }
 }
 
-const byAge = (a: DemoComment, b: DemoComment) => a.createdAt - b.createdAt
+/** Des plus anciens aux plus récents ; à date égale, l'identifiant départage (pages stables). */
+const byAge = (a: DemoComment, b: DemoComment) => a.createdAt - b.createdAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
 
-/** Les commentaires d'une publication lisible : racines des plus anciennes, trois réponses au plus en aperçu. */
-export function commentsView(state: DemoState, postId: string, viewerId: string, now: number): CommentThreadView[] | null {
+/** La position d'une page de commentaires de démonstration : la dernière ligne déjà lue. */
+export interface DemoCommentBoundary {
+  readonly at: number
+  readonly id: string
+}
+
+/** Le curseur opaque d'une page de commentaires de démonstration (FD-03), propre à une liste. */
+export function demoCommentCursor(list: string, row: DemoCommentBoundary): string {
+  return JSON.stringify(["demo-comments", list, row.at, row.id])
+}
+
+/** La position que porte un curseur : `null` pour la première page, `undefined` s'il est illisible ou d'une autre liste. */
+export function readDemoCommentCursor(list: string, cursor: string | null): DemoCommentBoundary | null | undefined {
+  if (cursor === null) return null
+  try {
+    const decoded: unknown = JSON.parse(cursor)
+    if (!Array.isArray(decoded) || decoded.length !== 4 || decoded[0] !== "demo-comments" || decoded[1] !== list
+      || typeof decoded[2] !== "number" || !Number.isFinite(decoded[2]) || typeof decoded[3] !== "string") return undefined
+    return { at: decoded[2], id: decoded[3] }
+  } catch {
+    return undefined
+  }
+}
+
+/** La liste d'une page de réponses : celles d'UNE racine d'UNE publication. */
+export const demoRepliesList = (postId: string, commentId: string) => `${postId}/${commentId}`
+
+/** Une fenêtre ordonnée après la position donnée, sa suite et sa fin. */
+function commentWindow(list: string, rows: readonly DemoComment[], after: DemoCommentBoundary | null, size: number) {
+  const remaining = [...rows].sort(byAge).filter((item) => after === null || item.createdAt > after.at || (item.createdAt === after.at && item.id > after.id))
+  const window = remaining.slice(0, size)
+  const last = window.at(-1)
+  return { window, isDone: remaining.length <= size, continueCursor: last ? demoCommentCursor(list, { at: last.createdAt, id: last.id }) : "" }
+}
+
+/**
+ * Une page des commentaires d'une publication lisible (FD-03) : racines des plus anciennes,
+ * vingt par page, trois réponses au plus en aperçu ; `null` : publication introuvable ou illisible.
+ */
+export function commentsPageView(state: DemoState, postId: string, viewerId: string, now: number, after: DemoCommentBoundary | null = null): CommentPageView<CommentThreadView> | null {
   const post = state.posts.find((candidate) => candidate.id === postId)
   if (!post || !canRead(state, post, viewerId, now)) return null
   const live = liveComments(state, postId, viewerId)
-  return live
-    .filter((item) => item.parentId === null)
-    .sort(byAge)
-    .slice(0, COMMENTS_PAGE)
-    .map((root) => {
+  const page = commentWindow(postId, live.filter((item) => item.parentId === null), after, COMMENTS_PAGE)
+  return {
+    items: page.window.map((root) => {
       const replies = live.filter((item) => item.parentId === root.id).sort(byAge)
       return {
         ...commentView(state, root, viewerId),
         replyCount: replies.length,
         replies: replies.slice(0, COMMENT_REPLIES_PREVIEW).map((reply) => commentView(state, reply, viewerId)),
       }
-    })
+    }),
+    continueCursor: page.continueCursor,
+    isDone: page.isDone,
+  }
 }
 
-/** Toutes les réponses d'une racine vivante, des plus anciennes aux plus récentes. */
-export function repliesView(state: DemoState, postId: string, commentId: string, viewerId: string, now: number): CommentView[] | null {
+/** Une page des réponses d'une racine vivante (FD-03), cinquante par page, dans l'ordre. */
+export function repliesPageView(state: DemoState, postId: string, commentId: string, viewerId: string, now: number, after: DemoCommentBoundary | null = null): CommentPageView<CommentView> | null {
   const post = state.posts.find((candidate) => candidate.id === postId)
   if (!post || !canRead(state, post, viewerId, now)) return null
   const live = liveComments(state, postId, viewerId)
   if (!live.some((item) => item.id === commentId && item.parentId === null)) return null
-  return live
-    .filter((item) => item.parentId === commentId)
-    .sort(byAge)
-    .map((reply) => commentView(state, reply, viewerId))
+  const page = commentWindow(demoRepliesList(postId, commentId), live.filter((item) => item.parentId === commentId), after, COMMENT_REPLIES_PAGE)
+  return { items: page.window.map((reply) => commentView(state, reply, viewerId)), continueCursor: page.continueCursor, isDone: page.isDone }
 }
 
 export function feedView(
@@ -582,6 +621,8 @@ export function countryHubView(state: DemoState, country: CountryCode, now: numb
     open: isCountryOpen(country, state.openCountries),
     counters: hubCounters(state, country, now),
     countersSource: "demo",
+    // Aucun passage ici : les compteurs se comptent à la lecture sur les données fictives, et le hub le dit (HB-05).
+    countersComputedAt: null,
     officialPages: pages.filter((page) => page.trust === "official"),
     associations: pages.filter((page) => page.ownerKind === "association"),
     companies: pages.filter((page) => page.ownerKind === "company"),

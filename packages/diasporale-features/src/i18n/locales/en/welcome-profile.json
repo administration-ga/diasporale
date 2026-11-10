@@ -1,0 +1,13 @@
+{
+  "welcomeProfile": {
+    "keptTitle": "You're joining with your profile",
+    "keptLead": "Your name, handle and headline are those of your ANTSIA account. Nothing is asked again or rewritten: you can change them in your settings if you wish.",
+    "withdrawnTitle": "Your profile is withdrawn",
+    "withdrawnLead": "You had withdrawn it. To join DIASPORALE, republish it as it was: same name, same handle, same headline.",
+    "identityLabel": "Your shared profile",
+    "returningNote": "Welcome back. Your previous country and city are filled in: change them if you have moved."
+  },
+  "errors": {
+    "profile_republish_required": "Republish your profile first: you can't join DIASPORALE without a published profile."
+  }
+}

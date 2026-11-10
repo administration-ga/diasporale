@@ -12,6 +12,9 @@ export const REPO_ROOT = fileURLToPath(new URL("../../../../", import.meta.url))
 
 const ROOTS = ["apps/diasporale_com/src", "packages/diasporale-features/src"] as const
 
+/** Le produit et son domaine pur (`@diasporale/domain`), pour les cliquets qui valent aussi pour les règles. */
+export const PRODUCT_AND_DOMAIN_ROOTS = [...ROOTS, "packages/diasporale-domain/src"] as const
+
 export interface SourceFile {
   /** Chemin relatif au dépôt, pour des messages d'échec lisibles. */
   readonly path: string
@@ -25,8 +28,8 @@ function walk(directory: string): string[] {
   })
 }
 
-export function productSources(extensions: readonly string[]): SourceFile[] {
-  return ROOTS.flatMap((root) => walk(join(REPO_ROOT, root)))
+export function productSources(extensions: readonly string[], roots: readonly string[] = ROOTS): SourceFile[] {
+  return roots.flatMap((root) => walk(join(REPO_ROOT, root)))
     .filter((file) => extensions.some((extension) => file.endsWith(extension)))
     .filter((file) => !/\.test\.tsx?$|test-utils\.tsx?$|\/ratchets\//.test(file))
     .map((file) => ({ path: relative(REPO_ROOT, file), text: readFileSync(file, "utf8") }))

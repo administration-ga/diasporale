@@ -74,7 +74,11 @@ Aucun préfixe de PATH : `codegen` passe par le lanceur Convex du moteur, qui me
 Cliquets attendus (verts avant toute PR), et ce qu'ils relisent vraiment :
 - **Code de DIASPORALE** : ses cliquets (`apps/diasporale_com/src/ratchets/`) — clés i18n (aucune
   clé manquante ni morte, codes d'erreur fermés), aucune couleur littérale, aucune chaîne affichée
-  en dur ; la parité fr/en (`packages/diasporale-features/src/i18n/locales.test.ts`) ; les
+  en dur, communication publique (aucun chiffre non mesuré, aucun audit, hébergement, conformité ni
+  chiffrement de bout en bout affirmés, dans chaque fragment fr et en), aucune route ni URL en dur
+  hors de `src/lib/routes.ts` (application, surfaces et domaine), aucun identifiant de déploiement
+  ni adresse personnelle dans `docs/`, `scripts/`, `.github/` et la racine, couple de versions
+  vérifié lisible (`engine-compat.json`, mis à jour après chaque vérification complète verte) ; la parité fr/en (`packages/diasporale-features/src/i18n/locales.test.ts`) ; les
   contrastes des deux thèmes (`packages/diasporale-features/src/styles/engine-theme-contrast.test.ts`) ;
   les imports inter-produits, refusés par le lint (preset du moteur). Des cliquets du moteur, deux
   seulement relisent ce code : déconnexion partout (`sign-out-everywhere`) et catalogue
@@ -82,10 +86,9 @@ Cliquets attendus (verts avant toute PR), et ce qu'ils relisent vraiment :
 - **Tranche `convex/modules/diaspora/` et thèmes `packages/ui/src/themes/diasporale*.css`** (dans
   ANTSIA) : cliquets du moteur — réseau borné, aucun import inter-produit, `.collect()` borné,
   `v.any()`, aucune URL absolue dans le backend, écritures limitées en débit, contrat de thème.
-- **Non contrôlé sur le code de DIASPORALE** : « communication publique » (aucun chiffre non
-  mesuré, aucun audit ou hébergement affirmé) et « aucune URL codée en dur » ne lisent que `apps/`
-  et `packages/` d'ANTSIA (`../ANTSIA/tests/ratchets/lib/source-files.ts`). Ces deux règles se
-  tiennent à la relecture jusqu'au lot LX-06.
+- **Copies locales** : les cliquets « communication publique » et « aucune URL codée en dur » du
+  moteur ne lisent que `apps/` et `packages/` d'ANTSIA ; DIASPORALE en porte une copie avec en-tête
+  de provenance (lot LX-06), plus précise pour son vocabulaire (logement, démarches, associations).
 
 ## Mémoire
 

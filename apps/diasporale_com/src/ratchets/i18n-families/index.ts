@@ -19,6 +19,7 @@ import { FAMILIES as PILOT_METRICS } from "./pilot-metrics"
 import { FAMILIES as SERVICE_NOTIFICATIONS } from "./service-notifications"
 import { FAMILIES as DEMO_ACCOUNTS } from "./demo-accounts"
 import { FAMILIES as REPORTER_NOTICES } from "./reporter-notices"
+import { FAMILIES as LEGAL_TEXTS } from "./legal-texts"
 
 export const LOT_FAMILIES: readonly string[] = [
   ...PAGES,
@@ -41,4 +42,5 @@ export const LOT_FAMILIES: readonly string[] = [
   ...SERVICE_NOTIFICATIONS,
   ...DEMO_ACCOUNTS,
   ...REPORTER_NOTICES,
+  ...LEGAL_TEXTS,
 ]

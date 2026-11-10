@@ -13,7 +13,7 @@ import type {
 } from "@diasporale/features/data"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
-import { act, cleanup, fireEvent, getDefaultNormalizer, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, getDefaultNormalizer, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ServiceOfferReviews, ServiceRequestReview, ServiceReviewCard } from "./service-reviews-section"
@@ -271,6 +271,25 @@ describe("avis de service — preuve, publication et gestes", () => {
     expect(screen.getByText(REPLY.body)).toBeVisible()
     expect(mocks.withdraw).not.toHaveBeenCalled()
     expect(mocks.withdrawReply).not.toHaveBeenCalled()
+  })
+
+  it("la feuille de signalement renvoie à la règle que vise le motif choisi (MD-05)", () => {
+    render(cardTree({ ...REVIEW, isMine: false, reply: null }))
+    fireEvent.click(screen.getByRole("button", { name: t("serviceReviews.report.cta") }))
+    const dialog = screen.getByRole("dialog", { name: t("serviceReviews.report.title") })
+    const ruleLink = (rule: "reporting" | "scams") => within(dialog).getByRole("link", { name: t("communityRules.readRule", { rule: t(`legal.community.${rule}.title`) }) })
+    // « Autre motif », choisi d'emblée, renvoie à la règle « Signaler ».
+    expect(ruleLink("reporting")).toHaveAttribute("href", "/regles-communaute#signaler")
+    fireEvent.change(within(dialog).getByLabelText(t("serviceReviews.report.reason")), { target: { value: "fraud" } })
+    expect(ruleLink("scams")).toHaveAttribute("href", "/regles-communaute#arnaques")
+  })
+
+  it("la feuille de signalement porte en tête la consigne d'urgence, sans numéro (MD-06)", () => {
+    render(cardTree({ ...REVIEW, isMine: false, reply: null }))
+    fireEvent.click(screen.getByRole("button", { name: t("serviceReviews.report.cta") }))
+    const dialog = screen.getByRole("dialog", { name: t("serviceReviews.report.title") })
+    expect(within(dialog).getByText(text("reportEmergency.heading"))).toBeInTheDocument()
+    expect(within(dialog).getByText(text("reportEmergency.body"), { exact: false })).toBeInTheDocument()
   })
 
   it("un avis retiré ne propose aucune republication ; l'avis en attente se présente comme non publié", () => {

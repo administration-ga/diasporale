@@ -2,7 +2,7 @@
 import { act, cleanup, renderHook } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { commentsView, memberSearchView, membershipView, notificationsView, ownProfileView, postDetailView, profileView, relationView, suggestionsView } from "./selectors"
+import { commentsPageView, memberSearchView, membershipView, notificationsView, ownProfileView, postDetailView, profileView, relationView, suggestionsView } from "./selectors"
 import { createDemoDataSource } from "./source"
 import { createDemoSeed, DEMO_STATE_VERSION, type DemoState } from "./state"
 import { DEMO_STORAGE_KEY, DemoStore } from "./store"
@@ -127,7 +127,7 @@ describe("Profil de démonstration — publication et découvrabilité distincte
     const post = postDetailView(store.getState(), personalPost.id, "p-mireille", NOW)
     expect(post?.body).toBe(personalPost.body)
     expect(post?.author).toMatchObject({ handle: "", displayName: "", badges: [] })
-    const comment = commentsView(store.getState(), "post-2", "p-mireille", NOW)?.find((item) => item.id === "c-1")
+    const comment = commentsPageView(store.getState(), "post-2", "p-mireille", NOW)?.items?.find((item) => item.id === "c-1")
     expect(comment?.author).toEqual({ personId: PERSON, handle: null, displayName: null })
     expect(notificationsView(store.getState(), "p-mireille")[0]?.actor).toBeNull()
     expect(store.getState().connections).toEqual(seed.connections)

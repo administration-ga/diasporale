@@ -1,6 +1,7 @@
 "use client"
 
 import { MessagerieDock } from "@antsia/social-features/messagerie"
+import { MESSAGES_UNREAD_CAP } from "@antsia/social-features/shell/reseau-menu-destinations"
 import { useIsReseauMobile } from "@antsia/ui/overlay"
 import { parseResidenceCountry, type CountryCode, type MembershipStatus } from "@diasporale/domain"
 import {
@@ -32,11 +33,13 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   BookmarkIcon,
+  BookTextIcon,
   BriefcaseBusinessIcon,
   ChartColumnIcon,
   ChevronsUpDownIcon,
   ClipboardListIcon,
   CompassIcon,
+  ContactRoundIcon,
   DatabaseIcon,
   FileTextIcon,
   GraduationCapIcon,
@@ -50,6 +53,7 @@ import {
   PenSquareIcon,
   PlusIcon,
   ScaleIcon,
+  ScrollTextIcon,
   Settings2Icon,
   ShieldCheckIcon,
   StoreIcon,
@@ -65,9 +69,11 @@ import { DropdownMenu, Popover } from "radix-ui"
 import { createContext, Suspense, useContext, useEffect, useId, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
+import { navDestinationOf, type NavDestination } from "@/lib/nav-destinations"
 import { routes } from "@/lib/routes"
 
 import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
+import { MessagesUnreadReader } from "./messages-unread"
 import { useSignOutEverywhere } from "./sign-out-settings"
 import { AppDemoChip } from "./site-chrome"
 import { Wordmark } from "./wordmark"
@@ -88,28 +94,11 @@ export function useComposer(): ComposerControl {
 // Arborescence (DG-005) — cinq destinations, un espace personnel, le compte
 // ═══════════════════════════════════════════════════════════════
 
-type EntryId =
-  | "feed"
-  | "explore"
-  | "services"
-  | "communities"
-  | "messages"
-  | "myRequests"
-  | "myActivity"
-  | "myAssociations"
-  | "myApplications"
-  | "myMentoring"
-  | "moderation"
-  | "pilot"
-  | "relations"
-  | "bookmarks"
-  | "sponsor"
-  | "profile"
-  | "settings"
-  | "myData"
-  | "legalNotice"
-  | "privacy"
-  | "charte"
+/**
+ * Les entrées : celles de la table des destinations (`lib/nav-destinations`), sous lesquelles
+ * chaque page de membre se range, puis l'ancre « Mes données » et les textes du site.
+ */
+type EntryId = NavDestination | "myData" | "legalNotice" | "privacy" | "terms" | "communityRules" | "contact" | "charte"
 
 /** Une entrée de navigation : une adresse de la table des routes, son icône, sa clé de libellé, son état courant. */
 interface NavEntry {
@@ -119,10 +108,35 @@ interface NavEntry {
   readonly labelKey: string
   /** Le chemin courant relève de cette entrée : `aria-current="page"`. */
   readonly active: boolean
+  /** Les non-lus portés par l'entrée (Messages seulement, UX-06) : pastille plafonnée, nombre dans le nom accessible. */
+  readonly unread?: number
 }
 
-/** Un segment fictif : la table des routes donne la forme d'une adresse paramétrée, jamais la coque. */
-const SAMPLE_SEGMENT = "segment"
+type ShellT = ReturnType<typeof useDiasporaleT>["t"]
+
+/**
+ * Le nom accessible d'une entrée qui porte des non-lus : « Messages, 3 non lus », « … 99 non lus ou
+ * plus » au plafond. La pastille n'est pas le seul signal : le nombre s'entend avec l'entrée. Sans
+ * non-lus, le libellé visible reste le nom.
+ */
+function unreadName(t: ShellT, entry: NavEntry): string | undefined {
+  const unread = entry.unread ?? 0
+  if (unread <= 0) return undefined
+  return unread >= MESSAGES_UNREAD_CAP ? t("nav.messagesUnreadCapped", { count: MESSAGES_UNREAD_CAP }) : t("nav.messagesUnread", { count: unread })
+}
+
+/** La pastille : le chiffre plafonné (« 99+ », même plafond que la carte iCom), muet pour les lecteurs d'écran. */
+function UnreadBadge(props: { count: number; className?: string }) {
+  return (
+    <span
+      aria-hidden
+      data-unread-badge=""
+      className={cn("min-w-5 rounded-full bg-primary px-1 text-center text-[11px] font-semibold leading-5 tabular-nums text-primary-foreground", props.className)}
+    >
+      {props.count >= MESSAGES_UNREAD_CAP ? `${MESSAGES_UNREAD_CAP}+` : props.count}
+    </span>
+  )
+}
 
 /** Le chemin d'une adresse de la table, sans requête ni ancre. */
 function pathOf(href: string): string {
@@ -145,105 +159,41 @@ function withinAny(pathname: string, hrefs: readonly string[]): boolean {
   })
 }
 
-/** La gestion d'une page (`/pages/<page>/gerer…`) relève de « Mon activité », sa simple lecture non. */
-function managesPage(pathname: string): boolean {
-  const [head = "", tail = ""] = pathOf(routes.pageManage(SAMPLE_SEGMENT)).split(SAMPLE_SEGMENT)
-  if (head === "" || tail === "" || !pathname.startsWith(head)) return false
-  const rest = pathname.slice(head.length)
-  const cut = rest.indexOf("/")
-  if (cut <= 0) return false
-  const after = rest.slice(cut)
-  return after === tail || after.startsWith(`${tail}/`)
-}
-
 /**
  * Les cinq destinations, dans cet ordre : Fil, Explorer, Services, Communautés, Messages.
  * Messages n'existe qu'avec iCom (même règle qu'avant) : sans lui, la barre garde
- * quatre onglets, sans trou. Correspondances : une publication seule et les statuts
- * relèvent du fil ; l'annuaire des membres d'Explorer ; les hubs pays de Communautés.
+ * quatre onglets, sans trou. Ce qui relève de chacune ne s'écrit pas ici : la table des
+ * destinations le dit pour toute adresse de la table des routes (UX-05, décision 5).
+ * Messages porte ses non-lus (UX-06), lus seulement quand iCom est ouvert.
  */
-function primaryEntries(membership: MembershipView, pathname: string, withMessages: boolean): NavEntry[] {
+function primaryEntries(current: NavDestination | null, withMessages: boolean, messagesUnread: number): NavEntry[] {
   const entries: NavEntry[] = [
-    {
-      id: "feed",
-      href: routes.feed(),
-      icon: HouseIcon,
-      labelKey: "nav.feed",
-      active: withinAny(pathname, [routes.feed(), routes.post(SAMPLE_SEGMENT), routes.stories()]),
-    },
-    {
-      id: "explore",
-      href: routes.explore(),
-      icon: CompassIcon,
-      labelKey: "nav.explore",
-      active: withinAny(pathname, [routes.explore(), routes.members()]),
-    },
-    {
-      id: "services",
-      href: routes.services(),
-      icon: StoreIcon,
-      labelKey: "nav.services",
-      active: withinAny(pathname, [routes.services(), routes.serviceOffer(SAMPLE_SEGMENT)]),
-    },
-    {
-      id: "communities",
-      href: routes.communities(),
-      icon: UsersRoundIcon,
-      labelKey: "nav.communities",
-      active: withinAny(pathname, [routes.communities(), routes.hub(membership.facet.countryOfResidence)]),
-    },
+    { id: "feed", href: routes.feed(), icon: HouseIcon, labelKey: "nav.feed", active: current === "feed" },
+    { id: "explore", href: routes.explore(), icon: CompassIcon, labelKey: "nav.explore", active: current === "explore" },
+    { id: "services", href: routes.services(), icon: StoreIcon, labelKey: "nav.services", active: current === "services" },
+    { id: "communities", href: routes.communities(), icon: UsersRoundIcon, labelKey: "nav.communities", active: current === "communities" },
   ]
   if (withMessages) {
-    entries.push({ id: "messages", href: routes.messages(), icon: MessageCircleIcon, labelKey: "nav.messages", active: withinAny(pathname, [routes.messages()]) })
+    entries.push({ id: "messages", href: routes.messages(), icon: MessageCircleIcon, labelKey: "nav.messages", active: current === "messages", unread: messagesUnread })
   }
   return entries
 }
 
 /** L'espace personnel : le rail du bureau le montre sous les destinations, le menu du compte le reprend. */
-function personalEntries(pathname: string, withRelations: boolean): NavEntry[] {
+function personalEntries(current: NavDestination | null, withRelations: boolean): NavEntry[] {
   const relations: NavEntry[] = withRelations
-    ? [{ id: "relations", href: routes.relations(), icon: UserRoundCheckIcon, labelKey: "nav.relations", active: withinAny(pathname, [routes.relations()]) }]
+    ? [{ id: "relations", href: routes.relations(), icon: UserRoundCheckIcon, labelKey: "nav.relations", active: current === "relations" }]
     : []
   return [
-    {
-      id: "myRequests",
-      href: routes.myServiceRequests(),
-      icon: ClipboardListIcon,
-      labelKey: "nav.myRequests",
-      active: withinAny(pathname, [routes.myServiceRequests(), routes.serviceRequest(SAMPLE_SEGMENT)]),
-    },
-    {
-      id: "myActivity",
-      href: routes.myActivity(),
-      icon: BriefcaseBusinessIcon,
-      labelKey: "nav.myActivity",
-      active: withinAny(pathname, [routes.myActivity(), routes.newPage()]) || managesPage(pathname),
-    },
-    {
-      id: "myAssociations",
-      href: routes.myAssociations(),
-      icon: HeartHandshakeIcon,
-      labelKey: "nav.myAssociations",
-      active: withinAny(pathname, [routes.myAssociations()]),
-    },
+    { id: "myRequests", href: routes.myServiceRequests(), icon: ClipboardListIcon, labelKey: "nav.myRequests", active: current === "myRequests" },
+    { id: "myActivity", href: routes.myActivity(), icon: BriefcaseBusinessIcon, labelKey: "nav.myActivity", active: current === "myActivity" },
+    { id: "myAssociations", href: routes.myAssociations(), icon: HeartHandshakeIcon, labelKey: "nav.myAssociations", active: current === "myAssociations" },
     // Vague H du plan global : candidatures (DG-025) et mentorat (DG-024).
-    {
-      id: "myApplications",
-      href: routes.myApplications(),
-      icon: FileTextIcon,
-      labelKey: "nav.myApplications",
-      active: withinAny(pathname, [routes.myApplications()]),
-    },
-    {
-      id: "myMentoring",
-      href: routes.myMentoring(),
-      icon: GraduationCapIcon,
-      labelKey: "nav.myMentoring",
-      active: withinAny(pathname, [routes.myMentoring()]),
-    },
+    { id: "myApplications", href: routes.myApplications(), icon: FileTextIcon, labelKey: "nav.myApplications", active: current === "myApplications" },
+    { id: "myMentoring", href: routes.myMentoring(), icon: GraduationCapIcon, labelKey: "nav.myMentoring", active: current === "myMentoring" },
     ...relations,
-    { id: "bookmarks", href: routes.bookmarks(), icon: BookmarkIcon, labelKey: "bookmarks.title", active: withinAny(pathname, [routes.bookmarks()]) },
-    { id: "sponsor", href: routes.sponsor(), icon: HandshakeIcon, labelKey: "nav.sponsor", active: withinAny(pathname, [routes.sponsor()]) },
+    { id: "bookmarks", href: routes.bookmarks(), icon: BookmarkIcon, labelKey: "bookmarks.title", active: current === "bookmarks" },
+    { id: "sponsor", href: routes.sponsor(), icon: HandshakeIcon, labelKey: "nav.sponsor", active: current === "sponsor" },
   ]
 }
 
@@ -258,34 +208,22 @@ const NO_PILOT_METRICS: Pick<PilotMetricsCapability, "useAccess"> = { useAccess:
  * Les entrées réservées aux responsables que le serveur reconnaît (modération par pays, mesure du
  * pilote) : absentes pour tout autre membre, et le serveur rejuge chaque lecture derrière elles.
  */
-function responsibleEntries(pathname: string, access: { readonly moderation: boolean; readonly pilot: boolean }): NavEntry[] {
+function responsibleEntries(current: NavDestination | null, access: { readonly moderation: boolean; readonly pilot: boolean }): NavEntry[] {
   const entries: NavEntry[] = []
   if (access.moderation) {
-    entries.push({ id: "moderation", href: routes.moderationDesk(), icon: ShieldCheckIcon, labelKey: "nav.moderation", active: withinAny(pathname, [routes.moderationDesk()]) })
+    entries.push({ id: "moderation", href: routes.moderationDesk(), icon: ShieldCheckIcon, labelKey: "nav.moderation", active: current === "moderation" })
   }
   if (access.pilot) {
-    entries.push({ id: "pilot", href: routes.pilotDashboard(), icon: ChartColumnIcon, labelKey: "pilotMetrics.nav", active: withinAny(pathname, [routes.pilotDashboard()]) })
+    entries.push({ id: "pilot", href: routes.pilotDashboard(), icon: ChartColumnIcon, labelKey: "pilotMetrics.nav", active: current === "pilot" })
   }
   return entries
 }
 
 /** Le menu du compte, ouvert depuis l'avatar : profil, réglages, l'espace personnel, mes données. */
-function accountEntries(membership: MembershipView, pathname: string, personal: readonly NavEntry[]): NavEntry[] {
+function accountEntries(membership: MembershipView, current: NavDestination | null, personal: readonly NavEntry[]): NavEntry[] {
   return [
-    {
-      id: "profile",
-      href: routes.profile(membership.handle),
-      icon: UserRoundIcon,
-      labelKey: "nav.profile",
-      active: withinAny(pathname, [routes.profile(membership.handle)]),
-    },
-    {
-      id: "settings",
-      href: routes.settings(),
-      icon: Settings2Icon,
-      labelKey: "nav.settings",
-      active: withinAny(pathname, [routes.settings(), routes.attestation()]),
-    },
+    { id: "profile", href: routes.profile(membership.handle), icon: UserRoundIcon, labelKey: "nav.profile", active: current === "profile" },
+    { id: "settings", href: routes.settings(), icon: Settings2Icon, labelKey: "nav.settings", active: current === "settings" },
     ...personal,
     // Une ancre des réglages : le chemin seul ne la distingue pas, elle n'est donc jamais « courante ».
     { id: "myData", href: routes.settingsData(), icon: DatabaseIcon, labelKey: "nav.myData", active: false },
@@ -295,12 +233,16 @@ function accountEntries(membership: MembershipView, pathname: string, personal: 
 /**
  * Le groupe « Informations » du menu du compte (UX-03) : les textes du site, à deux gestes
  * depuis tout écran une fois connecté — ils n'étaient qu'au pied des pages publiques.
- * Mêmes libellés que ce pied de page. L'aide s'y ajoutera avec UX-04.
+ * Mêmes libellés que ce pied de page, dont les trois textes de LX-05 (conditions d'utilisation,
+ * règles de la communauté, contact). L'aide s'y ajoutera avec UX-04.
  */
 function informationEntries(pathname: string): NavEntry[] {
   return [
     { id: "legalNotice", href: routes.legalNotice(), icon: ScaleIcon, labelKey: "footer.legalNotice", active: withinAny(pathname, [routes.legalNotice()]) },
     { id: "privacy", href: routes.privacy(), icon: LockKeyholeIcon, labelKey: "footer.privacy", active: withinAny(pathname, [routes.privacy()]) },
+    { id: "terms", href: routes.terms(), icon: ScrollTextIcon, labelKey: "footer.terms", active: withinAny(pathname, [routes.terms()]) },
+    { id: "communityRules", href: routes.communityRules(), icon: BookTextIcon, labelKey: "footer.community", active: withinAny(pathname, [routes.communityRules()]) },
+    { id: "contact", href: routes.contact(), icon: ContactRoundIcon, labelKey: "footer.contact", active: withinAny(pathname, [routes.contact()]) },
     { id: "charte", href: routes.charte(), icon: PaletteIcon, labelKey: "footer.charte", active: withinAny(pathname, [routes.charte()]) },
   ]
 }
@@ -383,21 +325,25 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   const icom = useIcomNetwork()
   const network = useEngineNetwork()
   const desktop = useIsReseauMobile() === false
+  // Les non-lus de Messages, remontés par le lecteur monté sous l'îlot iCom (UX-06) ; rien quand iCom est fermé.
+  const [messagesUnread, setMessagesUnread] = useState(0)
   const { membership } = props
   const canPublish = membership.canPublish
   // Inconnus tant qu'ils ne sont pas lus : le composeur n'affirme alors aucun pays fermé (HB-01).
   const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : null
-  const primary = primaryEntries(membership, pathname, icom !== null)
+  // Une seule entrée relève du chemin courant, rail et barre basse confondus (UX-05).
+  const current = navDestinationOf(pathname, membership.handle)
+  const primary = primaryEntries(current, icom !== null, icom === null ? 0 : messagesUnread)
   const desk = (useModerationDesk() ?? NO_MODERATION_DESK).useDesk(membership.personId)
   const pilot = (usePilotMetrics() ?? NO_PILOT_METRICS).useAccess()
   const personal = [
-    ...personalEntries(pathname, network !== null),
-    ...responsibleEntries(pathname, {
+    ...personalEntries(current, network !== null),
+    ...responsibleEntries(current, {
       moderation: desk.status === "ready" && desk.data !== null,
       pilot: pilot.status === "ready" && pilot.data.allowed,
     }),
   ]
-  const account = accountEntries(membership, pathname, personal)
+  const account = accountEntries(membership, current, personal)
   const information = informationEntries(pathname)
   const openComposer = () => setComposerOpen(true)
 
@@ -445,6 +391,13 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
         </div>
 
         <MobileTabBar entries={primary} />
+        {/* Le lecteur des non-lus de Messages : sous l'îlot iCom, et seulement iCom ouvert
+            (aucune lecture en démonstration ni pour un membre qui ne peut pas écrire). */}
+        {icom ? (
+          <IcomIsland network={icom}>
+            <MessagesUnreadReader onTotal={setMessagesUnread} />
+          </IcomIsland>
+        ) : null}
 
         {canPublish ? (
           <PostComposerSheet
@@ -516,10 +469,12 @@ function DesktopRail(props: {
 function RailLink(props: { entry: NavEntry; compact?: boolean }) {
   const { t } = useDiasporaleT()
   const Icon = props.entry.icon
+  const unread = props.entry.unread ?? 0
   return (
     <NextLink
       href={props.entry.href}
       aria-current={props.entry.active ? "page" : undefined}
+      aria-label={unreadName(t, props.entry)}
       className={cn(
         "flex min-h-11 min-w-0 items-center gap-3 rounded-[var(--esp-r-chrome)] px-3 font-medium transition-colors focus-visible:shadow-focus",
         props.compact ? "text-sm" : "text-[15px]",
@@ -528,6 +483,7 @@ function RailLink(props: { entry: NavEntry; compact?: boolean }) {
     >
       <Icon className={cn("shrink-0", props.compact ? "size-4" : "size-5")} aria-hidden />
       <span className="min-w-0 truncate">{t(props.entry.labelKey)}</span>
+      {unread > 0 ? <UnreadBadge count={unread} className="ml-auto shrink-0" /> : null}
     </NextLink>
   )
 }
@@ -774,17 +730,23 @@ function MobileTabBar(props: { entries: readonly NavEntry[] }) {
       <ul className="flex h-16 items-stretch px-1">
         {props.entries.map((entry) => {
           const Icon = entry.icon
+          const unread = entry.unread ?? 0
           return (
             <li key={entry.id} className="flex min-w-11 flex-auto">
               <NextLink
                 href={entry.href}
                 aria-current={entry.active ? "page" : undefined}
+                aria-label={unreadName(t, entry)}
                 className={cn(
                   "flex w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[11px] transition-colors focus-visible:shadow-focus",
                   entry.active ? "font-semibold text-[var(--esp-accent-deep)]" : "font-medium text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className="size-5 shrink-0" aria-hidden />
+                {/* La pastille s'accroche au coin de l'icône et s'étend vers la droite : « 99+ » ne la décentre pas. */}
+                <span className="relative flex shrink-0">
+                  <Icon className="size-5 shrink-0" aria-hidden />
+                  {unread > 0 ? <UnreadBadge count={unread} className="absolute -top-1.5 left-3" /> : null}
+                </span>
                 <span className="max-w-full truncate">{t(entry.labelKey)}</span>
               </NextLink>
             </li>

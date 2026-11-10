@@ -20,6 +20,7 @@ import type {
   DirectoryVisibility,
   FacetInput,
   FeedScope,
+  MembershipStatus,
   OnboardingConsentChoices,
   Reach,
 } from "@diasporale/domain"
@@ -30,6 +31,8 @@ import type {
   BookmarkView,
   BookmarksPageQuery,
   BookmarksPageRequest,
+  CommentPageQuery,
+  CommentsPageRequest,
   CommentThreadView,
   CommentView,
   CountryHubView,
@@ -48,6 +51,7 @@ import type {
   ProfilePostsPageRequest,
   ReactionKind,
   RelationView,
+  RepliesPageRequest,
   ReportReason,
   SessionView,
   SponsorDashboardView,
@@ -74,6 +78,8 @@ import type { PilotMetricsCapability } from "./pilot-metrics-port"
 import type { ConversationsCapability } from "./conversations-port"
 import type { DemoAccountsCapability } from "./demo-accounts-port"
 import type { PageDecisionsCapability } from "./page-decisions-port"
+import type { EntryDoorsView } from "./entry-doors-port"
+import type { CallSettingsCapability } from "./call-settings-port"
 
 export type ActionResult<T = null> =
   | { readonly ok: true; readonly value: T }
@@ -138,7 +144,7 @@ export interface ContentPreferences {
   restore(args: { personId: string; kind: ContentPreferenceKind; choiceId: string }): Promise<ActionResult<{ restored: boolean }>>
 }
 
-/** Ce qu'IDN rend au retour OIDC (simulé en démonstration). */
+/** L'identité qu'IDN rendrait au retour OIDC, SIMULÉE par l'écran de démonstration (`/entrer/idn`). */
 export interface IdnSignInInput {
   readonly firstName: string
   readonly lastName: string
@@ -151,13 +157,28 @@ export interface CodeDestination {
   readonly value: string
 }
 
-/** Les trois écrans de l'onboarding (EXF-DG-02), en une seule écriture. */
+/**
+ * Les trois écrans de l'onboarding (EXF-DG-02).
+ *
+ * L'identité commune (EA-04) : `handle` et `displayName` ne servent qu'à une personne qui n'a
+ * encore aucun profil. Un profil déjà publié (membre d'ANTSIA, retour après un départ) n'est ni
+ * redemandé ni réécrit : ces champs sont alors ignorés. Un profil retiré se republie d'abord, par
+ * le geste de la personne (`profilePublication.republish`) ; sinon l'entrée est refusée
+ * (`profile_republish_required`). Le fournisseur relit le profil à chaque essai : une entrée
+ * interrompue se reprend sans rien publier deux fois.
+ */
 export interface JoinInput {
   readonly facet: FacetInput
-  readonly handle: string
-  readonly displayName: string
+  readonly handle?: string
+  readonly displayName?: string
   readonly consents: OnboardingConsentChoices
   readonly directoryVisibility: DirectoryVisibility
+}
+
+/** Ce que rend une entrée : le pays du hub, et le statut que les faits donnent à l'adhésion. */
+export interface JoinedView {
+  readonly country: CountryCode
+  readonly status: MembershipStatus
 }
 
 /**
@@ -203,6 +224,15 @@ export interface PublishInput {
   readonly idempotencyKey?: string
 }
 
+/**
+ * Ce qu'une publication est devenue à l'envoi (FD-04), tel que le fournisseur le dit :
+ * publiée, ou retenue en relecture (visible de son seul auteur). `null` : le fournisseur
+ * n'a pas rendu l'état ; l'écran n'annonce alors ni « publiée » ni « en relecture ».
+ */
+export interface PublishOutcome {
+  readonly moderation: ContentModerationState | null
+}
+
 /** Commenter une publication ; une réponse à une réponse rejoint sa racine (un seul niveau). */
 export interface CommentInput {
   readonly postId: string
@@ -218,19 +248,30 @@ export interface ReportInput {
 }
 
 export interface DiasporaleActions {
-  signInWithIdn(input: IdnSignInInput): Promise<ActionResult>
+  /**
+   * Entrer par IDN (EA-02).
+   *   · Démonstration : l'identité simulée de `/entrer/idn` ouvre la session ; sans elle, `idn_invalid`.
+   *   · Moteur : SANS argument (une identité passée est ignorée, aucun nom civil ne part). Départ
+   *     vers IDN par le client d'authentification du moteur (fournisseur `idn`), retour sur
+   *     `/bienvenue` sans aucun paramètre ; `ok` veut dire que le navigateur part chez IDN.
+   */
+  signInWithIdn(input?: IdnSignInInput): Promise<ActionResult>
   requestCode(destination: CodeDestination): Promise<ActionResult<{ demoCode: string | null }>>
   verifyCode(code: string): Promise<ActionResult>
   /** Révocation de toutes les sessions côté serveur, puis purge locale (EXT-DG-01). */
   signOutEverywhere(): Promise<void>
   checkHandle(handle: string): Promise<ActionResult<{ available: boolean }>>
-  join(input: JoinInput): Promise<ActionResult<{ country: CountryCode }>>
+  join(input: JoinInput): Promise<ActionResult<JoinedView>>
   /** Déposer une photo ou une vidéo avant de publier ; les règles du moteur jugent le fichier d'abord. */
   uploadMedia(file: File): Promise<ActionResult<UploadedMedia>>
-  publish(input: PublishInput): Promise<ActionResult<{ moderation: ContentModerationState }>>
+  publish(input: PublishInput): Promise<ActionResult<PublishOutcome>>
   react(postId: string, kind: ReactionKind | null): Promise<ActionResult>
-  /** Commenter ou répondre (EXF-DG-12) ; l'auteur de la publication et la personne à qui l'on répond sont avisés. */
-  comment(input: CommentInput): Promise<ActionResult>
+  /**
+   * Commenter ou répondre (EXF-DG-12) ; l'auteur de la publication et la personne à qui l'on
+   * répond sont avisés. Rend l'identifiant du commentaire créé : l'écran le montre aussitôt,
+   * même hors des pages déjà lues (FD-03).
+   */
+  comment(input: CommentInput): Promise<ActionResult<{ readonly commentId: string }>>
   /** Modifier son commentaire publié, si la publication reste lisible. Capacité facultative du fournisseur. */
   editComment?(commentId: string, body: string): Promise<ActionResult>
   /** Retirer un commentaire — le sien, ou n'importe lequel sous sa propre publication. */
@@ -342,7 +383,14 @@ export interface DiasporaleDataSource {
   readonly conversations?: ConversationsCapability
   /** Comptes de démonstration par acteur, DÉVELOPPEMENT LOCAL du moteur seulement (`demo-accounts-port.ts`). */
   readonly demoAccounts?: DemoAccountsCapability
+  /** Réglages d'appel et de présence de la personne, valables aussi dans ANTSIA (IM-02, `call-settings-port.ts`). */
+  readonly callSettings?: CallSettingsCapability
   useSession(): Loadable<SessionView>
+  /**
+   * Les portes d'entrée que ce déploiement sait vraiment servir (EA-02, `entry-doors-port.ts`).
+   * Facultative : sans elle, la porte reste celle d'avant (`UNREAD_ENTRY_DOORS`).
+   */
+  useEntryDoors?(): Loadable<EntryDoorsView>
   useOpenCountries(): Loadable<readonly OpenCountryView[]>
   useCountryHub(country: CountryCode): Loadable<CountryHubView>
   useFeed(args: { scope: FeedScope; hubCountry?: CountryCode }): Loadable<readonly PostView[]>
@@ -366,10 +414,13 @@ export interface DiasporaleDataSource {
   useBookmarksPage(args: BookmarksPageRequest): BookmarksPageQuery
   /** Des membres à rencontrer (EXF-DG-18) : six au plus, réservées aux membres actifs. */
   useSuggestions(): Loadable<readonly SuggestionView[]>
-  /** Les commentaires d'une publication, des plus anciens aux plus récents, avec leurs premières réponses. */
-  useComments(postId: string): Loadable<readonly CommentThreadView[]>
-  /** Toutes les réponses d'une racine (`commentId` à `null` : rien à lire). */
-  useReplies(args: { postId: string; commentId: string | null }): Loadable<readonly CommentView[]>
+  /**
+   * Une page des commentaires d'une publication (FD-03), des plus anciens aux plus récents,
+   * chacun avec l'aperçu de ses réponses ; la page suivante se lit par son curseur.
+   */
+  useCommentsPage(args: CommentsPageRequest): CommentPageQuery<CommentThreadView>
+  /** Une page des réponses d'une racine (FD-03), dans l'ordre ; la suite se lit par son curseur. */
+  useRepliesPage(args: RepliesPageRequest): CommentPageQuery<CommentView>
   /** La cloche : les avis les plus récents, et le compte des non-lus. */
   useNotifications(): Loadable<readonly NotificationView[]>
   useUnreadCount(): Loadable<UnreadCountView>

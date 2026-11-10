@@ -19,7 +19,10 @@ import {
   type AssociationGroupsCapability,
   type AssociationGroupPostView,
   type AssociationGroupView,
+  type CountryEventsPage,
+  type CountryEventView,
   type Loadable,
+  countryEventsPageSize,
 } from "@diasporale/features/data"
 import type { FunctionReturnType } from "convex/server"
 import { useMemo } from "react"
@@ -34,7 +37,10 @@ const REMINDERS = api.modules.events.pageEventReminders
 const ATTENDANCE = api.modules.events.pageEventAttendance
 const GALLERY = api.modules.events.pageEventGallery
 const CALENDAR = api.modules.events.pageEventCalendar
+/** HB-02 : la lecture bornée des évènements d'un pays, dans la tranche DIASPORALE du moteur. */
+const HUB_EVENTS = api.modules.diaspora.hubEvents
 type GroupDto = NonNullable<FunctionReturnType<typeof ASSOCIATIONS.groupForPage>>
+type CountryEventDto = FunctionReturnType<typeof HUB_EVENTS.listCountryEvents>["items"][number]
 type EventDto = NonNullable<FunctionReturnType<typeof EVENTS.get>>
 type PostDto = FunctionReturnType<typeof ASSOCIATIONS.posts>["items"][number]
 type AttendanceDto = NonNullable<FunctionReturnType<typeof ATTENDANCE.get>>
@@ -53,6 +59,14 @@ function eventView(row: EventDto): AssociationEventView {
     remainingPlaces: row.remainingPlaces, registration: row.registration, waitlistPosition: row.waitlistPosition,
     registrationClosesAt: row.registrationClosesAt, registrationOpen: row.registrationOpen,
     reminderEnabled: row.reminderEnabled, reminderAt: row.reminderAt, reminderState: row.reminderState,
+  }
+}
+/** La carte d'un évènement du hub, allowlistée : rien d'autre ne sort de la réponse. */
+function countryEventView(row: CountryEventDto): CountryEventView {
+  return {
+    eventId: row.eventId, pageId: row.pageId, title: row.title, location: row.location,
+    startAt: row.startAt, endAt: row.endAt, timeZone: row.timeZone,
+    organizer: { name: row.organizer.name, handle: row.organizer.handle },
   }
 }
 function postView(row: PostDto): AssociationGroupPostView {
@@ -204,6 +218,14 @@ export function createEngineAssociationActivities(deps: EngineSourceDeps): { rea
           return { postId: row.postId as string, created: row.created }
         }),
         remove: ({ eventId, postId }) => attemptAction(async () => { await deps.convex.mutation(GALLERY.remove, { networkId: await networkOf(), eventId: eventId as Id<"events">, postId: postId as Id<"posts"> }); return null }),
+      },
+      useCountryEvents({ country, anchor, cursor, limit }) {
+        const reader = useReader()
+        const loaded = useLoaded(HUB_EVENTS.listCountryEvents, reader.networkId
+          ? { networkId: reader.networkId, country, anchor, cursor, numItems: countryEventsPageSize(limit) } : "skip")
+        return useStableLoaded(reader.error, loaded, (row): CountryEventsPage => ({
+          items: row.items.map(countryEventView), continueCursor: row.isDone ? null : row.continueCursor, isDone: row.isDone, partial: row.partial,
+        }))
       },
       useEvents({ pageId, cursor }) {
         const reader = useReader()

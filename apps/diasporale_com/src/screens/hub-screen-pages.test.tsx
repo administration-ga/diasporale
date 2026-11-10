@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /** Le hub pays et ses pages réelles (DG-007) : listes bornées par nature, vides, erreurs et suite annoncée. */
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
-import type { CountryHubView, HubPagesQuery, Loadable, MembershipView, PagesCapability, PageView } from "@diasporale/features/data"
+import type { AssociationEventsCapability, CountryEventsPage, CountryEventsRequest, CountryEventView, CountryHubView, HubPagesQuery, Loadable, MembershipView, PagesCapability, PageView } from "@diasporale/features/data"
 import { I18nProvider } from "@diasporale/features/i18n/client"
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import type { ReactNode } from "react"
@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   pages: { status: "loading" } as HubPagesQuery,
   capability: null as PagesCapability | null,
   hubPagesCalls: [] as string[],
+  associationEvents: null as Pick<AssociationEventsCapability, "useCountryEvents"> | null,
 }))
 
 vi.mock("next/navigation", () => ({
@@ -25,7 +26,10 @@ vi.mock("@diasporale/features/data", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@diasporale/features/data")>()),
   useCountryHub: () => mocks.hub,
   useOpenCountries: () => ({ status: "ready", data: [] }),
-  useOptionalDataSource: () => (mocks.capability ? { pages: mocks.capability } : null),
+  useOptionalDataSource: () =>
+    mocks.capability || mocks.associationEvents
+      ? { ...(mocks.capability ? { pages: mocks.capability } : {}), ...(mocks.associationEvents ? { associationEvents: mocks.associationEvents } : {}) }
+      : null,
 }))
 vi.mock("@diasporale/features", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@diasporale/features")>()),
@@ -71,6 +75,7 @@ const HUB: CountryHubView = {
     upcomingEvents: { kind: "value", value: 0 },
   },
   countersSource: "materialized",
+  countersComputedAt: Date.UTC(2026, 10, 9, 2, 30),
   officialPages: [],
   associations: [],
   companies: [],
@@ -117,6 +122,7 @@ beforeEach(() => {
   mocks.pages = { status: "loading" }
   mocks.capability = capability()
   mocks.hubPagesCalls.length = 0
+  mocks.associationEvents = null
 })
 
 afterEach(cleanup)
@@ -235,5 +241,109 @@ describe("HubScreen — pages réelles du pays", () => {
     render(tree())
     openTab("Associations")
     expect(within(screen.getByRole("tabpanel")).getByRole("article", { name: "association Cercle de Québec" })).toBeInTheDocument()
+  })
+})
+
+describe("HubScreen — évènements du pays lus par fenêtres (HB-02)", () => {
+  const DAY = 86_400_000
+  const START = Date.UTC(2030, 5, 12, 17)
+  function countryEvent(id: string, title: string, extra: Partial<CountryEventView> = {}): CountryEventView {
+    return {
+      eventId: id, pageId: "page-cercle", title, location: "Salle municipale, Montréal", startAt: START, endAt: START + 2 * 3_600_000,
+      timeZone: "America/Toronto", organizer: { name: "Cercle de Montréal", handle: "cercle-montreal" }, ...extra,
+    }
+  }
+  function serve(pages: Record<string, Loadable<CountryEventsPage>>) {
+    const requests: CountryEventsRequest[] = []
+    mocks.associationEvents = {
+      useCountryEvents: (request) => {
+        requests.push(request)
+        return pages[request.cursor ?? "premiere"] ?? { status: "loading" }
+      },
+    }
+    return requests
+  }
+
+  it("moteur : les cartes mènent à la fiche de l'évènement et à son association ; le compteur non mesuré reste caché", () => {
+    const requests = serve({
+      premiere: { status: "ready", data: { items: [countryEvent("evt-1", "Fête de l'indépendance"), countryEvent("evt-2", "Tournoi de football", { startAt: START + DAY, location: "" })], continueCursor: null, isDone: true, partial: false } },
+    })
+    render(tree())
+    expect(screen.queryByText("Évènements à venir")).not.toBeInTheDocument()
+    openTab("Évènements")
+    const panel = screen.getByRole("tabpanel")
+    expect(within(panel).getByRole("link", { name: "Fête de l'indépendance" })).toHaveAttribute("href", "/pages/cercle-montreal/evenements/evt-1")
+    expect(within(panel).getByRole("link", { name: "Tournoi de football" })).toHaveAttribute("href", "/pages/cercle-montreal/evenements/evt-2")
+    expect(within(panel).getAllByRole("link", { name: "Cercle de Montréal" })[0]).toHaveAttribute("href", "/pages/cercle-montreal")
+    expect(within(panel).getByText("Salle municipale, Montréal")).toBeInTheDocument()
+    expect(within(panel).getByRole("list", { name: "Prochains évènements\u00a0— Canada" })).toBeInTheDocument()
+    // Plus de renvoi « pas encore réunis » : la vraie liste le remplace.
+    expect(panel).not.toHaveTextContent("Les évènements ne sont pas encore réunis dans le hub.")
+    expect(within(panel).getByRole("link", { name: "Voir les associations du pays" })).toHaveAttribute("href", "/pages?type=association&pays=CA")
+    expect(within(panel).getByRole("link", { name: "Mon agenda" })).toHaveAttribute("href", "/agenda")
+    // Le pays consulté, à partir d'un instant fixé par l'écran, première fenêtre sans curseur.
+    expect(requests[0]).toMatchObject({ country: "CA", cursor: null })
+    expect(Number.isFinite(requests[0]!.anchor)).toBe(true)
+    expect(new Set(requests.map((request) => request.anchor)).size).toBe(1)
+  })
+
+  it("un compteur mesuré par le passage nocturne s'affiche à côté des autres", () => {
+    serve({ premiere: { status: "ready", data: { items: [], continueCursor: null, isDone: true, partial: false } } })
+    mocks.hub = { status: "ready", data: { ...HUB, eventsSource: "materialized", counters: { ...HUB.counters, upcomingEvents: { kind: "value", value: 3 } } } }
+    render(tree())
+    expect(screen.getByText("Évènements à venir")).toBeInTheDocument()
+  })
+
+  it("vide : le hub le dit sans rien promettre, et renvoie aux associations et à l'agenda", () => {
+    serve({ premiere: { status: "ready", data: { items: [], continueCursor: null, isDone: true, partial: false } } })
+    render(tree())
+    openTab("Évènements")
+    const panel = screen.getByRole("tabpanel")
+    expect(within(panel).getByText("Aucun évènement à venir ouvert au réseau — Canada.")).toBeInTheDocument()
+    expect(within(panel).getByText(/Les évènements réservés aux adhérents restent sur la page de chaque association/)).toBeInTheDocument()
+    expect(panel).not.toHaveTextContent(/apparaîtront|bientôt|\b0\b/)
+  })
+
+  it("une lecture qui n'a parcouru qu'une partie des pages du pays le dit", () => {
+    serve({ premiere: { status: "ready", data: { items: [countryEvent("evt-1", "Fête de l'indépendance")], continueCursor: null, isDone: true, partial: true } } })
+    render(tree())
+    openTab("Évènements")
+    expect(within(screen.getByRole("tabpanel")).getByRole("note")).toHaveTextContent("les évènements de certaines associations peuvent manquer ici")
+  })
+
+  it("« Afficher plus » monte la fenêtre suivante par son curseur opaque, sans doublon", () => {
+    const requests = serve({
+      premiere: { status: "ready", data: { items: [countryEvent("evt-1", "Fête de l'indépendance")], continueCursor: "suite-1", isDone: false, partial: false } },
+      "suite-1": { status: "ready", data: { items: [countryEvent("evt-1", "Fête de l'indépendance"), countryEvent("evt-3", "Gala solidaire", { startAt: START + 2 * DAY })], continueCursor: null, isDone: true, partial: false } },
+    })
+    render(tree())
+    openTab("Évènements")
+    act(() => {
+      fireEvent.click(within(screen.getByRole("tabpanel")).getByRole("button", { name: "Afficher plus" }))
+    })
+    const panel = screen.getByRole("tabpanel")
+    expect(within(panel).getAllByRole("link", { name: "Fête de l'indépendance" })).toHaveLength(1)
+    expect(within(panel).getByRole("link", { name: "Gala solidaire" })).toBeInTheDocument()
+    expect(requests.some((request) => request.cursor === "suite-1")).toBe(true)
+    expect(within(panel).queryByRole("button", { name: "Afficher plus" })).not.toBeInTheDocument()
+  })
+
+  it("une lecture refusée se dit telle quelle, jamais « aucun évènement »", () => {
+    serve({ premiere: { status: "error", code: "suspended" } })
+    render(tree())
+    openTab("Évènements")
+    const panel = screen.getByRole("tabpanel")
+    expect(within(panel).getByRole("alert")).toBeInTheDocument()
+    expect(panel).not.toHaveTextContent("Aucun évènement à venir")
+  })
+
+  it("démonstration : les évènements fictifs joints au hub restent la source de l'onglet", () => {
+    serve({ premiere: { status: "ready", data: { items: [countryEvent("evt-1", "Fête de l'indépendance")], continueCursor: null, isDone: true, partial: false } } })
+    mocks.hub = { status: "ready", data: { ...HUB, countersSource: "demo", eventsSource: "demo" } }
+    render(tree())
+    openTab("Évènements")
+    const panel = screen.getByRole("tabpanel")
+    expect(within(panel).getByText("Les associations publient leurs évènements sur leur page.")).toBeInTheDocument()
+    expect(within(panel).queryByRole("link", { name: "Fête de l'indépendance" })).not.toBeInTheDocument()
   })
 })

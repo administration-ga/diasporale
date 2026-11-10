@@ -1,0 +1,60 @@
+{
+  "legal": {
+    "provisional": {
+      "heading": "Provisional text, awaiting review",
+      "body": "It describes what the service does today. The lawyer and the publisher still have to review and approve it: the passages marked “To be provided” await their answer."
+    },
+    "community": {
+      "title": "Community rules",
+      "spirit": {
+        "title": "The spirit of the network",
+        "body": "DIASPORALE is the network of Gabonese people living abroad: a place to help one another, keep associations alive and find a skill close to home. These rules apply to everything published and exchanged here, in every country."
+      },
+      "respect": {
+        "title": "Respect and harassment",
+        "body": "Be respectful, even when you disagree. Harassment, insults, hatred or discrimination, threats and calls to violence are not accepted, whether in a post, a comment or a message. If someone bothers you, you can block them from their profile: you won't see each other, and your links are removed."
+      },
+      "scams": {
+        "title": "Scams, fake services and false information",
+        "body": "Do not offer a service you do not provide, or a job, housing or procedure that does not exist, and do not publish information you know to be false. Be wary of any request for money, an advance or fees, and of any promise of a visa, housing or a job. DIASPORALE collects no payment, membership is free, and no consular procedure is handled here. Contact goes through messaging: no member's address or phone number is published."
+      },
+      "impersonation": {
+        "title": "Impersonation",
+        "body": "Do not pretend to be another person, an association, a company, a consular post or a State institution. A page speaks for the organisation it presents, and only a verified member can create one. Badges are calculated by the service: none can be bought or self-declared. A consular attestation proves a consular registration, never a professional skill."
+      },
+      "politics": {
+        "title": "Political debate",
+        "body": "Debating ideas is welcome, with respect for people. Insults, calls to hatred, impersonation and paid political advertising are not."
+      },
+      "privacy": {
+        "title": "Privacy and other people's details",
+        "body": "Do not publish another person's address, phone number, email address, photo or personal situation without their consent, nor the content of a private conversation. Never publish an identity document, a passport number or a consular document, whether yours or someone else's."
+      },
+      "prohibited": {
+        "title": "Prohibited content",
+        "body": "The following are not accepted: sexual content, any content harmful to a minor, a deepfake of a person without their consent, and AI-generated content that the law prohibits. Such content may be removed and lead to a measure against its author.",
+        "pending": "To be provided (question Q1 to the lawyer): the exact list of content prohibited by law, depending on the country the service is published from and the country you live in."
+      },
+      "reporting": {
+        "title": "Reporting",
+        "body": "Posts, comments, profiles, pages, events, and mutual aid, mentoring, arrival kit and job content each carry a “Report” action, as do reviews of services. Choose the reason: the network's moderation team reviews the report, and its author does not learn who reported it. Reported content is hidden from you straight away, except a review of a service, which stays displayed until a decision is made. You follow your reports in “My reports”: acknowledgement, then decision; for reasons subject to a legal deadline, the due date is shown there. A profile is shared by DIASPORALE and ANTSIA: reports about it are reviewed by ANTSIA's moderation.",
+        "pending": "To be provided (question Q6 to the lawyer): the processing deadlines that apply depending on the country you live in."
+      },
+      "measures": {
+        "title": "Measures and appeals",
+        "body": "After review, the moderation team dismisses the report or takes a measure: removal of the content, warning, mute, suspension or exclusion. A mute prevents posting in DIASPORALE; a suspension or an exclusion closes access to all of ANTSIA, because the account is shared, but “My data” stays open. A mute or a suspension has a duration and ends on its own; an exclusion does not. Some content, such as page events and reviews of services, is reviewed before it appears. No one decides a case they are party to. Every decision is reasoned: the person concerned finds it in “My data”, without the name of who reported or who decided, and can contest it with a reasoned appeal. The appeal is reviewed by the network administration, then, on a second appeal, by the ANTSIA platform team, each time by someone other than the person who decided.",
+        "pending": "To be provided (question Q3 to the lawyer): the time limit for lodging an appeal and the other ways to complain."
+      }
+    }
+  },
+  "communityRules": {
+    "reasonsLabel": "Report reasons that relate to it",
+    "read": "Read the community rules",
+    "readRule": "Related rule: {{rule}}"
+  },
+  "settings": {
+    "texts": {
+      "provisional": "Provisional text"
+    }
+  }
+}

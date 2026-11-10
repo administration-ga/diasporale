@@ -1,0 +1,41 @@
+{
+  "settings": {
+    "calls": {
+      "title": "Messages et appels",
+      "lead": "Les réglages de votre compte : ils valent aussi dans ANTSIA. Ils décident si un appel qui vous est adressé sonne, et ce que vos relations voient de vous.",
+      "notOffered": "DIASPORALE ne propose pas encore d'appeler depuis un profil. Ces réglages s'appliquent déjà à tout appel qu'on vous adresse, ici ou dans ANTSIA.",
+      "demoNotice": "Démonstration : aucun appel n'est passé ici. Ces réglages fictifs restent le temps de la page.",
+      "who": "Qui peut vous appeler",
+      "outside": {
+        "ring": "Tous les membres",
+        "ringHint": "Un appel sonne, qu'il vienne ou non d'une de vos relations.",
+        "silent": "Mes relations seulement",
+        "silentHint": "L'appel d'une personne hors de vos relations ne sonne pas : il est inscrit à votre journal d'appels et l'appelant l'apprend. Un appel de groupe dont vous êtes membre, ou une mise en relation où vous avez accepté l'appel, sonne toujours."
+      },
+      "voicemail": "Messagerie vocale",
+      "voicemailHint": "Quand vous ne répondez pas, l'appelant peut vous laisser un message vocal. Vous ne pouvez pas encore l'écouter dans DIASPORALE.",
+      "presence": "Montrer ma présence",
+      "presenceHint": "Vos relations voient si vous êtes en ligne, en appel ou en « Ne pas déranger ». Désactivé, vous n'apparaissez plus du tout.",
+      "callWaiting": "Double appel",
+      "callWaitingHint": "Pendant un appel, un second appel se présente en attente. Désactivé, l'appelant apprend que vous êtes occupé.",
+      "dnd": {
+        "title": "Ne pas déranger",
+        "hint": "Aucun appel ne sonne jusqu'à l'heure choisie, sept jours au plus.",
+        "active": "En silence jusqu'au {{date}}.",
+        "duration": "Durée",
+        "oneHour": "1 heure",
+        "eightHours": "8 heures",
+        "oneDay": "24 heures",
+        "sevenDays": "7 jours",
+        "enable": "Activer",
+        "disable": "Lever le silence",
+        "enabled": "« Ne pas déranger » est activé.",
+        "disabled": "« Ne pas déranger » est levé."
+      }
+    }
+  },
+  "errors": {
+    "call_dnd_past": "La fin du silence est déjà passée : vérifiez l'heure de votre appareil.",
+    "call_dnd_too_long": "Un silence dure sept jours au plus : vérifiez l'heure de votre appareil."
+  }
+}
