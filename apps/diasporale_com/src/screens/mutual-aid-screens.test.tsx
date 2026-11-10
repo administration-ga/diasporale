@@ -218,12 +218,14 @@ describe("/entraide/<id> — une question", () => {
     expect(await screen.findAllByRole("button", { name: "Retenir cette réponse" })).toHaveLength(2)
   })
 
-  it("un autre membre répond ; il ne peut ni retenir, ni clore ; le contact privé passe par la messagerie", async () => {
+  it("un autre membre répond ; il ne peut ni retenir, ni clore ; le contact privé exige d'abord une relation", async () => {
     mount("p-nadia", <MutualAidItemScreen itemId="aid-q-2" />)
     expect(await screen.findByRole("heading", { level: 1, name: /Renouveler un titre de séjour/ })).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Retenir cette réponse" })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Clore la question" })).not.toBeInTheDocument()
-    expect(screen.getByText(/passez par la messagerie depuis le profil de la personne/)).toBeInTheDocument()
+    // ET-01 : la messagerie n'ouvre un fil qu'entre personnes en relation ; l'écran le dit, sans autre promesse.
+    expect(screen.getByText(/demandez d'abord à entrer en relation depuis le profil de la personne/)).toBeInTheDocument()
+    expect(screen.queryByText(/passez par la messagerie depuis le profil/)).not.toBeInTheDocument()
     fireEvent.change(screen.getByLabelText("Répondre à la question"), { target: { value: "Écris-moi : moi@exemple.fr" } })
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Publier ma réponse" })) })
     expect(await screen.findByText(/Pas de téléphone, d'adresse e-mail ni de lien/)).toBeInTheDocument()
@@ -272,6 +274,82 @@ describe("/entraide/<id> — une mission bénévole", () => {
     mount("p-nadia", <MutualAidItemScreen itemId="aid-m-2" />)
     expect(await screen.findByText("Cette mission est complète.")).toBeInTheDocument()
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument()
+  })
+})
+
+/** Un second écran sur le MÊME jeu fictif : un autre compte relit ce que le premier a écrit. */
+function remount(store: DemoStore, screenNode: ReactNode, locale: "fr" | "en" = "fr") {
+  render(
+    <I18nProvider locale={locale}>
+      <DataSourceProvider source={createDemoDataSource(store)}>{screenNode}</DataSourceProvider>
+    </I18nProvider>,
+  )
+}
+
+/**
+ * ET-01 — l'écran des missions ne promet que ce qui existe : aucun avis ne part à l'annulation ni à
+ * la modification d'une mission (genres d'avis à déclarer au moteur), et la messagerie n'ouvre un fil
+ * qu'entre personnes en relation (aucun canal entre l'équipe et un bénévole avant ET-02).
+ */
+describe("ET-01 — missions bénévoles : des promesses vraies", () => {
+  it("le bénévole : aucun message promis de l'équipe ; un changement ou une annulation se lit sur la fiche, sans avis", async () => {
+    mount("p-nadia", <MutualAidItemScreen itemId="aid-m-1" />)
+    expect(await screen.findByRole("heading", { level: 1, name: "Accueillir les nouveaux arrivants à la gare" })).toBeInTheDocument()
+    expect(screen.getByText(/l'équipe ne peut vous écrire que si vous êtes en relation/)).toBeInTheDocument()
+    expect(screen.getByText(/se lit sur cette fiche et dans «\sMes inscriptions\s»\s; aucun avis ne vous est envoyé/)).toBeInTheDocument()
+    expect(screen.queryByText(/vous écrira par la messagerie/)).not.toBeInTheDocument()
+  })
+
+  it("l'équipe : écrire à un bénévole exige une relation ; modifier et annuler disent qu'aucun avis ne part", async () => {
+    mount("p-steeve", <MutualAidItemScreen itemId="aid-m-1" />)
+    expect(await screen.findByRole("heading", { level: 3, name: "Bénévoles inscrits" })).toBeInTheDocument()
+    expect(screen.getByText(/Pour lui écrire, demandez d'abord à entrer en relation depuis son profil/)).toBeInTheDocument()
+    expect(screen.queryByText(/pour le joindre, passez par la messagerie/)).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Modifier" }))
+    const edit = await screen.findByRole("dialog", { name: "Modifier la mission" })
+    expect(within(edit).getByText(/Les changements s'affichent sur la fiche\s; aucun avis n'est envoyé aux inscrits/)).toBeInTheDocument()
+    fireEvent.click(within(edit).getByRole("button", { name: "Fermer" }))
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Modifier la mission" })).not.toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole("button", { name: "Annuler la mission" }))
+    const cancel = await screen.findByRole("dialog", { name: /Annuler cette mission/ })
+    expect(within(cancel).getByText(/aucun avis ne leur est envoyé/)).toBeInTheDocument()
+    expect(within(cancel).queryByText(/Les inscrits verront/)).not.toBeInTheDocument()
+  })
+
+  it("à deux comptes : l'équipe annule avec un motif, l'inscrite le lit sur la fiche et voit « Annulée » dans « Mes inscriptions »", async () => {
+    const store = mount("p-steeve", <MutualAidItemScreen itemId="aid-m-1" />)
+    fireEvent.click(await screen.findByRole("button", { name: "Annuler la mission" }))
+    const cancel = await screen.findByRole("dialog", { name: /Annuler cette mission/ })
+    fireEvent.change(within(cancel).getByLabelText("Motif (facultatif)"), { target: { value: "La gare est fermée ce samedi. (Motif fictif.)" } })
+    await act(async () => { fireEvent.click(within(cancel).getByRole("button", { name: "Confirmer l'annulation" })) })
+    expect(await screen.findByText("La mission est annulée.")).toBeInTheDocument()
+    cleanup()
+
+    // p-mireille est inscrite à cette mission dans le jeu fictif.
+    await act(async () => { await store.switchTo("p-mireille") })
+    remount(store, <MutualAidItemScreen itemId="aid-m-1" />)
+    expect(await screen.findByText(/^Cette mission est annulée\. Motif\s: La gare est fermée ce samedi\. \(Motif fictif\.\)$/)).toBeInTheDocument()
+    cleanup()
+
+    remount(store, <MutualAidScreen />)
+    openTab("Missions bénévoles")
+    fireEvent.change(screen.getByLabelText("Afficher"), { target: { value: "mine" } })
+    const signup = await screen.findByRole("link", { name: "Accueillir les nouveaux arrivants à la gare" })
+    expect(within(signup.closest("li")!).getByText("Annulée")).toBeInTheDocument()
+  })
+
+  it("en anglais, les mêmes phrases exactes", async () => {
+    mount("p-nadia", <MutualAidItemScreen itemId="aid-m-1" />, { locale: "en" })
+    expect(await screen.findByRole("heading", { level: 1, name: "Accueillir les nouveaux arrivants à la gare" })).toBeInTheDocument()
+    expect(screen.getByText(/the team can only write to you if you are connected/)).toBeInTheDocument()
+    expect(screen.getByText(/no notification is sent to you/)).toBeInTheDocument()
+    expect(screen.queryByText(/will write to you through messages/)).not.toBeInTheDocument()
+    cleanup()
+
+    mount("p-nadia", <MutualAidItemScreen itemId="aid-q-2" />, { locale: "en" })
+    expect(await screen.findByText(/first ask to connect from the person's profile/)).toBeInTheDocument()
   })
 })
 
