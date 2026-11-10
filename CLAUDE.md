@@ -1,14 +1,18 @@
 # DIASPORALE.COM — Consignes pour les agents (Claude Code, Codex)
 
-> Dossier ouvert le 14/10/2026. **Où l'on en est** : l'encart « État d'avancement » en tête de
-> `docs/01` (étapes a → e livrées le 14–15/10 ; PD0, câblage dans le moteur, en cours). Code :
+> Dossier ouvert le 14/10/2026. **Où l'on en est** (relevé du 10/11/2026) : l'encart « État
+> d'avancement » en tête de `docs/01`, ligne par ligne ; l'état détaillé et la suite sont dans
+> `docs/etudes/2026-11-10-finalisation/`. PD1 est fait et constaté ; PD0 et PD2 à PD8 sont écrits,
+> non recettés en tout ou partie ; PD9 et PD10 sont à faire. En ligne : la démonstration seulement,
+> avec des comptes fictifs. Code :
 > `packages/diasporale-domain` (règles pures), `packages/diasporale-features` (surfaces, interface
 > de données, fournisseur de démonstration), `apps/diasporale_com` (Next.js 16, port 3031).
 > Avant tout travail, lire dans l'ordre :
 > 1. `docs/00_CAHIER_DES_CHARGES_DIASPORALE.md` (ce que le produit est, ses invariants, ses lots) ;
 > 2. `../ANTSIA/docs/00_CAHIER_DES_CHARGES_ANTSIA.md` (le moteur dont DIASPORALE est une application) ;
-> 3. `docs/01_PLAN_IMPLEMENTATION_PROMPTS_DIASPORALE.md` (le prompt à exécuter, un à la fois, avec son préambule commun) ;
-> 4. `../../../Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTSIA_2026-10-14.md` et ses annexes.
+> 3. `docs/etudes/2026-11-10-finalisation/00_PLAN_DIRECTEUR.md` (état réel, feuille de route, mécanismes communs), puis, dans le même dossier, le plan du lot à exécuter (§ 1, § 2, le lot au § 5, son prompt au § 9 s'il existe) ;
+> 4. `docs/01_PLAN_IMPLEMENTATION_PROMPTS_DIASPORALE.md` (l'encart d'état, puis les prompts PD d'origine et leur préambule commun) ;
+> 5. `../../../Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTSIA_2026-10-14.md` et ses annexes.
 
 ## Ce qu'est ce dépôt
 
@@ -21,8 +25,10 @@
   (écrit par la session DIASPORALE) ; les rôles propres dans
   `packages/diasporale-features/src/styles/extras.css` (renvois au contrat seulement) ;
   référence `docs/03_CHARTE_DIASPORALE.md`.
-- **Données** : les écrans lisent un port (`@diasporale/features/data`) ; aujourd'hui le
-  fournisseur de DÉMONSTRATION (données fictives, ce navigateur seulement), demain celui du moteur.
+- **Données** : les écrans lisent un port (`@diasporale/features/data`), servi par deux
+  fournisseurs : celui de DÉMONSTRATION (données fictives, ce navigateur seulement), par défaut, et
+  celui du moteur (`apps/diasporale_com/src/data/engine-*.ts`, `dev:engine`), qui sert la
+  démonstration en ligne.
 
 ## Invariants (ne jamais contourner)
 
@@ -65,9 +71,21 @@ Aucun préfixe de PATH : `codegen` passe par le lanceur Convex du moteur, qui me
 `verify` pendant qu'un `convex dev` publie (`409 ExistingModuleHashConflict`) : attendre
 « Convex functions ready », puis relancer.
 
-Cliquets attendus (verts avant toute PR) : réseau borné, aucun import inter-produit, charte,
-i18n, `.collect()` borné, `v.any()`, communication publique (aucun chiffre non mesuré, aucun
-audit ou hébergement affirmé), aucune URL codée en dur.
+Cliquets attendus (verts avant toute PR), et ce qu'ils relisent vraiment :
+- **Code de DIASPORALE** : ses cliquets (`apps/diasporale_com/src/ratchets/`) — clés i18n (aucune
+  clé manquante ni morte, codes d'erreur fermés), aucune couleur littérale, aucune chaîne affichée
+  en dur ; la parité fr/en (`packages/diasporale-features/src/i18n/locales.test.ts`) ; les
+  contrastes des deux thèmes (`packages/diasporale-features/src/styles/engine-theme-contrast.test.ts`) ;
+  les imports inter-produits, refusés par le lint (preset du moteur). Des cliquets du moteur, deux
+  seulement relisent ce code : déconnexion partout (`sign-out-everywhere`) et catalogue
+  (`deploy-catalog`).
+- **Tranche `convex/modules/diaspora/` et thèmes `packages/ui/src/themes/diasporale*.css`** (dans
+  ANTSIA) : cliquets du moteur — réseau borné, aucun import inter-produit, `.collect()` borné,
+  `v.any()`, aucune URL absolue dans le backend, écritures limitées en débit, contrat de thème.
+- **Non contrôlé sur le code de DIASPORALE** : « communication publique » (aucun chiffre non
+  mesuré, aucun audit ou hébergement affirmé) et « aucune URL codée en dur » ne lisent que `apps/`
+  et `packages/` d'ANTSIA (`../ANTSIA/tests/ratchets/lib/source-files.ts`). Ces deux règles se
+  tiennent à la relecture jusqu'au lot LX-06.
 
 ## Mémoire
 
