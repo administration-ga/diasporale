@@ -8,7 +8,7 @@ import type { ComponentProps, ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { ProfilePostPagesProps } from "@/components/feed-pages"
-import type { IcomNetwork } from "@/components/icom"
+import type { IcomNetwork, IcomState } from "@/components/icom"
 import type { ProfileAlbums } from "@/components/profile-albums"
 import { routes } from "@/lib/routes"
 
@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   profile: { status: "loading" } as Loadable<ProfileView | null>,
   relation: { status: "loading" } as Loadable<RelationView>,
   network: null as IcomNetwork | null,
+  icom: { status: "off", reason: "not_allowed" } as IcomState,
+  callsOpen: false,
   search: "",
   read: vi.fn(),
   gate: vi.fn(),
@@ -75,11 +77,13 @@ vi.mock("@/components/app-shell", () => ({
 // gardes d'affichage ; aucun appel ou abonnement Convex réel n'est monté.
 vi.mock("@/components/icom", () => ({
   useEngineNetwork: () => mocks.network,
-  useIcomState: () => ({ status: "off", reason: "not_allowed" }),
+  useIcomState: () => mocks.icom,
   useWriteTo: () => mocks.write,
   IcomIsland: (props: { children: ReactNode }) => <>{props.children}</>,
 }))
 vi.mock("@antsia/social-features/iappel", () => ({ useRingRelation: () => ({ busyHandle: null, ring: mocks.ring }) }))
+// L'interrupteur des appels (IM-01) : chaque test choisit sa position.
+vi.mock("@/lib/calls", () => ({ callsAreOpen: () => mocks.callsOpen }))
 
 vi.mock("@/components/feed-pages", () => ({
   ProfilePostPages: (props: ProfilePostPagesProps) => {
@@ -148,6 +152,8 @@ beforeEach(() => {
   mocks.profile = { status: "ready", data: profile }
   mocks.relation = { status: "loading" }
   mocks.network = { networkId: "networks_diasporale", slug: "diasporale", personId: membership.personId } as IcomNetwork
+  mocks.icom = { status: "off", reason: "not_allowed" }
+  mocks.callsOpen = false
   mocks.search = ""
   for (const action of [mocks.follow, mocks.unfollow, mocks.connect, mocks.respond, mocks.block, mocks.unblock]) {
     action.mockReset().mockResolvedValue({ ok: true, value: null })
@@ -376,5 +382,47 @@ describe("ProfileScreen — suivre et ne plus suivre selon l'adhésion", () => {
     await act(async () => { fireEvent.click(button) })
     expect(mocks.unfollow).toHaveBeenCalledTimes(2)
     expect(mocks.follow).not.toHaveBeenCalled()
+  })
+})
+
+describe("ProfileScreen — « Appeler » derrière l'interrupteur des appels (IM-01)", () => {
+  const relationProfile: ProfileView = { ...profile, personId: "persons_boris", handle: "boris.demo", displayName: "Boris", isSelf: false }
+  const callName = t("contact.callTo", { name: relationProfile.displayName })
+  const writeName = t("contact.writeTo", { name: relationProfile.displayName })
+
+  beforeEach(() => {
+    mocks.profile = { status: "ready", data: relationProfile }
+    mocks.relation = { status: "ready", data: { connection: "connected", connectionId: "connections_boris", following: false } }
+    mocks.icom = { status: "on", network: { networkId: "networks_diasporale", slug: "diasporale", personId: membership.personId } as IcomNetwork }
+  })
+
+  it("appels fermés : « Écrire » reste, aucun geste d'appel n'est proposé à une relation", () => {
+    mocks.callsOpen = false
+    render(tree(relationProfile.handle))
+
+    expect(screen.getByRole("button", { name: writeName })).toBeEnabled()
+    expect(screen.queryByRole("button", { name: callName })).not.toBeInTheDocument()
+    expect(screen.queryByText(t("contact.call"))).not.toBeInTheDocument()
+    expect(mocks.ring).not.toHaveBeenCalled()
+  })
+
+  it("appels ouverts : « Appeler » revient à côté d'« Écrire » et fait sonner la relation", () => {
+    mocks.callsOpen = true
+    render(tree(relationProfile.handle))
+
+    expect(screen.getByRole("button", { name: writeName })).toBeEnabled()
+    const call = screen.getByRole("button", { name: callName })
+    expect(call).toBeEnabled()
+    fireEvent.click(call)
+    expect(mocks.ring).toHaveBeenCalledExactlyOnceWith({ personId: relationProfile.personId, handle: relationProfile.handle, displayName: relationProfile.displayName })
+  })
+
+  it("ouverts ou non, aucun appel hors relation : seul « Écrire », fermé, dit pourquoi", () => {
+    mocks.callsOpen = true
+    mocks.relation = { status: "ready", data: { connection: "none", connectionId: null, following: false } }
+    render(tree(relationProfile.handle))
+
+    expect(screen.getByRole("button", { name: writeName })).toBeDisabled()
+    expect(screen.queryByRole("button", { name: callName })).not.toBeInTheDocument()
   })
 })

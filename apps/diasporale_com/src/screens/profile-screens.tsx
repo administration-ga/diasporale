@@ -28,6 +28,7 @@ import { IcomIsland, useEngineNetwork, useIcomState, useWriteTo } from "@/compon
 import { ProfileAlbums } from "@/components/profile-albums"
 import { ProfileAvatar, ProfileCover } from "@/components/profile-images"
 import { ProfilePostPages } from "@/components/feed-pages"
+import { callsAreOpen } from "@/lib/calls"
 import { routes } from "@/lib/routes"
 
 /** `/@handle` (réécrit vers `/profil/handle`) — profil publié, facette selon ses visibilités (EXF-DG-07/08). */
@@ -320,6 +321,7 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
  * moteur n'ouvre un fil neuf qu'entre relations (`THREAD_RELATION_REQUIRED`) et
  * n'appelle que ses relations : hors relation, ou sans iCom (démonstration,
  * membre pas encore déclaré), seul « Écrire » reste, fermé, et dit pourquoi.
+ * « Appeler » n'est proposé que si l'interrupteur des appels est ouvert (IM-01).
  */
 function PersonContact(props: { personId: string; handle: string; displayName: string }) {
   const { t } = useDiasporaleT()
@@ -338,24 +340,35 @@ function PersonContact(props: { personId: string; handle: string; displayName: s
   return <ContactButton recipientName={props.displayName} unavailableHint={hint} />
 }
 
-/** Les deux gestes d'iCom, sous l'îlot du moteur (réseau courant, hôte d'appel de la coque). */
+/**
+ * Les gestes d'iCom, sous l'îlot du moteur (réseau courant, hôte d'appel de la coque) :
+ * « Écrire », puis « Appeler » quand les appels sont ouverts (IM-01). Fermés, le geste
+ * n'est pas proposé du tout : aucun bouton ne finit sur une erreur de configuration.
+ */
 function IcomContact(props: { personId: string; handle: string; displayName: string }) {
-  const { t } = useDiasporaleT()
   const writeTo = useWriteTo()
-  const { busyHandle, ring } = useRingRelation()
   return (
     <>
       <ContactButton recipientName={props.displayName} onContact={() => writeTo(props.handle)} />
-      <Button
-        variant="outline"
-        disabled={busyHandle === props.handle}
-        aria-label={t("contact.callTo", { name: props.displayName })}
-        onClick={() => void ring({ personId: props.personId as Id<"persons">, handle: props.handle, displayName: props.displayName })}
-      >
-        <PhoneIcon aria-hidden />
-        {t("contact.call")}
-      </Button>
+      {callsAreOpen() ? <CallButton personId={props.personId} handle={props.handle} displayName={props.displayName} /> : null}
     </>
+  )
+}
+
+/** « Appeler » une relation : la sonnerie du moteur (`ring`), audio. */
+function CallButton(props: { personId: string; handle: string; displayName: string }) {
+  const { t } = useDiasporaleT()
+  const { busyHandle, ring } = useRingRelation()
+  return (
+    <Button
+      variant="outline"
+      disabled={busyHandle === props.handle}
+      aria-label={t("contact.callTo", { name: props.displayName })}
+      onClick={() => void ring({ personId: props.personId as Id<"persons">, handle: props.handle, displayName: props.displayName })}
+    >
+      <PhoneIcon aria-hidden />
+      {t("contact.call")}
+    </Button>
   )
 }
 
