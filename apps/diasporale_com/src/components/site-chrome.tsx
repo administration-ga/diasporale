@@ -1,11 +1,13 @@
 "use client"
 
+import { LEGAL_TEXT_KINDS } from "@diasporale/domain"
 import { Button, DemoBanner, DemoChip, cn } from "@diasporale/features"
 import { useDataSource } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import NextLink from "next/link"
 import type { ReactNode } from "react"
 
+import { LEGAL_TEXT_LABELS, LEGAL_TEXT_ROUTES } from "@/lib/legal-texts"
 import { routes } from "@/lib/routes"
 
 import { useDismissal, useFloatingCard } from "./floating-cards"
@@ -95,12 +97,12 @@ export function SiteFooter(props: { compact?: boolean } = {}) {
           <p className="max-w-sm text-[13px] text-muted-foreground">{t("footer.publisher")}</p>
         </div>
         <nav aria-label={t("footer.label")} className={cn("flex gap-2 text-sm", props.compact ? "flex-wrap justify-center gap-x-5" : "flex-col")}>
-          <NextLink href={routes.legalNotice()} className="inline-flex min-h-11 items-center hover:underline focus-visible:shadow-focus">
-            {t("footer.legalNotice")}
-          </NextLink>
-          <NextLink href={routes.privacy()} className="inline-flex min-h-11 items-center hover:underline focus-visible:shadow-focus">
-            {t("footer.privacy")}
-          </NextLink>
+          {/* Les textes du site (LX-05) : mentions, confidentialité, conditions, règles de la communauté, contact. */}
+          {LEGAL_TEXT_KINDS.map((kind) => (
+            <NextLink key={kind} href={LEGAL_TEXT_ROUTES[kind]()} className="inline-flex min-h-11 items-center hover:underline focus-visible:shadow-focus">
+              {t(LEGAL_TEXT_LABELS[kind])}
+            </NextLink>
+          ))}
           {/* Les droits personnels, adhésion facultative (EA-05) : la connexion est demandée si besoin. */}
           <NextLink href={routes.myData()} className="inline-flex min-h-11 items-center hover:underline focus-visible:shadow-focus">
             {t("footer.myData")}
