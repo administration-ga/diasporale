@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
-import { REPORT_REASONS } from "@diasporale/features/data"
+import { DataSourceProvider, REPORT_REASONS } from "@diasporale/features/data"
 import type {
   ActionResult,
   ContentReportsCapability,
+  DiasporaleDataSource,
   JobOfferCardView,
   JobOfferDetailView,
   JobsCapability,
@@ -167,7 +168,11 @@ function signedIn(membership: MembershipView | null): Loadable<SessionView> {
 }
 
 function tree(ui: ReactNode, locale: "fr" | "en" = "fr") {
-  return <I18nProvider locale={locale}>{ui}</I18nProvider>
+  // Depuis MD-02, le geste « Signaler » vit dans le paquet de surfaces et lit la capacité dans le
+  // vrai contexte de la source de données : quand un test en pose une, elle est donc fournie ici.
+  const source = mocks.dataSource as DiasporaleDataSource | null
+  const content = source === null ? ui : <DataSourceProvider source={source}>{ui}</DataSourceProvider>
+  return <I18nProvider locale={locale}>{content}</I18nProvider>
 }
 
 beforeEach(() => {

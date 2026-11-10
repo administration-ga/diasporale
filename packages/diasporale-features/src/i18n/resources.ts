@@ -63,6 +63,7 @@ import enReporterNotices from "./locales/en/reporter-notices.json"
 import enFunctionalHealth from "./locales/en/functional-health.json"
 import enPostPublicationState from "./locales/en/post-publication-state.json"
 import enCommentPages from "./locales/en/comment-pages.json"
+import enObjectReports from "./locales/en/object-reports.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -115,6 +116,7 @@ import frReporterNotices from "./locales/fr/reporter-notices.json"
 import frFunctionalHealth from "./locales/fr/functional-health.json"
 import frPostPublicationState from "./locales/fr/post-publication-state.json"
 import frCommentPages from "./locales/fr/comment-pages.json"
+import frObjectReports from "./locales/fr/object-reports.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -175,6 +177,7 @@ export const LOCALE_PARTS = {
     "comment-pages": frCommentPages,
     "app-errors": frAppErrors,
     "account-menu": frAccountMenu,
+    "object-reports": frObjectReports,
   },
   en: {
     diasporale: enDiasporale,
@@ -229,6 +232,7 @@ export const LOCALE_PARTS = {
     "comment-pages": enCommentPages,
     "app-errors": enAppErrors,
     "account-menu": enAccountMenu,
+    "object-reports": enObjectReports,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

@@ -1,6 +1,10 @@
 "use client"
 
-/** DG-010 : événements sous identité d'association, audience explicite et inscription personnelle. */
+/**
+ * DG-010 : événements sous identité d'association, audience explicite et inscription personnelle.
+ * EV-04 : un évènement publié se signale depuis sa carte et son détail (nature « event »),
+ * jamais par l'équipe de la page ; signalé, il se masque aussitôt pour qui l'a signalé.
+ */
 import { associationEventReminderAt, isAssociationEventRegistrationOpen } from "@diasporale/domain"
 import { Button, Card, Checkbox, Sheet, SheetContent, Skeleton } from "@diasporale/features"
 import { useAssociationEvents, useSession, type ActionErrorCode, type AssociationEventView, type AssociationEventsCapability } from "@diasporale/features/data"
@@ -15,6 +19,7 @@ import { AssociationEventForm } from "./association-event-form"
 import { AssociationEventAttendance } from "./association-event-attendance"
 import { AssociationEventGallery } from "./association-event-gallery"
 import { AssociationEventCalendar } from "./association-event-calendar"
+import { ReportContentAction, ReportedContent } from "./report-content-sheet"
 import { ServicePager } from "./service-pager"
 import { ConfirmSheet } from "./service-request-sheets"
 import { browserTimeZone, formatServiceInstant, SlotText, useNow } from "./service-request-ui"
@@ -109,7 +114,9 @@ function AssociationEventCard(props: { readonly event: AssociationEventView; rea
   }
   const title = <span className="break-words">{event.title}</span>
   const Heading = props.detail ? "h1" : "h3"
-  return (
+  // EV-04 : jamais offert à l'équipe de la page, ni sur un évènement qui n'est pas publié.
+  const canReport = !event.canManage && event.moderation === "published"
+  const card = (
     <Card className="flex min-w-0 flex-col gap-3 p-4">
       <Heading className="text-lg font-semibold">{props.detail ? title : <NextLink href={routes.associationEvent(props.handle, event.eventId)} className="rounded-sm hover:underline focus-visible:shadow-focus">{title}</NextLink>}</Heading>
       <p className="text-sm font-medium">{event.organizer.name}</p>
@@ -136,6 +143,7 @@ function AssociationEventCard(props: { readonly event: AssociationEventView; rea
         {waitlisted && placesOpen && canPublish ? <Button variant="outline" disabled={task.busy} aria-busy={task.busy} onClick={requestPlace}>{t("associationActivities.event.refreshPlace")}</Button> : null}
         {confirmed || waitlisted ? <Button variant="outline" disabled={task.busy} aria-busy={task.busy} onClick={() => void task.run(() => props.capability.unregister(event.eventId), () => toast.success(t(waitlisted ? "associationActivities.event.waitlistWithdrawn" : "associationActivities.event.unregistered")))}>{t(waitlisted ? "associationActivities.event.withdrawWaitlist" : "associationActivities.event.unregister")}</Button> : null}
         {event.canManage && event.status === "scheduled" ? <><Button variant="outline" onClick={() => setEditor(event)}>{t("associationActivities.event.edit")}</Button><Button variant="ghost" onClick={() => setCancelling(event)}>{t("associationActivities.event.cancelEvent")}</Button></> : null}
+        {canReport ? <ReportContentAction target={{ kind: "event", id: event.eventId }} /> : null}
       </div>
       {confirmed || waitlisted ? (
         <div className="flex flex-col gap-2 rounded-lg border border-border p-3 text-sm">
@@ -160,5 +168,12 @@ function AssociationEventCard(props: { readonly event: AssociationEventView; rea
       {editor ? <EventEditor initial={editor} pageId={event.pageId} capability={props.capability} onClose={() => setEditor(null)} /> : null}
       {cancelling ? <ConfirmSheet open onOpenChange={(open) => { if (!open) setCancelling(null) }} title={t("associationActivities.event.cancelEvent")} description={t("associationActivities.event.cancelDescription")} confirmLabel={t("associationActivities.event.cancelEvent")} destructive onConfirm={cancel} /> : null}
     </Card>
+  )
+  if (event.canManage) return card
+  // Signalé par la personne de la session : l'avis le remplace pour elle ; au détail, avec le retour à la page.
+  return (
+    <ReportedContent target={{ kind: "event", id: event.eventId }} back={props.detail ? { href: routes.page(props.handle), label: t("contentReports.back.page") } : undefined}>
+      {card}
+    </ReportedContent>
   )
 }
