@@ -12,6 +12,7 @@ import type { FeedPagesProps } from "@/components/feed-pages"
 import { routes } from "@/lib/routes"
 
 import { CommunitiesScreen } from "./communities-screen"
+import { HubScreen } from "./hub-screen"
 
 const mocks = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), feed: vi.fn() }))
 
@@ -112,11 +113,59 @@ describe("/communautes — le hub de mon pays", () => {
     expect(store.getState().memberships["p-mireille"]?.facet.countryOfResidence).toBe("FR")
   })
 
+  it("garde ses rubriques, posées par le hub, sur le pays de résidence ; Mon agenda y reste", () => {
+    const { source } = demo("p-mireille")
+    renderCommunities(source)
+
+    const shortcuts = screen.getByRole("navigation", { name: "Vie communautaire du pays" })
+    expect(within(shortcuts).getByRole("link", { name: "Entraide" })).toHaveAttribute("href", routes.mutualAid("FR"))
+    expect(within(shortcuts).getByRole("link", { name: "Services" })).toHaveAttribute("href", routes.services({ country: "FR" }))
+    expect(within(shortcuts).getByRole("link", { name: "Mon agenda" })).toHaveAttribute("href", routes.agenda())
+    // Une seule rangée : Communautés ne pose plus la sienne à côté de celle du hub.
+    expect(screen.getAllByRole("navigation", { name: "Vie communautaire du pays" })).toHaveLength(1)
+  })
+
   it("sans session, ne montre aucun hub et renvoie vers l'entrée", () => {
     const { source } = demo("p-mireille")
     const anonymous: DiasporaleDataSource = { ...source, useSession: () => ({ status: "ready", data: { status: "anonymous" } }) }
     renderCommunities(anonymous)
     expect(screen.queryByRole("heading", { level: 1 })).toBeNull()
     expect(mocks.replace).toHaveBeenCalledWith("/entrer")
+  })
+})
+
+describe("/pays/ca — le hub d'un autre pays que la résidence (HB-04)", () => {
+  function renderHub(source: DiasporaleDataSource, iso: string) {
+    return render(
+      <I18nProvider locale="fr">
+        <DataSourceProvider source={source}>
+          <RoutingProvider routes={featureRoutes} Link={Link}>
+            <HubScreen iso={iso} />
+          </RoutingProvider>
+        </DataSourceProvider>
+      </I18nProvider>,
+    )
+  }
+
+  it("ouvre chaque rubrique sur le Canada, sans toucher la résidence française de la personne", () => {
+    const { store, source } = demo("p-mireille")
+    renderHub(source, "ca")
+
+    expect(screen.getByRole("heading", { level: 1, name: /^La communauté\s—\sCanada$/ })).toBeInTheDocument()
+    const shortcuts = screen.getByRole("navigation", { name: "Vie communautaire du pays" })
+    const expected: Record<string, string> = {
+      "Kit d'arrivée": routes.arrivalKit("CA"),
+      Entraide: routes.mutualAid("CA"),
+      Mentorat: routes.mentoring("CA"),
+      Emploi: routes.jobs("CA"),
+      Services: routes.services({ country: "CA" }),
+      Pages: routes.pages({ country: "CA" }),
+      "Mon agenda": routes.agenda(),
+    }
+    for (const [name, href] of Object.entries(expected)) {
+      expect(within(shortcuts).getByRole("link", { name })).toHaveAttribute("href", href)
+    }
+    expect(within(shortcuts).getAllByRole("link")).toHaveLength(Object.keys(expected).length)
+    expect(store.getState().memberships["p-mireille"]?.facet.countryOfResidence).toBe("FR")
   })
 })

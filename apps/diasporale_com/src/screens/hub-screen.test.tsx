@@ -160,6 +160,55 @@ describe("HubScreen — reprise des informations du pays", () => {
   })
 })
 
+describe("HubScreen — rubriques du pays consulté (HB-04)", () => {
+  const shortcuts = () => screen.getByRole("navigation", { name: "Vie communautaire du pays" })
+  const hrefOf = (name: string) => within(shortcuts()).getByRole("link", { name }).getAttribute("href")
+
+  it("sur le hub d'un autre pays que la résidence, chaque rubrique s'ouvre sur le pays consulté", () => {
+    // Awa réside en France ; elle consulte le hub du Canada.
+    mocks.hub = { status: "ready", data: hub }
+    render(tree("ca"))
+
+    expect(hrefOf("Kit d'arrivée")).toBe("/kit-arrivee?pays=CA")
+    expect(hrefOf("Entraide")).toBe("/entraide?pays=CA")
+    expect(hrefOf("Mentorat")).toBe("/mentorat?pays=CA")
+    expect(hrefOf("Emploi")).toBe("/emploi?pays=CA")
+    expect(hrefOf("Services")).toBe("/services?pays=CA")
+    expect(hrefOf("Pages")).toBe("/pages?pays=CA")
+    // Aucune rubrique n'emporte le pays de résidence.
+    for (const link of within(shortcuts()).getAllByRole("link")) expect(link.getAttribute("href")).not.toMatch(/pays=FR/)
+  })
+
+  it("l'agenda, personnel, ne suit pas le pays consulté ; l'annuaire des membres n'a pas de raccourci sans filtre par pays", () => {
+    mocks.hub = { status: "ready", data: hub }
+    render(tree("ca"))
+
+    expect(hrefOf("Mon agenda")).toBe("/agenda")
+    expect(within(shortcuts()).queryByRole("link", { name: /Membres/ })).not.toBeInTheDocument()
+  })
+
+  it("le hub de la résidence porte les mêmes rubriques, sur son pays", () => {
+    mocks.hub = { status: "ready", data: { ...hub, country: "FR" } }
+    render(tree("fr"))
+
+    expect(hrefOf("Kit d'arrivée")).toBe("/kit-arrivee?pays=FR")
+    expect(hrefOf("Services")).toBe("/services?pays=FR")
+  })
+
+  it("les rubriques restent atteignables pendant le chargement et après une erreur de lecture du hub", () => {
+    const view = render(tree("ca"))
+    expect(hrefOf("Pages")).toBe("/pages?pays=CA")
+    mocks.hub = { status: "error", code: "PRIVATE_BACKEND_FAILURE" }
+    view.rerender(tree("ca"))
+    expect(hrefOf("Pages")).toBe("/pages?pays=CA")
+  })
+
+  it("un code inconnu ne montre aucune rubrique", () => {
+    render(tree("zz"))
+    expect(screen.queryByRole("navigation", { name: "Vie communautaire du pays" })).not.toBeInTheDocument()
+  })
+})
+
 describe("HubScreen — pays pas encore ouvert (HB-01)", () => {
   it("dit ce qui est possible (tout lire, publier pour toute la diaspora), sans promettre de relecture", () => {
     mocks.hub = { status: "ready", data: { ...hub, country: "ES", open: false } }
