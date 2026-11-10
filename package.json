@@ -9,7 +9,8 @@
     "dev:engine": "bun run --cwd apps/diasporale_com dev:engine",
     "build": "bun run --cwd apps/diasporale_com build",
     "test:domain": "bun run --cwd packages/diasporale-domain test",
-    "test": "bun run test:domain && bun run --cwd packages/diasporale-features test && bun run --cwd apps/diasporale_com test",
+    "test:scripts": "bun test ./scripts",
+    "test": "bun run test:domain && bun run test:scripts && bun run --cwd packages/diasporale-features test && bun run --cwd apps/diasporale_com test",
     "typecheck": "bun run --cwd packages/diasporale-domain typecheck && bun run --cwd packages/diasporale-features typecheck && bun run --cwd apps/diasporale_com typecheck",
     "lint": "bun run --cwd packages/diasporale-features lint && bun run --cwd apps/diasporale_com lint",
     "verify": "bun run typecheck && bun run test && bun run lint"
