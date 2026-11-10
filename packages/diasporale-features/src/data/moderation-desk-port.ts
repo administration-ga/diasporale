@@ -20,8 +20,12 @@
  *     par les mutations EXISTANTES du moteur, qui la journalisent et en
  *     préviennent l'auteur, et reste susceptible de recours ;
  *   · une personne PARTIE au dossier (auteur, déclarant, signataire de la page
- *     visée, ancien décideur) ne le tranche pas : le moteur refuse ce qu'il
- *     garde, l'écran n'offre pas le geste (`party`) ;
+ *     visée, propriétaire ou modérateur du groupe visé, ancien décideur) ne le
+ *     tranche pas : le moteur refuse ce qu'il garde, l'écran n'offre pas le
+ *     geste (`party`) ;
+ *   · MC-01 du moteur : un groupe thématique (fiche et règles) se range au pays
+ *     du groupe, sinon à celui de sa page d'association ; un message personnel
+ *     est « sans pays », et son aperçu n'est que le texte du message signalé ;
  *   · les recours du réseau, la composition des équipes et les responsables du
  *     réseau (MD-01 : nommer, changer, retirer un administrateur ou un
  *     modérateur du réseau, motif obligatoire, dernier administrateur gardé)
@@ -126,8 +130,11 @@ export type DeskRole = (typeof DESK_ROLES)[number]
 export const DESK_CASE_LEVELS = ["team", "network", "platform"] as const
 export type DeskCaseLevel = (typeof DESK_CASE_LEVELS)[number]
 
-/** Pourquoi la personne ne tranche pas ce dossier. */
-export const DESK_PARTIES = ["author", "reporter", "page", "decider"] as const
+/**
+ * Pourquoi la personne ne tranche pas ce dossier. `group` (MC-01) : elle est
+ * propriétaire ou modératrice vivante du groupe thématique visé.
+ */
+export const DESK_PARTIES = ["author", "reporter", "page", "decider", "group"] as const
 export type DeskParty = (typeof DESK_PARTIES)[number]
 
 /** Les deux sources de la file : les signalements, la relecture préalable (pages à vérifier, évènements…). */
