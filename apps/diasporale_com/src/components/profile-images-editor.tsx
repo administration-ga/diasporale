@@ -17,7 +17,7 @@ export interface ProfileImagesEditorProps {
 }
 
 interface DeliveryNotice {
-  readonly kind: "updated" | "pending" | "blocked" | "removed"
+  readonly kind: "updated" | "pending" | "unavailable" | "blocked" | "removed"
   readonly previous: string
   readonly delivered: string
 }
@@ -25,6 +25,7 @@ interface DeliveryNotice {
 const NOTICE_KEYS = {
   updated: "profile.images.updated",
   pending: "profile.images.pending",
+  unavailable: "errors:fileScanUnavailable",
   blocked: "profile.images.blocked",
   removed: "profile.images.removed",
 } as const
@@ -71,7 +72,7 @@ function ProfileImageForm(props: {
   const busy = form.formState.isSubmitting || saving || removing
   const isAvatar = props.usage === "avatar"
   const currentUrl = props.image?.withheld === null ? props.image.url : null
-  const currentNotice = props.image?.withheld === "fileScanPending" ? "pending" : props.image?.withheld === "fileQuarantined" ? "blocked" : null
+  const currentNotice = props.image?.withheld === "fileScanPending" ? "pending" : props.image?.withheld === "fileScanUnavailable" ? "unavailable" : props.image?.withheld === "fileQuarantined" ? "blocked" : null
   const currentKey = imageKey(props.image)
   // Un nouveau verdict reçu par le port remplace l'avis d'attente précédent.
   const shownNotice = notice && (notice.previous === currentKey || notice.delivered === currentKey) ? notice.kind : currentNotice
@@ -99,7 +100,7 @@ function ProfileImageForm(props: {
         return
       }
       setNotice({
-        kind: result.value.withheld === "fileScanPending" ? "pending" : result.value.withheld === "fileQuarantined" ? "blocked" : "updated",
+        kind: result.value.withheld === "fileScanPending" ? "pending" : result.value.withheld === "fileScanUnavailable" ? "unavailable" : result.value.withheld === "fileQuarantined" ? "blocked" : "updated",
         previous: currentKey,
         delivered: imageKey(result.value),
       })
@@ -151,7 +152,7 @@ function ProfileImageForm(props: {
         />
       ) : null}
       {shownNotice ? (
-        <p role={shownNotice === "blocked" ? "alert" : "status"} className="text-sm text-muted-foreground">
+        <p role={shownNotice === "blocked" || shownNotice === "unavailable" ? "alert" : "status"} className="text-sm text-muted-foreground">
           {t(NOTICE_KEYS[shownNotice])}
         </p>
       ) : null}

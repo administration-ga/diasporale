@@ -187,14 +187,14 @@ function ClaimDecision(props: { readonly management: PageManagement; readonly cl
               <ul className="flex flex-col gap-1.5">
                 {detail.data.evidence.map((item, index) => (
                   <li key={index}>
-                    {item.url ? (
+                    {item.withheld === null && item.url ? (
                       <a href={item.url} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1.5 text-primary underline-offset-4 hover:underline">
                         <ExternalLinkIcon aria-hidden className="size-4" />
                         {t("pageAdmin.review.evidenceOpen", { index: index + 1 })}
                       </a>
                     ) : (
                       <span className="text-muted-foreground">
-                        {t(item.withheld === "fileScanPending" ? "pageAdmin.review.evidencePending" : item.withheld === "fileQuarantined" ? "pageAdmin.review.evidenceBlocked" : "pageAdmin.review.evidenceKept", { index: index + 1 })}
+                        {t(item.withheld === "fileScanPending" ? "pageAdmin.review.evidencePending" : item.withheld === "fileScanUnavailable" ? "errors:fileScanUnavailable" : item.withheld === "fileQuarantined" ? "pageAdmin.review.evidenceBlocked" : "pageAdmin.review.evidenceKept", { index: index + 1 })}
                       </span>
                     )}
                   </li>

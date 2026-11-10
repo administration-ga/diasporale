@@ -703,7 +703,7 @@ describe("publication seule, modification et signets par le moteur (PD4)", () =>
 
 describe("médias des publications par le moteur (EXF-DG-10)", () => {
   it("la garde des fichiers délivre une URL, ou dit la raison de la retenue", () => {
-    expect(toPostMediaView({ url: "https://f.test/1", withheld: null, kind: "image", mimeType: "image/jpeg", width: 4, height: 3, altText: "Le fleuve" } as never)).toEqual({
+    expect(toPostMediaView({ url: "https://f.test/1", withheld: null, kind: "image", mimeType: "image/jpeg", width: 4, height: 3, altText: "Le fleuve" })).toEqual({
       kind: "image",
       url: "https://f.test/1",
       withheld: null,
@@ -711,7 +711,7 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
       width: 4,
       height: 3,
     })
-    expect(toPostMediaView({ url: null, withheld: "fileScanPending", kind: "video", mimeType: "video/mp4" } as never)).toEqual({
+    expect(toPostMediaView({ url: null, withheld: "fileScanPending", kind: "video", mimeType: "video/mp4" })).toEqual({
       kind: "video",
       url: null,
       withheld: "scan_pending",
@@ -719,7 +719,18 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
       width: null,
       height: null,
     })
-    expect(toPostMediaView({ url: null, withheld: "fileQuarantined", kind: "image", mimeType: "image/png" } as never).withheld).toBe("quarantined")
+    expect(toPostMediaView({ url: null, withheld: "fileQuarantined", kind: "image", mimeType: "image/png" }).withheld).toBe("quarantined")
+  })
+
+  it.each([
+    ["fileScanPending", "scan_pending"],
+    ["fileScanUnavailable", "scan_unavailable"],
+    ["fileQuarantined", "quarantined"],
+  ] as const)("la retenue %s masque une URL contradictoire et conserve son motif", (withheld, expected) => {
+    const media: Parameters<typeof toPostMediaView>[0] = {
+      url: "https://f.test/retenu", withheld, kind: "video", mimeType: "video/mp4", width: 4, height: 3, altText: "Le fleuve",
+    }
+    expect(toPostMediaView(media)).toEqual({ kind: "video", url: null, withheld: expected, width: 4, height: 3, altText: "Le fleuve" })
   })
 
   it("un dépôt déclaré à la publication : texte alternatif nettoyé, absent s'il est vide ; seules les mesures connues partent", () => {

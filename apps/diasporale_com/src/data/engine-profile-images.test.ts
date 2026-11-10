@@ -132,7 +132,7 @@ describe("images du profil — adaptateur du moteur", () => {
     expect(calls()[1]).toEqual({ name: "modules/people/profile:setMyCover", args: { storageId: "storage-neuf", mimeType: "image/png" } })
   })
 
-  it.each(["fileScanPending", "fileQuarantined"] as const)("masque l'URL renvoyée avec une retenue %s", async (withheld) => {
+  it.each(["fileScanPending", "fileScanUnavailable", "fileQuarantined"] as const)("masque l'URL renvoyée avec une retenue %s", async (withheld) => {
     const { actions } = source({ url: "https://images.exemple.test/image-retenue.png", withheld })
 
     expect(await actions.set("avatar", photo())).toEqual({ ok: true, value: { url: null, withheld } })

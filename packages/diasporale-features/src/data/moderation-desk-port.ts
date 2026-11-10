@@ -83,9 +83,15 @@ export type DeskSanctionKind = SanctionKind
  */
 export const DESK_GROUNDS = [
   "harassment",
+  "minor_harm",
   "hate",
   "violence",
   "sexual_content",
+  "deepfake_of_me",
+  "prohibited_ai_content",
+  "institution_impersonation",
+  "impersonation",
+  "privacy_or_honor",
   "misinformation",
   "spam",
   "fraud",

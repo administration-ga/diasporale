@@ -16,8 +16,8 @@ const mocks = {
   clear: vi.fn<ProfileImagesActions["clear"]>(),
 }
 
-function tree(overrides: Partial<ProfileImagesEditorProps> = {}) {
-  return <I18nProvider locale="fr"><ProfileImagesEditor avatar={null} cover={null} actions={mocks} {...overrides} /></I18nProvider>
+function tree(overrides: Partial<ProfileImagesEditorProps> = {}, locale: "fr" | "en" = "fr") {
+  return <I18nProvider locale={locale}><ProfileImagesEditor avatar={null} cover={null} actions={mocks} {...overrides} /></I18nProvider>
 }
 
 function inputFor(usage: "avatar" | "cover") {
@@ -133,6 +133,24 @@ describe("ProfileImagesEditor — les deux images du profil", () => {
     expect(screen.queryByText(t("profile.images.updated"))).not.toBeInTheDocument()
     expect(container.querySelector('img[src="/url-retenue-interdite.png"]')).not.toBeInTheDocument()
     expect(inputFor("avatar").files).toHaveLength(0)
+  })
+
+  it.each(["fr", "en"] as const)("dit l'analyse indisponible au chargement et après dépôt sans annoncer de succès (%s)", async (locale) => {
+    const translated = getFixedT(locale)
+    const user = userEvent.setup()
+    const unavailable: ProfileImageView = { url: "/analyse-non-terminee.png", withheld: "fileScanUnavailable" }
+    mocks.set.mockResolvedValue({ ok: true, value: unavailable })
+    const view = render(tree({ cover: unavailable }, locale))
+    const notice = translated("errors:fileScanUnavailable")
+    expect(screen.getByRole("alert")).toHaveTextContent(notice)
+    const input = screen.getByLabelText(translated("profile.images.chooseAvatar")) as HTMLInputElement
+    await user.upload(input, imageFile())
+    await user.click(screen.getByRole("button", { name: translated("profile.images.saveAvatar") }))
+    await waitFor(() => expect(screen.getAllByRole("alert")).toHaveLength(2))
+    for (const alert of screen.getAllByRole("alert")) expect(alert).toHaveTextContent(notice)
+    expect(screen.queryByText(translated("profile.images.updated"))).not.toBeInTheDocument()
+    expect(view.container.innerHTML).not.toContain(unavailable.url)
+    expect(input.files).toHaveLength(0)
   })
 
   it("dit l'état courant gardé puis remplace l'attente quand le moteur délivre l'image", async () => {

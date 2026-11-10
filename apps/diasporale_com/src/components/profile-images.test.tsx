@@ -27,7 +27,7 @@ describe("images du profil — délivrance avant affichage", () => {
     expect((container.firstElementChild as HTMLElement).style.backgroundImage).toBe("")
   })
 
-  it.each(["fileScanPending", "fileQuarantined"] as const)("n'expose jamais l'URL d'une image %s dans le DOM ni dans le style", (withheld) => {
+  it.each(["fileScanPending", "fileScanUnavailable", "fileQuarantined"] as const)("n'expose jamais l'URL d'une image %s dans le DOM ni dans le style", (withheld) => {
     const { container } = render(images({ url: IMAGE_URL, withheld }))
 
     expect(container.querySelector("img")).not.toBeInTheDocument()
@@ -73,7 +73,7 @@ describe("images du profil — délivrance avant affichage", () => {
     expect(replacement).not.toBe(first)
   })
 
-  it.each(["fileScanPending", "fileQuarantined"] as const)("retire les deux images déjà affichées si leur délivrance devient %s", (withheld) => {
+  it.each(["fileScanPending", "fileScanUnavailable", "fileQuarantined"] as const)("retire les deux images déjà affichées si leur délivrance devient %s", (withheld) => {
     const { container, rerender } = render(images(SERVED))
     expect(container.querySelector("img")).toHaveAttribute("src", IMAGE_URL)
     expect((container.firstElementChild as HTMLElement).style.backgroundImage).toContain(IMAGE_URL)
