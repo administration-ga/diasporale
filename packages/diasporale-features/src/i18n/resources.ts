@@ -68,6 +68,7 @@ import enCommentPages from "./locales/en/comment-pages.json"
 import enObjectReports from "./locales/en/object-reports.json"
 import enCommunityRules from "./locales/en/community-rules.json"
 import enReportEmergency from "./locales/en/report-emergency.json"
+import enMessagesUnread from "./locales/en/messages-unread.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -125,6 +126,7 @@ import frCommentPages from "./locales/fr/comment-pages.json"
 import frObjectReports from "./locales/fr/object-reports.json"
 import frCommunityRules from "./locales/fr/community-rules.json"
 import frReportEmergency from "./locales/fr/report-emergency.json"
+import frMessagesUnread from "./locales/fr/messages-unread.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -190,6 +192,7 @@ export const LOCALE_PARTS = {
     "object-reports": frObjectReports,
     "community-rules": frCommunityRules,
     "report-emergency": frReportEmergency,
+    "messages-unread": frMessagesUnread,
   },
   en: {
     diasporale: enDiasporale,
@@ -249,6 +252,7 @@ export const LOCALE_PARTS = {
     "object-reports": enObjectReports,
     "community-rules": enCommunityRules,
     "report-emergency": enReportEmergency,
+    "messages-unread": enMessagesUnread,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 
