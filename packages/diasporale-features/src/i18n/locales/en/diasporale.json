@@ -877,10 +877,6 @@
       }
     }
   },
-  "health": {
-    "title": "Functional health",
-    "ok": "diasporale.com is responding."
-  },
   "notFound": {
     "title": "This page doesn't exist.",
     "body": "The address may be incomplete.",

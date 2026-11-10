@@ -56,6 +56,7 @@ import enContextualConversations from "./locales/en/contextual-conversations.jso
 import enCommunityNotifications from "./locales/en/community-notifications.json"
 import enPostExplanation from "./locales/en/post-explanation.json"
 import enReporterNotices from "./locales/en/reporter-notices.json"
+import enFunctionalHealth from "./locales/en/functional-health.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAssociations from "./locales/fr/associations.json"
 import frAssociationActivities from "./locales/fr/association-activities.json"
@@ -101,6 +102,7 @@ import frContextualConversations from "./locales/fr/contextual-conversations.jso
 import frCommunityNotifications from "./locales/fr/community-notifications.json"
 import frPostExplanation from "./locales/fr/post-explanation.json"
 import frReporterNotices from "./locales/fr/reporter-notices.json"
+import frFunctionalHealth from "./locales/fr/functional-health.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -154,6 +156,7 @@ export const LOCALE_PARTS = {
     "post-explanation": frPostExplanation,
     "reporter-notices": frReporterNotices,
     "appearance-themes": frAppearanceThemes,
+    "functional-health": frFunctionalHealth,
   },
   en: {
     diasporale: enDiasporale,
@@ -201,6 +204,7 @@ export const LOCALE_PARTS = {
     "post-explanation": enPostExplanation,
     "reporter-notices": enReporterNotices,
     "appearance-themes": enAppearanceThemes,
+    "functional-health": enFunctionalHealth,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 
