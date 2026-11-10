@@ -1564,7 +1564,7 @@ describe("EV-03 — avis aux inscrits de démonstration : annulation, place obte
     const before = context.store.getState().notifications
     const free = "Il pleut des cordes" as unknown as "weather"
     expect(await activities.events.cancel({ eventId, expectedVersion: 1, reason: free })).toEqual({ ok: false, code: "association_event_invalid" })
-    expect(eventView(activities, eventId).status).toBe("scheduled")
+    expect(eventView(activities, eventId)?.status).toBe("scheduled")
     await act(async () => { expect(await activities.events.cancel({ eventId, expectedVersion: 1, reason: "weather" })).toEqual({ ok: true, value: null }) })
 
     const notices = added(context, before)
