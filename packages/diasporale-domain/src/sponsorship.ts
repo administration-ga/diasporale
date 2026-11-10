@@ -24,6 +24,12 @@ export interface SponsorFacts {
   /** Depuis quand le parrain est `verifiee` (ms UTC) ; absent s'il ne l'est pas. */
   readonly verifiedSince?: number
   /**
+   * Dispense d'ancienneté accordée avec une admission fondatrice (EA-01,
+   * décision 1) : le parrain vérifié parraine sans attendre 30 jours. Le quota,
+   * lui, ne change pas (décision 3). Absente : pas de dispense.
+   */
+  readonly seniorityWaived?: boolean
+  /**
    * Parrainages CRÉÉS par ce parrain dans la fenêtre glissante, retirés
    * compris : retirer puis recommencer ne doit pas contourner le quota.
    */
@@ -65,7 +71,8 @@ export function checkSponsorship(
   if (sponsor.status !== "verifiee" || sponsor.verifiedSince === undefined) {
     return refuse("sponsor_not_verified")
   }
-  if (now <= sponsorSeniorityReachedAt(sponsor.verifiedSince)) return refuse("sponsor_too_recent")
+  // Dispensé (admission fondatrice), le parrain n'attend pas ; sinon, plus de 30 jours.
+  if (sponsor.seniorityWaived !== true && now <= sponsorSeniorityReachedAt(sponsor.verifiedSince)) return refuse("sponsor_too_recent")
   if (sponsor.sponsorshipsInWindow >= SPONSORSHIPS_PER_WINDOW) return refuse("sponsor_quota_reached")
   if (target.isSelf) return refuse("self_sponsorship")
   if (!SPONSORABLE_STATUSES.has(target.status) || target.alreadySponsored) {
@@ -80,7 +87,7 @@ export interface SponsorStanding {
   readonly refusal: SponsorshipRefusal | null
   readonly remaining: number
   readonly windowDays: number
-  /** Quand l'ancienneté du parrain sera atteinte ; `null` s'il n'est pas vérifié. */
+  /** Quand l'ancienneté du parrain sera atteinte (sa vérification s'il est dispensé) ; `null` s'il n'est pas vérifié. */
   readonly seniorityReachedAt: number | null
 }
 
@@ -96,7 +103,12 @@ export function sponsorStanding(sponsor: SponsorFacts, now: number): SponsorStan
     refusal: check.ok ? null : check.code,
     remaining: remainingSponsorships(sponsor.sponsorshipsInWindow),
     windowDays: SPONSORSHIP_WINDOW_DAYS,
-    seniorityReachedAt: sponsor.verifiedSince !== undefined ? sponsorSeniorityReachedAt(sponsor.verifiedSince) : null,
+    seniorityReachedAt:
+      sponsor.verifiedSince === undefined
+        ? null
+        : sponsor.seniorityWaived === true
+          ? sponsor.verifiedSince
+          : sponsorSeniorityReachedAt(sponsor.verifiedSince),
   }
 }
 

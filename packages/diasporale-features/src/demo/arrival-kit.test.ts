@@ -292,3 +292,18 @@ describe("démonstration — gestes", () => {
     expect(ready(renderHook(() => setup({ storage: memoryStorage(stale) }).kit.useResource("kit-5")).result.current)).toMatchObject({ status: "submitted" })
   })
 })
+
+describe("démonstration — chercher dans le kit (ET-04)", () => {
+  it("les mots du titre et du résumé, repliés ; la zone et la rubrique restreignent ; une recherche trop longue est refusée", () => {
+    const { kit } = setup()
+    const found = (overrides: Partial<ArrivalKitListRequest>) => ids(ready(renderHook(() => kit.useResources(request(overrides))).result.current))
+    expect(found({ query: "Bancaire" })).toEqual(["kit-2"])
+    expect(found({ query: "sante quartier" })).toEqual(["kit-3"])
+    expect(found({ query: "colocations" })).toEqual(["kit-4"])
+    expect(found({ query: "colocations", city: "Paris" })).toEqual([])
+    expect(found({ query: "bancaire", category: "health" })).toEqual([])
+    // Un caractère : aucune recherche, le kit entier de la zone reste listé.
+    expect(found({ query: "b" })).toEqual(found({}))
+    expect(renderHook(() => kit.useResources(request({ query: "x".repeat(101) }))).result.current).toEqual({ status: "error", code: "arrival_kit_query_too_long" })
+  })
+})

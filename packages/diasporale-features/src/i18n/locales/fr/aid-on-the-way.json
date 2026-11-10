@@ -1,0 +1,18 @@
+{
+  "aidOnTheWay": {
+    "page": {
+      "title": "Missions bénévoles",
+      "lead": "Les prochaines missions ouvertes de cette association. S'inscrire montre votre nom publié à son équipe, jamais vos coordonnées."
+    },
+    "agenda": {
+      "title": "Mes missions bénévoles",
+      "lead": "Les missions auxquelles vous êtes inscrit, à venir ; une mission annulée le dit.",
+      "all": "Toutes mes inscriptions"
+    },
+    "hub": {
+      "title": "Entraide : {{country}}",
+      "lead": "Les dernières questions ouvertes de ce pays. Une réponse simple aide déjà.",
+      "all": "Voir toute l'entraide"
+    }
+  }
+}
