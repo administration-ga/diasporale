@@ -1,4 +1,5 @@
 import type { EngineAuthClient } from "@antsia/api/auth-client"
+import { POST_VIDEO_MAX_BYTES } from "@antsia/social-domain/content"
 import { jpegHasGpsMetadata, listImageMetadata } from "@antsia/social-domain/imageMetadata"
 import { isPreparedImage } from "@antsia/social-features/media-upload"
 import { TEST_JPEG_WITH_GPS_BYTES, testPrepareImage } from "@antsia/social-features/tests/image-runtime"
@@ -918,6 +919,22 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
     try {
       const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage(options) })
       expect(await actions.uploadMedia(new File(["photo"], "fleuve.jpg", { type: "image/jpeg" }))).toEqual({ ok: false, code })
+      expect(calls.some((call) => call.name === "modules/media/media:generateUploadUrl")).toBe(false)
+      expect(deposit).not.toHaveBeenCalled()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it("FD-02 : une vidéo plus lourde que la borne du moteur est refusée avant l'envoi", async () => {
+    const { convex, calls } = fakeConvex({ ...NETWORK, "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement" })
+    const deposit = vi.fn()
+    vi.stubGlobal("fetch", deposit)
+    try {
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage() })
+      const heavy = new File(["v"], "lourde.mp4", { type: "video/mp4" })
+      Object.defineProperty(heavy, "size", { value: POST_VIDEO_MAX_BYTES + 1 })
+      expect(await actions.uploadMedia(heavy)).toEqual({ ok: false, code: "media_too_large" })
       expect(calls.some((call) => call.name === "modules/media/media:generateUploadUrl")).toBe(false)
       expect(deposit).not.toHaveBeenCalled()
     } finally {

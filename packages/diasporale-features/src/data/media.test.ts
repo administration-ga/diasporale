@@ -1,3 +1,4 @@
+import { POST_VIDEO_MAX_BYTES } from "@antsia/social-domain/content"
 import { jpegHasGpsMetadata, listImageMetadata } from "@antsia/social-domain/imageMetadata"
 import { IMAGE_UPLOAD_QUALITY, isPreparedImage, type PrepareImage } from "@antsia/social-features/media-upload"
 import { fakeImageRuntime, TEST_JPEG_WITH_GPS_BYTES, testPrepareImage } from "@antsia/social-features/tests/image-runtime"
@@ -193,5 +194,18 @@ describe("FD-01 — une photo part nettoyée et allégée, jamais telle qu'elle 
     expect(await downscaleImage(phonePhoto(), 1280, fakeImageRuntime({ canvas: "absent" }))).toEqual({ ok: false, code: "media_preparation_unavailable" })
     expect(await downscaleImage(phonePhoto(), 1280, fakeImageRuntime({ decodeFails: true }))).toEqual({ ok: false, code: "media_unreadable" })
     expect(await downscaleImage(new File(["%PDF"], "dossier.pdf", { type: "application/pdf" }), 1280, runtime)).toEqual({ ok: false, code: "media_type_invalid" })
+  })
+})
+
+describe("FD-02 — une vidéo trop lourde est refusée avant l'envoi, à la borne du moteur", () => {
+  it("la borne est celle du domaine : à la limite, recevable ; un octet de plus, refusée", async () => {
+    vi.useFakeTimers()
+    const atLimit = new File(["v"], "limite.mp4", { type: "video/mp4" })
+    Object.defineProperty(atLimit, "size", { value: POST_VIDEO_MAX_BYTES })
+    const heavy = new File(["v"], "lourde.mp4", { type: "video/mp4" })
+    Object.defineProperty(heavy, "size", { value: POST_VIDEO_MAX_BYTES + 1 })
+    expect(postMediaRefusal([{ kind: "video", mimeType: "video/mp4", sizeBytes: POST_VIDEO_MAX_BYTES }])).toBeNull()
+    expect(await prepareMediaFile(heavy)).toEqual({ ok: false, code: "media_too_large" })
+    expect((await measuredVideo(prepareMediaFile(atLimit))).ok).toBe(true)
   })
 })
