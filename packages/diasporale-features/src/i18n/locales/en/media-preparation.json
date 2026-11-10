@@ -3,6 +3,7 @@
     "media_unreadable": "This image could not be read: it will not be sent. Choose another one.",
     "media_preparation_unavailable": "This browser cannot prepare this image before sending: it will not be sent. Try an up-to-date browser.",
     "media_preparation_failed": "Preparing this image failed: it will not be sent. Try again or choose another one.",
-    "media_metadata_remaining": "The hidden information in this image (location, device) could not be removed: it will not be sent."
+    "media_metadata_remaining": "The hidden information in this image (location, device) could not be removed: it will not be sent.",
+    "media_not_croppable": "An animated image cannot be cropped: it will not be sent. Choose a still image."
   }
 }

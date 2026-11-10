@@ -112,6 +112,7 @@ export const IMAGE_PREPARATION_CODES: Readonly<Record<ImagePreparationRefusal, A
   "canvas-unavailable": "media_preparation_unavailable",
   "encoder-failed": "media_preparation_failed",
   "metadata-remaining": "media_metadata_remaining",
+  "not-croppable": "media_not_croppable",
 }
 
 /** Une photo préparée : le fichier NEUF, et ses dimensions quand le module les connaît. */
