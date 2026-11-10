@@ -1,4 +1,7 @@
 import type { EngineAuthClient } from "@antsia/api/auth-client"
+import { jpegHasGpsMetadata, listImageMetadata } from "@antsia/social-domain/imageMetadata"
+import { isPreparedImage } from "@antsia/social-features/media-upload"
+import { TEST_JPEG_WITH_GPS_BYTES, testPrepareImage } from "@antsia/social-features/tests/image-runtime"
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
 import type { ConvexReactClient } from "convex/react"
 import { getFunctionName } from "convex/server"
@@ -842,29 +845,35 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
     expect(engineActionErrorCode(engineError({ code: "invalidArgument", rule: "UPLOAD_MISMATCH" }))).toBe("media_upload_failed")
   })
 
-  it("une photo : URL de dépôt pour la publication, envoi du fichier, puis déclarée à la publication", async () => {
+  it("une photo : URL de dépôt pour la publication, envoi du fichier PRÉPARÉ, puis déclarée à la publication", async () => {
     const { convex, calls } = fakeConvex({
       ...NETWORK,
       "modules/diaspora/hubs:listOpenCountries": () => [{ country: "FR" }],
       "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement",
       "modules/posts/posts:publish": () => ({ postId: "post-1", created: true }),
     })
-    const deposit = vi.fn(async () => new Response(JSON.stringify({ storageId: "kg-photo" }), { status: 200 }))
+    const deposit = vi.fn(async (_url: string, _init: RequestInit) => new Response(JSON.stringify({ storageId: "kg-photo" }), { status: 200 }))
     vi.stubGlobal("fetch", deposit)
     try {
-      const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage({ width: 1200, height: 800 }) })
       const file = new File(["photo"], "fleuve.jpg", { type: "image/jpeg" })
       const uploaded = await actions.uploadMedia(file)
-      expect(uploaded).toEqual({ ok: true, value: { ref: "kg-photo", kind: "image", mimeType: "image/jpeg", sizeBytes: 5 } })
-      expect(deposit).toHaveBeenCalledWith("https://depot.test/televersement", { method: "POST", headers: { "Content-Type": "image/jpeg" }, body: file })
       if (!uploaded.ok) throw new Error("dépôt refusé")
+      // Le fichier envoyé est celui du module du moteur, jamais l'original ; ses faits sont les siens.
+      const sent = deposit.mock.calls[0]?.[1].body
+      expect(sent).toBeInstanceOf(File)
+      expect(sent).not.toBe(file)
+      expect(isPreparedImage(sent as File)).toBe(true)
+      const sentSize = (sent as File).size
+      expect(uploaded.value).toEqual({ ref: "kg-photo", kind: "image", mimeType: "image/jpeg", sizeBytes: sentSize, width: 1200, height: 800 })
+      expect(deposit).toHaveBeenCalledWith("https://depot.test/televersement", { method: "POST", headers: { "Content-Type": "image/jpeg" }, body: sent })
       expect(
         await actions.publish({ body: "", reach: "local", country: "FR", audience: "public", alsoOnRoot: false, media: [{ upload: uploaded.value, altText: " Le fleuve " }] }),
       ).toEqual({ ok: true, value: { moderation: "published" } })
       expect(calls.find((call) => call.name === "modules/media/media:generateUploadUrl")?.args).toEqual({ networkId: "n-diasporale", usage: "media_social" })
       expect(calls.find((call) => call.name === "modules/posts/posts:publish")?.args).toMatchObject({
         body: "",
-        media: [{ storageId: "kg-photo", kind: "image", mimeType: "image/jpeg", sizeBytes: 5, altText: "Le fleuve" }],
+        media: [{ storageId: "kg-photo", kind: "image", mimeType: "image/jpeg", sizeBytes: sentSize, width: 1200, height: 800, altText: "Le fleuve" }],
       })
       // Le dépôt refusé se dit sans jamais montrer la réponse du serveur ; un type refusé ne part pas.
       deposit.mockResolvedValueOnce(new Response("", { status: 500 }))
@@ -872,6 +881,45 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
       const before = calls.length
       expect(await actions.uploadMedia(new File(["%PDF"], "dossier.pdf", { type: "application/pdf" }))).toEqual({ ok: false, code: "media_type_invalid" })
       expect(calls.length).toBe(before)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it("FD-01 : une photo portant sa position GPS part sans aucun segment EXIF ; l'original ne quitte jamais le navigateur", async () => {
+    const { convex } = fakeConvex({ ...NETWORK, "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement" })
+    const deposit = vi.fn(async (_url: string, _init: RequestInit) => new Response(JSON.stringify({ storageId: "kg-photo" }), { status: 200 }))
+    vi.stubGlobal("fetch", deposit)
+    try {
+      // Pire cas : l'encodeur recopierait le bloc EXIF de la source.
+      const prepareImage = testPrepareImage({ width: 4032, height: 3024, output: { bytes: TEST_JPEG_WITH_GPS_BYTES, type: "image/jpeg" } })
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage })
+      const original = new File([TEST_JPEG_WITH_GPS_BYTES as Uint8Array<ArrayBuffer>], "IMG_0001.jpg", { type: "image/jpeg" })
+      const uploaded = await actions.uploadMedia(original)
+      expect(uploaded).toMatchObject({ ok: true, value: { width: 2048, height: 1536 } })
+      const sent = deposit.mock.calls[0]?.[1].body as File
+      expect(sent).not.toBe(original)
+      const bytes = new Uint8Array(await sent.arrayBuffer())
+      expect(jpegHasGpsMetadata(bytes)).toBe(false)
+      expect(listImageMetadata(bytes, "image/jpeg")).toEqual([])
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it.each([
+    { name: "canvas absent", options: { canvas: "absent" as const }, code: "media_preparation_unavailable" },
+    { name: "image illisible", options: { decodeFails: true }, code: "media_unreadable" },
+    { name: "encodeur muet", options: { output: null }, code: "media_preparation_failed" },
+  ])("FD-01 : $name — la photo est refusée avant toute URL de dépôt, rien ne part", async ({ options, code }) => {
+    const { convex, calls } = fakeConvex({ ...NETWORK, "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement" })
+    const deposit = vi.fn()
+    vi.stubGlobal("fetch", deposit)
+    try {
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage(options) })
+      expect(await actions.uploadMedia(new File(["photo"], "fleuve.jpg", { type: "image/jpeg" }))).toEqual({ ok: false, code })
+      expect(calls.some((call) => call.name === "modules/media/media:generateUploadUrl")).toBe(false)
+      expect(deposit).not.toHaveBeenCalled()
     } finally {
       vi.unstubAllGlobals()
     }

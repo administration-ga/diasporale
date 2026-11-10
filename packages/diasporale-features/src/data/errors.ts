@@ -68,6 +68,11 @@ export const DATA_ERROR_CODES = [
   "media_too_large",
   "media_alt_too_long",
   "media_upload_failed",
+  // Préparation d'une photo avant l'envoi (FD-01) : chaque refus du module du moteur ; l'original ne part jamais.
+  "media_unreadable",
+  "media_preparation_unavailable",
+  "media_preparation_failed",
+  "media_metadata_remaining",
   // Partage cité : seule une publication publique et publiée se partage ; un partage ne joint pas de média.
   "share_not_allowed",
   "share_with_media",

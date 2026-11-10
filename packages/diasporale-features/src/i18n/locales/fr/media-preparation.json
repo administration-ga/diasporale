@@ -1,0 +1,8 @@
+{
+  "errors": {
+    "media_unreadable": "Cette image n’a pas pu être lue : elle ne sera pas envoyée. Choisissez-en une autre.",
+    "media_preparation_unavailable": "Ce navigateur ne peut pas préparer cette image avant l’envoi : elle ne sera pas envoyée. Essayez avec un navigateur à jour.",
+    "media_preparation_failed": "La préparation de cette image a échoué : elle ne sera pas envoyée. Réessayez ou choisissez-en une autre.",
+    "media_metadata_remaining": "Les informations cachées de cette image (lieu, appareil) n’ont pas pu être retirées : elle ne sera pas envoyée."
+  }
+}
