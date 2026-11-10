@@ -12,5 +12,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    // 15 s par test au lieu des 5 s par défaut, comme dans l'application : sous une machine très chargée,
+    // un test jsdom qui passe en moins d'une seconde seul a dépassé le délai à l'assemblage du 10/11.
+    testTimeout: 15_000,
   },
 })

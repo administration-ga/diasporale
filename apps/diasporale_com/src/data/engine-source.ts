@@ -113,6 +113,7 @@ import { createEnginePilotMetrics } from "./engine-pilot-metrics"
 import { createEngineConversations } from "./engine-conversations"
 import { createEngineDemoAccounts } from "./engine-demo-accounts"
 import { createEnginePageDecisions } from "./engine-page-decisions"
+import { createEngineCallSettings } from "./engine-call-settings"
 import {
   toAccountView,
   toConsentViews,
@@ -221,6 +222,8 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
     conversations: createEngineConversations(deps),
     // Comptes de démonstration par acteur : développement local du moteur seulement.
     demoAccounts: createEngineDemoAccounts(deps),
+    // IM-02 : réglages d'appel et de présence de la personne, valables aussi dans ANTSIA.
+    callSettings: createEngineCallSettings(deps),
     contentPreferences: {
       usePage(args: ContentPreferencesRequest): ContentPreferencesQuery {
         const { auth, networkId, membership } = useMember()

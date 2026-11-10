@@ -1,0 +1,109 @@
+{
+  "legal": {
+    "edition": "Version {{version}}, {{date}}",
+    "terms": {
+      "title": "Terms of use",
+      "purpose": {
+        "title": "Purpose",
+        "body": "To be provided: what the service offers and what these terms cover."
+      },
+      "access": {
+        "title": "Access to the network",
+        "body": "To be provided: who may join the network, and on what conditions."
+      },
+      "conduct": {
+        "title": "Rules of use",
+        "body": "To be provided: what is allowed and what is forbidden."
+      },
+      "content": {
+        "title": "Published content",
+        "body": "To be provided: the rights over content published by members and how it is shared."
+      },
+      "moderation": {
+        "title": "Moderation",
+        "body": "To be provided: how content is reviewed, removed or restored, and how to challenge a decision."
+      },
+      "liability": {
+        "title": "Responsibilities",
+        "body": "To be provided: the responsibilities of the publisher and those of members."
+      },
+      "termination": {
+        "title": "Suspension and closing an account",
+        "body": "To be provided: when an account may be suspended or closed, and how to leave."
+      },
+      "changes": {
+        "title": "Changes to these terms",
+        "body": "To be provided: how members are told about a change to these terms."
+      },
+      "law": {
+        "title": "Applicable law",
+        "body": "To be provided: the applicable law and how disputes are settled."
+      }
+    },
+    "community": {
+      "title": "Community rules",
+      "spirit": {
+        "title": "The spirit of the network",
+        "body": "To be provided: what the network sets out to make possible between its members."
+      },
+      "respect": {
+        "title": "Respect for people",
+        "body": "To be provided: what is expected of everyone in conversations."
+      },
+      "safety": {
+        "title": "Scams and safety",
+        "body": "To be provided: how to protect yourself from scams, and what is forbidden."
+      },
+      "privacy": {
+        "title": "Other people's privacy",
+        "body": "To be provided: what must not be published about another person."
+      },
+      "offers": {
+        "title": "Offers, listings and services",
+        "body": "To be provided: what may be offered in the network, and how."
+      },
+      "reporting": {
+        "title": "Reporting",
+        "body": "To be provided: when to report content or a person."
+      },
+      "sanctions": {
+        "title": "Sanctions and appeals",
+        "body": "To be provided: the possible measures and how to challenge them."
+      }
+    },
+    "contact": {
+      "title": "Contact",
+      "report": {
+        "title": "Report content",
+        "body": "A post's menu offers “Report…”, as do mutual aid, mentoring and job content. The network's moderation team reviews the report; its author does not learn who reported it."
+      },
+      "messages": {
+        "title": "Write to a member",
+        "body": "Members reach each other through messaging, open between connections. No member's address or phone number is published."
+      },
+      "data": {
+        "title": "Your data and your reports",
+        "body": "Export your data, erase your account, follow a decision about you or the outcome of your reports: it is all done from “My data”, even without a membership."
+      },
+      "publisher": {
+        "title": "Write to the publisher",
+        "body": "To be provided: the publisher's contact address."
+      },
+      "dataProtection": {
+        "title": "Personal data",
+        "body": "To be provided: where to send a request about your personal data."
+      }
+    }
+  },
+  "footer": {
+    "terms": "Terms of use",
+    "community": "Community rules",
+    "contact": "Contact"
+  },
+  "settings": {
+    "texts": {
+      "lead": "The site's texts, with their version and date. Those not yet provided say so.",
+      "pending": "Text to be provided"
+    }
+  }
+}

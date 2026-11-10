@@ -5,6 +5,8 @@ import {
   FACET_FIELDS,
   FIELD_VISIBILITY_LEVELS,
   isResidenceCountry,
+  LEGAL_TEXT_KINDS,
+  LEGAL_TEXTS,
   type ConsentPurpose,
   type DirectoryVisibility,
   type FacetField,
@@ -37,6 +39,7 @@ import { toast } from "sonner"
 import { z } from "zod"
 
 import { AppShell } from "@/components/app-shell"
+import { CallSettings } from "@/components/call-settings"
 import { DataRightsSettings } from "@/components/data-rights-settings"
 import { Gate } from "@/components/gate"
 import { ProfileImagesSettings } from "@/components/profile-images-settings"
@@ -45,6 +48,7 @@ import { ContentPreferencesSettings } from "@/components/content-preferences-set
 import { SignOutSettings } from "@/components/sign-out-settings"
 import { LanguageSwitch, ThemeSwitch } from "@/components/preferences"
 import { ThemePicker } from "@/components/theme-picker"
+import { formatLegalTextDate, LEGAL_TEXT_LABELS, LEGAL_TEXT_ROUTES } from "@/lib/legal-texts"
 import { routes } from "@/lib/routes"
 
 /** `/parametres` — profil, facette, confidentialité, consentements, « Mes données » (EXF-DG-44 à 46). */
@@ -89,6 +93,8 @@ function Settings(props: { membership: MembershipView }) {
       <ProfileImagesSettings membership={props.membership} />
       <FacetSection membership={props.membership} />
       <DirectorySection membership={props.membership} />
+      {/* « Messages et appels » (IM-02) : réglages d'appel et de présence du compte, valables aussi dans ANTSIA. */}
+      <CallSettings membership={props.membership} />
       <ConsentsSection />
       <SponsorHelpSection membership={props.membership} />
       {/* « Mes données » (DG-026) : export, effacement, décisions et recours — ouverte au membre suspendu ;
@@ -102,8 +108,40 @@ function Settings(props: { membership: MembershipView }) {
           <ThemePicker className="mt-1" />
         </div>
       </Section>
+      <LegalTextsSection />
       <SignOutSettings />
     </>
+  )
+}
+
+/**
+ * Les textes du site depuis l'espace membre (LX-05) : chacun avec sa version et sa date, lues
+ * dans le domaine ; un texte non fourni le dit, sans rien affirmer de son contenu.
+ */
+function LegalTextsSection() {
+  const { t, locale } = useDiasporaleT()
+  return (
+    <Section id="informations" title={t("nav.account.info")} lead={t("settings.texts.lead")}>
+      <ul className="flex flex-col divide-y divide-border">
+        {LEGAL_TEXT_KINDS.map((kind) => {
+          const edition = LEGAL_TEXTS[kind]
+          return (
+            <li key={kind} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2">
+              <NextLink
+                href={LEGAL_TEXT_ROUTES[kind]()}
+                className="inline-flex min-h-11 items-center rounded-sm text-[15px] font-medium text-primary underline-offset-4 hover:underline focus-visible:shadow-focus"
+              >
+                {t(LEGAL_TEXT_LABELS[kind])}
+              </NextLink>
+              <span className="font-mono text-[11px] text-muted-foreground">
+                {t("legal.edition", { version: edition.version, date: formatLegalTextDate(edition.date, locale) })}
+                {edition.provided ? null : <span className="ml-2 rounded-sm bg-muted px-1.5 py-0.5">{t("settings.texts.pending")}</span>}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+    </Section>
   )
 }
 

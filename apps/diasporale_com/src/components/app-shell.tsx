@@ -32,11 +32,13 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   BookmarkIcon,
+  BookTextIcon,
   BriefcaseBusinessIcon,
   ChartColumnIcon,
   ChevronsUpDownIcon,
   ClipboardListIcon,
   CompassIcon,
+  ContactRoundIcon,
   DatabaseIcon,
   FileTextIcon,
   GraduationCapIcon,
@@ -50,6 +52,7 @@ import {
   PenSquareIcon,
   PlusIcon,
   ScaleIcon,
+  ScrollTextIcon,
   Settings2Icon,
   ShieldCheckIcon,
   StoreIcon,
@@ -109,6 +112,9 @@ type EntryId =
   | "myData"
   | "legalNotice"
   | "privacy"
+  | "terms"
+  | "communityRules"
+  | "contact"
   | "charte"
 
 /** Une entrée de navigation : une adresse de la table des routes, son icône, sa clé de libellé, son état courant. */
@@ -295,12 +301,16 @@ function accountEntries(membership: MembershipView, pathname: string, personal: 
 /**
  * Le groupe « Informations » du menu du compte (UX-03) : les textes du site, à deux gestes
  * depuis tout écran une fois connecté — ils n'étaient qu'au pied des pages publiques.
- * Mêmes libellés que ce pied de page. L'aide s'y ajoutera avec UX-04.
+ * Mêmes libellés que ce pied de page, dont les trois textes de LX-05 (conditions d'utilisation,
+ * règles de la communauté, contact). L'aide s'y ajoutera avec UX-04.
  */
 function informationEntries(pathname: string): NavEntry[] {
   return [
     { id: "legalNotice", href: routes.legalNotice(), icon: ScaleIcon, labelKey: "footer.legalNotice", active: withinAny(pathname, [routes.legalNotice()]) },
     { id: "privacy", href: routes.privacy(), icon: LockKeyholeIcon, labelKey: "footer.privacy", active: withinAny(pathname, [routes.privacy()]) },
+    { id: "terms", href: routes.terms(), icon: ScrollTextIcon, labelKey: "footer.terms", active: withinAny(pathname, [routes.terms()]) },
+    { id: "communityRules", href: routes.communityRules(), icon: BookTextIcon, labelKey: "footer.community", active: withinAny(pathname, [routes.communityRules()]) },
+    { id: "contact", href: routes.contact(), icon: ContactRoundIcon, labelKey: "footer.contact", active: withinAny(pathname, [routes.contact()]) },
     { id: "charte", href: routes.charte(), icon: PaletteIcon, labelKey: "footer.charte", active: withinAny(pathname, [routes.charte()]) },
   ]
 }

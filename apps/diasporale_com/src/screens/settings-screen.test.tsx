@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
-import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
+import { DEFAULT_FACET_VISIBILITY, LEGAL_TEXT_KINDS, LEGAL_TEXTS } from "@diasporale/domain"
 import type { ActionResult, ConsentView, MembershipView } from "@diasporale/features/data"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import { formatLegalTextDate } from "@/lib/legal-texts"
 
 import { SettingsScreen } from "./settings-screen"
 
@@ -17,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   publication: vi.fn(),
   dataRights: vi.fn(),
+  callSettings: vi.fn(),
   replace: vi.fn(),
   session: { status: "loading" } as unknown,
   success: vi.fn(),
@@ -52,6 +55,12 @@ vi.mock("@/components/data-rights-settings", () => ({
   },
 }))
 vi.mock("@/components/preferences", () => ({ LanguageSwitch: () => null, ThemeSwitch: () => null }))
+vi.mock("@/components/call-settings", () => ({
+  CallSettings: (props: { membership: MembershipView }) => {
+    mocks.callSettings(props.membership)
+    return <section id="messages-et-appels" aria-label="Messages et appels" />
+  },
+}))
 
 const t = getFixedT("fr")
 const membership: MembershipView = {
@@ -191,5 +200,33 @@ describe("Réglages — « Mes données » (DG-026)", () => {
     mocks.membership = suspended
     render(tree())
     expect(mocks.dataRights).toHaveBeenLastCalledWith({ personId: suspended.personId, handle: suspended.handle, canLeave: true })
+  })
+})
+
+describe("Réglages — les textes du site depuis l'espace membre (LX-05)", () => {
+  it("liste les cinq textes avec leur version, leur date et le repère d'un texte à fournir", () => {
+    render(tree())
+    const region = within(screen.getByRole("region", { name: t("nav.account.info") }))
+    expect(region.getAllByRole("link").map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["Mentions légales", "/mentions-legales"],
+      ["Confidentialité", "/confidentialite"],
+      ["Conditions d'utilisation", "/conditions-utilisation"],
+      ["Règles de la communauté", "/regles-communaute"],
+      ["Contact", "/contact"],
+    ])
+    for (const kind of LEGAL_TEXT_KINDS) {
+      const edition = LEGAL_TEXTS[kind]
+      expect(region.getAllByText(t("legal.edition", { version: edition.version, date: formatLegalTextDate(edition.date, "fr") }), { exact: false }).length).toBeGreaterThan(0)
+    }
+    // Aucun texte n'est fourni : chaque ligne le dit.
+    expect(region.getAllByText(t("settings.texts.pending"))).toHaveLength(LEGAL_TEXT_KINDS.length)
+  })
+})
+
+describe("Réglages — « Messages et appels » (IM-02)", () => {
+  it("monte la rubrique des réglages d'appel pour le membre affiché", () => {
+    render(tree())
+    expect(mocks.callSettings).toHaveBeenLastCalledWith(membership)
+    expect(screen.getByRole("region", { name: "Messages et appels" })).toHaveAttribute("id", "messages-et-appels")
   })
 })

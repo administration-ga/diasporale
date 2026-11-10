@@ -234,6 +234,10 @@ export const routes = {
   charte: () => "/charte",
   legalNotice: () => "/mentions-legales",
   privacy: () => "/confidentialite",
+  /** Les textes du site ajoutés par LX-05 : chacun sa page, sa version, sa date et son marqueur tant qu'il n'est pas fourni. */
+  terms: () => "/conditions-utilisation",
+  communityRules: () => "/regles-communaute",
+  contact: () => "/contact",
   health: () => "/sante-fonctionnelle",
   healthApi: () => "/api/sante-fonctionnelle",
 } as const
