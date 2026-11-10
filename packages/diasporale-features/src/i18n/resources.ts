@@ -60,6 +60,8 @@ import enCommunityNotifications from "./locales/en/community-notifications.json"
 import enPostExplanation from "./locales/en/post-explanation.json"
 import enReporterNotices from "./locales/en/reporter-notices.json"
 import enFunctionalHealth from "./locales/en/functional-health.json"
+import enLegalTexts from "./locales/en/legal-texts.json"
+import enCallSettings from "./locales/en/call-settings.json"
 import enWelcomeProfile from "./locales/en/welcome-profile.json"
 import enPostPublicationState from "./locales/en/post-publication-state.json"
 import enCommentPages from "./locales/en/comment-pages.json"
@@ -114,6 +116,8 @@ import frCommunityNotifications from "./locales/fr/community-notifications.json"
 import frPostExplanation from "./locales/fr/post-explanation.json"
 import frReporterNotices from "./locales/fr/reporter-notices.json"
 import frFunctionalHealth from "./locales/fr/functional-health.json"
+import frLegalTexts from "./locales/fr/legal-texts.json"
+import frCallSettings from "./locales/fr/call-settings.json"
 import frWelcomeProfile from "./locales/fr/welcome-profile.json"
 import frPostPublicationState from "./locales/fr/post-publication-state.json"
 import frCommentPages from "./locales/fr/comment-pages.json"
@@ -178,6 +182,8 @@ export const LOCALE_PARTS = {
     "comment-pages": frCommentPages,
     "app-errors": frAppErrors,
     "account-menu": frAccountMenu,
+    "legal-texts": frLegalTexts,
+    "call-settings": frCallSettings,
     "welcome-profile": frWelcomeProfile,
     "object-reports": frObjectReports,
     "idn-entry": frIdnEntry,
@@ -234,6 +240,8 @@ export const LOCALE_PARTS = {
     "comment-pages": enCommentPages,
     "app-errors": enAppErrors,
     "account-menu": enAccountMenu,
+    "legal-texts": enLegalTexts,
+    "call-settings": enCallSettings,
     "welcome-profile": enWelcomeProfile,
     "object-reports": enObjectReports,
     "idn-entry": enIdnEntry,

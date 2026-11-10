@@ -79,6 +79,7 @@ import type { ConversationsCapability } from "./conversations-port"
 import type { DemoAccountsCapability } from "./demo-accounts-port"
 import type { PageDecisionsCapability } from "./page-decisions-port"
 import type { EntryDoorsView } from "./entry-doors-port"
+import type { CallSettingsCapability } from "./call-settings-port"
 
 export type ActionResult<T = null> =
   | { readonly ok: true; readonly value: T }
@@ -376,6 +377,8 @@ export interface DiasporaleDataSource {
   readonly conversations?: ConversationsCapability
   /** Comptes de démonstration par acteur, DÉVELOPPEMENT LOCAL du moteur seulement (`demo-accounts-port.ts`). */
   readonly demoAccounts?: DemoAccountsCapability
+  /** Réglages d'appel et de présence de la personne, valables aussi dans ANTSIA (IM-02, `call-settings-port.ts`). */
+  readonly callSettings?: CallSettingsCapability
   useSession(): Loadable<SessionView>
   /**
    * Les portes d'entrée que ce déploiement sait vraiment servir (EA-02, `entry-doors-port.ts`).
