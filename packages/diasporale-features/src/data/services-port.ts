@@ -23,6 +23,7 @@ import {
   type ServiceDeliveryFilter,
   type ServiceDeliveryMode,
   type ServiceLanguageCode,
+  type ServiceLocation,
   type ServiceOfferStatus,
   type ServiceOfferStatusTarget,
   type ServicePricingLike,
@@ -66,11 +67,26 @@ export interface ServiceOfferCardView {
   readonly updatedAt: number
 }
 
+/**
+ * SV-04 : les réglages de prestation d'une offre (fuseau, lieu approximatif ou à
+ * distance, conditions d'annulation habituels), repris dans chaque nouvelle
+ * proposition. Lus et écrits par l'équipe de la page seulement ; `null` : non réglé.
+ * SV-09 : les rendez-vous simultanés que la prestation admet (un par défaut).
+ */
+export interface ServiceProviderSettingsView {
+  readonly timeZone: string | null
+  readonly location: ServiceLocation | null
+  readonly cancellationTerms: string | null
+  readonly bookingCapacity: number
+}
+
 /** La fiche d'une offre : sa carte, son état, et si le lecteur peut la gérer. */
 export interface ServiceOfferDetailView extends ServiceOfferCardView {
   readonly status: ServiceOfferStatus
   /** Signataire vivant de la page : il voit l'offre dans tous ses états et la gère. */
   readonly viewerCanManage: boolean
+  /** SV-04 : les réglages de prestation, pour l'équipe seulement ; `null` (ou absent, fournisseur antérieur) sinon. */
+  readonly providerSettings?: ServiceProviderSettingsView | null
 }
 
 /** Une fenêtre de résultats : curseur opaque du fournisseur, fin distincte d'une page vide. */
@@ -107,6 +123,8 @@ export interface ServiceOfferInputView {
   readonly languages: readonly ServiceLanguageCode[]
   readonly durationMinutes: number | null
   readonly pricing: ServicePricingLike
+  /** SV-04 : les réglages de prestation ; absents, ceux déjà écrits restent tels quels. */
+  readonly providerSettings?: ServiceProviderSettingsView
 }
 
 export interface ServicesCapability {

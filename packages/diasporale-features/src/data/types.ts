@@ -359,6 +359,13 @@ export interface MembershipView {
   readonly canPublish: boolean
   readonly rateTier: WriteRateTier
   readonly directoryVisibility: DirectoryVisibility
+  /**
+   * EA-03 : le statut enregistré n'est plus celui que les faits justifient (IDN liée,
+   * niveau relevé, lien révoqué hors de DIASPORALE) ; l'application le fait relire
+   * (action `refreshMembership`). Absent ou `false` : rien à relire — la démonstration
+   * dérive le statut à chaque lecture.
+   */
+  readonly statusOutdated?: boolean
 }
 
 export type SessionView =

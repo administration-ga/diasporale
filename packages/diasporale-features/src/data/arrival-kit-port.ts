@@ -169,6 +169,8 @@ export interface ArrivalKitListRequest {
   /** Sans ville : ne garder que les ressources valables dans tout le pays. */
   readonly nationalOnly: boolean
   readonly category: ArrivalKitCategory | null
+  /** ET-04 — des mots cherchés dans le titre et le résumé (deux caractères au moins pour chercher). */
+  readonly query?: string
   readonly cursor: string | null
 }
 

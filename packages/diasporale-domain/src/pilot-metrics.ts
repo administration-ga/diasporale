@@ -8,7 +8,11 @@
  *   envoyées, répondues (proposition ou refus), confirmées, réalisées,
  *   annulées, expirées ; délai de première réponse (médiane et 75e centile) ;
  *   adhésions associatives demandées et acceptées ; inscriptions et présences
- *   aux évènements de page ; avis publiés.
+ *   aux évènements de page ; avis publiés ; ET-10 — l'utilité de l'entraide :
+ *   questions posées, part ayant reçu une réponse, délai de première réponse,
+ *   part résolue (la « première aide aboutie ») ; inscriptions bénévoles ;
+ *   demandes de mentorat et part acceptée ; ressources du kit publiées et part
+ *   « à revoir » (relevé du passage).
  * - Des COHORTES en jours UTC : une demande, une adhésion ou un avis compte le
  *   jour de sa création, avec son état au dernier passage ; une inscription
  *   compte le jour de son évènement. Un taux rapporte une partie de la cohorte
@@ -24,8 +28,10 @@
  * ne lit aucune base. Il est relu par le moteur (lib ES2021) : aucune API plus
  * récente.
  */
+import { arrivalKitReviewCause, isArrivalKitListed, type ArrivalKitStanding } from "./arrival-kit"
 import type { AssociationMembershipStatus } from "./associations"
 import { isResidenceCountry, normalizeCountryCode, type CountryCode } from "./countries"
+import type { AidQuestionStatus, AidSignupStatus } from "./mutual-aid"
 import { ok, refuse, type Result } from "./result"
 import { effectiveServiceRequestStatus, type ServiceRequestStatus } from "./service-requests"
 import { DAY_MS, HOUR_MS } from "./time"
@@ -99,6 +105,22 @@ export function pilotWindow(lastDayStartAt: number, days: PilotWindowDays): Pilo
 // Compteurs quotidiens et classes de délai
 // ═══════════════════════════════════════════════════════════════
 
+/**
+ * ET-10 — les compteurs de l'entraide, ajoutés après les premiers : une ligne écrite
+ * avant leur ajout ne les porte pas, et ils s'y lisent zéro (jamais un compte inventé).
+ * Une question compte le jour de sa création, une inscription bénévole et une demande
+ * de mentorat aussi, chacune avec son état au dernier passage.
+ */
+export const PILOT_AID_DAILY_COUNTERS = [
+  "aidQuestionsAsked",
+  "aidQuestionsAnswered",
+  "aidQuestionsResolved",
+  "aidSignups",
+  "mentoringRequested",
+  "mentoringAccepted",
+] as const
+export type PilotAidDailyCounter = (typeof PILOT_AID_DAILY_COUNTERS)[number]
+
 /** Les compteurs matérialisés d'un jour et d'une portée, dans un ordre FIXE. */
 export const PILOT_DAILY_COUNTERS = [
   "requestsSent",
@@ -112,9 +134,15 @@ export const PILOT_DAILY_COUNTERS = [
   "eventRegistrations",
   "eventAttendances",
   "reviewsPublished",
+  ...PILOT_AID_DAILY_COUNTERS,
 ] as const
 export type PilotDailyCounter = (typeof PILOT_DAILY_COUNTERS)[number]
-export type PilotDailyCounts = { readonly [Counter in PilotDailyCounter]: number }
+/** Les compteurs lus d'une ligne : ceux de l'entraide peuvent manquer (ligne d'avant ET-10), ils valent alors zéro. */
+export type PilotDailyCounts = { readonly [Counter in Exclude<PilotDailyCounter, PilotAidDailyCounter>]: number } & { readonly [Counter in PilotAidDailyCounter]?: number }
+
+export function isPilotAidDailyCounter(counter: string): counter is PilotAidDailyCounter {
+  return (PILOT_AID_DAILY_COUNTERS as readonly string[]).includes(counter)
+}
 
 /**
  * Classes du délai de première réponse : borne HAUTE incluse, en heures. Au-delà
@@ -131,15 +159,18 @@ export interface PilotDayAggregate {
   readonly counts: PilotDailyCounts
   /** Réponses par classe de délai (`PILOT_FIRST_RESPONSE_BUCKET_HOURS`, puis le dépassement). */
   readonly firstResponse: readonly number[]
+  /** ET-10 — premières réponses aux questions d'entraide du jour, mêmes classes ; absent d'une ligne d'avant ET-10. */
+  readonly aidFirstAnswer?: readonly number[]
 }
 
 /** L'agrégat d'un jour, tel qu'il est produit (copie neuve, modifiable). */
 export interface PilotDayTotals {
   readonly counts: Record<PilotDailyCounter, number>
   readonly firstResponse: number[]
+  readonly aidFirstAnswer: number[]
 }
 
-function sanitize(value: number): number {
+function sanitize(value: number | undefined): number {
   return Number.isFinite(value) && value > 0 ? Math.trunc(value) : 0
 }
 
@@ -156,6 +187,12 @@ export function emptyPilotCounts(): Record<PilotDailyCounter, number> {
     eventRegistrations: 0,
     eventAttendances: 0,
     reviewsPublished: 0,
+    aidQuestionsAsked: 0,
+    aidQuestionsAnswered: 0,
+    aidQuestionsResolved: 0,
+    aidSignups: 0,
+    mentoringRequested: 0,
+    mentoringAccepted: 0,
   }
 }
 
@@ -165,19 +202,28 @@ export function normalizePilotHistogram(histogram: readonly number[]): number[] 
 }
 
 export function emptyPilotDay(): PilotDayTotals {
-  return { counts: emptyPilotCounts(), firstResponse: normalizePilotHistogram([]) }
+  return { counts: emptyPilotCounts(), firstResponse: normalizePilotHistogram([]), aidFirstAnswer: normalizePilotHistogram([]) }
 }
 
-/** Ajoute une ligne source à l'agrégat d'un jour : un par compteur cité, et sa classe de délai s'il en a une. */
-export function tallyPilotDay(day: PilotDayAggregate, counters: readonly PilotDailyCounter[], firstResponseBucket: number | null = null): PilotDayTotals {
+/** Une classe de plus dans un histogramme, si elle existe. */
+function bump(histogram: number[], bucket: number | null): void {
+  if (bucket !== null && Number.isInteger(bucket) && bucket >= 0 && bucket < histogram.length) histogram[bucket] = (histogram[bucket] ?? 0) + 1
+}
+
+/**
+ * Ajoute une ligne source à l'agrégat d'un jour : un par compteur cité, et sa classe de
+ * délai s'il en a une — délai de première réponse d'une demande de service, ou (ET-10)
+ * délai de première réponse d'une question d'entraide.
+ */
+export function tallyPilotDay(day: PilotDayAggregate, counters: readonly PilotDailyCounter[], firstResponseBucket: number | null = null, aidFirstAnswerBucket: number | null = null): PilotDayTotals {
   const counts = emptyPilotCounts()
   for (const counter of PILOT_DAILY_COUNTERS) counts[counter] = sanitize(day.counts[counter])
   for (const counter of counters) counts[counter] += 1
   const firstResponse = normalizePilotHistogram(day.firstResponse)
-  if (firstResponseBucket !== null && Number.isInteger(firstResponseBucket) && firstResponseBucket >= 0 && firstResponseBucket < firstResponse.length) {
-    firstResponse[firstResponseBucket] = (firstResponse[firstResponseBucket] ?? 0) + 1
-  }
-  return { counts, firstResponse }
+  bump(firstResponse, firstResponseBucket)
+  const aidFirstAnswer = normalizePilotHistogram(day.aidFirstAnswer ?? [])
+  bump(aidFirstAnswer, aidFirstAnswerBucket)
+  return { counts, firstResponse, aidFirstAnswer }
 }
 
 /** La somme de plusieurs jours (une période, ou plusieurs pays). */
@@ -187,6 +233,9 @@ export function sumPilotDays(days: readonly PilotDayAggregate[]): PilotDayTotals
     for (const counter of PILOT_DAILY_COUNTERS) total.counts[counter] += sanitize(day.counts[counter])
     normalizePilotHistogram(day.firstResponse).forEach((count, index) => {
       total.firstResponse[index] = (total.firstResponse[index] ?? 0) + count
+    })
+    normalizePilotHistogram(day.aidFirstAnswer ?? []).forEach((count, index) => {
+      total.aidFirstAnswer[index] = (total.aidFirstAnswer[index] ?? 0) + count
     })
   }
   return total
@@ -261,6 +310,54 @@ export function pilotRegistrationCounters(checkedIn: boolean): readonly PilotDai
 /** Un avis compte s'il est actif ET publié par la modération ; sinon il ne compte pas. */
 export function pilotReviewCounters(review: { readonly active: boolean; readonly published: boolean }): readonly PilotDailyCounter[] {
   return review.active && review.published ? ["reviewsPublished"] : []
+}
+
+// ── ET-10 : l'utilité de l'entraide ──────────────────────────────
+
+/** Les seuls faits lus d'une question : son état, sa réponse retenue, ses réponses publiées, sa première réponse ; jamais un texte. */
+export interface PilotAidQuestionFacts {
+  readonly status: AidQuestionStatus
+  readonly hasAcceptedAnswer: boolean
+  /** Les réponses publiées au passage. */
+  readonly answerCount: number
+  readonly createdAt: number
+  /** La création de sa plus ancienne réponse encore publiée, si elle existe. */
+  readonly firstAnswerAt: number | null
+}
+
+export interface PilotAidTally {
+  readonly counters: readonly PilotDailyCounter[]
+  readonly aidFirstAnswerBucket: number | null
+}
+
+/**
+ * Une question de la cohorte : posée ; « a reçu une réponse » si une réponse publiée
+ * existe au passage ; « résolue » si son auteur a retenu une réponse (résolue, ou close
+ * après l'avoir retenue) — la PREMIÈRE AIDE ABOUTIE. Une question retirée par son auteur
+ * ne compte pas. Le délai va de la question à sa plus ancienne réponse encore publiée.
+ */
+export function pilotAidQuestionTally(facts: PilotAidQuestionFacts): PilotAidTally {
+  if (facts.status === "withdrawn") return { counters: [], aidFirstAnswerBucket: null }
+  const counters: PilotDailyCounter[] = ["aidQuestionsAsked"]
+  if (facts.answerCount > 0 || facts.firstAnswerAt !== null) counters.push("aidQuestionsAnswered")
+  if (facts.hasAcceptedAnswer) counters.push("aidQuestionsResolved")
+  return { counters, aidFirstAnswerBucket: facts.firstAnswerAt === null ? null : pilotFirstResponseBucket(facts.firstAnswerAt - facts.createdAt) }
+}
+
+/** Une inscription bénévole compte si elle est confirmée au passage (un retrait la retire du compte). */
+export function pilotAidSignupCounters(status: AidSignupStatus): readonly PilotDailyCounter[] {
+  return status === "confirmed" ? ["aidSignups"] : []
+}
+
+/** Une demande de mentorat, et son acceptation si elle a été acceptée (même close ensuite). */
+export function pilotMentoringCounters(accepted: boolean): readonly PilotDailyCounter[] {
+  return accepted ? ["mentoringRequested", "mentoringAccepted"] : ["mentoringRequested"]
+}
+
+/** Le relevé d'une ressource du kit au passage : listée (publiée ou à revoir), et « à revoir » par son état EFFECTIF. */
+export function pilotKitSnapshot(standing: ArrivalKitStanding, now: number): { readonly listed: boolean; readonly toReview: boolean } {
+  const listed = isArrivalKitListed(standing.status)
+  return { listed, toReview: listed && arrivalKitReviewCause(standing, now) !== null }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -358,7 +455,7 @@ export function presentPilotFirstResponse(histogram: readonly number[], threshol
 // Les indicateurs du pilote (liste fermée)
 // ═══════════════════════════════════════════════════════════════
 
-export const PILOT_METRIC_GROUPS = ["services", "associations", "events", "reviews"] as const
+export const PILOT_METRIC_GROUPS = ["services", "associations", "events", "reviews", "mutual_aid"] as const
 export type PilotMetricGroup = (typeof PILOT_METRIC_GROUPS)[number]
 
 export const PILOT_METRIC_IDS = [
@@ -375,8 +472,26 @@ export const PILOT_METRIC_IDS = [
   "event_registrations",
   "event_attendances",
   "reviews_published",
+  // ET-10 : l'utilité de l'entraide.
+  "aid_questions_asked",
+  "aid_questions_answered",
+  "aid_first_answer_hours",
+  "aid_questions_resolved",
+  "aid_signups",
+  "mentoring_requested",
+  "mentoring_accepted",
+  "kit_resources_listed",
+  "kit_resources_to_review",
 ] as const
 export type PilotMetricId = (typeof PILOT_METRIC_IDS)[number]
+
+/** Les relevés du dernier passage (pas des cohortes) : offres actives ; ressources du kit listées, et « à revoir » (ET-10). */
+export const PILOT_SNAPSHOTS = ["offersActive", "kitListed", "kitToReview"] as const
+export type PilotSnapshot = (typeof PILOT_SNAPSHOTS)[number]
+
+/** Les histogrammes de délai : première réponse d'une demande de service ; première réponse d'une question d'entraide (ET-10). */
+export const PILOT_DELAY_HISTOGRAMS = ["firstResponse", "aidFirstAnswer"] as const
+export type PilotDelayHistogram = (typeof PILOT_DELAY_HISTOGRAMS)[number]
 
 interface PilotMetricBase {
   readonly id: PilotMetricId
@@ -384,30 +499,40 @@ interface PilotMetricBase {
 }
 
 /**
- * La définition d'un indicateur : un relevé au dernier passage (`snapshot`),
- * un compte de cohorte (`count`), une part de cohorte et sa base (`ratio`), ou
- * les délais de première réponse (`duration`).
+ * La définition d'un indicateur : un relevé au dernier passage (`snapshot`), un compte
+ * de cohorte (`count`), une part de cohorte et sa base (`ratio`), une part d'un relevé
+ * et sa base (`snapshot_ratio`, présentée comme une part), ou des délais (`duration`).
  */
 export type PilotMetricDefinition =
-  | (PilotMetricBase & { readonly kind: "snapshot" })
+  | (PilotMetricBase & { readonly kind: "snapshot"; readonly snapshot: PilotSnapshot })
   | (PilotMetricBase & { readonly kind: "count"; readonly counter: PilotDailyCounter })
   | (PilotMetricBase & { readonly kind: "ratio"; readonly counter: PilotDailyCounter; readonly denominator: PilotDailyCounter; readonly denominatorId: PilotMetricId })
-  | (PilotMetricBase & { readonly kind: "duration" })
+  | (PilotMetricBase & { readonly kind: "snapshot_ratio"; readonly snapshot: PilotSnapshot; readonly denominator: PilotSnapshot; readonly denominatorId: PilotMetricId })
+  | (PilotMetricBase & { readonly kind: "duration"; readonly histogram: PilotDelayHistogram })
 
 export const PILOT_METRICS: readonly PilotMetricDefinition[] = [
-  { id: "offers_active", group: "services", kind: "snapshot" },
+  { id: "offers_active", group: "services", kind: "snapshot", snapshot: "offersActive" },
   { id: "requests_sent", group: "services", kind: "count", counter: "requestsSent" },
   { id: "requests_answered", group: "services", kind: "ratio", counter: "requestsAnswered", denominator: "requestsSent", denominatorId: "requests_sent" },
   { id: "requests_confirmed", group: "services", kind: "ratio", counter: "requestsConfirmed", denominator: "requestsSent", denominatorId: "requests_sent" },
   { id: "requests_completed", group: "services", kind: "ratio", counter: "requestsCompleted", denominator: "requestsConfirmed", denominatorId: "requests_confirmed" },
   { id: "requests_cancelled", group: "services", kind: "ratio", counter: "requestsCancelled", denominator: "requestsSent", denominatorId: "requests_sent" },
   { id: "requests_expired", group: "services", kind: "ratio", counter: "requestsExpired", denominator: "requestsSent", denominatorId: "requests_sent" },
-  { id: "first_response_hours", group: "services", kind: "duration" },
+  { id: "first_response_hours", group: "services", kind: "duration", histogram: "firstResponse" },
   { id: "memberships_requested", group: "associations", kind: "count", counter: "membershipsRequested" },
   { id: "memberships_accepted", group: "associations", kind: "ratio", counter: "membershipsAccepted", denominator: "membershipsRequested", denominatorId: "memberships_requested" },
   { id: "event_registrations", group: "events", kind: "count", counter: "eventRegistrations" },
   { id: "event_attendances", group: "events", kind: "ratio", counter: "eventAttendances", denominator: "eventRegistrations", denominatorId: "event_registrations" },
   { id: "reviews_published", group: "reviews", kind: "count", counter: "reviewsPublished" },
+  { id: "aid_questions_asked", group: "mutual_aid", kind: "count", counter: "aidQuestionsAsked" },
+  { id: "aid_questions_answered", group: "mutual_aid", kind: "ratio", counter: "aidQuestionsAnswered", denominator: "aidQuestionsAsked", denominatorId: "aid_questions_asked" },
+  { id: "aid_first_answer_hours", group: "mutual_aid", kind: "duration", histogram: "aidFirstAnswer" },
+  { id: "aid_questions_resolved", group: "mutual_aid", kind: "ratio", counter: "aidQuestionsResolved", denominator: "aidQuestionsAsked", denominatorId: "aid_questions_asked" },
+  { id: "aid_signups", group: "mutual_aid", kind: "count", counter: "aidSignups" },
+  { id: "mentoring_requested", group: "mutual_aid", kind: "count", counter: "mentoringRequested" },
+  { id: "mentoring_accepted", group: "mutual_aid", kind: "ratio", counter: "mentoringAccepted", denominator: "mentoringRequested", denominatorId: "mentoring_requested" },
+  { id: "kit_resources_listed", group: "mutual_aid", kind: "snapshot", snapshot: "kitListed" },
+  { id: "kit_resources_to_review", group: "mutual_aid", kind: "snapshot_ratio", snapshot: "kitToReview", denominator: "kitListed", denominatorId: "kit_resources_listed" },
 ]
 
 interface PilotIndicatorBase {
@@ -427,6 +552,9 @@ export interface PilotIndicatorsInput {
   readonly days: readonly PilotDayAggregate[]
   /** Les offres actives relevées au dernier passage pour cette portée. */
   readonly offersActive: number
+  /** ET-10 — les ressources du kit listées, et « à revoir », relevées au dernier passage ; absentes : zéro. */
+  readonly kitListed?: number
+  readonly kitToReview?: number
   readonly threshold?: number
 }
 
@@ -434,10 +562,19 @@ export interface PilotIndicatorsInput {
 export function presentPilotIndicators(input: PilotIndicatorsInput): PilotIndicator[] {
   const threshold = thresholdOf(input.threshold ?? PILOT_DISPLAY_THRESHOLD)
   const total = sumPilotDays(input.days)
+  const snapshots: Readonly<Record<PilotSnapshot, number>> = { offersActive: input.offersActive, kitListed: input.kitListed ?? 0, kitToReview: input.kitToReview ?? 0 }
   return PILOT_METRICS.map((metric): PilotIndicator => {
     switch (metric.kind) {
       case "snapshot":
-        return { id: metric.id, group: metric.group, kind: "snapshot", value: presentPilotCount(input.offersActive, threshold) }
+        return { id: metric.id, group: metric.group, kind: "snapshot", value: presentPilotCount(snapshots[metric.snapshot], threshold) }
+      case "snapshot_ratio":
+        return {
+          id: metric.id,
+          group: metric.group,
+          kind: "ratio",
+          denominatorId: metric.denominatorId,
+          ...presentPilotRatio(snapshots[metric.snapshot], snapshots[metric.denominator], threshold),
+        }
       case "count":
         return { id: metric.id, group: metric.group, kind: "count", value: presentPilotCount(total.counts[metric.counter], threshold) }
       case "ratio":
@@ -449,7 +586,7 @@ export function presentPilotIndicators(input: PilotIndicatorsInput): PilotIndica
           ...presentPilotRatio(total.counts[metric.counter], total.counts[metric.denominator], threshold),
         }
       case "duration":
-        return { id: metric.id, group: metric.group, kind: "duration", ...presentPilotFirstResponse(total.firstResponse, threshold) }
+        return { id: metric.id, group: metric.group, kind: "duration", ...presentPilotFirstResponse(total[metric.histogram], threshold) }
     }
   })
 }

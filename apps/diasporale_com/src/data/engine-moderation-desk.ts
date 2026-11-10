@@ -22,6 +22,11 @@
  * `setTeamMember`), qui motivent, journalisent et préviennent l'auteur. Le
  * motif et les mesures sont jugés avant tout appel, la personne de la session
  * est relue : une autre session ferme le geste (`not_found`) avant toute écriture.
+ *
+ * MD-01 : les responsables du réseau se lisent dans la tranche `diaspora/moderationDesk`
+ * (`responsibles`) et se nomment par `diaspora/membership` (`setResponsibleRole`), qui appelle l'aide
+ * du moteur (EX-08) et journalise ; la règle `NETWORK_LAST_ADMIN` se dit
+ * `moderation_desk_last_admin`, le refus indistinct `moderation_desk_role_refused`.
  */
 import { engineErrorCode, engineErrorRule } from "@antsia/social-contracts/errors"
 import { api } from "@convex/_generated/api"
@@ -44,6 +49,7 @@ import {
   type DeskPage,
   type DeskPendingView,
   type DeskPreviewView,
+  type DeskResponsiblesView,
   type DeskRosterView,
   type DeskSurface,
   type DeskZone,
@@ -72,6 +78,7 @@ import {
 const DESK = api.modules.diaspora.moderationDesk
 const CASES = api.modules.moderation.cases
 const PREVIEW = api.modules.moderation.reviewProjection.preview
+const SET_RESPONSIBLE_ROLE = api.modules.diaspora.membership.setResponsibleRole
 
 type DeskRow = FunctionReturnType<typeof DESK.myDesk>
 type CaseRow = FunctionReturnType<typeof DESK.queue>["items"][number]
@@ -81,6 +88,7 @@ type CaseDetailRow = FunctionReturnType<typeof DESK.caseDetail>
 type PendingRow = FunctionReturnType<typeof DESK.pendingQueue>["items"][number]
 type AppealRow = FunctionReturnType<typeof DESK.appealQueue>["items"][number]
 type RosterRow = FunctionReturnType<typeof DESK.teamRoster>
+type ResponsiblesRow = FunctionReturnType<typeof DESK.responsibles>
 type PreviewRow = FunctionReturnType<typeof PREVIEW>
 type EngineZone = FunctionArgs<typeof DESK.queue>["zone"]
 type EngineTarget = FunctionArgs<typeof CASES.reviewContent>["target"]
@@ -110,11 +118,22 @@ export function moderationDeskErrorCode(error: unknown): ActionErrorCode {
   return engineActionErrorCode(error)
 }
 
-async function run<T>(work: () => Promise<T>): Promise<ActionResult<T>> {
+/**
+ * MD-01 : les refus d'un geste sur un rôle de réseau. Le refus indistinct du
+ * moteur (personne qui n'est pas membre active « déclarée » au moins, ou geste
+ * hors de l'administration du réseau) se dit sans en livrer la raison ; une
+ * autre session reste `not_found`, comme pour tout geste du guichet.
+ */
+export function responsibleRoleErrorCode(error: unknown): ActionErrorCode {
+  if (!(error instanceof Refusal) && engineErrorCode(error) === "notFound") return "moderation_desk_role_refused"
+  return moderationDeskErrorCode(error)
+}
+
+async function run<T>(work: () => Promise<T>, errorCode: (error: unknown) => ActionErrorCode = moderationDeskErrorCode): Promise<ActionResult<T>> {
   try {
     return { ok: true, value: await work() }
   } catch (error) {
-    return { ok: false, code: moderationDeskErrorCode(error) }
+    return { ok: false, code: errorCode(error) }
   }
 }
 
@@ -226,6 +245,21 @@ export function toRosterView(row: RosterRow): DeskRosterView {
       handle: member.handle,
       displayName: member.displayName,
       inNetwork: member.inNetwork,
+      isMe: member.isMe,
+    })),
+    more: row.more,
+  }
+}
+
+/** MD-01 : les responsables, tels que la tranche les sert (profil publié seul). */
+export function toResponsiblesView(row: ResponsiblesRow): DeskResponsiblesView {
+  return {
+    members: row.members.map((member) => ({
+      personId: member.personId,
+      role: member.role,
+      handle: member.handle,
+      displayName: member.displayName,
+      active: member.active,
       isMe: member.isMe,
     })),
     more: row.more,
@@ -513,6 +547,27 @@ export function createEngineModerationDesk(deps: EngineSourceDeps): ModerationDe
         })
         return null
       })
+    },
+
+    useResponsibles(personId) {
+      const reader = useDeskReader(personId)
+      const loaded = useLoaded(DESK.responsibles, reader.networkId ? { networkId: reader.networkId, expectedPersonId: personId as Id<"persons"> } : "skip")
+      return useProjected(reader, loaded, toResponsiblesView)
+    },
+
+    async setResponsibleRole(input) {
+      return await run(async () => {
+        const reason = requireReason(input.reason)
+        await expectPerson(input.personId)
+        const networkId = await resolveDiasporaleNetworkId(deps.convex)
+        const result = await deps.convex.mutation(SET_RESPONSIBLE_ROLE, {
+          networkId,
+          personId: input.memberPersonId as Id<"persons">,
+          role: input.role,
+          reason,
+        })
+        return { role: result.role, changed: result.changed }
+      }, responsibleRoleErrorCode)
     },
   }
 }

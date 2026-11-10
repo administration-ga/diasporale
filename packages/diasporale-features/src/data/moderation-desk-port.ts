@@ -22,8 +22,10 @@
  *   · une personne PARTIE au dossier (auteur, déclarant, signataire de la page
  *     visée, ancien décideur) ne le tranche pas : le moteur refuse ce qu'il
  *     garde, l'écran n'offre pas le geste (`party`) ;
- *   · les recours du réseau et la composition des équipes sont à
- *     l'administration du réseau seule ;
+ *   · les recours du réseau, la composition des équipes et les responsables du
+ *     réseau (MD-01 : nommer, changer, retirer un administrateur ou un
+ *     modérateur du réseau, motif obligatoire, dernier administrateur gardé)
+ *     sont à l'administration du réseau seule ; le rôle vaut au geste suivant ;
  *   · SU01d du moteur (ordonnance n° 0011/PR/2026, art. 24, 32, 33) : les
  *     dossiers à délai légal forment une voie À PART, l'échéance la plus proche
  *     d'abord, que ni le pays ni la nature ne filtrent ; la file ordinaire ne les
@@ -68,6 +70,10 @@ export const MODERATION_DESK_ERROR_CODES = [
   "moderation_desk_handle_required",
   // Aucun membre actif du réseau ne porte cet identifiant.
   "moderation_desk_member_unknown",
+  // MD-01 : le réseau garde toujours un administrateur actif (règle NETWORK_LAST_ADMIN du moteur).
+  "moderation_desk_last_admin",
+  // MD-01 : rôle refusé, sans dire pourquoi (personne qui n'est pas membre active « déclarée » au moins, ou geste hors de l'administration).
+  "moderation_desk_role_refused",
 ] as const
 export type ModerationDeskErrorCode = (typeof MODERATION_DESK_ERROR_CODES)[number]
 
@@ -424,6 +430,49 @@ export interface DeskCandidateView {
   readonly displayName: string
 }
 
+// ── Responsables du réseau (MD-01, LX-03) ──────────────────────────────────
+
+/** Les deux rôles de réseau qui décident (`NETWORK_RESPONSIBLE_ROLES` du moteur). */
+export const DESK_RESPONSIBLE_ROLES = ["network_admin", "network_moderator"] as const
+export type DeskResponsibleRole = (typeof DESK_RESPONSIBLE_ROLES)[number]
+/** Le rôle qu'un geste pose : un rôle de responsable, ou `member` pour le retirer. */
+export type DeskRoleChoice = DeskResponsibleRole | "member"
+
+/** L'autre rôle de responsable : celui qu'un changement de rôle pose. */
+export function otherResponsibleRole(role: DeskResponsibleRole): DeskResponsibleRole {
+  return role === "network_admin" ? "network_moderator" : "network_admin"
+}
+
+/** Un responsable du réseau, identifié par son profil PUBLIÉ (`null` : nom neutre), jamais par une coordonnée. */
+export interface DeskResponsibleView {
+  readonly personId: string
+  readonly role: DeskResponsibleRole
+  readonly handle: string | null
+  readonly displayName: string | null
+  /** Faux : le rôle ne s'exerce pas (adhésion en attente ou suspendue). */
+  readonly active: boolean
+  readonly isMe: boolean
+}
+
+export interface DeskResponsiblesView {
+  /** L'administration d'abord, puis la modération. */
+  readonly members: readonly DeskResponsibleView[]
+  readonly more: boolean
+}
+
+export interface DeskResponsibleRoleInput {
+  readonly personId: string
+  readonly memberPersonId: string
+  readonly role: DeskRoleChoice
+  readonly reason: string
+}
+
+export interface DeskResponsibleRoleResult {
+  readonly role: DeskRoleChoice
+  /** Faux : la personne avait déjà ce rôle ; rien n'a été écrit. */
+  readonly changed: boolean
+}
+
 // ── Délais légaux (SU01d du moteur) ────────────────────────────────────────
 
 /** Le fondement d'un délai légal (`REPORT_LEGAL_BASES` du moteur). */
@@ -571,4 +620,12 @@ export interface ModerationDeskCapability {
   findMember(request: DeskMemberLookup): Promise<ActionResult<DeskCandidateView | null>>
   createTeam(input: DeskTeamInput): Promise<ActionResult<{ readonly teamId: string }>>
   setTeamMember(input: DeskTeamMemberInput): Promise<ActionResult>
+  /** MD-01 : les responsables du réseau (administration du réseau seule ; sinon `not_found`). */
+  useResponsibles(personId: string): Loadable<DeskResponsiblesView>
+  /**
+   * MD-01 : nommer, changer ou retirer (`member`) le rôle de réseau d'un membre
+   * actif, motif obligatoire ; le dernier administrateur actif reste
+   * (`moderation_desk_last_admin`). Le rôle vaut au geste suivant de la personne.
+   */
+  setResponsibleRole(input: DeskResponsibleRoleInput): Promise<ActionResult<DeskResponsibleRoleResult>>
 }

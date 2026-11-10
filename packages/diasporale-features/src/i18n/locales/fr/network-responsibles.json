@@ -1,0 +1,38 @@
+{
+  "moderationDesk": {
+    "responsibles": {
+      "title": "Responsables du réseau",
+      "lead": "L'administration du réseau examine les recours, compose les équipes et nomme les responsables ; la modération du réseau lit et tranche toute la file. Toutes deux lisent le tableau du pilote. Chaque nomination, chaque changement et chaque retrait est motivé et inscrit au journal des décisions du moteur ; il vaut dès le geste suivant de la personne.",
+      "role": {
+        "network_admin": "Administration du réseau",
+        "network_moderator": "Modération du réseau"
+      },
+      "inactive": "Rôle en sommeil : l'adhésion de cette personne est en attente ou suspendue.",
+      "more": "D'autres responsables existent ; seuls les premiers sont montrés.",
+      "change": "Changer le rôle",
+      "remove": "Retirer le rôle",
+      "changeTitle": "Changer le rôle de {{name}}",
+      "changeBody": "{{name}} passera de « {{from}} » à « {{to}} » dès son prochain geste. Le changement est motivé et inscrit au journal des décisions du moteur.",
+      "changeConfirm": "Confirmer le changement",
+      "removeTitle": "Retirer {{name}} des responsables du réseau",
+      "removeBody": "{{name}} reste membre du réseau, sans le rôle « {{role}} », dès son prochain geste. Le retrait est motivé et inscrit au journal des décisions du moteur.",
+      "removeConfirm": "Confirmer le retrait",
+      "selfWarning": "C'est votre propre rôle : vous en perdrez les droits dès ce geste.",
+      "appointTitle": "Nommer un responsable",
+      "appointLead": "Seule une personne membre active du réseau, au statut « déclarée » au moins, reçoit un rôle ; aucune adhésion n'est créée. Le réseau garde toujours au moins un administrateur actif.",
+      "handle": "Identifiant public de la personne à nommer",
+      "handleHint": "Par exemple prenom.nom.",
+      "search": "Chercher la personne",
+      "roleField": "Rôle confié",
+      "appointConfirm": "Nommer",
+      "appointed": "Nomination enregistrée : {{name}}, {{role}}.",
+      "changed": "Rôle changé : {{name}}, {{role}}.",
+      "removed": "{{name}} n'est plus responsable du réseau.",
+      "unchanged": "{{name}} a déjà ce rôle : rien n'a changé."
+    }
+  },
+  "errors": {
+    "moderation_desk_last_admin": "Le réseau garde toujours au moins un administrateur actif : nommez-en un autre avant ce retrait.",
+    "moderation_desk_role_refused": "Ce geste n'a pas abouti : seule l'administration du réseau confie ou retire un rôle, et un rôle ne se confie qu'à une personne membre active, au statut « déclarée » au moins."
+  }
+}

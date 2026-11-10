@@ -178,7 +178,7 @@ export function AidMissionDetail(props: { readonly capability: MutualAidCapabili
   const reportTarget: ContentReportTarget = { kind: "diasporaAidMission", id: mission.id }
   const article = (
     <article className="flex min-w-0 flex-col gap-5" aria-labelledby="mission-entraide">
-      <NextLink href={routes.mutualAid(mission.country, mission.city)} className="inline-flex min-h-11 items-center gap-2 self-start text-sm font-medium text-primary hover:underline focus-visible:shadow-focus">
+      <NextLink href={routes.mutualAid(mission.country, mission.city, { tab: "missions" })} className="inline-flex min-h-11 items-center gap-2 self-start text-sm font-medium text-primary hover:underline focus-visible:shadow-focus">
         <ArrowLeftIcon aria-hidden className="size-4" />{t("mutualAid.backToList")}
       </NextLink>
       <header className="flex min-w-0 flex-col gap-3">
@@ -297,5 +297,5 @@ export function AidMissionDetail(props: { readonly capability: MutualAidCapabili
       {dialog === "cancel" ? <CancelSheet capability={capability} mission={mission} onClose={() => setDialog(null)} onDone={() => done("missionCancelled")} /> : null}
     </article>
   )
-  return <ReportedContent target={reportTarget} back={{ href: routes.mutualAid(mission.country, mission.city), label: t("mutualAid.backToList") }}>{article}</ReportedContent>
+  return <ReportedContent target={reportTarget} back={{ href: routes.mutualAid(mission.country, mission.city, { tab: "missions" }), label: t("mutualAid.backToList") }}>{article}</ReportedContent>
 }

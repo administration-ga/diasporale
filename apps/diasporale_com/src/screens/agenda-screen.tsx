@@ -7,6 +7,7 @@ import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import NextLink from "next/link"
 import { useCallback, useState } from "react"
 
+import { AgendaMissionsSection } from "@/components/aid-on-the-way"
 import { AppShell } from "@/components/app-shell"
 import { Gate, GateSkeleton } from "@/components/gate"
 import { IcomIsland, useEngineNetwork, useIcomState } from "@/components/icom"
@@ -33,6 +34,8 @@ function Agenda(props: { readonly membership: MembershipView }) {
       : network && network.personId === member.personId ? <IcomIsland key={`${network.networkId}:${network.personId}`} network={network}><EvenementsPanel now={now} canWrite={member.canPublish} /></IcomIsland>
       : network || icom.status === "loading" ? <GateSkeleton />
       : <Card className="p-4">{t("errors.feature_unavailable")}</Card>}
+    {/* ET-09 : mes inscriptions bénévoles à venir, quand j'en ai. */}
+    {blocked ? null : <AgendaMissionsSection />}
   </>
 }
 

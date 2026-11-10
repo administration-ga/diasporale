@@ -1,0 +1,58 @@
+{
+  "pilotMetrics": {
+    "group": {
+      "mutual_aid": "Mutual aid, mentoring and arrival kit"
+    },
+    "indicator": {
+      "aid_questions_asked": {
+        "label": "Mutual aid questions asked",
+        "hint": "Questions created during the period; a question withdrawn by its author or by moderation does not count."
+      },
+      "aid_questions_answered": {
+        "label": "Questions that received an answer",
+        "hint": "At least one published answer, to date."
+      },
+      "aid_questions_resolved": {
+        "label": "Successful help",
+        "hint": "Questions whose author kept an answer, to date, even if closed afterwards."
+      },
+      "aid_signups": {
+        "label": "Volunteer sign-ups",
+        "hint": "Mission sign-ups made during the period and still confirmed."
+      },
+      "mentoring_requested": {
+        "label": "Mentoring requests",
+        "hint": "Requests sent during the period."
+      },
+      "mentoring_accepted": {
+        "label": "Accepted mentoring requests",
+        "hint": "Accepted to date, even if closed afterwards."
+      },
+      "kit_resources_listed": {
+        "label": "Published arrival kit resources",
+        "hint": "Reviewed resources served in the kit, recorded at the last pass."
+      },
+      "kit_resources_to_review": {
+        "label": "Arrival kit resources to review",
+        "hint": "Flagged as outdated, verified more than twelve months ago or marked by a reviewer, at the last pass."
+      }
+    },
+    "base": {
+      "aid_questions_asked": "out of {{value}} questions asked",
+      "mentoring_requested": "out of {{value}} mentoring requests",
+      "kit_resources_listed": "out of {{value}} published resources"
+    },
+    "baseBelow": {
+      "aid_questions_asked": "out of fewer than {{threshold}} questions asked",
+      "mentoring_requested": "out of fewer than {{threshold}} mentoring requests",
+      "kit_resources_listed": "out of fewer than {{threshold}} published resources"
+    },
+    "durationAid": {
+      "median": "Time to first answer to a question, median",
+      "p75": "Time to first answer to a question, 75th percentile",
+      "hint": "From the question to its oldest answer still published, grouped by hour class.",
+      "sample": "out of {{value}} answered questions",
+      "sampleBelow": "out of fewer than {{threshold}} answered questions"
+    }
+  }
+}

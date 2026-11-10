@@ -405,6 +405,7 @@ export class DemoStore {
         : null,
       sponsored: false,
       consularAttestation: false,
+      foundingAdmission: null,
       suspension: null,
       leftAt: null,
     }

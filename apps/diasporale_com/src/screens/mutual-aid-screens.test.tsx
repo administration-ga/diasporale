@@ -19,7 +19,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { routes } from "@/lib/routes"
 import { filledButtons } from "@/test-utils"
 
-import { aidFilterFromParams, MutualAidItemScreen, MutualAidScreen } from "./mutual-aid-screens"
+import { aidFilterFromParams, aidHrefOf, aidStateFromParams, MutualAidItemScreen, MutualAidScreen } from "./mutual-aid-screens"
 
 const mocks = vi.hoisted(() => ({ gate: vi.fn(), push: vi.fn(), replace: vi.fn(), params: new URLSearchParams() }))
 
@@ -434,5 +434,49 @@ describe("entraide — l'état de modération, dans les seules vues de gestion (
     expect(await screen.findByRole("heading", { level: 1, name: "Accueillir les nouveaux arrivants à la gare" })).toBeInTheDocument()
     expect(screen.queryByText("Refusée.")).not.toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Participer" })).toBeInTheDocument()
+  })
+})
+
+describe("/entraide — retrouver : thème, mots, sans réponse, dans l'adresse (ET-04)", () => {
+  it("l'adresse porte l'onglet, la vue, le thème et les mots ; une valeur inconnue est ignorée ; l'adresse d'un état se relit à l'identique", () => {
+    const state = aidStateFromParams(new URLSearchParams("pays=CA&ville=Montr%C3%A9al&vue=sans-reponse&theme=health&q=m%C3%A9decin"), "FR")
+    expect(state).toEqual({ country: "CA", city: "Montréal", tab: "questions", questionView: "unanswered", missionView: "upcoming", theme: "health", q: "médecin" })
+    expect(aidStateFromParams(new URLSearchParams(aidHrefOf(state).split("?")[1]), "FR")).toEqual(state)
+    expect(aidStateFromParams(new URLSearchParams("onglet=missions&vue=mes-associations"), "FR")).toMatchObject({ tab: "missions", missionView: "team", questionView: "open" })
+    expect(aidStateFromParams(new URLSearchParams("vue=inconnue&theme=sports"), "FR")).toMatchObject({ tab: "questions", questionView: "open", theme: null, q: "" })
+  })
+
+  it("une adresse filtrée se recharge à l'identique : la vue « sans réponse » d'un pays et son thème", async () => {
+    mocks.params = new URLSearchParams("pays=CA&vue=sans-reponse&theme=health")
+    mount("p-steeve", <MutualAidScreen />)
+    expect(await screen.findByRole("link", { name: "Trouver un médecin de famille à Montréal" })).toHaveAttribute("href", routes.mutualAidItem("aid-q-3"))
+    expect(screen.getByLabelText("Afficher")).toHaveValue("unanswered")
+    expect(screen.getByLabelText("Thème")).toHaveValue("health")
+  })
+
+  it("choisir un thème, puis chercher des mots : la liste se restreint et l'adresse se réécrit ; un vide de recherche s'explique", async () => {
+    mount("p-steeve", <MutualAidScreen />)
+    expect(await screen.findByRole("link", { name: /Renouveler un titre de séjour/ })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText("Thème"), { target: { value: "housing" } })
+    expect(mocks.replace).toHaveBeenLastCalledWith(routes.mutualAid("FR", undefined, { theme: "housing" }))
+    expect(await screen.findByText("Aucune question ne correspond")).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText("Thème"), { target: { value: "" } })
+    fireEvent.change(screen.getByLabelText("Mots cherchés"), { target: { value: "séjour" } })
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Chercher" })) })
+    await waitFor(() => expect(mocks.replace).toHaveBeenLastCalledWith(routes.mutualAid("FR", undefined, { q: "séjour" })))
+    expect(await screen.findByRole("link", { name: /Renouveler un titre de séjour/ })).toBeInTheDocument()
+    // Un seul bouton plein dans la zone des questions : « Poser une question » ; chercher reste discret.
+    const questions = screen.getByRole("region", { name: "Questions" })
+    expect(filledButtons(questions).map((button) => button.textContent)).toEqual(["Poser une question"])
+  })
+
+  it("l'onglet des missions et sa vue se lisent dans l'adresse ; passer d'un onglet à l'autre la réécrit", async () => {
+    mocks.params = new URLSearchParams("pays=FR&onglet=missions")
+    mount("p-steeve", <MutualAidScreen />)
+    expect(screen.getByRole("tab", { name: "Missions bénévoles" })).toHaveAttribute("aria-selected", "true")
+    expect(await screen.findByRole("link", { name: "Accueillir les nouveaux arrivants à la gare" })).toBeInTheDocument()
+    openTab("Questions")
+    expect(mocks.replace).toHaveBeenLastCalledWith(routes.mutualAid("FR"))
   })
 })

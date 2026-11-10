@@ -1,0 +1,38 @@
+{
+  "moderationDesk": {
+    "responsibles": {
+      "title": "Network leads",
+      "lead": "Network administration reviews appeals, builds the teams and appoints the leads; network moderation reads and decides the whole queue. Both read the pilot dashboard. Every appointment, change and removal is reasoned and recorded in the engine's decision log; it applies from the person's next action.",
+      "role": {
+        "network_admin": "Network administration",
+        "network_moderator": "Network moderation"
+      },
+      "inactive": "Dormant role: this person's membership is pending or suspended.",
+      "more": "Other leads exist; only the first ones are shown.",
+      "change": "Change role",
+      "remove": "Remove role",
+      "changeTitle": "Change {{name}}'s role",
+      "changeBody": "{{name}} will move from “{{from}}” to “{{to}}” from their next action. The change is reasoned and recorded in the engine's decision log.",
+      "changeConfirm": "Confirm the change",
+      "removeTitle": "Remove {{name}} from the network leads",
+      "removeBody": "{{name}} stays a member of the network, without the “{{role}}” role, from their next action. The removal is reasoned and recorded in the engine's decision log.",
+      "removeConfirm": "Confirm the removal",
+      "selfWarning": "This is your own role: you will lose its rights with this action.",
+      "appointTitle": "Appoint a lead",
+      "appointLead": "Only an active network member, with at least “declared” status, can receive a role; no membership is created. The network always keeps at least one active administrator.",
+      "handle": "Public handle of the person to appoint",
+      "handleHint": "For example firstname.lastname.",
+      "search": "Find the person",
+      "roleField": "Role given",
+      "appointConfirm": "Appoint",
+      "appointed": "Appointment recorded: {{name}}, {{role}}.",
+      "changed": "Role changed: {{name}}, {{role}}.",
+      "removed": "{{name}} is no longer a network lead.",
+      "unchanged": "{{name}} already has this role: nothing changed."
+    }
+  },
+  "errors": {
+    "moderation_desk_last_admin": "The network always keeps at least one active administrator: appoint another one before this removal.",
+    "moderation_desk_role_refused": "This action did not go through: only network administration gives or removes a role, and a role can only be given to an active network member with at least “declared” status."
+  }
+}

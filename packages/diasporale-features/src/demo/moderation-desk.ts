@@ -5,6 +5,13 @@
  *   · la personne de la session, membre active du jeu de démonstration, reçoit un
  *     rôle FICTIF d'administration du réseau pour parcourir les trois onglets ;
  *     elle fait partie de l'équipe fictive de départ ;
+ *   · MD-01 : les responsables du réseau se nomment, se changent et se retirent
+ *     comme dans le moteur (administration seule, motif, membre active
+ *     « déclarée » au moins, dernier administrateur gardé, rôle déjà posé sans
+ *     effet). Personne d'autre n'est nommé d'office. Le rôle fictif de la
+ *     personne de la session suit ces gestes au geste suivant : rétrogradée,
+ *     elle perd les recours et les équipes ; retirée, elle ne garde que la file
+ *     de ses équipes, comme le moteur le ferait ;
  *   · la file est un jeu d'exemples fictifs, sans lien avec les publications ni
  *     les personnes du magasin, répartis entre la France, la Belgique, le Canada
  *     et les cibles sans pays ; deux dossiers montrent la retenue d'une personne
@@ -46,6 +53,10 @@ import {
   type DeskParty,
   type DeskPendingView,
   type DeskPreviewView,
+  type DeskResponsibleRole,
+  type DeskResponsibleView,
+  type DeskResponsiblesView,
+  type DeskRoleChoice,
   type DeskRosterView,
   type DeskSurface,
   type DeskTeamMemberView,
@@ -140,6 +151,19 @@ interface DeskWorld {
   readonly settled: Set<string>
   readonly teams: DemoTeam[]
   teamSequence: number
+  /**
+   * MD-01 : les rôles de réseau posés par un geste, dans l'ordre des gestes. La
+   * personne de la session garde son rôle fictif d'administration tant qu'aucun
+   * geste ne l'a changé ; toute autre personne est simple membre.
+   */
+  readonly roles: Map<string, DeskRoleChoice>
+}
+
+/** Ce que la personne de la session lit et décide, selon son rôle fictif (mêmes règles que `myDesk`). */
+interface DemoCapacity {
+  readonly role: DeskRoleChoice
+  readonly networkWide: boolean
+  readonly admin: boolean
 }
 
 /** La modératrice fictive de l'équipe de départ : aucune personne du magasin. */
@@ -236,7 +260,7 @@ function seedWorld(world: number): DeskWorld {
     members: new Map<string, DemoMemberLabel>([[FICTIVE_MODERATOR.personId, FICTIVE_MODERATOR.label]]),
     removed: new Set<string>(),
   }
-  return { world, cases, pending, appeals, decided: new Map(), reviewed: new Set(), settled: new Set(), teams: [team], teamSequence: 1 }
+  return { world, cases, pending, appeals, decided: new Map(), reviewed: new Set(), settled: new Set(), teams: [team], teamSequence: 1, roles: new Map() }
 }
 
 /**
@@ -330,6 +354,46 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
     return { handle: profile.handle, displayName: profile.displayName }
   }
 
+  // ── Rôles du réseau (MD-01) ──
+
+  /** Le rôle de réseau d'une personne : le geste posé, sinon le rôle fictif de la session, sinon membre. */
+  const roleOf = (desk: DeskWorld, personId: string): DeskRoleChoice => {
+    const set = desk.roles.get(personId)
+    if (set !== undefined) return set
+    return personId === store.getState().session.personId ? "network_admin" : "member"
+  }
+  const capacityOf = (desk: DeskWorld, personId: string): DemoCapacity => {
+    const role = roleOf(desk, personId)
+    return { role, networkWide: role !== "member", admin: role === "network_admin" }
+  }
+  /** Le rôle s'exerce : adhésion « déclarée » au moins, ni en attente, ni suspendue, ni partie. */
+  const canHoldRole = (personId: string): boolean => {
+    const status = statusOf(store.getState(), personId, store.now())
+    return status === "declaree" || status === "verifiee"
+  }
+  /** Lit la file d'une équipe (`teamId`) ou du réseau entier (`null`) : rôle réseau, ou membre de l'équipe. */
+  const canReadTeam = (desk: DeskWorld, personId: string, teamId: string | null): boolean => {
+    if (capacityOf(desk, personId).networkWide) return true
+    const team = teamOf(desk, teamId)
+    return team !== null && team !== undefined && isTeamMember(team, personId)
+  }
+  /** Les responsables du jeu en cours : la personne de la session d'abord, puis l'ordre des gestes ; administration avant modération. */
+  const responsiblesOf = (desk: DeskWorld, viewer: string): DeskResponsibleView[] => {
+    const ids = [viewer, ...[...desk.roles.keys()].filter((id) => id !== viewer)]
+    const rows: DeskResponsibleView[] = []
+    for (const id of ids) {
+      const role = roleOf(desk, id)
+      if (role === "member") continue
+      const label = storeLabel(id)
+      rows.push({ personId: id, role, handle: label?.handle ?? null, displayName: label?.displayName ?? null, active: canHoldRole(id), isMe: id === viewer })
+    }
+    const rank = (role: DeskResponsibleRole) => (role === "network_admin" ? 0 : 1)
+    return rows.sort((a, b) => rank(a.role) - rank(b.role))
+  }
+  /** Un AUTRE administrateur actif que `personId` existe-t-il (règle `NETWORK_LAST_ADMIN` du moteur) ? */
+  const hasAnotherActiveAdmin = (desk: DeskWorld, personId: string, viewer: string): boolean =>
+    responsiblesOf(desk, viewer).some((row) => row.personId !== personId && row.role === "network_admin" && row.active)
+
   return {
     demonstration: true,
 
@@ -340,14 +404,19 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
         const refusal = viewerRefusal(personId)
         if (refusal !== null) return refused(refusal)
         const desk = deskWorld()
+        const capacity = capacityOf(desk, personId)
+        const teams = desk.teams
+          .map((team) => ({ teamId: team.teamId, name: team.name, scope: team.scope, isMember: isTeamMember(team, personId) }))
+          .filter((team) => capacity.admin || team.isMember)
+        if (!capacity.networkWide && teams.length === 0) return { status: "ready", data: null }
         return {
           status: "ready",
           data: {
-            role: "network_admin",
-            networkWide: true,
-            canReviewAppeals: true,
-            canManageTeams: true,
-            teams: desk.teams.map((team) => ({ teamId: team.teamId, name: team.name, scope: team.scope, isMember: isTeamMember(team, personId) })),
+            role: capacity.admin ? "network_admin" : capacity.networkWide ? "network_moderator" : "team_member",
+            networkWide: capacity.networkWide,
+            canReviewAppeals: capacity.admin,
+            canManageTeams: capacity.admin,
+            teams,
           },
         }
       }, [version, personId])
@@ -362,7 +431,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
         const refusal = viewerRefusal(personId)
         if (refusal !== null) return refused(refusal)
         const desk = deskWorld()
-        if (teamOf(desk, teamId) === undefined) return refused("not_found")
+        if (teamOf(desk, teamId) === undefined || !canReadTeam(desk, personId, teamId)) return refused("not_found")
         const filter = deskZoneFromKey(zoneKey)
         // SU01d : la file ordinaire ne reprend pas les dossiers que la voie des délais légaux présente.
         const shown = new Set(lane === "ordinary" ? deadlineLane(desk, teamId).items.map((row) => row.reportId) : [])
@@ -381,7 +450,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
         const refusal = viewerRefusal(personId)
         if (refusal !== null) return refused(refusal)
         const desk = deskWorld()
-        if (teamOf(desk, teamId) === undefined) return refused("not_found")
+        if (teamOf(desk, teamId) === undefined || !canReadTeam(desk, personId, teamId)) return refused("not_found")
         return { status: "ready", data: deadlineLane(desk, teamId) }
       }, [version, personId, teamId])
     },
@@ -392,8 +461,9 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
         if (version === null) return LOADING
         const refusal = viewerRefusal(personId)
         if (refusal !== null) return refused(refusal)
-        const row = openCase(deskWorld(), reportId)
-        return row === null ? refused("not_found") : { status: "ready", data: { case: row.view, history: row.history, historyMore: false } }
+        const desk = deskWorld()
+        const row = openCase(desk, reportId)
+        return row === null || !canReadTeam(desk, personId, row.teamId) ? refused("not_found") : { status: "ready", data: { case: row.view, history: row.history, historyMore: false } }
       }, [version, personId, reportId])
     },
 
@@ -403,8 +473,9 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
         if (version === null) return LOADING
         const refusal = viewerRefusal(personId)
         if (refusal !== null) return refused(refusal)
-        const row = openCase(deskWorld(), reportId)
-        return row === null ? refused("not_found") : { status: "ready", data: row.preview }
+        const desk = deskWorld()
+        const row = openCase(desk, reportId)
+        return row === null || !canReadTeam(desk, personId, row.teamId) ? refused("not_found") : { status: "ready", data: row.preview }
       }, [version, personId, reportId])
     },
 
@@ -417,7 +488,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
       if (!sanctions.ok) return fail(sanctions.code)
       const desk = deskWorld()
       const row = openCase(desk, input.reportId)
-      if (row === null) return fail("not_found")
+      if (row === null || !canReadTeam(desk, input.personId, row.teamId)) return fail("not_found")
       if (row.view.party !== null) return fail("moderation_desk_party")
       // Comme le moteur : sans personne visée, seul le retrait du contenu s'applique.
       if (!row.view.hasAuthor && sanctions.value.some((sanction) => sanction.kind !== "removal")) return fail("moderation_desk_measure_refused")
@@ -434,7 +505,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
         const refusal = viewerRefusal(personId)
         if (refusal !== null) return refused(refusal)
         const desk = deskWorld()
-        if (teamOf(desk, teamId) === undefined) return refused("not_found")
+        if (teamOf(desk, teamId) === undefined || !canReadTeam(desk, personId, teamId)) return refused("not_found")
         const filter = deskZoneFromKey(zoneKey)
         const rows = desk.pending
           .filter((row) => !desk.reviewed.has(row.view.key))
@@ -450,8 +521,9 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
         if (version === null) return LOADING
         const refusal = viewerRefusal(personId)
         if (refusal !== null) return refused(refusal)
-        const row = openPending(deskWorld(), `${targetKind}:${targetId}`)
-        return row === null ? refused("not_found") : { status: "ready", data: row.preview }
+        const desk = deskWorld()
+        const row = openPending(desk, `${targetKind}:${targetId}`)
+        return row === null || !canReadTeam(desk, personId, row.teamId) ? refused("not_found") : { status: "ready", data: row.preview }
       }, [version, personId, targetKind, targetId])
     },
 
@@ -463,7 +535,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
       const desk = deskWorld()
       const key = `${input.targetKind}:${input.targetId}`
       const row = openPending(desk, key)
-      if (row === null) return fail("not_found")
+      if (row === null || !canReadTeam(desk, input.personId, row.teamId)) return fail("not_found")
       if (row.view.party !== null) return fail("moderation_desk_party")
       desk.reviewed.add(key)
       emit()
@@ -478,6 +550,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
         const refusal = viewerRefusal(personId)
         if (refusal !== null) return refused(refusal)
         const desk = deskWorld()
+        if (!capacityOf(desk, personId).admin) return refused("not_found")
         const filter = deskZoneFromKey(zoneKey)
         const rows = desk.appeals.filter((row) => !desk.settled.has(row.appealId) && (surface === null || row.surface === surface) && isInDeskZone(filter, row.country))
         return windowed(rows, cursor, desk.world)
@@ -490,6 +563,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
       const reasonRefusal = deskReasonRefusal(input.reason)
       if (reasonRefusal !== null) return fail(reasonRefusal)
       const desk = deskWorld()
+      if (!capacityOf(desk, input.personId).admin) return fail("not_found")
       const row = desk.appeals.find((item) => item.appealId === input.appealId)
       if (!row || desk.settled.has(row.appealId)) return fail("not_found")
       if (row.party !== null) return fail("moderation_desk_party")
@@ -504,8 +578,9 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
         if (version === null) return LOADING
         const refusal = viewerRefusal(personId)
         if (refusal !== null) return refused(refusal)
-        const team = teamOf(deskWorld(), teamId)
-        if (!team) return refused("not_found")
+        const desk = deskWorld()
+        const team = teamOf(desk, teamId)
+        if (!team || !capacityOf(desk, personId).admin) return refused("not_found")
         const members: DeskTeamMemberView[] = []
         if (team.includesViewer && !team.removed.has(personId) && !team.members.has(personId)) {
           const label = storeLabel(personId)
@@ -522,6 +597,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
     async findMember({ personId, handle }) {
       const refusal = viewerRefusal(personId)
       if (refusal !== null) return fail(refusal)
+      if (!capacityOf(deskWorld(), personId).admin) return fail("not_found")
       const wanted = handle.trim().replace(/^@/, "").toLowerCase()
       if (wanted.length === 0) return fail("moderation_desk_handle_required")
       const person = Object.values(store.getState().persons).find((candidate) => candidate.profile?.handle === wanted)
@@ -532,6 +608,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
     async createTeam(input) {
       const refusal = viewerRefusal(input.personId)
       if (refusal !== null) return fail(refusal)
+      if (!capacityOf(deskWorld(), input.personId).admin) return fail("not_found")
       const nameRefusal = deskTeamNameRefusal(input.name)
       if (nameRefusal !== null) return fail(nameRefusal)
       const reasonRefusal = deskReasonRefusal(input.reason)
@@ -547,9 +624,11 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
     async setTeamMember(input) {
       const refusal = viewerRefusal(input.personId)
       if (refusal !== null) return fail(refusal)
+      const desk = deskWorld()
+      if (!capacityOf(desk, input.personId).admin) return fail("not_found")
       const reasonRefusal = deskReasonRefusal(input.reason)
       if (reasonRefusal !== null) return fail(reasonRefusal)
-      const team = teamOf(deskWorld(), input.teamId)
+      const team = teamOf(desk, input.teamId)
       if (!team) return fail("not_found")
       if (!input.active) {
         team.members.delete(input.memberPersonId)
@@ -563,6 +642,38 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
       team.members.set(input.memberPersonId, label)
       emit()
       return { ok: true, value: null }
+    },
+
+    useResponsibles(personId) {
+      const version = useSnapshot()
+      return useMemo((): Loadable<DeskResponsiblesView> => {
+        if (version === null) return LOADING
+        const refusal = viewerRefusal(personId)
+        if (refusal !== null) return refused(refusal)
+        const desk = deskWorld()
+        if (!capacityOf(desk, personId).admin) return refused("not_found")
+        return { status: "ready", data: { members: responsiblesOf(desk, personId), more: false } }
+      }, [version, personId])
+    },
+
+    async setResponsibleRole(input) {
+      const refusal = viewerRefusal(input.personId)
+      if (refusal !== null) return fail(refusal)
+      const desk = deskWorld()
+      // Comme la tranche : le refus indistinct d'abord, puis le motif, puis l'aide du moteur.
+      if (!capacityOf(desk, input.personId).admin) return fail("not_found")
+      const reasonRefusal = deskReasonRefusal(input.reason)
+      if (reasonRefusal !== null) return fail(reasonRefusal)
+      const target = input.memberPersonId
+      // Jamais d'adhésion créée ; nommer exige une adhésion active « déclarée » au moins.
+      if (statusOf(store.getState(), target, store.now()) === null) return fail("moderation_desk_role_refused")
+      if (input.role !== "member" && !canHoldRole(target)) return fail("moderation_desk_role_refused")
+      const current = roleOf(desk, target)
+      if (current === input.role) return { ok: true, value: { role: current, changed: false } }
+      if (current === "network_admin" && canHoldRole(target) && !hasAnotherActiveAdmin(desk, target, input.personId)) return fail("moderation_desk_last_admin")
+      desk.roles.set(target, input.role)
+      emit()
+      return { ok: true, value: { role: input.role, changed: true } }
     },
   }
 }

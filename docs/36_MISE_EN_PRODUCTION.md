@@ -144,16 +144,32 @@ annonce avant.
 
 ## 4. L'équipe de modération France et les responsables du réseau
 
-**Qui** : un opérateur de la console, sur les noms désignés par le propriétaire.
+**Qui** : un administrateur de plateforme dans la console du moteur, puis l'administration du réseau
+dans le bureau de modération de diasporale.com, sur les noms désignés par le propriétaire.
 
 - « Équipes de modération » : créer l'équipe de la France pour le réseau DIASPORALE, avec son motif,
   puis y placer les modérateurs désignés. Règle du projet : pas de pays ouvert sans modération.
 - Responsables du réseau (administrateur et modérateur du réseau, lecteurs de `/pilote` et juges des
-  recours) : **aucune fonction ne les nomme aujourd'hui hors des comptes de démonstration**. C'est le
-  lot LX-03 (décision 3 du plan 17, lot EX-08 du moteur) : tant qu'il n'est pas livré, `/pilote` n'a
-  aucun lecteur en production.
+  recours ; lots EX-08 du moteur, MD-01 et LX-03, décision 3 du plan 17) :
+  1. **Le premier administrateur** : un administrateur de plateforme, dans la console (section
+     « Équipes », bloc « Responsables du réseau », réseau DIASPORALE), nomme la personne désignée,
+     motif à l'appui. La console ne trouve un membre de DIASPORALE par son identifiant que s'il a
+     choisi de paraître dans l'annuaire du réseau : la personne désignée doit l'avoir choisi au moment
+     de la nomination (le rôle reste si elle le retire ensuite).
+  2. **Les suivants** : l'administrateur nommé ouvre le bureau de modération (`/moderation`, onglet
+     « Équipe », bloc « Responsables du réseau ») et nomme le second administrateur et les modérateurs
+     du réseau par leur identifiant public, motif à l'appui. Recommandation du plan 14 (décision 2) :
+     deux administrateurs, pour que nul ne juge le recours de sa propre décision.
+  3. **Ce que le moteur tient sur les deux chemins** : seule une personne membre active, au statut
+     « déclarée » au moins, reçoit un rôle ; aucune adhésion n'est créée ; le dernier administrateur
+     actif ne se retire pas ; un départ du réseau retire le rôle ; chaque nomination, changement ou
+     retrait entre au journal du moteur (`membership.role_set`) et vaut au geste suivant de la personne.
+  4. **Jamais** : un rôle posé par une graine ou par la porte des comptes de démonstration.
 
-**Preuve** : l'équipe est active dans la console ; une personne nommée ouvre `/pilote` (LX-03).
+**Preuve** : l'équipe est active dans la console ; la personne nommée ouvre `/pilote` et la file des
+recours ; retirée, elle reçoit le refus indistinct au geste suivant. Le parcours est prouvé sur un
+backend de test, sans la porte de démonstration (`convex/modules/diaspora/responsibles.test.ts` du
+moteur) ; il reste à le constater en réel.
 
 ## 5. La mise en relation
 
@@ -277,7 +293,9 @@ s'affichent à 390 et 1 440 px ; un vrai compte entre (recette réelle, plan 01,
    (`docs/37`, § 3).
 4. **Création du réseau** : la faire, ou la confier nommément à un administrateur de plateforme, avec
    le motif (étape 2).
-5. **Responsables du réseau (décision 3)** : deux personnes, et le chemin qui les nomme (LX-03).
+5. **Responsables du réseau (décision 3)** : désigner les deux personnes ; le premier administrateur
+   est nommé à la console par un administrateur de plateforme, les suivants par l'administration du
+   réseau dans le bureau (étape 4). Aucun code ne nomme personne à la place du propriétaire.
 6. **Modérateurs de l'équipe France** (étape 4).
 7. **Natures de mise en relation ouvertes au lancement** (étape 5, avec DS-04).
 8. **Adresse d'envoi propre à DIASPORALE ou commune (décision 13)**.

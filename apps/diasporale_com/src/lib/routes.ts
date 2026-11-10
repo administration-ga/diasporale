@@ -36,6 +36,72 @@ function zoneHref(base: string, country?: CountryCode, city?: string): string {
   return search ? `${base}?${search}` : base
 }
 
+/**
+ * ET-04 — les vues de l'entraide dans l'adresse (`?vue=`), en mots du site ; la vue par
+ * défaut de chaque onglet (questions ouvertes, missions à venir) ne s'écrit pas.
+ */
+export const AID_QUESTION_VIEW_SLUGS = { open: null, unanswered: "sans-reponse", resolved: "resolues", closed: "closes", mine: "miennes" } as const
+export const AID_MISSION_VIEW_SLUGS = { upcoming: null, mine: "mes-inscriptions", team: "mes-associations" } as const
+export type AidQuestionRouteView = keyof typeof AID_QUESTION_VIEW_SLUGS
+export type AidMissionRouteView = keyof typeof AID_MISSION_VIEW_SLUGS
+
+/**
+ * L'onglet, sa vue, le thème et les mots de l'entraide, portés par l'adresse (ET-04) : une
+ * adresse filtrée se partage et se recharge à l'identique. Le thème et les mots ne
+ * restreignent que les questions ; ils restent dans l'adresse d'un onglet à l'autre.
+ */
+export interface MutualAidRouteFilters {
+  readonly tab?: "questions" | "missions"
+  /** La vue de l'onglet affiché (`AID_QUESTION_VIEW_SLUGS` ou `AID_MISSION_VIEW_SLUGS`). */
+  readonly view?: AidQuestionRouteView | AidMissionRouteView
+  readonly theme?: string | null
+  readonly q?: string
+}
+
+function mutualAidHref(country?: CountryCode, city?: string, filters?: MutualAidRouteFilters): string {
+  const query = new URLSearchParams(zoneHref("/entraide", country, city).split("?")[1] ?? "")
+  const missions = filters?.tab === "missions"
+  if (missions) query.set("onglet", "missions")
+  const slugs: Readonly<Record<string, string | null>> = missions ? AID_MISSION_VIEW_SLUGS : AID_QUESTION_VIEW_SLUGS
+  const slug = filters?.view ? slugs[filters.view] ?? null : null
+  if (slug) query.set("vue", slug)
+  if (filters?.theme) query.set("theme", filters.theme)
+  const q = filters?.q?.trim()
+  if (q) query.set("q", q)
+  const search = query.toString()
+  return search ? `/entraide?${search}` : "/entraide"
+}
+
+/** ET-04 — les mots cherchés et la rubrique du kit, portés par l'adresse. */
+export interface ArrivalKitRouteFilters {
+  readonly q?: string
+  readonly category?: string | null
+}
+
+function arrivalKitHref(country?: CountryCode, city?: string, filters?: ArrivalKitRouteFilters): string {
+  const query = new URLSearchParams(zoneHref("/kit-arrivee", country, city).split("?")[1] ?? "")
+  const q = filters?.q?.trim()
+  if (q) query.set("q", q)
+  if (filters?.category) query.set("categorie", filters.category)
+  const search = query.toString()
+  return search ? `/kit-arrivee?${search}` : "/kit-arrivee"
+}
+
+/** ET-04 — le domaine, la langue et la ville saisie d'une recherche de mentors, portés par l'adresse. */
+export interface MentoringRouteFilters {
+  readonly domain?: string | null
+  readonly language?: string | null
+  readonly city?: string
+}
+
+function mentoringHref(country?: CountryCode, filters?: MentoringRouteFilters): string {
+  const query = new URLSearchParams(zoneHref("/mentorat", country, filters?.city).split("?")[1] ?? "")
+  if (filters?.domain) query.set("domaine", filters.domain)
+  if (filters?.language) query.set("langue", filters.language)
+  const search = query.toString()
+  return search ? `/mentorat?${search}` : "/mentorat"
+}
+
 /** Filtres du catalogue des services, portés par l'adresse (partageables, sans GPS). */
 export interface ServiceSearchParams {
   readonly q?: string
@@ -206,14 +272,14 @@ export const routes = {
   myAssociations: () => "/mes-associations",
   /** Le fil en mode découverte verticale (DG-017) ; la liste reste le mode par défaut. */
   feedDiscovery: () => "/fil?vue=decouverte",
-  /** Entraide : questions, réponses retenues et missions bénévoles (DG-024, vague H). */
-  mutualAid: (country?: CountryCode, city?: string) => zoneHref("/entraide", country, city),
+  /** Entraide : questions, réponses retenues et missions bénévoles (DG-024, vague H) ; onglet, vue, thème et mots dans l'adresse (ET-04). */
+  mutualAid: mutualAidHref,
   mutualAidItem: (itemId: string) => `/entraide/${encodeURIComponent(itemId)}`,
-  /** Kit d'arrivée : ressources datées, sourcées et relues, par pays et ville (DG-024). */
-  arrivalKit: (country?: CountryCode, city?: string) => zoneHref("/kit-arrivee", country, city),
+  /** Kit d'arrivée : ressources datées, sourcées et relues, par pays et ville (DG-024) ; mots et rubrique dans l'adresse (ET-04). */
+  arrivalKit: arrivalKitHref,
   arrivalKitResource: (resourceId: string) => `/kit-arrivee/${encodeURIComponent(resourceId)}`,
-  /** Mentorat : mentors volontaires, demandes et créneaux consentis (DG-024). */
-  mentoring: (country?: CountryCode) => zoneHref("/mentorat", country),
+  /** Mentorat : mentors volontaires, demandes et créneaux consentis (DG-024) ; domaine, langue et ville dans l'adresse (ET-04). */
+  mentoring: mentoringHref,
   mentorProfile: (mentorId: string) => `/mentorat/${encodeURIComponent(mentorId)}`,
   myMentoring: () => "/mes-mentorats",
   /** Talents et emploi : offres des pages, candidatures privées, profils opt-in (DG-025). */
@@ -258,6 +324,19 @@ export const routes = {
   contact: () => "/contact",
   health: () => "/sante-fonctionnelle",
   healthApi: () => "/api/sante-fonctionnelle",
+  /**
+   * Les icônes de l'application installée que le manifeste déclare (MO-02) : 192 et 512 px, et la
+   * variante masquable (symbole tenu dans la zone sûre). L'icône d'onglet et l'icône Apple sont
+   * celles des conventions de Next (`app/icon.tsx`, `app/apple-icon.tsx`), liées par lui.
+   */
+  appIcon: (format: "192" | "512" | "masquable") => `/icone-application/${format}`,
+  /**
+   * Le script de fond UNIQUE du site (MO-05) : page hors-ligne en réserve, écouteurs de
+   * notification. Son adresse ne change pas : une autre adresse ferait un second script.
+   */
+  serviceWorker: () => "/script-de-fond",
+  /** La page hors-ligne, la seule réserve du script de fond (MO-05). */
+  offline: () => "/hors-ligne",
 } as const
 
 /**
@@ -283,6 +362,10 @@ export const ROUTE_FILTER_KEYS = [
   "modifier",
   "nouveau",
   "auteur",
+  // ET-04 : le thème d'une question, le domaine et la langue d'un mentor.
+  "theme",
+  "domaine",
+  "langue",
 ] as const
 
 /** Ancres internes de la vitrine. */

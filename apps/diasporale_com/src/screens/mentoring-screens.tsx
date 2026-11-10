@@ -4,7 +4,8 @@
  * Les écrans du mentorat bénévole (DG-024, troisième tranche, lot G8 point 2) :
  *
  *   · `/mentorat?pays=` — chercher des mentors actifs par pays (celui de ma
- *     facette par défaut) et domaine, leurs cartes, « Devenir mentor » ;
+ *     facette par défaut), domaine, langue et ville saisie (ET-04 : tout dans
+ *     l'adresse, qui se partage), leurs cartes, « Devenir mentor » ;
  *   · `/mentorat/<id>` — la fiche d'un mentor et « Demander un mentorat »
  *     (feuille React Hook Form + Zod, consentement explicite) ; le profil d'autrui
  *     se signale (G9, chantier « confiance des surfaces ») ;
@@ -17,7 +18,17 @@
  * dit le chargement, l'erreur, le vide et l'indisponibilité (capacité absente).
  * PROPRIÉTAIRE : chantier « mentorat ».
  */
-import { isMentoringDomain, MENTORING_DOMAINS, parseResidenceCountry, type CountryCode, type MentoringDomain } from "@diasporale/domain"
+import {
+  isMentoringDomain,
+  isMentorLanguageCode,
+  MENTOR_CITY_MAX_LENGTH,
+  MENTOR_LANGUAGE_CODES,
+  MENTORING_DOMAINS,
+  parseResidenceCountry,
+  type CountryCode,
+  type MentoringDomain,
+  type MentorLanguageCode,
+} from "@diasporale/domain"
 import {
   Button,
   Card,
@@ -27,6 +38,7 @@ import {
   FolderTabsContent,
   FolderTabsList,
   FolderTabsTrigger,
+  Input,
   Skeleton,
   countryName,
   residenceCountryOptions,
@@ -36,8 +48,8 @@ import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ArrowLeftIcon, SearchXIcon } from "lucide-react"
 import NextLink from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useId, useMemo, useState, type ReactNode } from "react"
+import { useSearchParams } from "next/navigation"
+import { useId, useMemo, type ReactNode } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -48,7 +60,9 @@ import { MentoringRequestEntry } from "@/components/mentoring-request-form"
 import { MenteeRequestsSection, MentorRequestsSection } from "@/components/mentoring-requests"
 import { MentoringPager, MentoringUnavailable, MentoringVolunteerNote, MentorResultCard, MentorSummary } from "@/components/mentoring-ui"
 import { ReportContentAction, ReportedContent } from "@/components/report-content-sheet"
+import { languageName } from "@/components/service-format"
 import { browserTimeZone } from "@/components/service-request-ui"
+import { useUrlState } from "@/components/url-state"
 import { routes } from "@/lib/routes"
 
 const selectClass = "h-11 w-full rounded-md border border-input bg-card px-3 text-[15px] focus-visible:shadow-focus aria-invalid:border-destructive"
@@ -85,19 +99,43 @@ export function MentoringScreen() {
 const searchSchema = z.object({
   country: z.string().refine((value) => parseResidenceCountry(value).ok, { message: "mentor_country_invalid" }),
   domain: z.string().refine((value): boolean => value === "" || isMentoringDomain(value), { message: "mentor_domain_invalid" }),
+  language: z.string().refine((value): boolean => value === "" || isMentorLanguageCode(value), { message: "mentor_language_invalid" }),
+  city: z.string().trim().max(MENTOR_CITY_MAX_LENGTH, "mentor_city_invalid"),
 })
 
 type SearchValues = z.infer<typeof searchSchema>
+
+/** ET-04 — la recherche portée par l'adresse : pays, domaine, langue, ville saisie ; une valeur inconnue est ignorée. */
+export interface MentoringSearchView {
+  readonly country: CountryCode
+  readonly domain: MentoringDomain | null
+  readonly language: MentorLanguageCode | null
+  readonly city: string
+}
+
+export function mentoringSearchFromParams(params: Pick<URLSearchParams, "get">, fallback: CountryCode): MentoringSearchView {
+  const domain = params.get("domaine") ?? ""
+  const language = params.get("langue") ?? ""
+  return {
+    country: mentoringCountryOf(params.get("pays"), fallback),
+    domain: isMentoringDomain(domain) ? domain : null,
+    language: isMentorLanguageCode(language) ? language : null,
+    city: (params.get("ville") ?? "").trim().slice(0, MENTOR_CITY_MAX_LENGTH),
+  }
+}
+
+/** L'adresse d'une recherche de mentors : pays, domaine, langue et ville saisie. */
+export function mentoringHrefOf(search: MentoringSearchView): string {
+  return routes.mentoring(search.country, { domain: search.domain, language: search.language, city: search.city })
+}
 
 function MentoringSearch(props: { readonly membership: MembershipView }) {
   const { t } = useDiasporaleT()
   const capability = useMentoring()
   const params = useSearchParams()
-  const router = useRouter()
-  const country = mentoringCountryOf(params.get("pays"), props.membership.facet.countryOfResidence)
-  // Le domaine vit dans l'écran : l'adresse ne porte que le pays (table des routes).
-  const [domain, setDomain] = useState<MentoringDomain | null>(null)
-  const searchKey = `${country}:${domain ?? ""}`
+  const fromUrl = useMemo(() => mentoringSearchFromParams(params, props.membership.facet.countryOfResidence), [params, props.membership.facet.countryOfResidence])
+  const [search, setSearch] = useUrlState(fromUrl, mentoringHrefOf)
+  const searchKey = `${search.country}:${search.domain ?? ""}:${search.language ?? ""}:${search.city}`
   return (
     <>
       <header className="flex flex-col gap-2">
@@ -117,34 +155,36 @@ function MentoringSearch(props: { readonly membership: MembershipView }) {
           </div>
           <SearchForm
             key={searchKey}
-            country={country}
-            domain={domain}
-            onSearch={(next) => {
-              setDomain(next.domain)
-              router.replace(routes.mentoring(next.country))
-            }}
+            search={search}
+            onSearch={setSearch}
           />
-          <SearchResults key={searchKey} capability={capability} country={country} domain={domain} />
+          <SearchResults key={searchKey} capability={capability} search={search} />
         </>
       )}
     </>
   )
 }
 
-function SearchForm(props: {
-  readonly country: CountryCode
-  readonly domain: MentoringDomain | null
-  readonly onSearch: (next: { readonly country: CountryCode; readonly domain: MentoringDomain | null }) => void
-}) {
+function SearchForm(props: { readonly search: MentoringSearchView; readonly onSearch: (next: MentoringSearchView) => void }) {
   const { t, locale } = useDiasporaleT()
   const id = useId()
   const countries = useMemo(() => residenceCountryOptions(locale), [locale])
-  const form = useForm<SearchValues>({ resolver: zodResolver(searchSchema), defaultValues: { country: props.country, domain: props.domain ?? "" } })
+  const { search } = props
+  const form = useForm<SearchValues>({
+    resolver: zodResolver(searchSchema),
+    defaultValues: { country: search.country, domain: search.domain ?? "", language: search.language ?? "", city: search.city },
+  })
   const countryError = form.formState.errors.country?.message
+  const cityError = form.formState.errors.city?.message
   const submit = form.handleSubmit((values) => {
     const country = parseResidenceCountry(values.country)
     if (!country.ok) return form.setError("country", { message: "mentor_country_invalid" })
-    props.onSearch({ country: country.value, domain: isMentoringDomain(values.domain) ? values.domain : null })
+    props.onSearch({
+      country: country.value,
+      domain: isMentoringDomain(values.domain) ? values.domain : null,
+      language: isMentorLanguageCode(values.language) ? values.language : null,
+      city: values.city,
+    })
   })
   return (
     <Card className="p-4">
@@ -169,6 +209,19 @@ function SearchForm(props: {
               </select>
             )}
           </Field>
+          <Field id={`${id}-langue`} label={t("mentoring.search.language")}>
+            {(field) => (
+              <select id={field.id} aria-describedby={field.describedBy} className={selectClass} {...form.register("language")}>
+                <option value="">{t("mentoring.search.anyLanguage")}</option>
+                {MENTOR_LANGUAGE_CODES.map((value) => (
+                  <option key={value} value={value}>{languageName(value, locale)}</option>
+                ))}
+              </select>
+            )}
+          </Field>
+          <Field id={`${id}-ville`} label={t("mentoring.search.city")} hint={t("mentoring.search.cityHint")} error={cityError ? t(`errors.${cityError}`) : undefined}>
+            {(field) => <Input id={field.id} autoComplete="address-level2" maxLength={MENTOR_CITY_MAX_LENGTH} aria-invalid={field.invalid || undefined} aria-describedby={field.describedBy} {...form.register("city")} />}
+          </Field>
         </div>
         <div>
           <Button type="submit">{t("mentoring.search.submit")}</Button>
@@ -178,21 +231,24 @@ function SearchForm(props: {
   )
 }
 
-function SearchResults(props: { readonly capability: MentoringCapability; readonly country: CountryCode; readonly domain: MentoringDomain | null }) {
+function SearchResults(props: { readonly capability: MentoringCapability; readonly search: MentoringSearchView }) {
   const { t, locale } = useDiasporaleT()
-  const { capability, country, domain } = props
+  const { capability } = props
+  const { country, domain, language, city } = props.search
   const name = countryName(country, locale)
+  // ET-04 : une langue ou une ville posée change l'explication du vide.
+  const narrowed = language !== null || city.length > 0
   return (
     <section aria-labelledby="resultats-mentors" className="flex min-w-0 flex-col gap-3">
       <h2 id="resultats-mentors" className="text-lg font-semibold">{t("mentoring.search.results", { country: name })}</h2>
       <MentoringPager
-        read={(cursor) => capability.useSearch({ country, domain, cursor })}
+        read={(cursor) => capability.useSearch({ country, domain, ...(language ? { language } : {}), ...(city ? { city } : {}), cursor })}
         keyOf={(mentor) => mentor.mentorId}
         empty={
           <EmptyState
             icon={<SearchXIcon />}
             title={t("mentoring.search.emptyTitle")}
-            description={t(domain ? "mentoring.search.emptyDomain" : "mentoring.search.emptyBody", { country: name })}
+            description={t(narrowed ? "mentoring.search.emptyFilters" : domain ? "mentoring.search.emptyDomain" : "mentoring.search.emptyBody", { country: name })}
           />
         }
       >

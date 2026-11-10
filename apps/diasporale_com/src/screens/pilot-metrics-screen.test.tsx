@@ -137,3 +137,17 @@ describe("/pilote — la mesure du pilote", () => {
     expect(screen.getByRole("radio", { name: "30 days" })).toBeChecked()
   })
 })
+
+describe("/pilote — l'utilité de l'entraide (ET-10)", () => {
+  it("un tableau de l'entraide : aides abouties avec leur base, son propre délai de première réponse, le kit relevé", () => {
+    renderPilot(demo("p-mireille"))
+    const aid = screen.getByRole("table", { name: "Entraide, mentorat et kit d’arrivée" })
+    expect(within(aid).getByRole("row", { name: /Aides abouties/ }).textContent).toMatch(/sur .+ questions posées/)
+    expect(within(aid).getByRole("row", { name: /Délai de première réponse à une question, médiane/ }).textContent).toMatch(/questions répondues/)
+    expect(within(aid).getByRole("row", { name: /Ressources du kit d’arrivée publiées/ })).toBeInTheDocument()
+    // Le délai des demandes de service garde ses propres libellés, dans son propre tableau.
+    const services = screen.getByRole("table", { name: "Services et demandes" })
+    expect(within(services).queryByRole("row", { name: /question/ })).not.toBeInTheDocument()
+    expect(within(aid).queryByRole("row", { name: /demandes répondues/ })).not.toBeInTheDocument()
+  })
+})
