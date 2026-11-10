@@ -18,7 +18,9 @@ import {
   toMembershipView,
   toNotificationView,
   toOpenCountries,
+  postModerationOf,
   toPostMediaView,
+  toPublishOutcome,
   toSharedPostView,
   toProfileView,
   toRelationView,
@@ -730,13 +732,14 @@ describe("publications à portée et pays (PD4, lot 7 d'ANTSIA)", () => {
   it("local dans un pays ouvert : portée et pays partent au moteur ; diaspora garde son pays d'origine ; ANTSIA seulement en public", async () => {
     const { convex, calls } = fakeConvex({ ...NETWORK, ...OPEN_FR, "modules/posts/posts:publish": () => ({ postId: "post-1", created: true }) })
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    // Le moteur ne rend pas encore l'état (issue [S1] de FD-04) : rien n'est affirmé, ni « publiée » ni « en relecture ».
     expect(await actions.publish({ body: "Bonjour Lyon", reach: "local", country: "FR", audience: "public", alsoOnRoot: true })).toEqual({
       ok: true,
-      value: { moderation: "published" },
+      value: { moderation: null },
     })
     expect(await actions.publish({ body: "Pour tous", reach: "diaspora", country: "FR", audience: "connections", alsoOnRoot: true })).toEqual({
       ok: true,
-      value: { moderation: "published" },
+      value: { moderation: null },
     })
     expect(calls.filter((call) => call.name === "modules/posts/posts:publish").map((call) => call.args)).toEqual([
       { networkId: "n-diasporale", body: "Bonjour Lyon", audience: "public", reach: "local", country: "FR", alsoOnRoot: true },
@@ -744,12 +747,34 @@ describe("publications à portée et pays (PD4, lot 7 d'ANTSIA)", () => {
     ])
   })
 
-  it("local dans un pays non ouvert : refusé avant toute écriture, tant que le moteur ne retient rien en relecture", async () => {
+  it.each(["published", "pending_review"] as const)("FD-04 : l'état « %s » rendu par le moteur à l'envoi est celui que lit l'auteur", async (state) => {
+    const { convex } = fakeConvex({ ...NETWORK, "modules/posts/posts:publish": () => ({ postId: "post-1", created: true, moderation: state }) })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.publish({ body: "Pour tous", reach: "diaspora", country: "FR", audience: "public", alsoOnRoot: false })).toEqual({
+      ok: true,
+      value: { moderation: state },
+    })
+  })
+
+  it("FD-04 : une publication retenue en relecture se dit à son auteur, jamais aux autres lecteurs", () => {
+    const mine = { ...(item("retenue", "diaspora", "FR", "public", true) as object), moderation: "pending_review" } as never
+    const ofSomeoneElse = { ...(item("retenue", "diaspora", "FR") as object), moderation: "pending_review" } as never
+    expect(toFeed([mine], "recents", "FR")[0]).toMatchObject({ id: "retenue", isMine: true, moderation: "pending_review" })
+    expect(toFeed([ofSomeoneElse], "recents", "FR")[0]).toMatchObject({ id: "retenue", isMine: false, moderation: "published" })
+    expect(toWall({ items: [mine], pinned: null })[0]).toMatchObject({ moderation: "pending_review" })
+    // Publiée, ou sans état rendu par le moteur : aucune relecture n'est affirmée.
+    expect(postModerationOf({ isMine: true, moderation: "published" })).toBe("published")
+    expect(postModerationOf({ isMine: true })).toBe("published")
+    expect(toPublishOutcome({ postId: "post-1" })).toEqual({ moderation: null })
+    expect(toPublishOutcome({ postId: "post-1", moderation: "pending_review" })).toEqual({ moderation: "pending_review" })
+  })
+
+  it("local dans un pays non ouvert : refusé avant toute écriture, avec le message du composeur (FD-04)", async () => {
     const { convex, calls } = fakeConvex({ ...NETWORK, ...OPEN_FR })
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
     expect(await actions.publish({ body: "Bonjour Montréal", reach: "local", country: "CA", audience: "public", alsoOnRoot: false })).toEqual({
       ok: false,
-      code: "feature_unavailable",
+      code: "hub_not_open",
     })
     expect(calls.some((call) => call.name === "modules/posts/posts:publish")).toBe(false)
   })
@@ -808,8 +833,9 @@ describe("commentaires par le moteur (PD4, lot 8 d'ANTSIA)", () => {
       "modules/engagement/engagement:removeComment": () => ({ removed: true }),
     })
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
-    expect(await actions.comment({ postId: "post-1", body: "Bonjour" })).toEqual({ ok: true, value: null })
-    expect(await actions.comment({ postId: "post-1", body: "Merci", parentCommentId: "c1" })).toEqual({ ok: true, value: null })
+    // L'identifiant rendu par le moteur : l'écran montre aussitôt le commentaire envoyé (FD-03).
+    expect(await actions.comment({ postId: "post-1", body: "Bonjour" })).toEqual({ ok: true, value: { commentId: "c9" } })
+    expect(await actions.comment({ postId: "post-1", body: "Merci", parentCommentId: "c1" })).toEqual({ ok: true, value: { commentId: "c9" } })
     expect(await actions.removeComment("c9")).toEqual({ ok: true, value: null })
     expect(await actions.comment({ postId: "post-1", body: "x".repeat(1001) })).toEqual({ ok: false, code: "comment_too_long" })
     expect(calls.slice(1, 4)).toEqual([
@@ -950,7 +976,7 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
       if (!uploaded.ok) throw new Error("dépôt refusé")
       expect(
         await actions.publish({ body: "", reach: "local", country: "FR", audience: "public", alsoOnRoot: false, media: [{ upload: uploaded.value, altText: " Le fleuve " }] }),
-      ).toEqual({ ok: true, value: { moderation: "published" } })
+      ).toEqual({ ok: true, value: { moderation: null } })
       expect(calls.find((call) => call.name === "modules/media/media:generateUploadUrl")?.args).toEqual({ networkId: "n-diasporale", usage: "media_social" })
       expect(calls.find((call) => call.name === "modules/posts/posts:publish")?.args).toMatchObject({
         body: "",
@@ -994,7 +1020,7 @@ describe("partage cité par le moteur (EXF-DG-10)", () => {
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
     expect(await actions.publish({ body: "", reach: "local", country: "FR", audience: "public", alsoOnRoot: false, sharedPostId: "post-7" })).toEqual({
       ok: true,
-      value: { moderation: "published" },
+      value: { moderation: null },
     })
     expect(calls.find((call) => call.name === "modules/posts/posts:publish")?.args).toMatchObject({ body: "", sharedPostId: "post-7" })
     await actions.publish({ body: "Une seule fois", reach: "local", country: "FR", audience: "public", alsoOnRoot: false, idempotencyKey: "cle-1" })

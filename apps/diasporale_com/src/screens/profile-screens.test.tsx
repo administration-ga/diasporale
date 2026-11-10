@@ -1,10 +1,24 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
-import type { ActionResult, Loadable, MembershipView, ProfileImageView, ProfileView, RelationView } from "@diasporale/features/data"
+import {
+  contentReportKey,
+  DataSourceProvider,
+  type ActionResult,
+  type ContentReportInput,
+  type ContentReportsCapability,
+  type ContentReportTarget,
+  type DiasporaleDataSource,
+  type Loadable,
+  type MembershipView,
+  type ProfileImageView,
+  type ProfileView,
+  type RelationView,
+} from "@diasporale/features/data"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
-import type { ComponentProps, ReactNode } from "react"
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { useSyncExternalStore, type ComponentProps, type ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { ProfilePostPagesProps } from "@/components/feed-pages"
@@ -38,7 +52,13 @@ const mocks = vi.hoisted(() => ({
   respond: vi.fn<(connectionId: string, accept: boolean) => Promise<ActionResult>>(),
   block: vi.fn<(personId: string) => Promise<ActionResult>>(),
   unblock: vi.fn<(personId: string) => Promise<ActionResult>>(),
+  mute: vi.fn<(personId: string) => Promise<ActionResult>>(),
+  success: vi.fn(),
+  error: vi.fn(),
+  info: vi.fn(),
 }))
+
+vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error, info: mocks.info } }))
 
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(mocks.search) }))
 
@@ -55,6 +75,7 @@ vi.mock("@diasporale/features/data", async (importOriginal) => ({
     respondToConnection: mocks.respond,
     block: mocks.block,
     unblock: mocks.unblock,
+    muteAuthor: mocks.mute,
   }),
   useRelation: () => mocks.relation,
   usePage: () => ({ status: "loading" }),
@@ -156,7 +177,7 @@ beforeEach(() => {
   mocks.icom = { status: "off", reason: "not_allowed" }
   mocks.callsOpen = false
   mocks.search = ""
-  for (const action of [mocks.follow, mocks.unfollow, mocks.connect, mocks.respond, mocks.block, mocks.unblock]) {
+  for (const action of [mocks.follow, mocks.unfollow, mocks.connect, mocks.respond, mocks.block, mocks.unblock, mocks.mute]) {
     action.mockReset().mockResolvedValue({ ok: true, value: null })
   }
 })
@@ -438,5 +459,126 @@ describe("ProfileScreen — « Appeler » derrière l'interrupteur des appels (I
 
     expect(screen.getByRole("button", { name: writeName })).toBeDisabled()
     expect(screen.queryByRole("button", { name: callName })).not.toBeInTheDocument()
+  })
+})
+
+describe("ProfileScreen — RP-02 : le menu « … » de la fiche d'autrui", () => {
+  const other: ProfileView = { ...profile, personId: "persons_boris", handle: "boris.demo", displayName: "Boris NZÉ", isSelf: false }
+  const menuName = t("objectMenu.open", { name: other.displayName })
+  const plain = (value: string) => value.replace(/\s+/g, " ").trim()
+
+  /** Une capacité factice : sa mémoire des cibles signalées relance le rendu, comme les vrais fournisseurs. */
+  function fakeReports() {
+    const reported = new Set<string>()
+    const listeners = new Set<() => void>()
+    let version = 0
+    const subscribe = (listener: () => void) => {
+      listeners.add(listener)
+      return () => { listeners.delete(listener) }
+    }
+    const getVersion = () => version
+    const report = vi.fn(async (input: ContentReportInput): Promise<ActionResult<{ readonly created: boolean }>> => {
+      reported.add(contentReportKey(input))
+      version += 1
+      for (const listener of listeners) listener()
+      return { ok: true, value: { created: true } }
+    })
+    function useReported(target: ContentReportTarget): boolean {
+      useSyncExternalStore(subscribe, getVersion, getVersion)
+      return reported.has(contentReportKey(target))
+    }
+    const capability: ContentReportsCapability = { demonstration: false, report, useReported }
+    return { capability, report }
+  }
+
+  function withReports(capability: ContentReportsCapability, handle: string) {
+    const source = { contentReports: capability } as unknown as DiasporaleDataSource
+    return <I18nProvider locale="fr"><DataSourceProvider source={source}><ProfileScreen handle={handle} /></DataSourceProvider></I18nProvider>
+  }
+
+  async function openMenu(user: ReturnType<typeof userEvent.setup>) {
+    screen.getByRole("button", { name: menuName }).focus()
+    await user.keyboard("{Enter}")
+    return screen.findByRole("menu")
+  }
+
+  beforeEach(() => {
+    mocks.profile = { status: "ready", data: other }
+    mocks.relation = { status: "ready", data: { connection: "none", connectionId: null, following: false } }
+  })
+
+  it("Signaler ce profil, Bloquer, Mettre en sourdine, Copier le lien : dans le menu, aucun en bouton plein", async () => {
+    const user = userEvent.setup()
+    render(withReports(fakeReports().capability, other.handle))
+    // « Bloquer » n'est plus un bouton de la barre : il vit dans le menu.
+    expect(screen.queryByRole("button", { name: t("relation.block") })).not.toBeInTheDocument()
+    const zone = screen.getByRole("button", { name: menuName }).parentElement
+    if (zone === null) throw new Error("Zone d'actions absente")
+    expect(filledButtons(zone)).toEqual([screen.getByRole("button", { name: t("relation.connect") })])
+
+    const menu = await openMenu(user)
+    expect(within(menu).getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
+      t("contentReports.action.person"),
+      t("relation.block"),
+      t("postMenu.mute", { name: other.displayName }),
+      t("profileMenu.copyLink"),
+    ])
+  })
+
+  it("Signaler ce profil : la feuille dit que le réseau racine traite le dossier ; envoyé, la fiche se masque", async () => {
+    const user = userEvent.setup()
+    const { capability, report } = fakeReports()
+    render(withReports(capability, other.handle))
+    await user.click(within(await openMenu(user)).getByRole("menuitem", { name: t("contentReports.action.person") }))
+    const dialog = await screen.findByRole("dialog", { name: t("contentReports.title.person") })
+    expect(within(dialog).getByText(plain(t("contentReports.rootNotice")))).toBeInTheDocument()
+    await user.click(within(dialog).getByRole("radio", { name: t("report.reason.impersonation") }))
+    await user.click(within(dialog).getByRole("button", { name: t("contentReports.confirm") }))
+
+    await waitFor(() => expect(report).toHaveBeenCalledExactlyOnceWith({ kind: "person", id: other.personId, reason: "impersonation" }))
+    await waitFor(() => expect(screen.queryByRole("heading", { level: 1, name: other.displayName })).not.toBeInTheDocument())
+    const notice = screen.getByRole("note")
+    expect(notice).toHaveTextContent(plain(t("contentReports.masked.title")))
+    expect(within(notice).getByRole("link", { name: t("contentReports.back.feed") })).toHaveAttribute("href", routes.feed())
+  })
+
+  it("Bloquer, depuis le menu, ouvre la confirmation de la barre de relation", async () => {
+    const user = userEvent.setup()
+    render(withReports(fakeReports().capability, other.handle))
+    await user.click(within(await openMenu(user)).getByRole("menuitem", { name: t("relation.block") }))
+    const group = await screen.findByRole("group", { name: t("relation.blockConfirm", { name: other.displayName }) })
+    await user.click(within(group).getByRole("button", { name: t("relation.blockAction") }))
+    expect(mocks.block).toHaveBeenCalledExactlyOnceWith(other.personId)
+  })
+
+  it("Mettre en sourdine et Copier le lien : le choix privé, puis l'adresse du profil", async () => {
+    const user = userEvent.setup()
+    render(withReports(fakeReports().capability, other.handle))
+    await user.click(within(await openMenu(user)).getByRole("menuitem", { name: t("postMenu.mute", { name: other.displayName }) }))
+    await waitFor(() => expect(mocks.mute).toHaveBeenCalledExactlyOnceWith(other.personId))
+    expect(mocks.success).toHaveBeenCalledWith(t("postMenu.muted", { name: other.displayName }))
+
+    await user.click(within(await openMenu(user)).getByRole("menuitem", { name: t("profileMenu.copyLink") }))
+    await waitFor(() => expect(mocks.success).toHaveBeenCalledWith(t("profileMenu.linkCopied")))
+    expect(await navigator.clipboard.readText()).toBe(new URL(routes.profile(other.handle), window.location.origin).href)
+  })
+
+  it("bloqué par soi : ni signalement ni sourdine, seul le lien reste ; sans capacité, pas de « Signaler »", async () => {
+    const user = userEvent.setup()
+    mocks.relation = { status: "ready", data: { connection: "blocked_by_me", connectionId: null, following: false } }
+    const blocked = render(withReports(fakeReports().capability, other.handle))
+    expect(within(await openMenu(user)).getAllByRole("menuitem").map((item) => item.textContent)).toEqual([t("profileMenu.copyLink")])
+    blocked.unmount()
+
+    mocks.relation = { status: "ready", data: { connection: "none", connectionId: null, following: false } }
+    render(tree(other.handle))
+    expect(within(await openMenu(user)).queryByRole("menuitem", { name: t("contentReports.action.person") })).not.toBeInTheDocument()
+  })
+
+  it("jamais sur sa propre fiche : aucun menu, aucun geste de signalement", () => {
+    mocks.profile = { status: "ready", data: profile }
+    render(withReports(fakeReports().capability, profile.handle))
+    expect(screen.queryByRole("button", { name: t("objectMenu.open", { name: profile.displayName }) })).not.toBeInTheDocument()
+    expect(screen.queryByText(t("contentReports.action.person"))).not.toBeInTheDocument()
   })
 })

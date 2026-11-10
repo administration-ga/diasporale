@@ -31,6 +31,8 @@ import type {
   BookmarkView,
   BookmarksPageQuery,
   BookmarksPageRequest,
+  CommentPageQuery,
+  CommentsPageRequest,
   CommentThreadView,
   CommentView,
   CountryHubView,
@@ -49,6 +51,7 @@ import type {
   ProfilePostsPageRequest,
   ReactionKind,
   RelationView,
+  RepliesPageRequest,
   ReportReason,
   SessionView,
   SponsorDashboardView,
@@ -219,6 +222,15 @@ export interface PublishInput {
   readonly idempotencyKey?: string
 }
 
+/**
+ * Ce qu'une publication est devenue à l'envoi (FD-04), tel que le fournisseur le dit :
+ * publiée, ou retenue en relecture (visible de son seul auteur). `null` : le fournisseur
+ * n'a pas rendu l'état ; l'écran n'annonce alors ni « publiée » ni « en relecture ».
+ */
+export interface PublishOutcome {
+  readonly moderation: ContentModerationState | null
+}
+
 /** Commenter une publication ; une réponse à une réponse rejoint sa racine (un seul niveau). */
 export interface CommentInput {
   readonly postId: string
@@ -243,10 +255,14 @@ export interface DiasporaleActions {
   join(input: JoinInput): Promise<ActionResult<JoinedView>>
   /** Déposer une photo ou une vidéo avant de publier ; les règles du moteur jugent le fichier d'abord. */
   uploadMedia(file: File): Promise<ActionResult<UploadedMedia>>
-  publish(input: PublishInput): Promise<ActionResult<{ moderation: ContentModerationState }>>
+  publish(input: PublishInput): Promise<ActionResult<PublishOutcome>>
   react(postId: string, kind: ReactionKind | null): Promise<ActionResult>
-  /** Commenter ou répondre (EXF-DG-12) ; l'auteur de la publication et la personne à qui l'on répond sont avisés. */
-  comment(input: CommentInput): Promise<ActionResult>
+  /**
+   * Commenter ou répondre (EXF-DG-12) ; l'auteur de la publication et la personne à qui l'on
+   * répond sont avisés. Rend l'identifiant du commentaire créé : l'écran le montre aussitôt,
+   * même hors des pages déjà lues (FD-03).
+   */
+  comment(input: CommentInput): Promise<ActionResult<{ readonly commentId: string }>>
   /** Modifier son commentaire publié, si la publication reste lisible. Capacité facultative du fournisseur. */
   editComment?(commentId: string, body: string): Promise<ActionResult>
   /** Retirer un commentaire — le sien, ou n'importe lequel sous sa propre publication. */
@@ -376,10 +392,13 @@ export interface DiasporaleDataSource {
   useBookmarksPage(args: BookmarksPageRequest): BookmarksPageQuery
   /** Des membres à rencontrer (EXF-DG-18) : six au plus, réservées aux membres actifs. */
   useSuggestions(): Loadable<readonly SuggestionView[]>
-  /** Les commentaires d'une publication, des plus anciens aux plus récents, avec leurs premières réponses. */
-  useComments(postId: string): Loadable<readonly CommentThreadView[]>
-  /** Toutes les réponses d'une racine (`commentId` à `null` : rien à lire). */
-  useReplies(args: { postId: string; commentId: string | null }): Loadable<readonly CommentView[]>
+  /**
+   * Une page des commentaires d'une publication (FD-03), des plus anciens aux plus récents,
+   * chacun avec l'aperçu de ses réponses ; la page suivante se lit par son curseur.
+   */
+  useCommentsPage(args: CommentsPageRequest): CommentPageQuery<CommentThreadView>
+  /** Une page des réponses d'une racine (FD-03), dans l'ordre ; la suite se lit par son curseur. */
+  useRepliesPage(args: RepliesPageRequest): CommentPageQuery<CommentView>
   /** La cloche : les avis les plus récents, et le compte des non-lus. */
   useNotifications(): Loadable<readonly NotificationView[]>
   useUnreadCount(): Loadable<UnreadCountView>

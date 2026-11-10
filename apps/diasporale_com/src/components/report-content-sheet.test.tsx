@@ -259,3 +259,52 @@ describe("signaler un contenu de la vague H — la feuille", () => {
     expect(screen.queryByRole("button", { name: TRIGGER })).not.toBeInTheDocument()
   })
 })
+
+describe("MD-02 — la même feuille pour un profil : le réseau racine traite le dossier", () => {
+  const PERSON: ContentReportTarget = { kind: "person", id: "persons_boris" }
+
+  function mountPerson(capability: ContentReportsCapability) {
+    const source = { contentReports: capability } as unknown as DiasporaleDataSource
+    return render(
+      <I18nProvider locale="fr">
+        <DataSourceProvider source={source}>
+          <ReportedContent target={PERSON}>
+            <p>{CONTENT}</p>
+            <ReportContentAction target={PERSON} />
+          </ReportedContent>
+        </DataSourceProvider>
+      </I18nProvider>,
+    )
+  }
+
+  it("la feuille dit que la modération d'ANTSIA examine le profil, puis le profil se masque", async () => {
+    const user = userEvent.setup()
+    const { capability, report } = fakeReports()
+    mountPerson(capability)
+    await user.click(screen.getByRole("button", { name: t("contentReports.action.person") }))
+    const dialog = await screen.findByRole("dialog", { name: t("contentReports.title.person") })
+    expect(within(dialog).getByText(plain(t("contentReports.rootNotice")))).toBeInTheDocument()
+    await user.click(within(dialog).getByRole("radio", { name: t("report.reason.harassment") }))
+    await user.click(within(dialog).getByRole("button", { name: t("contentReports.confirm") }))
+    await waitFor(() => expect(report).toHaveBeenCalledExactlyOnceWith({ kind: "person", id: "persons_boris", reason: "harassment" }))
+    expect(screen.queryByText(CONTENT)).not.toBeInTheDocument()
+    expect(screen.getByRole("note")).toHaveTextContent(plain(t("contentReports.masked.title")))
+  })
+
+  it("la démonstration ne transmet rien : elle ne promet aucun examen, pas même au réseau racine", async () => {
+    const user = userEvent.setup()
+    const { capability } = fakeReports({ demonstration: true })
+    mountPerson(capability)
+    await user.click(screen.getByRole("button", { name: t("contentReports.action.person") }))
+    const dialog = await screen.findByRole("dialog", { name: t("contentReports.title.person") })
+    expect(within(dialog).queryByText(plain(t("contentReports.rootNotice")))).not.toBeInTheDocument()
+  })
+
+  it("une autre nature ne parle pas du réseau racine", async () => {
+    const user = userEvent.setup()
+    const { capability } = fakeReports()
+    mount(capability)
+    const dialog = await openSheet(user)
+    expect(within(dialog).queryByText(plain(t("contentReports.rootNotice")))).not.toBeInTheDocument()
+  })
+})
