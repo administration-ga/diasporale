@@ -4,6 +4,7 @@ import type { AccountView, MembershipView, SessionView } from "@diasporale/featu
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { parseReturnPath, peekReturnPath, rememberReturnPath } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 
 import { Gate, gateRedirect, type GateRequirement } from "./gate"
@@ -112,5 +113,68 @@ describe("Gate — `member` : aucune surface sociale hors adhésion", () => {
     renderGate("member", SESSIONS[label])
     expect(screen.queryByTestId("admis")).toBeNull()
     expect(mocks.replace).toHaveBeenCalledWith(routes.welcome())
+  })
+})
+
+describe("la page demandée avant la connexion (UX-02, MO-03)", () => {
+  const EVENT = routes.associationEvent("amicale-lyon", "evt-42")
+  const event = parseReturnPath(EVENT)
+  const stored = () => peekReturnPath()
+
+  afterEach(() => {
+    window.sessionStorage.clear()
+    window.history.replaceState(null, "", "/")
+  })
+
+  it("gateRedirect : l'accueil rend au membre la page demandée, au compte en attente ce qu'il peut lire", () => {
+    expect(gateRedirect(SESSIONS.déclarée, "account", event)).toBe(EVENT)
+    expect(gateRedirect(SESSIONS["en attente"], "account", event)).toBe(EVENT)
+    expect(gateRedirect(SESSIONS["en attente"], "account", parseReturnPath(routes.messages()))).toBe(routes.hub("FR"))
+    // Sans adhésion, l'accueil d'abord ; « Mes données » s'ouvre sans lui.
+    expect(gateRedirect(SESSIONS["sans adhésion"], "account", event)).toBeNull()
+    expect(gateRedirect(SESSIONS.partie, "account", parseReturnPath(routes.myData()))).toBe(routes.myData())
+  })
+
+  it("sans session, une page de membre est retenue dans l'onglet, jamais dans l'adresse, puis renvoi à l'entrée", () => {
+    window.history.replaceState(null, "", `${EVENT}?token=secret`)
+    renderGate("member", { status: "anonymous" })
+    expect(mocks.replace).toHaveBeenCalledExactlyOnceWith(routes.enter())
+    expect(stored()).toEqual({ path: EVENT, needs: "read_network" })
+  })
+
+  it("connecté sans adhésion, la page est retenue avant l'accueil", () => {
+    window.history.replaceState(null, "", EVENT)
+    renderGate("member", SESSIONS["sans adhésion"])
+    expect(mocks.replace).toHaveBeenCalledExactlyOnceWith(routes.welcome())
+    expect(stored()?.path).toBe(EVENT)
+  })
+
+  it("l'accueil sans session ne remplace pas la page déjà retenue", () => {
+    rememberReturnPath({ pathname: EVENT, search: "", hash: "" })
+    window.history.replaceState(null, "", routes.welcome())
+    renderGate("account", { status: "anonymous" })
+    expect(mocks.replace).toHaveBeenCalledWith(routes.enter())
+    expect(stored()?.path).toBe(EVENT)
+  })
+
+  it("un membre qui arrive sur l'accueil va à la page demandée ; l'arrivée l'efface", () => {
+    rememberReturnPath({ pathname: EVENT, search: "", hash: "" })
+    const welcome = renderGate("account", SESSIONS.déclarée)
+    expect(mocks.replace).toHaveBeenCalledExactlyOnceWith(EVENT)
+    // Lire ne consomme pas : la porte et l'accueil mènent au même endroit.
+    expect(stored()?.path).toBe(EVENT)
+    welcome.unmount()
+
+    renderGate("member", SESSIONS.déclarée)
+    expect(screen.getByTestId("admis")).toBeInTheDocument()
+    expect(stored()).toBeNull()
+  })
+
+  it("pendant l'entrée qu'il écrit, l'accueil garde la main : aucun renvoi du membre qui naît", () => {
+    rememberReturnPath({ pathname: EVENT, search: "", hash: "" })
+    mocks.session = { status: "ready", data: SESSIONS.déclarée }
+    render(<Gate require="account" holdMember>{() => <p data-testid="accueil" />}</Gate>)
+    expect(screen.getByTestId("accueil")).toBeInTheDocument()
+    expect(mocks.replace).not.toHaveBeenCalled()
   })
 })

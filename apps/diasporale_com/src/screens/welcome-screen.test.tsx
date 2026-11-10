@@ -9,6 +9,7 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { peekReturnPath, rememberReturnPath } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 
 import { WelcomeScreen } from "./welcome-screen"
@@ -24,6 +25,7 @@ afterEach(() => {
   cleanup()
   vi.clearAllMocks()
   vi.unstubAllGlobals()
+  window.sessionStorage.clear()
 })
 
 const t = getFixedT("fr")
@@ -158,6 +160,56 @@ describe("/bienvenue — l'onboarding en trois écrans", () => {
   })
 })
 
+/** Un compte neuf remplit l'accueil : France, un nom, un identifiant libre, le seul consentement requis. */
+async function completeNewAccount(user: ReturnType<typeof userEvent.setup>, displayName: string, handle: string) {
+  await chooseFrance(user)
+  await user.click(screen.getByRole("button", { name: /Continuer/ }))
+  await user.type(await screen.findByRole("textbox", { name: "Nom affiché" }), displayName)
+  await user.click(screen.getByRole("radio", { name: t("welcome.handleOther") }))
+  await user.type(screen.getByRole("textbox", { name: t("welcome.handleOtherLabel") }), handle)
+  await user.click(screen.getByRole("button", { name: /Continuer/ }))
+  await user.click(await screen.findByRole("checkbox", { name: /Créer mon profil social/ }))
+  await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORALE/ }))
+}
+
+describe("/bienvenue — la page demandée avant la connexion (UX-02, MO-03)", () => {
+  const EVENT = routes.associationEvent("amicale-lyon", "evt-42")
+
+  it("nouveau membre : l'accueil d'abord, puis la page demandée ; la garde ne l'emmène pas ailleurs", async () => {
+    rememberReturnPath({ pathname: EVENT, search: "", hash: "" })
+    const { user } = await signedInAwa()
+    await completeNewAccount(user, "Awa Ogooué", "awa.ogooue")
+
+    await vi.waitFor(() => expect(navigation.push).toHaveBeenCalledExactlyOnceWith(EVENT))
+    expect(navigation.replace).not.toHaveBeenCalled()
+  })
+
+  it("compte en attente : la page demandée qu'il ne peut pas lire cède la place à son hub", async () => {
+    rememberReturnPath({ pathname: routes.messages(), search: "", hash: "" })
+    const store = new DemoStore(null, () => Date.UTC(2026, 9, 14, 12), 0)
+    const sent = await store.requestCode({ kind: "email", value: "neuve@example.com" })
+    if (!sent.ok || sent.value.demoCode === null) throw new Error("code de démonstration attendu")
+    await store.verifyCode(sent.value.demoCode)
+    const { user } = renderWelcome(store)
+    await completeNewAccount(user, "Neuve EXEMPLE", "neuve.exemple")
+
+    await vi.waitFor(() => expect(navigation.push).toHaveBeenCalledExactlyOnceWith(routes.hubWelcome("FR")))
+    expect(store.statusOf(store.getState().session.personId ?? "")).toBe("en_attente")
+  })
+
+  it("un compte en attente arrive sur la page demandée qu'il peut lire", async () => {
+    rememberReturnPath({ pathname: EVENT, search: "", hash: "" })
+    const { user } = renderWelcome(demoSignedIn())
+    await chooseFrance(user)
+    await user.click(screen.getByRole("button", { name: /Continuer/ }))
+    await user.click(await screen.findByRole("button", { name: /Continuer/ }))
+    await user.click(await screen.findByRole("checkbox", { name: /Créer mon profil social/ }))
+    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORALE/ }))
+
+    await vi.waitFor(() => expect(navigation.push).toHaveBeenCalledExactlyOnceWith(EVENT))
+  })
+})
+
 describe("/bienvenue — un profil commun déjà là (EA-04)", () => {
   it("l'acteur `exterieur` entre : son identité est montrée, jamais redemandée ni réécrite", async () => {
     const store = demoSignedIn()
@@ -227,7 +279,8 @@ describe("/bienvenue — un profil commun déjà là (EA-04)", () => {
 })
 
 describe("/bienvenue — la sortie d'un compte connecté sans adhésion", () => {
-  it("se déconnecte partout depuis l'accueil, puis la démonstration recharge la porte", async () => {
+  it("se déconnecte partout depuis l'accueil, puis la démonstration recharge la porte ; la page demandée est oubliée", async () => {
+    rememberReturnPath({ pathname: routes.associationEvent("amicale-lyon", "evt-42"), search: "", hash: "" })
     const assign = stubPageNavigation()
     const { store, user } = await signedInAwa()
 
@@ -238,6 +291,7 @@ describe("/bienvenue — la sortie d'un compte connecté sans adhésion", () => 
 
     await vi.waitFor(() => expect(assign).toHaveBeenCalledExactlyOnceWith(routes.home()))
     expect(store.getState().session.personId ?? null).toBeNull()
+    expect(peekReturnPath()).toBeNull()
   })
 
   it("dit un échec générique et laisse réessayer", async () => {

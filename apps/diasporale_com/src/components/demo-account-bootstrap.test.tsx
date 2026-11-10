@@ -7,6 +7,7 @@ import { cleanup, render, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { DEMO_ACCOUNT_KEY } from "@/lib/demo-account-pending"
+import { rememberReturnPath } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 
 import { DemoAccountBootstrap } from "./demo-account-bootstrap"
@@ -179,6 +180,16 @@ describe("Amorçage d'un compte de démonstration", () => {
     expect(mocks.demoAccounts?.welcomeOutsider).not.toHaveBeenCalled()
     expect(mocks.demoAccounts?.equip).toHaveBeenCalledExactlyOnceWith(actor)
     expect(mocks.toast.success).toHaveBeenCalledWith(t("demoAccounts.ready", { name }), { id: "avis" })
+  })
+
+  it("après un lien reçu, l'acteur préparé arrive sur la page demandée, pas sur le fil (UX-02, MO-03)", async () => {
+    const event = routes.associationEvent("amicale-lyon", "evt-42")
+    rememberReturnPath({ pathname: event, search: "", hash: "" })
+    window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "verifie")
+    mocks.demoAccounts = demoAccounts(equipment({ pageId: null, pageCreated: false }))
+    mount()
+
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledExactlyOnceWith(event))
   })
 
   it("laisse l'accueil au nouvel arrivant", async () => {

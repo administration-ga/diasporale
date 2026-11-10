@@ -37,6 +37,7 @@ import { z } from "zod"
 import { Gate, GateSkeleton } from "@/components/gate"
 import { useSignOutEverywhere } from "@/components/sign-out-settings"
 import { PublicShell } from "@/components/site-chrome"
+import { peekReturnPath, welcomeExit } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 
 const OTHER_HANDLE = "__autre__"
@@ -94,32 +95,42 @@ function existingIdentityOf(profile: OwnProfileView | null): ExistingIdentity {
   return { kind: profile.published ? "published" : "withdrawn", personId: profile.personId, handle, displayName, headline: profile.headline }
 }
 
+/** Ce que l'accueil reçoit de sa page : l'adhésion partie s'il y en a une, et la prise de main de la garde. */
+interface OnboardingContext {
+  readonly membership: MembershipView | null
+  /** Pendant l'entrée qu'il écrit, l'accueil garde la main : il mène lui-même à la page demandée. */
+  readonly onFinishing: (finishing: boolean) => void
+}
+
 /** `/bienvenue` — onboarding en trois écrans (EXF-DG-02, E12). */
 export function WelcomeScreen() {
+  const [finishing, setFinishing] = useState(false)
   return (
     <PublicShell hideEnter>
-      <Gate require="account">{(session) => <WelcomeOnboarding membership={session.membership} />}</Gate>
+      <Gate require="account" holdMember={finishing}>
+        {(session) => <WelcomeOnboarding membership={session.membership} onFinishing={setFinishing} />}
+      </Gate>
     </PublicShell>
   )
 }
 
 /** Le profil commun se lit avant l'accueil ; un fournisseur sans cette capacité n'a que des comptes neufs. */
-function WelcomeOnboarding(props: { membership: MembershipView | null }) {
+function WelcomeOnboarding(props: OnboardingContext) {
   const source = useDataSource()
   return source.profilePublication
-    ? <OnboardingWithProfile publication={source.profilePublication} membership={props.membership} />
-    : <Onboarding identity={NO_IDENTITY} membership={props.membership} />
+    ? <OnboardingWithProfile publication={source.profilePublication} {...props} />
+    : <Onboarding identity={NO_IDENTITY} {...props} />
 }
 
-function OnboardingWithProfile(props: { publication: ProfilePublication; membership: MembershipView | null }) {
+function OnboardingWithProfile(props: OnboardingContext & { publication: ProfilePublication }) {
   const profile = props.publication.useMyProfile()
   if (profile.status === "loading") return <GateSkeleton />
   // Profil illisible : l'accueil d'un compte neuf ; le fournisseur relit le profil et ne réécrit rien.
   const identity = profile.status === "ready" ? existingIdentityOf(profile.data) : NO_IDENTITY
-  return <Onboarding identity={identity} publication={props.publication} membership={props.membership} />
+  return <Onboarding identity={identity} {...props} />
 }
 
-function Onboarding(props: { identity: ExistingIdentity; publication?: ProfilePublication; membership: MembershipView | null }) {
+function Onboarding(props: OnboardingContext & { identity: ExistingIdentity; publication?: ProfilePublication }) {
   const { identity } = props
   const { t } = useDiasporaleT()
   const actions = useActions()
@@ -213,19 +224,28 @@ function Onboarding(props: { identity: ExistingIdentity; publication?: ProfilePu
   }
 
   const submit = form.handleSubmit(async (values) => {
-    const result = await actions.join({
-      facet: { countryOfResidence: values.country, city: values.city },
-      // Un profil déjà là n'envoie rien : le fournisseur le garde tel quel (EA-04).
-      ...(asksIdentity ? { handle: chosenHandle(values), displayName: values.displayName } : {}),
-      consents: { social_profile: values.socialProfile, directory: values.directory, notifications: values.notifications },
-      directoryVisibility: values.directory ? values.directoryLevel : "hidden",
-    })
+    // L'accueil garde la main jusqu'à sa sortie : la garde ne renvoie pas ailleurs le membre qui naît.
+    props.onFinishing(true)
+    let result: Awaited<ReturnType<typeof actions.join>>
+    try {
+      result = await actions.join({
+        facet: { countryOfResidence: values.country, city: values.city },
+        // Un profil déjà là n'envoie rien : le fournisseur le garde tel quel (EA-04).
+        ...(asksIdentity ? { handle: chosenHandle(values), displayName: values.displayName } : {}),
+        consents: { social_profile: values.socialProfile, directory: values.directory, notifications: values.notifications },
+        directoryVisibility: values.directory ? values.directoryLevel : "hidden",
+      })
+    } catch {
+      result = { ok: false, code: "unknown" }
+    }
     if (!result.ok) {
+      props.onFinishing(false)
       toast.error(t(`errors.${result.code}`))
       return
     }
     toast.success(t("welcome.joined"))
-    router.push(`${routes.hub(result.value.country)}?bienvenue=1`)
+    // Nouveau membre : l'accueil d'abord, puis la page demandée s'il peut la lire (UX-02, MO-03).
+    router.push(welcomeExit(result.value, peekReturnPath()))
   })
 
   const errorOf = (name: keyof FormInput) => {

@@ -6,6 +6,7 @@ import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { LogOutIcon } from "lucide-react"
 import { useRef, useState } from "react"
 
+import { forgetReturnPath } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 
 /**
@@ -26,6 +27,8 @@ export function useSignOutEverywhere() {
     running.current = true
     setBusy(true)
     setFailed(false)
+    // La page demandée avant la connexion ne survit pas à la sortie (UX-02), quelle que soit la source.
+    forgetReturnPath()
     try {
       await actions.signOutEverywhere()
       if (kind === "demo") window.location.assign(routes.home())
