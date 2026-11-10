@@ -78,6 +78,8 @@ const ENGINE_RULES: Readonly<Record<string, ActionErrorCode>> = {
   CONTEXT_NOT_OPEN: "context_not_open",
   CONTEXT_CLOSED: "context_closed",
   CONTEXT_UNAVAILABLE: "context_unavailable",
+  // Rôles du réseau (MD-01, EX-08 du moteur) : le réseau garde toujours un administrateur actif.
+  NETWORK_LAST_ADMIN: "moderation_desk_last_admin",
 }
 
 /** Le code FERMÉ d'une erreur levée par une fonction du moteur. */
