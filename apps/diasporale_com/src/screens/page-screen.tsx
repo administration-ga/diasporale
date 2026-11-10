@@ -17,7 +17,7 @@ import {
   useOptionalDataSource,
 } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { ArrowLeftIcon, BellOffIcon, BellPlusIcon, NewspaperIcon, UserRoundXIcon } from "lucide-react"
+import { ArrowLeftIcon, BellOffIcon, BellPlusIcon, ExternalLinkIcon, NewspaperIcon, UserRoundXIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useId, useLayoutEffect, useRef, useState } from "react"
 import { toast } from "sonner"
@@ -36,6 +36,7 @@ import { PageServiceContactEntry, PageServicesSection } from "@/components/page-
 import { PagePublishButton } from "@/components/page-publications"
 import { PageShareButton } from "@/components/page-share-button"
 import { ProfileCover } from "@/components/profile-images"
+import { publicEnv } from "@/lib/env"
 import { routes } from "@/lib/routes"
 
 /** `/pages/[handle]` — page d'institution, d'association ou d'entreprise (EXF-DG-20 à 23, DG-007). */
@@ -194,13 +195,16 @@ function PageFiche(props: { view: PageDetailView; membership: MembershipView; ca
                 filled={view.viewer.role === null}
               />
             ) : null}
-            {serviceProvider ? view.viewer.role === null ? <PageServiceContactEntry pageHandle={page.handle} variant={props.capability && !view.viewer.following ? "outline" : "commerce"} /> : null : <ContactButton recipientName={page.name} />}
+            {/* Une institution n'a pas de messagerie ici (VC-01) : le renvoi vers consulat.ga, dessous, remplace un « Écrire » inactif. */}
+            {serviceProvider ? view.viewer.role === null ? <PageServiceContactEntry pageHandle={page.handle} variant={props.capability && !view.viewer.following ? "outline" : "commerce"} /> : null
+              : page.ownerKind === "institution" ? null : <ContactButton recipientName={page.name} />}
             <PageAdminEntry pageId={page.id} handle={page.handle} viewerRole={view.viewer.role} claimable={page.claimable} />
             <AssociationMembershipEntry pageId={page.id} handle={page.handle} ownerKind={page.ownerKind} />
             <PagePublishButton page={page} membership={props.membership} role={view.viewer.role} />
             <PageShareButton handle={page.handle} name={page.name} />
           </div>
           {page.trust === "official" ? <p className="text-[13px] text-muted-foreground">{t("page.officialNote")}</p> : null}
+          {page.ownerKind === "institution" ? <InstitutionCaseNotice /> : null}
         </div>
       </Card>
 
@@ -258,6 +262,32 @@ function PageFiche(props: { view: PageDetailView; membership: MembershipView; ca
         </PageContentViews>
       </section>
     </>
+  )
+}
+
+/**
+ * Les démarches restent sur consulat.ga (cahier § 8.15) : la fiche d'une
+ * institution le dit, au lieu d'un « Écrire » inactif qui promettait une
+ * messagerie avec le poste (VC-01). Le lien sortant est celui de la bannière
+ * d'élévation, seulement si l'environnement le fournit (jamais de lien mort,
+ * jamais d'adresse écrite ici).
+ */
+function InstitutionCaseNotice() {
+  const { t } = useDiasporaleT()
+  return (
+    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground">
+      <span>{t("page.consularMatters")}</span>
+      {publicEnv.consulateUrl ? (
+        <a
+          href={publicEnv.consulateUrl}
+          rel="noopener"
+          className="inline-flex min-h-10 items-center gap-1 rounded-md px-1 font-semibold text-primary hover:underline focus-visible:shadow-focus"
+        >
+          {t("page.consularLink")}
+          <ExternalLinkIcon className="size-3.5" aria-hidden />
+        </a>
+      ) : null}
+    </p>
   )
 }
 

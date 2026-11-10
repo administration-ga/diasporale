@@ -317,6 +317,12 @@ describe("compteurs de hub et persistance", () => {
     expect(hub.events.length).toBeGreaterThan(0)
   })
 
+  it("aucun évènement de poste consulaire : la démonstration ne montre pas ce que le moteur ne sert pas (VC-01)", () => {
+    const state = demo().store.getState()
+    expect(state.events.length).toBeGreaterThan(0)
+    for (const event of state.events) expect(state.pages[event.organizerPageId]?.ownerKind).toBe("association")
+  })
+
   it("persiste dans le stockage local, recharge, et se remet à zéro", async () => {
     const { store, storage } = demo()
     await store.switchTo("p-steeve")

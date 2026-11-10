@@ -206,6 +206,29 @@ describe("HubScreen — pages réelles du pays", () => {
     expect(screen.queryByText("Les évènements ne sont pas encore réunis dans le hub.")).not.toBeInTheDocument()
   })
 
+  it("sans aucune page, le hub ne promet ni import public, ni évènement de poste, ni rien au futur (VC-01)", () => {
+    mocks.pages = { status: "ready", data: { country: "CA", officialPages: [], associations: [], companies: [], more: NOTHING_MORE } }
+    render(tree())
+    for (const tab of ["Évènements", "Associations", "Entreprises"]) {
+      openTab(tab)
+      const panel = screen.getByRole("tabpanel")
+      expect(panel).not.toHaveTextContent(/import|postes|apparaîtront|arrivent|pourront/i)
+    }
+    openTab("Associations")
+    expect(within(screen.getByRole("tabpanel")).getByText("Une association de la diaspora peut créer sa page.")).toBeInTheDocument()
+    openTab("Entreprises")
+    expect(within(screen.getByRole("tabpanel")).getByText("Une entreprise de la diaspora peut créer sa page.")).toBeInTheDocument()
+  })
+
+  it("démonstration sans évènement : le vide dit ce qui existe, sans promettre les évènements des postes", () => {
+    mocks.hub = { status: "ready", data: { ...HUB, countersSource: "demo", eventsSource: "demo" } }
+    render(tree())
+    openTab("Évènements")
+    const panel = screen.getByRole("tabpanel")
+    expect(within(panel).getByText("Les associations publient leurs évènements sur leur page.")).toBeInTheDocument()
+    expect(panel).not.toHaveTextContent(/postes|apparaîtront/)
+  })
+
   it("sans capacité « pages », les listes jointes au hub restent la source", () => {
     mocks.capability = null
     mocks.hub = { status: "ready", data: { ...HUB, associations: [page("cercle", "Cercle de Québec")] } }

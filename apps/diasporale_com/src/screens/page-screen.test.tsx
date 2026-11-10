@@ -24,6 +24,7 @@ const mocks = vi.hoisted(() => ({
   association: vi.fn(),
   services: vi.fn(),
   contact: vi.fn(),
+  consulateUrl: null as string | null,
 }))
 
 // Les rubriques de la fiche lisent leur sélection dans l'adresse (`contenu=`) : aucune n'est demandée ici.
@@ -75,6 +76,8 @@ vi.mock("@diasporale/features/data", async (original) => ({
   useActions: () => ({ react: mocks.react }),
 }))
 vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error } }))
+// La sortie vers consulat.ga ne vient que de l'environnement : absente, aucun lien.
+vi.mock("@/lib/env", () => ({ publicEnv: { dataSource: "engine", convexUrl: null, idnPortalUrl: null, get consulateUrl() { return mocks.consulateUrl } } }))
 
 const MEMBER: MembershipView = {
   personId: "person-me",
@@ -153,6 +156,7 @@ beforeEach(() => {
   mocks.portDetail = { status: "loading" }
   mocks.pageCalls.length = 0
   mocks.portCalls.length = 0
+  mocks.consulateUrl = null
 })
 
 afterEach(cleanup)
@@ -311,5 +315,39 @@ describe("PageScreen — suivre et ne plus suivre", () => {
     expect(mocks.portCalls).toEqual(["collectif-lyon"])
     expect(screen.getByRole("heading", { level: 1, name: "Collectif de Lyon" })).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Suivre" })).not.toBeInTheDocument()
+  })
+})
+
+describe("PageScreen — fiche d'une institution (VC-01)", () => {
+  function institution(): PageDetailView {
+    const base = view()
+    return {
+      ...base,
+      page: { ...base.page, id: "page-poste", handle: "poste-recette", name: "Poste consulaire de recette", ownerKind: "institution", trust: "official", badge: "official", claimable: false, shortName: null },
+    }
+  }
+
+  it("aucun « Écrire » inactif : la fiche renvoie les questions de dossier vers consulat.ga, sans lien si l'adresse manque", () => {
+    mocks.detail = { status: "ready", data: institution() }
+    render(tree())
+    expect(screen.queryByRole("button", { name: /Écrire/ })).not.toBeInTheDocument()
+    expect(screen.queryByTitle(/messagerie/i)).not.toBeInTheDocument()
+    expect(screen.getByText("Les questions sur un dossier se traitent sur consulat.ga.")).toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: /Aller sur consulat\.ga/ })).not.toBeInTheDocument()
+    expect(mocks.contact).not.toHaveBeenCalled()
+  })
+
+  it("l'adresse configurée devient le lien sortant, celui de la bannière d'élévation", () => {
+    mocks.consulateUrl = "https://consulat.example/"
+    mocks.detail = { status: "ready", data: institution() }
+    render(tree())
+    expect(screen.getByRole("link", { name: /Aller sur consulat\.ga/ })).toHaveAttribute("href", "https://consulat.example/")
+  })
+
+  it("une association garde son entrée de contact, sans renvoi consulaire", () => {
+    mocks.detail = { status: "ready", data: view() }
+    render(tree())
+    expect(mocks.contact).toHaveBeenCalled()
+    expect(screen.queryByText("Les questions sur un dossier se traitent sur consulat.ga.")).not.toBeInTheDocument()
   })
 })
