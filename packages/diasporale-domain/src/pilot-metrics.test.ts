@@ -4,6 +4,7 @@ import {
   canReadPilotMetrics,
   emptyPilotCounts,
   emptyPilotDay,
+  isPilotAidDailyCounter,
   normalizePilotHistogram,
   parsePilotScope,
   parsePilotWindowDays,
@@ -34,6 +35,7 @@ import {
   sumPilotDays,
   tallyPilotDay,
   type PilotDailyCounter,
+  type PilotDayAggregate,
   type PilotDayTotals,
   type PilotRequestFacts,
   PILOT_AID_DAILY_COUNTERS,
@@ -373,7 +375,9 @@ describe("ET-10 — l'utilité de l'entraide", () => {
       day = tallyPilotDay(day, tally.counters, null, tally.aidFirstAnswerBucket)
     }
     day = tallyPilotDay(day, pilotMentoringCounters(true))
-    const legacy = { counts: { ...emptyPilotCounts(), aidQuestionsAsked: undefined, aidSignups: undefined }, firstResponse: [] }
+    // Une ligne écrite avant ET-10 n'a pas ces deux compteurs : ils sont ABSENTS, pas « indéfinis ».
+    const { aidQuestionsAsked: _asked, aidSignups: _signups, ...legacyCounts } = emptyPilotCounts()
+    const legacy: PilotDayAggregate = { counts: legacyCounts, firstResponse: [] }
     const indicators = presentPilotIndicators({ days: [day, legacy], offersActive: 0, kitListed: 12, kitToReview: 3 })
     const byId = new Map(indicators.map((indicator) => [indicator.id, indicator]))
     expect(byId.get("aid_questions_asked")).toEqual({ id: "aid_questions_asked", group: "mutual_aid", kind: "count", value: { kind: "value", value: 20 } })
@@ -391,5 +395,9 @@ describe("ET-10 — l'utilité de l'entraide", () => {
     expect(byId.get("kit_resources_listed")).toEqual({ id: "kit_resources_listed", group: "mutual_aid", kind: "snapshot", value: { kind: "value", value: 12 } })
     expect(byId.get("kit_resources_to_review")).toMatchObject({ kind: "ratio", denominatorId: "kit_resources_listed", value: { kind: "below_threshold" }, denominator: { kind: "value", value: 12 } })
     expect(PILOT_AID_DAILY_COUNTERS.every((counter) => emptyPilotCounts()[counter] === 0)).toBe(true)
+    // Seuls les compteurs d'entraide peuvent manquer à une ligne d'avant ET-10 : la garde les reconnaît, et eux seuls.
+    expect(PILOT_AID_DAILY_COUNTERS.every((counter) => isPilotAidDailyCounter(counter))).toBe(true)
+    expect(isPilotAidDailyCounter("requestsSent")).toBe(false)
+    expect(isPilotAidDailyCounter("compteur_inconnu")).toBe(false)
   })
 })

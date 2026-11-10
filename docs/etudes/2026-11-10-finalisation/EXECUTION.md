@@ -35,9 +35,9 @@ Plan : [`01_ENTREE_ADHESION_CONFIANCE.md`](01_ENTREE_ADHESION_CONFIANCE.md)
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| EA-01 | Amorcer la confiance : membres fondateurs admis par décision tracée | P0 | M | S2 | décision du propriétaire (qui, combien, dispense, badge affiché) | nouveau | à faire |
+| EA-01 | Amorcer la confiance : membres fondateurs admis par décision tracée | P0 | M | S2 | décision du propriétaire (qui, combien, dispense, badge affiché) | nouveau | fusionné (#51, antsia#119) ; console et audit des admissions : antsia#120 ; plafond de la cohorte à confirmer |
 | EA-02 | Entrée par IDN branchée dans DIASPORALE | P0 | M | S2 | variables IDN et origines sur le déploiement (propriétaire) ; recette avec un vrai compte IDN | nouveau | fusionné (#52) ; variables IDN et recette avec un vrai compte : propriétaire ; refus chez IDN : antsia#122 |
-| EA-03 | Statut relu quand l'identité change | P0 | S | S2 | aucune | nouveau | à faire |
+| EA-03 | Statut relu quand l'identité change | P0 | S | S2 | aucune | nouveau | fusionné (#51, antsia#119) ; réconciliation du moteur : antsia#121 |
 | EA-04 | Accueil qui respecte un profil existant | P0 | S | S2 | aucune | nouveau | fusionné (#49) |
 | EA-05 | Droits personnels et sortie sans adhésion | P0 | S | S2 | aucune | nouveau | fusionné (#40) |
 | EA-06 | Recette réelle de l'entrée de DIASPORALE | P0 | S | S2 + propriétaire | clés d'envoi et domaine (propriétaire) ; accord écrit sur le déploiement visé | nouveau | à faire |
@@ -234,7 +234,7 @@ Plan : [`08_EVENEMENTS_AGENDA.md`](08_EVENEMENTS_AGENDA.md)
 |---|---|---|---|---|---|---|---|
 | EV-01 | Évènements de démonstration et parcours rejouables | P0 | S | S2 | accord pour les variables du backend local ; publication de la démonstration sur accord écrit | nouveau | fusionné (#42) |
 | EV-02 | Le hub ne dit plus « zéro évènement » | P0 | S | S2 | aucune | nouveau | fusionné (#37) |
-| EV-03 | Avis aux inscrits : annulation, place obtenue | P0 | M | S1 puis S2 | publication du backend par S1 | nouveau | à faire |
+| EV-03 | Avis aux inscrits : annulation, place obtenue | P0 | M | S1 puis S2 | publication du backend par S1 | nouveau | fusionné (#63, antsia#139) ; motifs d'annulation à valider par le propriétaire |
 | EV-04 | Signaler un évènement et un ajout de galerie | P0 | S | S2 | aucune | nouveau | fusionné (#48) |
 | EV-05 | Évènements du pays dans le hub : liste, compteur, ville, catégorie, portée | P1 | L | S1 puis S2 | issue `[S1]` acceptée ; publication du backend par S1. Repli si S1 ne peut pas : une projection nocturne dans la tranche, avec son retard dit à l'écran | nouveau | à faire |
 | EV-06 | Liste d'une page : à venir d'abord, passés ensuite | P1 | S | S1 puis S2 | aucune | nouveau | à faire |
@@ -263,13 +263,13 @@ Plan : [`09_SERVICES_RENDEZ_VOUS_AVIS.md`](09_SERVICES_RENDEZ_VOUS_AVIS.md)
 |---|---|---|---|---|---|---|---|
 | SV-01 | Avis publiables : politique des deux surfaces et parcours prouvé | P0 | S | S2 | décision 2 ; rôle d'administrateur du réseau sur chaque déploiement (propriétaire) | nouveau | à faire |
 | SV-02 | Rappel du rendez-vous, rendez-vous à venir et fichier de calendrier | P1 | M | S2 | décision 6 (moment du rappel) | nouveau | à faire |
-| SV-03 | Déplacer un rendez-vous confirmé | P1 | M | S2 | aucune | nouveau | à faire |
-| SV-04 | Proposition préremplie et réglages de prestation de la page | P1 | S | S2 | aucune | nouveau | à faire |
+| SV-03 | Déplacer un rendez-vous confirmé | P1 | M | S2 | aucune | nouveau | fusionné (#59, antsia#132) ; avis de cloche : antsia#133 |
+| SV-04 | Proposition préremplie et réglages de prestation de la page | P1 | S | S2 | aucune | nouveau | fusionné (#59, antsia#132) ; réglages par offre, non par page |
 | SV-05 | Catégories élargies et politique des professions réglementées | P1 | M | S2 | décisions 3 et 4 ; juriste pour le texte sur les professions réglementées | nouveau | à faire |
 | SV-06 | Trouver près de chez soi : villes desservies, pays d'entrée, langue, tri | P1 | M | S2 | décision 5 | nouveau | à faire |
 | SV-07 | Avis : prévenir l'équipe, inviter le demandeur, feuille de signalement commune | P1 | S | S2 | aucune | nouveau | à faire |
 | SV-08 | Réalisations : photos de la page attachées à une offre | P1 | M | S2 | décision 8 | nouveau | à faire |
-| SV-09 | Plusieurs rendez-vous simultanés pour une page | P1 | S | S2 | aucune | nouveau | à faire |
+| SV-09 | Plusieurs rendez-vous simultanés pour une page | P1 | S | S2 | aucune | nouveau | fusionné (#59, antsia#132) |
 | SV-10 | Problème sur un rendez-vous : professionnel absent, rendez-vous sans constat | P1 | M | S2 | décision 9 ; juriste pour les textes | nouveau | à faire |
 | DS-11 (volet favoris) | Retrouver : offres enregistrées | P2 | M | S2 | aucune | plan 15 | à faire |
 | DS-12 | Disponibilités des prestataires et créneaux | P2 | L | S2 | décision 10 ; aucun paiement | plan 15 | à faire |
@@ -315,16 +315,16 @@ Plan : [`11_ENTRAIDE_MENTORAT_KIT_ARRIVEE.md`](11_ENTRAIDE_MENTORAT_KIT_ARRIVEE.
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| ET-01 | Bénévoles prévenus, promesses vraies | P0 | S | S2 | issue `[S1]` | nouveau | fusionné (#39) ; avis aux bénévoles en attente d'antsia#101 |
+| ET-01 | Bénévoles prévenus, promesses vraies | P0 | S | S2 | issue `[S1]` | nouveau | fusionné (#39, #63, antsia#139) |
 | ET-02 | Conversation entre l'équipe et chaque bénévole | P1 | M | S2 | politique contextuelle ouverte par un opérateur ; issue `[S1]` | nouveau | à faire |
 | ET-03 | Garde sur les conseils sensibles | P1 | S | S2 | relecture du texte ; question posée au juriste (plan 14) | nouveau | à faire |
-| ET-04 | Retrouver : thème, mots, sans réponse | P1 | M | S2 | aucune | nouveau | à faire |
+| ET-04 | Retrouver : thème, mots, sans réponse | P1 | M | S2 | aucune | nouveau | fusionné (#60, antsia#135) |
 | ET-05 | Mentorat : créneau convenu, avis, rappel | P1 | M | S2 | issue `[S1]` | nouveau | à faire |
 | ET-06 | Kit de départ du pays pilote, relecteurs désignés | P1 | M | S2 + propriétaire | associations relais et relecteurs désignés par le propriétaire (décision 6) | nouveau | à faire |
 | ET-07 | Vie d'une ressource : relecteurs et auteurs prévenus | P1 | S | S2 | issue `[S1]` | nouveau | à faire |
 | ET-08 | Premiers pas du nouvel arrivant | P1 | M | S2 | issue `[S1]` | nouveau | à faire |
-| ET-09 | Missions et questions là où l'on passe | P1 | S | S2 | aucune | nouveau | à faire |
-| ET-10 | Mesure d'utilité de l'entraide | P1 | S | S2 | aucune | nouveau | à faire |
+| ET-09 | Missions et questions là où l'on passe | P1 | S | S2 | aucune | nouveau | fusionné (#60, antsia#135) |
+| ET-10 | Mesure d'utilité de l'entraide | P1 | S | S2 | aucune | nouveau | fusionné (#60, antsia#135) |
 | DS-13 | Mentorat : retour après séance | P2 | S | S2 | aucune | plan 15 | à faire |
 | ET-11 | Mentorat dans la durée : séances, objectifs, besoin publié | P2 | M | S2 | issue `[S1]` | nouveau | à faire |
 | ET-12 | Entraide vivante : merci, suivre, photo, questions proches | P2 | M | S2 | issue `[S1]` | nouveau | à faire |
@@ -393,7 +393,7 @@ Plan : [`14_MODERATION_SECURITE_CONFORMITE.md`](14_MODERATION_SECURITE_CONFORMIT
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
 | DS-04 (volet guichet) | Recette CC-V et traitement au guichet | P0 | M | S2 | accord pour les variables du backend local ; rien sur la démonstration en ligne sans accord écrit | plan 15 | à faire |
-| MD-01 | Responsables du réseau : nommer l'administration et les modérateurs | P0 | M | S2 + S1 | décision 2 du § 7 ; publication du moteur par S1 | nouveau | à faire |
+| MD-01 | Responsables du réseau : nommer l'administration et les modérateurs | P0 | M | S2 + S1 | décision 2 du § 7 ; publication du moteur par S1 | nouveau | fusionné (#62, antsia#136) ; nomination réelle : propriétaire |
 | MD-02 | Signaler depuis chaque objet de DIASPORALE | P0 | L | S2 | aucune | nouveau | fusionné (#48) ; groupe et auto-signalement d'un signataire : antsia#114 |
 | MD-03 | Signaler et modérer une offre de service | P0 | M | S2 + S1 | publication du moteur par S1 | nouveau | à faire |
 | MD-04 | Réglages de modération au guichet | P0 | M | S2 | décision 4 du § 7 (valeurs de départ) | nouveau | à faire |
@@ -451,10 +451,10 @@ Plan : [`16_APPLICATION_MOBILE_PWA.md`](16_APPLICATION_MOBILE_PWA.md)
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
 | MO-01 | Passe sur téléphones réels | P0 | S | S2 + propriétaire | présence du propriétaire avec ses téléphones ; accord pour toute publication de la démonstration | nouveau | à faire |
-| MO-02 | Icônes, manifeste et installation | P1 | S | S2 | icône validée par le propriétaire (décision 3) | nouveau | à faire |
+| MO-02 | Icônes, manifeste et installation | P1 | S | S2 | icône validée par le propriétaire (décision 3) | nouveau | fusionné (#58) ; icône provisoire à valider par le propriétaire |
 | MO-03 | Destination conservée à travers l'entrée | P1 | S | S2 | aucune | nouveau | fusionné (#49) |
 | MO-04 | Reprise de la saisie du code après un aller-retour | P1 | S | S2 | aucune | nouveau | à faire |
-| MO-05 | Script de fond unique et page hors-ligne | P1 | M | S2 | aucune | nouveau | à faire |
+| MO-05 | Script de fond unique et page hors-ligne | P1 | M | S2 | aucune | nouveau | fusionné (#58) ; recette hors-ligne non jouée |
 | MO-06 | Notifications sur l'écran d'accueil : pastille, aide iPhone, ouverture | P1 | S | S2 | clés du navigateur et déclaration de l'application `diasporale_com` (propriétaire) | nouveau | à faire |
 | MO-07 | Billet QR gardé pendant sa durée de vie | P1 | S | S2 | aucune | nouveau | à faire |
 | MO-08 | Lecture du code QR sur tous les téléphones | P1 | M | S2 | aucune | nouveau | à faire |
@@ -484,7 +484,7 @@ Plan : [`17_LANCEMENT_PILOTE_EXPLOITATION_MODELE_ECONOMIQUE.md`](17_LANCEMENT_PI
 | LX-04 | Banc de recette local : ouvrir la mise en relation sans opérateur | P0 | S | S2 | décision 2 | nouveau | fusionné (antsia#106) pour la graine locale ; ouverture de la politique : à brancher sur antsia#129 |
 | DS-05 | Campagne de recettes en mode moteur | P0 | L | S2 | aucune en local ; toute action sur la démonstration en ligne après accord | plan 15 | à faire |
 | LX-02 | Publication et retour arrière de DIASPORALE dans le dépôt | P0 | M | S2 | toute exécution réelle exige l'accord écrit du propriétaire | nouveau | fusionné (#47) ; retour arrière non joué sur la démonstration (accord écrit requis) |
-| LX-03 | Responsables du réseau en production et lecteurs du tableau du pilote | P0 | M | S2 | nomination réelle : propriétaire | nouveau | à faire |
+| LX-03 | Responsables du réseau en production et lecteurs du tableau du pilote | P0 | M | S2 | nomination réelle : propriétaire | nouveau | fusionné (#62, antsia#136) |
 | DS-06 | Dossier de mise en production | P0 | M | S2 | hébergement A10, domaine, secrets, création du réseau : propriétaire | plan 15 | fusionné (#47) ; rien du dossier n'a été joué |
 | LX-05 | Charpente des textes manquants : conditions d'utilisation, règles de la communauté, contact | P0 | S | S2 | fond des textes : juriste | nouveau | fusionné (#50) ; fond des textes : juriste |
 | DS-07 | Textes légaux définitifs | P0 | S | S2 | juriste (A11), informations de l'éditeur | plan 15 | à faire |

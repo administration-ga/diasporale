@@ -676,7 +676,7 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
 
     async proposeReschedule(input: ProposeRescheduleInput) {
       const scope = rescheduleScope(input.requestId, "propose_reschedule")
-      if ("refusal" in scope) return fail(scope.refusal)
+      if (scope.refusal !== undefined) return fail(scope.refusal)
       const { data, row, actor, booking, now } = scope
       const expected = checkProposalVersion(input.expectedProposalVersion, row.proposalVersion)
       if (!expected.ok) return fail(expected.code)
@@ -694,7 +694,7 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
 
     async acceptReschedule({ requestId, expectedProposalVersion, expectedStartAt }) {
       const scope = rescheduleScope(requestId, "accept_reschedule")
-      if ("refusal" in scope) return fail(scope.refusal)
+      if (scope.refusal !== undefined) return fail(scope.refusal)
       const { data, row, booking, now } = scope
       const expected = checkProposalVersion(expectedProposalVersion, row.proposalVersion)
       if (!expected.ok) return fail(expected.code)
@@ -727,7 +727,7 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
 
     async declineReschedule({ requestId }) {
       const scope = rescheduleScope(requestId, "decline_reschedule")
-      if ("refusal" in scope) return fail(scope.refusal)
+      if (scope.refusal !== undefined) return fail(scope.refusal)
       const { data, row, booking, now } = scope
       commit({
         ...data,
