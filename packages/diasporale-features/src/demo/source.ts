@@ -4,8 +4,9 @@ import { extractHashtags } from "@antsia/social-domain/richText"
 import { hasCapability, type CountryCode, type FeedScope } from "@diasporale/domain"
 import { useMemo, useSyncExternalStore } from "react"
 
+import type { EntryDoorsView } from "../data/entry-doors-port"
 import { describeMediaFile, downscaleImage } from "../data/media"
-import type { ContentPreferencesQuery, ContentPreferencesRequest, DemoAccountView, DiasporaleDataSource } from "../data/port"
+import type { ActionResult, ContentPreferencesQuery, ContentPreferencesRequest, DemoAccountView, DiasporaleDataSource } from "../data/port"
 import type {
   BookmarkView,
   BookmarksPageQuery,
@@ -81,6 +82,9 @@ const retryLocalFeed = () => undefined
 
 /** Côté le plus long d'une photo gardée par la démonstration (stockage du navigateur : quelques Mo). */
 const DEMO_IMAGE_MAX_SIDE = 1280
+
+/** EA-02 : la démonstration sert toutes ses portes, en simulation (IDN par l'écran `/entrer/idn`). */
+const DEMO_ENTRY_DOORS: Loadable<EntryDoorsView> = { status: "ready", data: { idn: true, emailCode: true } }
 
 function ready<T>(data: T): Loadable<T> {
   return { status: "ready", data }
@@ -175,6 +179,8 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       const version = useVersion()
       return useMemo(() => (version < 0 ? LOADING : ready(sessionView(store.getState(), store.now()))), [version])
     },
+
+    useEntryDoors: () => DEMO_ENTRY_DOORS,
 
     useOpenCountries() {
       const version = useVersion()
@@ -458,7 +464,8 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
     },
 
     actions: {
-      signInWithIdn: (input) => store.signInWithIdn(input),
+      // Sans l'identité simulée de `/entrer/idn`, rien ne s'ouvre : la démonstration ne part pas chez IDN.
+      signInWithIdn: (input) => (input === undefined ? Promise.resolve<ActionResult>({ ok: false, code: "idn_invalid" }) : store.signInWithIdn(input)),
       requestCode: (destination) => store.requestCode(destination),
       verifyCode: (code) => store.verifyCode(code),
       signOutEverywhere: () => store.signOutEverywhere(),

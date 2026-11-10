@@ -3,8 +3,9 @@
 import type { CountryCode, FeedScope } from "@diasporale/domain"
 import { createContext, useContext, type ReactNode } from "react"
 
+import { type EntryDoorsView, UNREAD_ENTRY_DOORS } from "./entry-doors-port"
 import type { DiasporaleDataSource } from "./port"
-import type { BookmarksPageRequest, CommentsPageRequest, FeedPageRequest, ProfilePostsPageRequest, RepliesPageRequest } from "./types"
+import type { BookmarksPageRequest, CommentsPageRequest, FeedPageRequest, Loadable, ProfilePostsPageRequest, RepliesPageRequest } from "./types"
 
 const DataSourceContext = createContext<DiasporaleDataSource | null>(null)
 
@@ -30,6 +31,11 @@ export function useOptionalDataSource(): DiasporaleDataSource | null {
 }
 
 export const useSession = () => useDataSource().useSession()
+/**
+ * Les portes d'entrée ouvertes (EA-02). La source ne change pas pendant la vie de l'arbre :
+ * l'appel facultatif est donc stable d'un rendu à l'autre.
+ */
+export const useEntryDoors = (): Loadable<EntryDoorsView> => useDataSource().useEntryDoors?.() ?? UNREAD_ENTRY_DOORS
 export const useOpenCountries = () => useDataSource().useOpenCountries()
 export const useCountryHub = (country: CountryCode) => useDataSource().useCountryHub(country)
 export const useFeed = (args: { scope: FeedScope; hubCountry?: CountryCode }) => useDataSource().useFeed(args)

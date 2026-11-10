@@ -1,0 +1,15 @@
+{
+  "entryDoors": {
+    "idnAntsia": "IDN will show the name ANTSIA: DIASPORALE is a network of ANTSIA, which handles sign-in. You then come back here.",
+    "idnStarting": "Opening IDN…",
+    "checking": "Checking which sign-in options are open…",
+    "idnUnknown": "IDN sign-in can’t be checked right now. Try again in a moment.",
+    "codeClosed": "Sign-in with a code isn’t open on this site yet."
+  },
+  "errors": {
+    "idn_unavailable": "IDN sign-in isn’t available right now. Try again in a moment.",
+    "idn_refused": "You declined or left the sign-in on IDN. You can try again whenever you like.",
+    "idn_account_exists": "An account already exists with the email address of this IDN identity: sign in with a code sent to that address.",
+    "idn_failed": "Signing in with IDN didn’t go through. Try again in a moment."
+  }
+}
