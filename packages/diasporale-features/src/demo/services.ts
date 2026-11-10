@@ -148,7 +148,7 @@ const SEED_OFFERS: readonly SeedOffer[] = [
       durationMinutes: 180,
       pricing: { mode: "from", amountMinor: 6000, currency: "EUR" },
     },
-    settings: { timeZone: "Europe/Paris", location: { mode: "onsite", area: "Paris 18e (démo)" }, cancellationTerms: "Annulation libre jusqu'à la veille, 18 h (démo)." },
+    settings: { timeZone: "Europe/Paris", location: { mode: "onsite", area: "Paris 18e (démo)" }, cancellationTerms: "Annulation libre jusqu'à la veille, 18 h (démo).", bookingCapacity: 2 },
   },
   {
     id: "offer-demo-photo",

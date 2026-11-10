@@ -173,7 +173,7 @@ describe("services — écritures du moteur", () => {
   })
 
   it("SV-04 : les réglages de prestation se lisent pour l'équipe et partent seulement quand le formulaire les porte", async () => {
-    const settings = { timeZone: "Europe/Paris", location: { mode: "onsite" as const, area: "Paris 11e" }, cancellationTerms: "Annulation libre jusqu'à la veille." }
+    const settings = { timeZone: "Europe/Paris", location: { mode: "onsite" as const, area: "Paris 11e" }, cancellationTerms: "Annulation libre jusqu'à la veille.", bookingCapacity: 2 }
     mocks.results.set("modules/diaspora/services:getOffer", { ...DETAIL, providerSettings: { ...settings, location: { mode: "onsite", area: "Paris 11e" } } })
     const data = source()
     const { result, rerender } = renderHook(() => data.useOffer("offer-1"))
@@ -183,8 +183,8 @@ describe("services — écritures du moteur", () => {
     expect(result.current).toMatchObject({ status: "ready", data: { providerSettings: null } })
 
     const mutation = vi.fn().mockResolvedValue({ version: 3 })
-    await writer(mutation).updateOffer({ ...INPUT, offerId: "offer-1", expectedVersion: 2, providerSettings: { timeZone: null, location: { mode: "remote" }, cancellationTerms: null } })
-    expect(mutation.mock.calls[0]![1]).toMatchObject({ providerSettings: { timeZone: null, location: { mode: "remote" }, cancellationTerms: null } })
+    await writer(mutation).updateOffer({ ...INPUT, offerId: "offer-1", expectedVersion: 2, providerSettings: { timeZone: null, location: { mode: "remote" }, cancellationTerms: null, bookingCapacity: 1 } })
+    expect(mutation.mock.calls[0]![1]).toEqual(expect.objectContaining({ providerSettings: { timeZone: null, location: { mode: "remote" }, cancellationTerms: null, bookingCapacity: 1 } }))
     await writer(mutation).updateOffer({ ...INPUT, offerId: "offer-1", expectedVersion: 3 })
     expect(mutation.mock.calls[1]![1]).not.toHaveProperty("providerSettings")
     await writer(mutation).createOffer({ ...INPUT, pageId: "page-1", publish: true, providerSettings: settings })

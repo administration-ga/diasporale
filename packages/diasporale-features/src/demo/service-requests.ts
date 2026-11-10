@@ -15,6 +15,7 @@
  */
 import {
   availableServiceRequestActions,
+  bookingCapacityAllows,
   canContestNoShow,
   checkNoShowContest,
   checkProposalVersion,
@@ -141,6 +142,8 @@ interface DemoBookingRow {
   readonly status: ServiceBookingStatus
   readonly reason: string | null
   readonly createdAt: number
+  /** SV-09 : les rendez-vous simultanés admis à l'accord (absent d'un état local antérieur : un). */
+  readonly capacity?: number
 }
 
 export interface DemoServiceRequestsState {
@@ -391,8 +394,17 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
     }
   }
 
-  function slotTaken(data: DemoServiceRequestsState, pageId: string, slot: ServiceWindow): boolean {
-    return data.bookings.some((booking) => booking.pageId === pageId && booking.status === "confirmed" && slotsOverlap(booking, slot))
+  /** SV-09 : les rendez-vous simultanés que l'offre d'une demande admet (un par défaut), comme le moteur. */
+  function offerCapacityOf(row: DemoRequestRow): number {
+    return deps.findOffer(row.offerId)?.proposalPrefill?.settings.bookingCapacity ?? 1
+  }
+
+  /** Le créneau est-il plein pour la page ? La règle de capacité du domaine ; le rendez-vous déplacé ne se compte pas. */
+  function slotTaken(data: DemoServiceRequestsState, pageId: string, slot: ServiceWindow, capacity: number, exceptBookingId: string | null = null): boolean {
+    const overlapping = data.bookings
+      .filter((booking) => booking.pageId === pageId && booking.status === "confirmed" && booking.id !== exceptBookingId && slotsOverlap(booking, slot))
+      .map((booking) => ({ capacity: booking.capacity ?? 1 }))
+    return !bookingCapacityAllows({ capacity, overlapping })
   }
 
   function replaceRequest(data: DemoServiceRequestsState, next: DemoRequestRow): readonly DemoRequestRow[] {
@@ -523,7 +535,7 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
       if (!next.ok) return fail(next.code)
       const terms = parseServiceProposal(input, now)
       if (!terms.ok) return fail(terms.code)
-      if (slotTaken(data, row.pageId, terms.value)) return fail("booking_slot_unavailable")
+      if (slotTaken(data, row.pageId, terms.value, offerCapacityOf(row))) return fail("booking_slot_unavailable")
       const proposalId = `proposition-demo-${data.sequence}`
       commit({
         ...data,
@@ -586,14 +598,18 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
       if (!expected.ok) return fail(expected.code)
       const proposal = data.proposals.find((candidate) => candidate.id === row.currentProposalId)
       if (!proposal || proposal.state !== "current") return fail("request_not_open")
-      if (slotTaken(data, row.pageId, proposal)) return fail("booking_slot_unavailable")
+      const capacity = offerCapacityOf(row)
+      if (slotTaken(data, row.pageId, proposal, capacity)) return fail("booking_slot_unavailable")
       const bookingId = `rendez-vous-demo-${data.sequence}`
       commit({
         ...data,
         sequence: data.sequence + 1,
         bookings: [
           ...data.bookings,
-          { id: bookingId, requestId: row.id, proposalId: proposal.id, pageId: row.pageId, startAt: proposal.startAt, endAt: proposal.endAt, timeZone: proposal.timeZone, status: "confirmed", reason: null, createdAt: now },
+          {
+            id: bookingId, requestId: row.id, proposalId: proposal.id, pageId: row.pageId, startAt: proposal.startAt, endAt: proposal.endAt,
+            timeZone: proposal.timeZone, status: "confirmed", reason: null, createdAt: now, ...(capacity > 1 ? { capacity } : {}),
+          },
         ],
         requests: replaceRequest(data, { ...row, status: "confirmed", bookingId, deadlineAt: null, updatedAt: now }),
       })

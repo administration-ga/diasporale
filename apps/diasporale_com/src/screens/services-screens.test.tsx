@@ -306,7 +306,7 @@ describe("/mon-activite", () => {
       title: "Tresses enfants", description: "Tresses et nattes pour enfants, le samedi.", category: "beauty", country: "FR", city: "Paris",
       delivery: "onsite", languages: ["fr"], durationMinutes: null, pricing: { mode: "fixed", amountMinor: 4550, currency: "EUR" }, pageId: "page-1", publish: true,
       // SV-04 : rien de réglé, rien d'inventé.
-      providerSettings: { timeZone: null, location: null, cancellationTerms: null },
+      providerSettings: { timeZone: null, location: null, cancellationTerms: null, bookingCapacity: 1 },
     })
     expect(mocks.success).toHaveBeenCalledWith("Offre publiée.")
     // Le formulaire fermé, le focus revient au titre de la section.
@@ -314,7 +314,7 @@ describe("/mon-activite", () => {
   })
 
   it("SV-04 : règle le lieu, les conditions et le fuseau habituels de la prestation ; une adresse exacte est refusée au champ", async () => {
-    const providerSettings = { timeZone: "Europe/Paris", location: { mode: "onsite" as const, area: "Paris 11e" }, cancellationTerms: "Annulation libre jusqu'à la veille." }
+    const providerSettings = { timeZone: "Europe/Paris", location: { mode: "onsite" as const, area: "Paris 11e" }, cancellationTerms: "Annulation libre jusqu'à la veille.", bookingCapacity: 1 }
     mocks.myPages.set("first", ready([detail("a", { version: 3, viewerCanManage: true, providerSettings })]))
     render(tree(<MyActivityScreen />))
     fireEvent.click(screen.getByRole("button", { name: "Modifier" }))
@@ -330,10 +330,12 @@ describe("/mon-activite", () => {
 
     fireEvent.click(screen.getByLabelText("À distance, en visio ou par écrit"))
     fireEvent.change(screen.getByLabelText("Fuseau horaire des rendez-vous"), { target: { value: "" } })
+    // SV-09 : un salon à deux fauteuils tient deux rendez-vous à la même heure.
+    fireEvent.change(screen.getByLabelText("Rendez-vous en même temps"), { target: { value: "2" } })
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Enregistrer les modifications" })) })
     await waitFor(() => expect(mocks.update).toHaveBeenCalledOnce())
     expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({
-      offerId: "a", expectedVersion: 3, providerSettings: { timeZone: null, location: { mode: "remote" }, cancellationTerms: "Annulation libre jusqu'à la veille." },
+      offerId: "a", expectedVersion: 3, providerSettings: { timeZone: null, location: { mode: "remote" }, cancellationTerms: "Annulation libre jusqu'à la veille.", bookingCapacity: 2 },
     }))
   })
 

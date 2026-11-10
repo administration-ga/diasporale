@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test"
 
 import {
+  SERVICE_BOOKING_CAPACITY_MAX,
   SERVICE_NO_SHOW_CONTEST_DAYS,
   SERVICE_PROPOSAL_MAX_VERSIONS,
   SERVICE_REQUEST_ACTIONS,
@@ -8,6 +9,7 @@ import {
   SERVICE_REQUEST_STATUSES,
   SERVICE_REQUEST_TERMINAL_STATUSES,
   availableServiceRequestActions,
+  bookingCapacityAllows,
   canContestNoShow,
   canonicalTimeZone,
   checkNoShowContest,
@@ -268,7 +270,7 @@ describe("réglages de prestation (SV-04)", () => {
   it("normalise un fuseau canonique, un lieu approximatif et des conditions bornées", () => {
     expect(parseServiceProviderSettings({ timeZone: " Africa/Libreville ", location: { mode: "onsite", area: "  Paris   11e " }, cancellationTerms: " Annulation  libre jusqu'à la veille. " })).toEqual({
       ok: true,
-      value: { timeZone: "Africa/Libreville", location: { mode: "onsite", area: "Paris 11e" }, cancellationTerms: "Annulation libre jusqu'à la veille." },
+      value: { timeZone: "Africa/Libreville", location: { mode: "onsite", area: "Paris 11e" }, cancellationTerms: "Annulation libre jusqu'à la veille.", bookingCapacity: 1 },
     })
     expect(parseServiceProviderSettings({ location: { mode: "remote" } })).toEqual({ ok: true, value: { ...NO_PROVIDER_SETTINGS, location: { mode: "remote" } } })
   })
@@ -281,8 +283,40 @@ describe("réglages de prestation (SV-04)", () => {
     [{ cancellationTerms: "t" }, "proposal_terms_invalid"],
     [{ cancellationTerms: "t".repeat(501) }, "proposal_terms_invalid"],
     [{ cancellationTerms: "Prévenir au 07 12 34 56 78" }, "request_contact_forbidden"],
+    [{ bookingCapacity: 0 }, "booking_capacity_invalid"],
+    [{ bookingCapacity: 1.5 }, "booking_capacity_invalid"],
+    [{ bookingCapacity: SERVICE_BOOKING_CAPACITY_MAX + 1 }, "booking_capacity_invalid"],
   ] as const)("refuse %o par %s, comme la proposition", (input, code) => {
     expect(parseServiceProviderSettings(input)).toEqual({ ok: false, code })
+  })
+
+  it("SV-09 : un rendez-vous à la fois par défaut, jusqu'à dix rendez-vous simultanés", () => {
+    expect(NO_PROVIDER_SETTINGS.bookingCapacity).toBe(1)
+    expect(parseServiceProviderSettings({ bookingCapacity: null })).toEqual({ ok: true, value: NO_PROVIDER_SETTINGS })
+    expect(parseServiceProviderSettings({ bookingCapacity: SERVICE_BOOKING_CAPACITY_MAX })).toEqual({ ok: true, value: { ...NO_PROVIDER_SETTINGS, bookingCapacity: 10 } })
+  })
+})
+
+describe("capacité simultanée d'une page (SV-09)", () => {
+  const booked = (...capacities: number[]) => capacities.map((capacity) => ({ capacity }))
+
+  it("à un partout, aucun chevauchement : l'agenda unique d'avant", () => {
+    expect(bookingCapacityAllows({ capacity: 1, overlapping: [] })).toBe(true)
+    expect(bookingCapacityAllows({ capacity: 1, overlapping: booked(1) })).toBe(false)
+  })
+
+  it("capacité deux : un second rendez-vous passe, pas un troisième", () => {
+    expect(bookingCapacityAllows({ capacity: 2, overlapping: booked(2) })).toBe(true)
+    expect(bookingCapacityAllows({ capacity: 2, overlapping: booked(2, 2) })).toBe(false)
+  })
+
+  it("la plus petite capacité en jeu l'emporte : nul ne dépasse la sienne", () => {
+    // Un rendez-vous déjà pris « seul » (capacité un) ferme son créneau aux autres.
+    expect(bookingCapacityAllows({ capacity: 3, overlapping: booked(1) })).toBe(false)
+    // Une prestation « seule » ne se glisse pas à côté d'un rendez-vous existant.
+    expect(bookingCapacityAllows({ capacity: 1, overlapping: booked(3) })).toBe(false)
+    expect(bookingCapacityAllows({ capacity: 3, overlapping: booked(3, 2) })).toBe(false)
+    expect(bookingCapacityAllows({ capacity: 3, overlapping: booked(3, 3) })).toBe(true)
   })
 })
 

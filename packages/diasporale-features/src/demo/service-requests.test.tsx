@@ -280,7 +280,7 @@ describe("démonstration — proposition préremplie (SV-04)", () => {
     const { store, capability, offers } = setup()
     const proposalPrefill = {
       pricing: { mode: "fixed" as const, amountMinor: 4500, currency: "EUR" }, durationMinutes: 90, delivery: "onsite" as const, city: "Paris",
-      settings: { timeZone: "Europe/Paris", location: { mode: "onsite" as const, area: "Paris 18e (démo)" }, cancellationTerms: "Annulation libre jusqu'à la veille (démo)." },
+      settings: { timeZone: "Europe/Paris", location: { mode: "onsite" as const, area: "Paris 18e (démo)" }, cancellationTerms: "Annulation libre jusqu'à la veille (démo).", bookingCapacity: 1 },
     }
     offers.set("offre-coiffure", offerRef("offre-coiffure", { proposalPrefill }))
     const requestId = await sent(capability)
@@ -288,5 +288,43 @@ describe("démonstration — proposition préremplie (SV-04)", () => {
     expect(ready(detail.result.current)?.proposalPrefill).toBeNull()
     await as(store, "p-mireille")
     expect(ready(detail.result.current)).toMatchObject({ viewerRole: "page", proposalPrefill, currentProposal: null, proposals: [] })
+  })
+})
+
+describe("démonstration — plusieurs rendez-vous simultanés (SV-09)", () => {
+  const prefill = (bookingCapacity: number) => ({
+    pricing: { mode: "fixed" as const, amountMinor: 4500, currency: "EUR" }, durationMinutes: 90, delivery: "onsite" as const, city: "Paris",
+    settings: { timeZone: "Europe/Paris", location: null, cancellationTerms: null, bookingCapacity },
+  })
+
+  async function threeOnOneSlot(bookingCapacity: number) {
+    const { store, capability, offers } = setup()
+    offers.set("offre-coiffure", offerRef("offre-coiffure", { proposalPrefill: prefill(bookingCapacity) }))
+    const people = ["p-prisca", "p-steeve", "p-nadia"]
+    const requestIds: string[] = []
+    for (const person of people) {
+      await as(store, person)
+      requestIds.push(await sent(capability))
+    }
+    await as(store, "p-mireille")
+    for (const requestId of requestIds) expect((await capability.propose(proposalInput(requestId))).ok).toBe(true)
+    const accept = async (index: number) => {
+      await as(store, people[index]!)
+      return await capability.accept({ requestId: requestIds[index]!, expectedProposalVersion: 1 })
+    }
+    return { accept }
+  }
+
+  it("capacité deux : deux accords sur le même créneau réussissent, le troisième est refusé", async () => {
+    const { accept } = await threeOnOneSlot(2)
+    expect((await accept(0)).ok).toBe(true)
+    expect((await accept(1)).ok).toBe(true)
+    expect(await accept(2)).toEqual({ ok: false, code: "booking_slot_unavailable" })
+  })
+
+  it("par défaut, un seul rendez-vous à la fois", async () => {
+    const { accept } = await threeOnOneSlot(1)
+    expect((await accept(0)).ok).toBe(true)
+    expect(await accept(1)).toEqual({ ok: false, code: "booking_slot_unavailable" })
   })
 })

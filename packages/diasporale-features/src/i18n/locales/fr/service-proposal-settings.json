@@ -16,6 +16,11 @@
     "form": {
       "prefilled": "Formulaire prérempli depuis l’offre et ses réglages : vérifiez le créneau, le lieu et l’échéance avant d’envoyer.",
       "reusePrevious": "Reprendre la version précédente (version {{version}})"
-    }
+    },
+    "capacity": "Rendez-vous en même temps",
+    "capacityHint": "Combien de rendez-vous de cette prestation votre équipe tient à la même heure (un collaborateur, un fauteuil chacun). À 1, la page ne prend aucun autre rendez-vous pendant celui-ci."
+  },
+  "errors": {
+    "booking_capacity_invalid": "Choisissez de 1 à 10 rendez-vous en même temps."
   }
 }

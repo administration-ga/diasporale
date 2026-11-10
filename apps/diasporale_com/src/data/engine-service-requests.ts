@@ -117,6 +117,7 @@ function prefillView(prefill: DetailDto["proposalPrefill"] | undefined): Service
       timeZone: settings.timeZone,
       location: settings.location === null ? null : settings.location.mode === "onsite" ? { mode: "onsite", area: settings.location.area } : { mode: "remote" },
       cancellationTerms: settings.cancellationTerms,
+      bookingCapacity: settings.bookingCapacity,
     },
   }
 }

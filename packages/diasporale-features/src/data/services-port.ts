@@ -71,11 +71,13 @@ export interface ServiceOfferCardView {
  * SV-04 : les réglages de prestation d'une offre (fuseau, lieu approximatif ou à
  * distance, conditions d'annulation habituels), repris dans chaque nouvelle
  * proposition. Lus et écrits par l'équipe de la page seulement ; `null` : non réglé.
+ * SV-09 : les rendez-vous simultanés que la prestation admet (un par défaut).
  */
 export interface ServiceProviderSettingsView {
   readonly timeZone: string | null
   readonly location: ServiceLocation | null
   readonly cancellationTerms: string | null
+  readonly bookingCapacity: number
 }
 
 /** La fiche d'une offre : sa carte, son état, et si le lecteur peut la gérer. */

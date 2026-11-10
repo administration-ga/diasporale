@@ -154,13 +154,13 @@ describe("demandes de service — adaptateur moteur", () => {
   it("SV-04 : recopie la proposition préremplie servie à l'équipe de la page, réglages compris", () => {
     const prefill = {
       pricing: { mode: "fixed", amountMinor: 4500, currency: "EUR" }, durationMinutes: 90, delivery: "onsite", city: "Paris",
-      settings: { timeZone: "Europe/Paris", location: { mode: "onsite", area: "Paris 11e" }, cancellationTerms: "Libre jusqu'à la veille." },
+      settings: { timeZone: "Europe/Paris", location: { mode: "onsite", area: "Paris 11e" }, cancellationTerms: "Libre jusqu'à la veille.", bookingCapacity: 2 },
     }
     mocks.results.set("modules/diaspora/serviceRequests:getServiceRequest", { ...DETAIL, viewerRole: "page", proposalPrefill: prefill })
     const data = capability()
     const { result, rerender } = renderHook(() => data.useRequest("request-1"))
     expect(result.current.status === "ready" && result.current.data?.proposalPrefill).toEqual(prefill)
-    const quote = { ...prefill, pricing: { mode: "quote" }, durationMinutes: null, settings: { timeZone: null, location: { mode: "remote" }, cancellationTerms: null } }
+    const quote = { ...prefill, pricing: { mode: "quote" }, durationMinutes: null, settings: { timeZone: null, location: { mode: "remote" }, cancellationTerms: null, bookingCapacity: 1 } }
     mocks.results.set("modules/diaspora/serviceRequests:getServiceRequest", { ...DETAIL, viewerRole: "page", proposalPrefill: quote })
     rerender()
     expect(result.current.status === "ready" && result.current.data?.proposalPrefill).toEqual(quote)

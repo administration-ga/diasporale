@@ -82,6 +82,7 @@ function toProviderSettings(settings: DetailDto["providerSettings"]): ServicePro
     timeZone: settings.timeZone,
     location: location === null ? null : location.mode === "onsite" ? { mode: "onsite", area: location.area } : { mode: "remote" },
     cancellationTerms: settings.cancellationTerms,
+    bookingCapacity: settings.bookingCapacity,
   }
 }
 
@@ -98,6 +99,7 @@ function providerSettingsArgs(settings: ServiceProviderSettingsView | undefined)
       timeZone: settings.timeZone,
       location: location === null ? null : location.mode === "onsite" ? { mode: "onsite" as const, area: location.area } : { mode: "remote" as const },
       cancellationTerms: settings.cancellationTerms,
+      bookingCapacity: settings.bookingCapacity,
     },
   }
 }

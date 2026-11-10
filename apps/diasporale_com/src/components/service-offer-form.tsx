@@ -5,6 +5,7 @@ import {
   parseMajorAmount,
   parseServiceOffer,
   parseServiceProviderSettings,
+  SERVICE_BOOKING_CAPACITY_MAX,
   SERVICE_CANCELLATION_TERMS_MAX_LENGTH,
   SERVICE_CATEGORIES,
   SERVICE_CITY_MAX_LENGTH,
@@ -48,6 +49,9 @@ const SETTINGS_LOCATION_LABELS = {
   remote: "serviceProposalSettings.locationRemote",
 } as const satisfies Record<(typeof SETTINGS_LOCATION_MODES)[number], string>
 
+/** SV-09 : de un (par défaut) à dix rendez-vous simultanés. */
+const CAPACITY_CHOICES = Array.from({ length: SERVICE_BOOKING_CAPACITY_MAX }, (_, index) => index + 1)
+
 /**
  * Le formulaire d'une offre (React Hook Form + Zod). Les bornes de Zod sont
  * celles du domaine ; puis LA règle du domaine (`parseServiceOffer`) juge
@@ -75,6 +79,7 @@ const schema = z
     settingsArea: z.string().max(SERVICE_LOCATION_AREA_MAX_LENGTH, "proposal_location_invalid"),
     settingsTerms: z.string().max(SERVICE_CANCELLATION_TERMS_MAX_LENGTH, "proposal_terms_invalid"),
     settingsTimeZone: z.string(),
+    settingsCapacity: z.string(),
   })
   .superRefine((values, ctx) => {
     const input = inputOf(values)
@@ -120,6 +125,7 @@ const FIELD_OF: Partial<Record<string, FieldPath<Values>>> = {
   request_time_zone_invalid: "settingsTimeZone",
   proposal_location_invalid: "settingsArea",
   proposal_terms_invalid: "settingsTerms",
+  booking_capacity_invalid: "settingsCapacity",
 }
 
 function fieldOf(code: string): FieldPath<Values> {
@@ -132,6 +138,7 @@ function settingsOf(values: Values): ServiceProviderSettingsView {
     timeZone: values.settingsTimeZone === "" ? null : values.settingsTimeZone,
     location: values.settingsLocationMode === "remote" ? { mode: "remote" } : values.settingsLocationMode === "onsite" ? { mode: "onsite", area: values.settingsArea } : null,
     cancellationTerms: values.settingsTerms.trim() === "" ? null : values.settingsTerms,
+    bookingCapacity: Number(values.settingsCapacity),
   }
 }
 
@@ -185,6 +192,7 @@ function defaultsOf(offer: ServiceOfferDetailView | null, fallback: { readonly c
       settingsArea: "",
       settingsTerms: "",
       settingsTimeZone: "",
+      settingsCapacity: "1",
     }
   }
   const { pricing } = offer
@@ -206,6 +214,7 @@ function defaultsOf(offer: ServiceOfferDetailView | null, fallback: { readonly c
     settingsArea: location?.mode === "onsite" ? location.area : "",
     settingsTerms: settings?.cancellationTerms ?? "",
     settingsTimeZone: settings?.timeZone ?? "",
+    settingsCapacity: String(settings?.bookingCapacity ?? 1),
   }
 }
 
@@ -431,6 +440,13 @@ export function ServiceOfferForm(props: ServiceOfferFormProps) {
               <select id={field.id} aria-describedby={field.describedBy} aria-invalid={field.invalid || undefined} className={selectClass} disabled={busy} {...form.register("settingsTimeZone")}>
                 <option value="">{t("serviceProposalSettings.timeZoneDevice")}</option>
                 {zones.map((zone) => <option key={zone} value={zone}>{zone}</option>)}
+              </select>
+            )}
+          </Field>
+          <Field id={`${id}-settings-capacity`} label={t("serviceProposalSettings.capacity")} hint={t("serviceProposalSettings.capacityHint")} error={error("settingsCapacity")}>
+            {(field) => (
+              <select id={field.id} aria-describedby={field.describedBy} aria-invalid={field.invalid || undefined} className={selectClass} disabled={busy} {...form.register("settingsCapacity")}>
+                {CAPACITY_CHOICES.map((count) => <option key={count} value={String(count)}>{count}</option>)}
               </select>
             )}
           </Field>

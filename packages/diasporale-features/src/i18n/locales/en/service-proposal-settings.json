@@ -16,6 +16,11 @@
     "form": {
       "prefilled": "Form prefilled from the offer and its settings: check the slot, the place and the deadline before sending.",
       "reusePrevious": "Reuse the previous version (version {{version}})"
-    }
+    },
+    "capacity": "Appointments at the same time",
+    "capacityHint": "How many appointments for this service your team can hold at the same hour (one staff member or chair each). At 1, the page takes no other appointment during this one."
+  },
+  "errors": {
+    "booking_capacity_invalid": "Choose from 1 to 10 appointments at the same time."
   }
 }

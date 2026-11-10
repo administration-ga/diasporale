@@ -318,7 +318,7 @@ describe("/mon-activite/demandes/<id> — côté page", () => {
 
 describe("SV-04 — proposition préremplie depuis l'offre et ses réglages", () => {
   const requester = { displayName: "Awa OGOOUÉ", handle: "awa" }
-  const settings = { timeZone: "Europe/Paris", location: { mode: "onsite" as const, area: "Paris 11e" }, cancellationTerms: "Annulation libre jusqu'à la veille." }
+  const settings = { timeZone: "Europe/Paris", location: { mode: "onsite" as const, area: "Paris 11e" }, cancellationTerms: "Annulation libre jusqu'à la veille.", bookingCapacity: 1 }
   const sentWith = (proposalPrefill: ServiceRequestDetailView["proposalPrefill"]) => detail({
     viewerRole: "page", status: "sent", requester, currentProposal: null, proposals: [], deadlineAt: NOW + DAY + 4 * HOUR,
     actions: ["propose", "refuse"], timeline: [{ status: "sent", at: NOW - HOUR, version: null }], proposalPrefill,
@@ -344,7 +344,7 @@ describe("SV-04 — proposition préremplie depuis l'offre et ses réglages", ()
   })
 
   it("offre sur devis : montant laissé vide et refusé à l'envoi ; la ville de l'offre sert de lieu approximatif", async () => {
-    const { capability } = fake({ request: { status: "ready", data: sentWith({ pricing: { mode: "quote" }, durationMinutes: null, delivery: "both", city: "Paris", settings: { timeZone: null, location: null, cancellationTerms: null } }) } })
+    const { capability } = fake({ request: { status: "ready", data: sentWith({ pricing: { mode: "quote" }, durationMinutes: null, delivery: "both", city: "Paris", settings: { timeZone: null, location: null, cancellationTerms: null, bookingCapacity: 1 } }) } })
     render(tree(<ActivityRequestScreen requestId="request-1" />))
     fireEvent.click(screen.getByRole("button", { name: "Faire une proposition" }))
     expect([value("Montant"), value("Durée en minutes"), value("Ville ou quartier"), value("Conditions d’annulation")]).toEqual(["", "60", "Paris", ""])
@@ -354,7 +354,7 @@ describe("SV-04 — proposition préremplie depuis l'offre et ses réglages", ()
   })
 
   it("une offre à distance seulement se propose à distance", () => {
-    fake({ request: { status: "ready", data: sentWith({ pricing: { mode: "from", amountMinor: 3000, currency: "XAF" }, durationMinutes: 45, delivery: "remote", city: "Paris", settings: { timeZone: null, location: null, cancellationTerms: null } }) } })
+    fake({ request: { status: "ready", data: sentWith({ pricing: { mode: "from", amountMinor: 3000, currency: "XAF" }, durationMinutes: 45, delivery: "remote", city: "Paris", settings: { timeZone: null, location: null, cancellationTerms: null, bookingCapacity: 1 } }) } })
     render(tree(<ActivityRequestScreen requestId="request-1" />))
     fireEvent.click(screen.getByRole("button", { name: "Faire une proposition" }))
     expect((screen.getByLabelText("À distance") as HTMLInputElement).checked).toBe(true)

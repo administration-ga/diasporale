@@ -97,6 +97,8 @@ export const SERVICE_CANCELLATION_TERMS_MIN_LENGTH = 2
 export const SERVICE_CANCELLATION_TERMS_MAX_LENGTH = 500
 export const SERVICE_REASON_MAX_LENGTH = 500
 export const SERVICE_TIME_ZONE_MAX_LENGTH = 64
+/** SV-09 : rendez-vous simultanés qu'une prestation admet, de un (par défaut) à dix. */
+export const SERVICE_BOOKING_CAPACITY_MAX = 10
 /** Le plus grand instant qu'une date JavaScript sait représenter. */
 const MAX_INSTANT = 8_640_000_000_000_000
 
@@ -151,6 +153,8 @@ export const SERVICE_REQUEST_REFUSALS = [
   // La contestation d'une absence (DG-015).
   "request_contest_unavailable",
   "request_contest_window_closed",
+  // Les réglages de prestation (SV-09).
+  "booking_capacity_invalid",
 ] as const
 export type ServiceRequestRefusal = (typeof SERVICE_REQUEST_REFUSALS)[number]
 
@@ -496,22 +500,25 @@ export function parseServiceProposal(input: ServiceProposalInput, now: number): 
 /**
  * Les réglages de prestation d'une offre, lus par l'équipe de sa page seulement :
  * les conditions HABITUELLES reprises dans chaque nouvelle proposition (fuseau,
- * lieu approximatif ou à distance, conditions d'annulation). Chaque prestation
- * porte les siens : une offre a déjà sa ville et son mode, une coupe et un
- * mariage n'ont pas les mêmes conditions. `null` : rien de réglé.
+ * lieu approximatif ou à distance, conditions d'annulation) et, SV-09, les
+ * rendez-vous simultanés que la prestation admet. Chaque prestation porte les
+ * siens : une offre a déjà sa ville et son mode, une coupe et un mariage n'ont
+ * pas les mêmes conditions. `null` : rien de réglé ; capacité : un par défaut.
  */
 export interface ServiceProviderSettings {
   readonly timeZone: string | null
   readonly location: ServiceLocation | null
   readonly cancellationTerms: string | null
+  readonly bookingCapacity: number
 }
 
-export const NO_PROVIDER_SETTINGS: ServiceProviderSettings = Object.freeze({ timeZone: null, location: null, cancellationTerms: null })
+export const NO_PROVIDER_SETTINGS: ServiceProviderSettings = Object.freeze({ timeZone: null, location: null, cancellationTerms: null, bookingCapacity: 1 })
 
 export interface ServiceProviderSettingsInput {
   readonly timeZone?: string | null
   readonly location?: ServiceLocation | null
   readonly cancellationTerms?: string | null
+  readonly bookingCapacity?: number | null
 }
 
 /**
@@ -539,7 +546,23 @@ export function parseServiceProviderSettings(input: ServiceProviderSettingsInput
     const textRefusal = serviceTextRefusal(text)
     if (textRefusal !== null) return refuse(textRefusal)
   }
-  return ok({ timeZone, location, cancellationTerms: terms.length > 0 ? terms : null })
+  const bookingCapacity = input.bookingCapacity ?? 1
+  if (!Number.isSafeInteger(bookingCapacity) || bookingCapacity < 1 || bookingCapacity > SERVICE_BOOKING_CAPACITY_MAX) return refuse("booking_capacity_invalid")
+  return ok({ timeZone, location, cancellationTerms: terms.length > 0 ? terms : null, bookingCapacity })
+}
+
+/**
+ * SV-09 — la règle de capacité d'une page : un rendez-vous de capacité `capacity`
+ * n'est admis que si les rendez-vous CONFIRMÉS de la page qui le chevauchent sont
+ * moins nombreux que la plus petite capacité en jeu (la sienne et celle de chacun
+ * d'eux). À tout instant, aucun rendez-vous ne se tient donc avec plus de
+ * rendez-vous simultanés que sa capacité déclarée ; à un partout (par défaut),
+ * c'est l'agenda unique d'avant : aucun chevauchement. Le compte est prudent :
+ * deux rendez-vous qui se suivent mais chevauchent tous deux le nouveau comptent.
+ */
+export function bookingCapacityAllows(input: { readonly capacity: number; readonly overlapping: readonly { readonly capacity: number }[] }): boolean {
+  const limit = input.overlapping.reduce((smallest, booking) => Math.min(smallest, booking.capacity), input.capacity)
+  return input.overlapping.length < limit
 }
 
 /** La version citée par un geste doit être la version COURANTE (deux onglets, deux signataires). */
