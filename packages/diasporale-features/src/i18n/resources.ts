@@ -26,6 +26,7 @@ import enDiasporale from "./locales/en/diasporale.json"
 import enDiscovery from "./locales/en/discovery.json"
 import enDoorVision from "./locales/en/door-vision.json"
 import enHubNotices from "./locales/en/hub-notices.json"
+import enHubEvents from "./locales/en/hub-events.json"
 import enNavigation from "./locales/en/navigation.json"
 import enPageAdmin from "./locales/en/page-admin.json"
 import enPageBrowsing from "./locales/en/page-browsing.json"
@@ -66,7 +67,12 @@ import enWelcomeProfile from "./locales/en/welcome-profile.json"
 import enPostPublicationState from "./locales/en/post-publication-state.json"
 import enCommentPages from "./locales/en/comment-pages.json"
 import enObjectReports from "./locales/en/object-reports.json"
+import enHubShortcuts from "./locales/en/hub-shortcuts.json"
+import enHubAbout from "./locales/en/hub-about.json"
+import enCommunityRules from "./locales/en/community-rules.json"
+import enReportEmergency from "./locales/en/report-emergency.json"
 import enMessagesUnread from "./locales/en/messages-unread.json"
+import enIdnEntry from "./locales/en/idn-entry.json"
 import enInstallableApp from "./locales/en/installable-app.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
@@ -83,6 +89,7 @@ import frDiasporale from "./locales/fr/diasporale.json"
 import frDiscovery from "./locales/fr/discovery.json"
 import frDoorVision from "./locales/fr/door-vision.json"
 import frHubNotices from "./locales/fr/hub-notices.json"
+import frHubEvents from "./locales/fr/hub-events.json"
 import frNavigation from "./locales/fr/navigation.json"
 import frPageAdmin from "./locales/fr/page-admin.json"
 import frPageBrowsing from "./locales/fr/page-browsing.json"
@@ -123,7 +130,12 @@ import frWelcomeProfile from "./locales/fr/welcome-profile.json"
 import frPostPublicationState from "./locales/fr/post-publication-state.json"
 import frCommentPages from "./locales/fr/comment-pages.json"
 import frObjectReports from "./locales/fr/object-reports.json"
+import frHubShortcuts from "./locales/fr/hub-shortcuts.json"
+import frHubAbout from "./locales/fr/hub-about.json"
+import frCommunityRules from "./locales/fr/community-rules.json"
+import frReportEmergency from "./locales/fr/report-emergency.json"
 import frMessagesUnread from "./locales/fr/messages-unread.json"
+import frIdnEntry from "./locales/fr/idn-entry.json"
 import frInstallableApp from "./locales/fr/installable-app.json"
 
 export interface LocaleTree {
@@ -145,6 +157,7 @@ export const LOCALE_PARTS = {
     discovery: frDiscovery,
     "door-vision": frDoorVision,
     "hub-notices": frHubNotices,
+    "hub-events": frHubEvents,
     navigation: frNavigation,
     "page-admin": frPageAdmin,
     "page-browsing": frPageBrowsing,
@@ -188,7 +201,12 @@ export const LOCALE_PARTS = {
     "call-settings": frCallSettings,
     "welcome-profile": frWelcomeProfile,
     "object-reports": frObjectReports,
+    "hub-shortcuts": frHubShortcuts,
+    "hub-about": frHubAbout,
+    "community-rules": frCommunityRules,
+    "report-emergency": frReportEmergency,
     "messages-unread": frMessagesUnread,
+    "idn-entry": frIdnEntry,
     "installable-app": frInstallableApp,
   },
   en: {
@@ -204,6 +222,7 @@ export const LOCALE_PARTS = {
     discovery: enDiscovery,
     "door-vision": enDoorVision,
     "hub-notices": enHubNotices,
+    "hub-events": enHubEvents,
     navigation: enNavigation,
     "page-admin": enPageAdmin,
     "page-browsing": enPageBrowsing,
@@ -247,7 +266,12 @@ export const LOCALE_PARTS = {
     "call-settings": enCallSettings,
     "welcome-profile": enWelcomeProfile,
     "object-reports": enObjectReports,
+    "hub-shortcuts": enHubShortcuts,
+    "hub-about": enHubAbout,
+    "community-rules": enCommunityRules,
+    "report-emergency": enReportEmergency,
     "messages-unread": enMessagesUnread,
+    "idn-entry": enIdnEntry,
     "installable-app": enInstallableApp,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>

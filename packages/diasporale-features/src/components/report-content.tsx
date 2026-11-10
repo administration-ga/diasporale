@@ -38,6 +38,7 @@ import { cn } from "../lib/cn"
 import { Button } from "../primitives/button"
 import { RadioCard, RadioGroup } from "../primitives/radio-group"
 import { Sheet, SheetContent, SheetTrigger } from "../primitives/sheet"
+import { ReportEmergencyNotice, ReportRulesLink } from "./report-guidance"
 
 /** La capacité, ou `null` : fournisseur sans signalements, ou brique rendue hors de l'application. */
 export function useOptionalContentReports(): ContentReportsCapability | null {
@@ -176,6 +177,8 @@ function ReportForm(props: {
 
   return (
     <form noValidate onSubmit={(event) => void form.handleSubmit(send)(event)} className="flex min-w-0 flex-col gap-4" aria-busy={busy}>
+      {/* MD-06 : un signalement n'alerte pas les secours ; la consigne d'urgence passe en tête. */}
+      <ReportEmergencyNotice />
       {props.capability.demonstration ? <p className="rounded-lg bg-muted px-3 py-2 text-[13px]">{t("contentReports.demoNotice")}</p> : null}
       {rootNotice ? <p className="rounded-lg bg-muted px-3 py-2 text-[13px]">{t("contentReports.rootNotice")}</p> : null}
       {props.hint !== undefined ? <p className="text-sm">{props.hint}</p> : null}
@@ -207,6 +210,8 @@ function ReportForm(props: {
         ) : null}
       </fieldset>
       {props.capability.demonstration ? null : <p className="text-[13px] text-muted-foreground">{t("report.followUp")}</p>}
+      {/* MD-05 : chaque motif renvoie à une règle, que la page des règles détaille. */}
+      <ReportRulesLink />
       {failure !== null ? <p role="alert" className="text-sm font-medium text-destructive">{t(errorKey(failure))}</p> : null}
       <div className="flex flex-wrap justify-end gap-2">
         <Button type="button" variant="ghost" disabled={busy} onClick={props.onClose}>

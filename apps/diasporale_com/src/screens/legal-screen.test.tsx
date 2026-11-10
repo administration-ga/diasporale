@@ -31,15 +31,15 @@ function renderText(kind: LegalTextKind, locale: "fr" | "en" = "fr") {
 }
 
 describe("Textes du site — chaque page dit sa version, sa date et son marqueur (LX-05)", () => {
-  it.each(LEGAL_TEXT_KINDS)("« %s » : titre, version et date du domaine, marqueur bloquant, toutes ses rubriques", (kind) => {
+  it.each(LEGAL_TEXT_KINDS)("« %s » : titre, version et date du domaine, marqueur de son état, toutes ses rubriques", (kind) => {
     const t = getFixedT("fr")
     const edition = LEGAL_TEXTS[kind]
     renderText(kind)
     expect(screen.getByRole("heading", { level: 1, name: t(`legal.${kind}.title`) })).toBeInTheDocument()
     expect(screen.getByText(normalized(t("legal.edition", { version: edition.version, date: formatLegalTextDate(edition.date, "fr") })))).toBeInTheDocument()
-    // Aucun texte n'est fourni : le marqueur est visible et ne se ferme pas.
+    // Aucun texte n'est définitif : le marqueur de son état (à fournir, ou provisoire) est visible et ne se ferme pas.
     const marker = screen.getByRole("note")
-    expect(marker).toHaveTextContent(normalized(t("legal.todoLawyer")))
+    expect(marker).toHaveTextContent(normalized(t(edition.status === "provisional" ? "legal.provisional.heading" : "legal.todoLawyer")))
     expect(within(marker).queryByRole("button")).toBeNull()
     expect(screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)).toEqual(
       edition.sections.map((section) => t(`legal.${kind}.${section}.title`)),
@@ -47,7 +47,7 @@ describe("Textes du site — chaque page dit sa version, sa date et son marqueur
     for (const section of edition.sections) expect(screen.getByText(normalized(t(`legal.${kind}.${section}.body`)))).toBeInTheDocument()
   })
 
-  it.each(["terms", "community"] as const)("« %s » n'invente aucun contenu : chaque rubrique dit ce qui reste à fournir", (kind) => {
+  it.each(["terms"] as const)("« %s » n'invente aucun contenu : chaque rubrique dit ce qui reste à fournir", (kind) => {
     const t = getFixedT("fr")
     for (const section of LEGAL_TEXTS[kind].sections) expect(t(`legal.${kind}.${section}.body`)).toMatch(/^À fournir : /)
     const en = getFixedT("en")

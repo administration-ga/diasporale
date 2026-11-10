@@ -40,37 +40,6 @@
         "body": "To be provided: the applicable law and how disputes are settled."
       }
     },
-    "community": {
-      "title": "Community rules",
-      "spirit": {
-        "title": "The spirit of the network",
-        "body": "To be provided: what the network sets out to make possible between its members."
-      },
-      "respect": {
-        "title": "Respect for people",
-        "body": "To be provided: what is expected of everyone in conversations."
-      },
-      "safety": {
-        "title": "Scams and safety",
-        "body": "To be provided: how to protect yourself from scams, and what is forbidden."
-      },
-      "privacy": {
-        "title": "Other people's privacy",
-        "body": "To be provided: what must not be published about another person."
-      },
-      "offers": {
-        "title": "Offers, listings and services",
-        "body": "To be provided: what may be offered in the network, and how."
-      },
-      "reporting": {
-        "title": "Reporting",
-        "body": "To be provided: when to report content or a person."
-      },
-      "sanctions": {
-        "title": "Sanctions and appeals",
-        "body": "To be provided: the possible measures and how to challenge them."
-      }
-    },
     "contact": {
       "title": "Contact",
       "report": {
@@ -102,7 +71,7 @@
   },
   "settings": {
     "texts": {
-      "lead": "The site's texts, with their version and date. Those not yet provided say so.",
+      "lead": "The site's texts, with their version and date. Those not yet provided, or not yet reviewed, say so.",
       "pending": "Text to be provided"
     }
   }

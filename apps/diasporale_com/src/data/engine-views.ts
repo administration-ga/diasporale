@@ -57,6 +57,8 @@ type MyPerson = NonNullable<FunctionReturnType<typeof api.modules.people.persons
 type MyIdentity = NonNullable<FunctionReturnType<typeof api.modules.diaspora.membership.myIdentity>>
 type MyMembership = NonNullable<FunctionReturnType<typeof api.modules.diaspora.membership.myMembership>>
 type HubView = FunctionReturnType<typeof api.modules.diaspora.hubs.getCountryHub>
+/** La vitrine publique des pays ouverts : sa projection stricte, sans la date du comptage des évènements. */
+type OpenHubView = FunctionReturnType<typeof api.modules.diaspora.hubs.listOpenCountries>[number]
 type FeedItem = FunctionReturnType<typeof api.modules.posts.posts.myFeed>["items"][number]
 type EngineMedia = FeedItem["media"][number]
 type DeclaredMedia = NonNullable<FunctionArgs<typeof api.modules.posts.posts.publish>["media"]>[number]
@@ -128,7 +130,7 @@ export function toMembershipView(person: MyPerson, membership: MyMembership): Me
   }
 }
 
-export function toOpenCountries(hubs: readonly HubView[]): OpenCountryView[] {
+export function toOpenCountries(hubs: readonly OpenHubView[]): OpenCountryView[] {
   return hubs.flatMap((hub) =>
     isResidenceCountry(hub.country) ? [{ country: hub.country, counters: hub.counters, countersSource: "materialized" as const }] : [],
   )
@@ -140,9 +142,12 @@ export function toOpenCountries(hubs: readonly HubView[]): OpenCountryView[] {
  * comptés à la lecture. Ses pages se lisent par la capacité « pages »
  * (`diaspora.hubPages.listCountryPages`, bornée par nature, `toHubPagesView`) :
  * les listes du hub restent vides ici plutôt que recopiées. Les évènements d'un
- * pays ne se lisent pas encore (HB-02, puis EV-05) : le compteur `upcomingEvents`
- * du moteur vaut toujours zéro sans rien mesurer, la source le dit « non mesurée »
- * et l'écran ne montre ni liste ni nombre (EV-02).
+ * pays se lisent par `associationEvents.useCountryEvents` (HB-02,
+ * `diaspora.hubEvents.listCountryEvents`) : la liste jointe reste vide. Leur
+ * compteur n'est « matérialisé » que si le passage nocturne l'a compté exactement
+ * (`upcomingEventsComputedAt`) ; sinon il est « non mesuré » et l'écran ne montre
+ * aucun nombre (EV-02). La date du dernier passage (`countersComputedAt`) est
+ * reprise telle quelle (HB-05) : sans elle, aucun compteur ne se dit mesuré.
  */
 export function toCountryHubView(hub: HubView, country: CountryCode): CountryHubView {
   return {
@@ -150,11 +155,13 @@ export function toCountryHubView(hub: HubView, country: CountryCode): CountryHub
     open: hub.open,
     counters: hub.counters,
     countersSource: "materialized",
+    countersComputedAt: typeof hub.countersComputedAt === "number" ? hub.countersComputedAt : null,
     officialPages: [],
     associations: [],
     companies: [],
     events: [],
-    eventsSource: "unmeasured",
+    // Un moteur antérieur à HB-02 ne rend pas la date : sans elle, rien n'est mesuré.
+    eventsSource: typeof hub.upcomingEventsComputedAt === "number" ? "materialized" : "unmeasured",
   }
 }
 

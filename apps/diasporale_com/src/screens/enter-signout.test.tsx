@@ -23,6 +23,8 @@ vi.mock("@diasporale/features/data", async (importOriginal) => ({
   useSession: () => mocks.session,
   useDataSource: () => ({ kind: "demo" }),
   useActions: () => ({}),
+  // Les portes de la démonstration (EA-02) : toutes ouvertes, en simulation.
+  useEntryDoors: () => ({ status: "ready", data: { idn: true, emailCode: true } }),
 }))
 // La porte (vitrine, mot-symbole, pied de page) n'est pas l'objet de ces tests : seule la carte d'accès l'est.
 vi.mock("@/components/entry-door", () => ({

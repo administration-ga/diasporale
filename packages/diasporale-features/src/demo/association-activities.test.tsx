@@ -1486,3 +1486,51 @@ describe("DG-023 — pagination de l'agenda associatif de démonstration", () =>
     expect(ready(page.result.current)).toMatchObject({ isDone: true, continueCursor: null })
   })
 })
+
+describe("HB-02 — évènements d'un pays dans le hub, démonstration alignée sur le moteur", () => {
+  it("ne lit que les évènements ouverts au réseau, programmés, publiés et à venir des associations du pays, par fenêtres", async () => {
+    const context = setup()
+    const later = await event(context, { audience: "network", startAt: NOW + 48 * HOUR, endAt: NOW + 50 * HOUR }, "pays-plus-tard")
+    const sooner = await event(context, { audience: "network", startAt: NOW + 24 * HOUR, endAt: NOW + 26 * HOUR }, "pays-bientot")
+    await event(context, { audience: "association", startAt: NOW + 30 * HOUR, endAt: NOW + 31 * HOUR }, "pays-adherents")
+    const cancelled = await event(context, { audience: "network", startAt: NOW + 60 * HOUR, endAt: NOW + 61 * HOUR }, "pays-annule")
+    const activities = publishedFixture(context)
+    expect(await activities.events.cancel({ eventId: cancelled, expectedVersion: 1 })).toEqual({ ok: true, value: null })
+    // Un évènement nouveau attend la modération : aucun faux modérateur ne le publie ici.
+    expect((await activities.events.create({ ...eventInput({ audience: "network", startAt: NOW + 72 * HOUR, endAt: NOW + 73 * HOUR }), idempotencyKey: "pays-retenu" })).ok).toBe(true)
+    const countryEvents = activities.events.useCountryEvents!
+    const page = createDemoSeed(NOW).pages[PAGE]!
+
+    const all = ready(renderHook(() => countryEvents({ country: "FR", anchor: NOW, cursor: null })).result.current)
+    expect(all.items.map((row) => row.eventId)).toEqual([sooner, later])
+    expect(all).toMatchObject({ isDone: true, continueCursor: null, partial: false })
+    // La carte seulement : ni inscrits, ni capacité, ni état du lecteur.
+    expect(all.items[0]).toEqual({
+      eventId: sooner, pageId: PAGE, title: eventInput().title, location: "Salle de démonstration",
+      startAt: NOW + 24 * HOUR, endAt: NOW + 26 * HOUR, timeZone: "Europe/Paris", organizer: { name: page.name, handle: page.handle },
+    })
+
+    const list = renderHook((props: { cursor: string | null }) => countryEvents({ country: "FR", anchor: NOW, cursor: props.cursor, limit: 1 }), { initialProps: { cursor: null as string | null } })
+    const first = ready(list.result.current)
+    expect(first.items.map((row) => row.eventId)).toEqual([sooner])
+    expect(first.isDone).toBe(false)
+    list.rerender({ cursor: first.continueCursor })
+    expect(ready(list.result.current)).toMatchObject({ items: [expect.objectContaining({ eventId: later })], isDone: true })
+
+    // Un autre pays ne montre pas les associations de France ; l'instant de l'écran écarte ce qui commence avant lui.
+    expect(ready(renderHook(() => countryEvents({ country: "CA", anchor: NOW, cursor: null })).result.current).items).toEqual([])
+    expect(ready(renderHook(() => countryEvents({ country: "FR", anchor: NOW + 30 * HOUR, cursor: null })).result.current).items.map((row) => row.eventId)).toEqual([later])
+    // Le curseur reste à son pays et à son instant.
+    expect(renderHook(() => countryEvents({ country: "CA", anchor: NOW, cursor: first.continueCursor })).result.current).toEqual({ status: "error", code: "unknown" })
+    expect(renderHook(() => countryEvents({ country: "FR", anchor: NOW + 1, cursor: first.continueCursor })).result.current).toEqual({ status: "error", code: "unknown" })
+  })
+
+  it("refuse la lecture à un compte suspendu, comme les autres lectures associatives", async () => {
+    const context = setup()
+    await event(context, { audience: "network" }, "pays-suspendu")
+    const seed = context.store.getState()
+    const suspended = setup({ state: { ...seed, memberships: { ...seed.memberships, "p-steeve": { ...seed.memberships["p-steeve"]!, grounds: { ...seed.memberships["p-steeve"]!.grounds, suspension: { until: null, readAccess: "none" } } } } } })
+    const result = renderHook(() => suspended.events.useCountryEvents!({ country: "FR", anchor: NOW, cursor: null })).result.current
+    expect(result.status).toBe("error")
+  })
+})

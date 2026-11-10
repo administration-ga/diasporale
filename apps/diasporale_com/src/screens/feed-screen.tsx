@@ -2,7 +2,7 @@
 
 import { FEED_SCOPES, parseFeedScope, parseResidenceCountry, type CountryCode, type FeedScope } from "@diasporale/domain"
 import { Avatar, Card, EmptyState, EventCard, FeedDiscovery, FolderTabsNav, MemberSuggestions, StatCounter, countryName } from "@diasporale/features"
-import { useCountryHub, type MembershipView } from "@diasporale/features/data"
+import { useCountryHub, useOptionalDataSource, type MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { ArrowRightIcon, GalleryVerticalEndIcon, ListIcon, NewspaperIcon } from "lucide-react"
 import NextLink from "next/link"
@@ -13,6 +13,7 @@ import { AppShell, useComposer } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
 import { FeedPages } from "@/components/feed-pages"
 import { FeedStories } from "@/components/feed-stories"
+import { countryEventsReader, RailCountryEvents } from "@/components/hub-events"
 import { StatusBanner } from "@/components/status-banner"
 import { normalizeFeedTag, routes } from "@/lib/routes"
 
@@ -240,14 +241,16 @@ function ListReturn(props: { postId: string | null; fallback: RefObject<HTMLAnch
 }
 
 /**
- * Rail droit (≥ 1 280 px) : le hub de mon pays et ses prochains évènements. Tant
- * que le fournisseur ne mesure pas les évènements d'un pays (EV-02), le rail ne
- * montre ni leur nombre ni « aucun évènement » : il dit où ils se trouvent.
+ * Rail droit (≥ 1 280 px) : le hub de mon pays et ses prochains évènements, lus
+ * par la capacité des évènements du pays (HB-02). Leur nombre ne s'affiche que
+ * mesuré par le passage nocturne (EV-02) ; un fournisseur qui ne lit pas les
+ * évènements d'un pays ne dit pas « aucun évènement » : il dit où ils se trouvent.
  */
 export function FeedRail(props: { membership: MembershipView }) {
   const { t, locale } = useDiasporaleT()
   const country = props.membership.facet.countryOfResidence
   const hub = useCountryHub(country)
+  const countryEvents = countryEventsReader(useOptionalDataSource()?.associationEvents)
   const now = Date.now()
   const eventsMeasured = hub.status === "ready" && hub.data.eventsSource !== "unmeasured"
   return (
@@ -275,7 +278,16 @@ export function FeedRail(props: { membership: MembershipView }) {
           {t("rail.upcoming")}
         </h2>
         {/* Rien n'est affirmé avant la lecture du hub : ni liste, ni « aucun évènement ». */}
-        {hub.status !== "ready" ? null : hub.data.eventsSource === "unmeasured" ? (
+        {hub.status !== "ready" ? null : hub.data.eventsSource === "demo" ? (
+          // La démonstration joint au hub ses évènements fictifs (autre modèle, que EV-05 réunira).
+          hub.data.events.length > 0 ? (
+            hub.data.events.slice(0, 3).map((event) => <EventCard key={event.id} event={event} now={now} hubCountry={country} />)
+          ) : (
+            <p className="text-[13px] text-muted-foreground">{t("rail.noEvents")}</p>
+          )
+        ) : countryEvents ? (
+          <RailCountryEvents read={countryEvents} country={country} />
+        ) : (
           <>
             <p className="text-[13px] text-muted-foreground">{t("rail.eventsUnlisted")}</p>
             <NextLink
@@ -286,10 +298,6 @@ export function FeedRail(props: { membership: MembershipView }) {
               <ArrowRightIcon className="size-4" aria-hidden />
             </NextLink>
           </>
-        ) : hub.data.events.length > 0 ? (
-          hub.data.events.slice(0, 3).map((event) => <EventCard key={event.id} event={event} now={now} hubCountry={country} />)
-        ) : (
-          <p className="text-[13px] text-muted-foreground">{t("rail.noEvents")}</p>
         )}
       </section>
     </>

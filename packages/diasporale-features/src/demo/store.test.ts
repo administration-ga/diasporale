@@ -334,6 +334,13 @@ describe("compteurs de hub et persistance", () => {
     expect(hub.events.length).toBeGreaterThan(0)
   })
 
+  it("aucun passage dans la démonstration : ses compteurs, comptés à la lecture et signalés, ne portent aucune date (HB-05)", () => {
+    const { store } = demo()
+    const hub = countryHubView(store.getState(), "FR", T0)
+    expect(hub.countersSource).toBe("demo")
+    expect(hub.countersComputedAt).toBeNull()
+  })
+
   it("aucun évènement de poste consulaire : la démonstration ne montre pas ce que le moteur ne sert pas (VC-01)", () => {
     const state = demo().store.getState()
     expect(state.events.length).toBeGreaterThan(0)

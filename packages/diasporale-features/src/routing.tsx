@@ -35,6 +35,8 @@ export interface FeatureRoutes {
   arrivalKitResource?(resourceId: string): string
   /** Avis d'une conversation de mise en relation (cloche, CC-6) : le fil, sous la messagerie de l'application. */
   contextualConversation?(threadId: string): string
+  /** Les règles de la communauté (MD-05), page publique : la feuille de signalement y renvoie. */
+  communityRules?(): string
   hub(country: CountryCode): string
   /** Le filtre restreint le fil ; une carte peut conserver sa portée et le pays de son hub. */
   feed(tag?: string, context?: { readonly scope: FeedScope; readonly country?: CountryCode }): string
@@ -63,4 +65,12 @@ export function useRouting(): RoutingValue {
   const value = useContext(RoutingContext)
   if (value === null) throw new Error("RoutingProvider manquant : l'application doit fournir sa table de routes.")
   return value
+}
+
+/**
+ * La table de routes, ou `null` quand la brique est rendue hors de l'application (feuille de
+ * signalement montée seule) : le lien qui en dépend se tait au lieu d'inventer une adresse.
+ */
+export function useOptionalRouting(): RoutingValue | null {
+  return useContext(RoutingContext)
 }

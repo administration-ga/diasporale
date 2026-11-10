@@ -7,6 +7,7 @@ import { act, cleanup, fireEvent, render, screen, within } from "@testing-librar
 import { useState, type ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { CommunityShortcuts } from "@/components/community-shortcuts"
 import type { IcomNetwork, IcomState } from "@/components/icom"
 import { engineRoutes } from "@/lib/engine-routes"
 import { routes } from "@/lib/routes"
@@ -39,7 +40,7 @@ vi.mock("@antsia/social-features/reseau-personnel", async () => ({
   ...await import("@antsia/social-features/features/reseau-personnel/cursor-pages"),
   EvenementsPanel: (props: { now: number; canWrite?: boolean }) => { const [marker, setMarker] = useState(""); mocks.panel(props); return <section aria-label="Agenda réutilisé du moteur"><input aria-label="Repère du panneau moteur" value={marker} onChange={(event) => setMarker(event.target.value)} /></section> },
 }))
-vi.mock("./hub-screen", () => ({ HubScreen: (props: { iso: string; entryAction?: ReactNode }) => <section aria-label={`Hub ${props.iso}`}>{props.entryAction}</section> }))
+vi.mock("./hub-screen", () => ({ HubScreen: (props: { iso: string }) => <section aria-label={`Hub ${props.iso}`} /> }))
 
 const t = getFixedT("fr")
 const NOW = Date.UTC(2026, 9, 18, 12)
@@ -141,9 +142,12 @@ describe("/agenda — panneau moteur existant et démonstration honnête", () =>
     expect(mocks.panel).not.toHaveBeenCalled()
   })
 
-  it("garde le point d'entrée Mon agenda dans Communautés et le hub du pays inchangé", () => {
+  it("garde le point d'entrée Mon agenda dans les rubriques du hub, sans pays, et le hub de Communautés inchangé", () => {
     render(<I18nProvider locale="fr"><CommunitiesScreen /></I18nProvider>)
     expect(screen.getByRole("region", { name: "Hub FR" })).toBeVisible()
+    cleanup()
+    // Le hub pose ces rubriques sur tout pays (HB-04) : l'agenda, personnel, ne suit pas le pays consulté.
+    render(<I18nProvider locale="fr"><CommunityShortcuts country="CA" /></I18nProvider>)
     expect(screen.getByRole("link", { name: t("eventCalendar.agendaTitle") })).toHaveAttribute("href", routes.agenda())
   })
 

@@ -1,0 +1,16 @@
+{
+  "hubAbout": {
+    "summary": "À propos du hub — {{country}}",
+    "statusLabel": "Statut",
+    "statusOpen": "Pays ouvert : les membres qui y résident peuvent publier dans ce hub. Tout membre de DIASPORALE le lit, quel que soit son pays.",
+    "statusNotOpen": "Pas encore ouvert : tout membre lit ce hub. Ceux qui y résident peuvent publier pour toute la diaspora ; la publication dans ce hub attend l'ouverture du pays.",
+    "openingLabel": "Ouverture d'un pays",
+    "openingRule": "Un pays est ouvert par l'administration de la plateforme. Le réseau s'est donné pour règle de l'ouvrir avec {{relays}} associations relais et {{moderators}} modérateur ; l'application ne vérifie pas encore cette condition d'elle-même.",
+    "moderationLabel": "Modération et signalement",
+    "reportReminder": "Une publication, un commentaire ou une page contraire aux règles ? Ouvrez son menu et choisissez « Signaler » : l'équipe de modération du réseau l'examine, et son auteur ne sait pas qui l'a signalé.",
+    "reportsLink": "Suivre mes signalements",
+    "rulesLink": "Lire les règles de la communauté",
+    "countedOn": "Comptés le {{date}}.",
+    "visibleMembers": "Membres visibles : ceux qui ont choisi l'annuaire."
+  }
+}

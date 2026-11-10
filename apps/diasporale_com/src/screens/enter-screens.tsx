@@ -16,7 +16,7 @@ import {
   normalizeFamilyName,
   normalizeGivenNames,
 } from "@diasporale/features"
-import { useActions, useDataSource, useSession } from "@diasporale/features/data"
+import { useActions, useDataSource, useEntryDoors, useSession } from "@diasporale/features/data"
 import { DEMO_IDN_IDENTITIES, isValidDestination } from "@diasporale/features/demo"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { ArrowLeftIcon, FlaskConicalIcon, MailIcon, PhoneIcon } from "lucide-react"
@@ -253,12 +253,16 @@ export function CodeScreen() {
  * authentification. L'écran qui le monte décide du départ d'une session déjà
  * ouverte (`useLeaveEntryWhenSignedIn`) : après une déconnexion incomplète, la
  * porte le suspend. Dans la porte (`compact`), le bouton dit « Se connecter »,
- * ou « Recevoir le code » quand la carte crée un compte.
+ * ou « Recevoir le code » quand la carte crée un compte. Un déploiement qui ne
+ * sait pas envoyer le code le dit, et le bouton reste fermé (EA-02) ; tant que
+ * les portes se lisent, ou si elles sont illisibles, l'envoi reste ouvert.
  */
 export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
   const { t } = useDiasporaleT()
   const actions = useActions()
   const source = useDataSource()
+  const doors = useEntryDoors()
+  const codeClosed = doors.status === "ready" && !doors.data.emailCode
   const router = useRouter()
   const ids = useId()
   const [kind, setKind] = useState<"email" | "phone">("email")
@@ -351,12 +355,14 @@ export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
                 autoComplete={kind === "email" ? "email" : "tel"}
                 spellCheck={false}
                 readOnly={sending}
+                disabled={codeClosed}
                 className={props.compact ? "h-12 text-base" : undefined}
                 {...destinationForm.register("destination")}
               />
             )}
           </Field>
-          <Button type="submit" size="lg" disabled={sending}>
+          {codeClosed ? <p className="text-[13px] text-muted-foreground">{t("entryDoors.codeClosed")}</p> : null}
+          <Button type="submit" size="lg" disabled={sending || codeClosed}>
             {sending ? t("common.pleaseWait") : t(props.compact && !props.signUp ? "landing.signIn" : "code.send")}
           </Button>
         </form>

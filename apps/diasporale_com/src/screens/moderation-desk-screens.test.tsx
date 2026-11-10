@@ -422,6 +422,16 @@ describe("Guichet — décision motivée", () => {
     expect(within(dialog).getByText(text("moderationDesk.party.page"))).toBeInTheDocument()
     expect(within(dialog).queryByRole("button", { name: text("moderationDesk.decision.submit") })).toBeNull()
   })
+
+  it("renvoie, sous le motif du dossier, à la règle de la communauté qu'il vise (MD-05)", async () => {
+    mocks.desk = fakeDesk().desk
+    const user = userEvent.setup()
+    render(tree())
+    await user.click(screen.getAllByRole("button", { name: text("moderationDesk.case.open") })[0]!)
+    const dialog = await screen.findByRole("dialog")
+    const rule = within(dialog).getByRole("link", { name: String(translate("communityRules.readRule", { rule: translate("legal.community.respect.title") })) })
+    expect(rule).toHaveAttribute("href", "/regles-communaute#respect")
+  })
 })
 
 describe("Guichet — recours et équipe", () => {

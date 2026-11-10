@@ -44,6 +44,8 @@ const featureRoutes: FeatureRoutes = {
   myApplications: routes.myApplications,
   arrivalKitResource: routes.arrivalKitResource,
   contextualConversation: routes.contextualConversation,
+  // Les règles de la communauté (MD-05) : la feuille de signalement y renvoie.
+  communityRules: routes.communityRules,
   hub: routes.hub,
   feed: (tag, context) => routes.feed(context?.scope, tag, context?.country),
   sponsor: routes.sponsor,
