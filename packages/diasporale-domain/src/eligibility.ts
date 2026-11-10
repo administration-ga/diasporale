@@ -14,6 +14,11 @@
  *   · compte léger (code à usage unique) → `en_attente` jusqu'au parrainage
  *     (→ `declaree`) ou à l'attestation consulaire (→ `verifiee`) ;
  *   · attestation consulaire, à la demande de la personne → `verifiee`.
+ *
+ * Amorçage (EA-01, décision 1 du plan 01) : une admission FONDATRICE, décidée par
+ * un opérateur du réseau, motif à l'appui, dans une cohorte plafonnée
+ * (`founders.ts`), vérifie elle aussi — sans elle, nul n'est vérifié au premier
+ * jour (l'attestation dépend d'un tiers) et nul ne parraine avant 30 jours.
  */
 import type { TrustBadge } from "./badges"
 import { ok, refuse, type Result } from "./result"
@@ -54,11 +59,22 @@ export interface SuspensionGround {
   readonly readAccess: SuspensionReadAccess
 }
 
+/**
+ * Admission fondatrice EN VIGUEUR : décision tracée d'un opérateur du réseau
+ * (EA-01). La dispense d'ancienneté pour parrainer est une option de la décision ;
+ * le quota du parrain, lui, ne change pas (décision 3).
+ */
+export interface FoundingAdmissionGround {
+  readonly seniorityWaiver: boolean
+}
+
 /** Les faits dont le statut se dérive — relus à l'acte, jamais mis en cache. */
 export interface MembershipGrounds {
   readonly idn: IdnGround | null
   readonly sponsored: boolean
   readonly consularAttestation: boolean
+  /** Admission fondatrice par décision du réseau ; `null` sans décision en vigueur. */
+  readonly foundingAdmission: FoundingAdmissionGround | null
   readonly suspension: SuspensionGround | null
   readonly leftAt: number | null
 }
@@ -68,6 +84,7 @@ export const LIGHT_ACCOUNT_GROUNDS: MembershipGrounds = Object.freeze({
   idn: null,
   sponsored: false,
   consularAttestation: false,
+  foundingAdmission: null,
   suspension: null,
   leftAt: null,
 })
@@ -87,14 +104,17 @@ export function isSuspensionActive(suspension: SuspensionGround | null, now: num
  *   1. un départ l'emporte sur tout (`partie`) ;
  *   2. une sanction en cours suspend (`suspendue`) ;
  *   3. l'attestation consulaire vérifie ;
- *   4. IDN `loa ≥ 2` ET parrainage vérifient ;
- *   5. IDN seule, ou le parrainage seul, déclarent ;
- *   6. sinon, admission conditionnelle (`en_attente`).
+ *   4. l'admission fondatrice par décision du réseau vérifie (EA-01) ;
+ *   5. IDN `loa ≥ 2` ET parrainage vérifient ;
+ *   6. IDN seule, ou le parrainage seul, déclarent ;
+ *   7. sinon, admission conditionnelle (`en_attente`).
  */
 export function deriveMembershipStatus(grounds: MembershipGrounds, now: number): MembershipStatus {
   if (grounds.leftAt !== null) return "partie"
   if (isSuspensionActive(grounds.suspension, now)) return "suspendue"
   if (grounds.consularAttestation) return "verifiee"
+  // Un jeu de faits enregistré avant EA-01 (démonstration du navigateur) n'a pas le champ : sans décision.
+  if (grounds.foundingAdmission) return "verifiee"
   const idn = idnCountsAsGround(grounds.idn) ? grounds.idn : null
   if (idn !== null && idn.loa >= VERIFIED_LOA_THRESHOLD && grounds.sponsored) return "verifiee"
   if (idn !== null || grounds.sponsored) return "declaree"
@@ -111,6 +131,22 @@ export function effectiveMembershipStatus(
 ): MembershipStatus {
   if (networkStatus === "partie") return "partie"
   return root.suspended ? "suspendue" : networkStatus
+}
+
+/**
+ * EA-03 — l'écart entre le statut ENREGISTRÉ et celui que les faits justifient :
+ * le statut attendu, ou `null` quand rien n'est à relire. Un départ et une
+ * sanction ne se relisent jamais ici : ils ont leurs propres chemins (le retour,
+ * la levée). Sert à dire « à relire » sans écrire, et à relire seulement alors.
+ */
+export function membershipStatusDrift(
+  recorded: MembershipStatus,
+  grounds: MembershipGrounds,
+  now: number,
+): MembershipStatus | null {
+  if (recorded === "partie" || recorded === "suspendue") return null
+  const expected = deriveMembershipStatus(grounds, now)
+  return expected === recorded ? null : expected
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -170,9 +206,10 @@ function nextGrounds(
       // en quittant puis en revenant.
       return ok({ ...grounds, leftAt: null })
     case "left":
-      // Le parrainage admettait la personne dans le réseau ; il s'éteint avec
-      // le départ. Les liens d'identité (IDN, attestation) restent ceux de la personne.
-      return ok({ ...grounds, leftAt: event.at, sponsored: false })
+      // Le parrainage et l'admission fondatrice admettaient la personne dans le
+      // réseau ; ils s'éteignent avec le départ. Les liens d'identité (IDN,
+      // attestation) restent ceux de la personne.
+      return ok({ ...grounds, leftAt: event.at, sponsored: false, foundingAdmission: null })
     case "idn_linked":
       if (grounds.idn !== null) return refuse("idn_already_linked")
       if (!isValidLoa(event.loa)) return refuse("loa_invalid")

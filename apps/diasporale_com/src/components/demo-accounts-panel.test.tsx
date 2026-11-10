@@ -85,7 +85,7 @@ describe("Porte — bouton des comptes de démonstration", () => {
     for (const group of ["members", "pages", "roles", "access"] as const) {
       expect(within(sheet).getByRole("heading", { name: t(`demoAccounts.groups.${group}`) })).toBeInTheDocument()
     }
-    expect(DIASPORALE_DEMO_ACTORS).toHaveLength(20)
+    expect(DIASPORALE_DEMO_ACTORS).toHaveLength(21)
     expect(within(sheet).getAllByRole("button", { name: /./ }).filter((button) => button.closest("li"))).toHaveLength(DIASPORALE_DEMO_ACTORS.length)
     expect(actorButton(t("demoAccounts.actors.verifie.title"))).toHaveAccessibleName(/Patrice MBOUMBA/)
     expect(actorButton(t("demoAccounts.actors.nouveau.title"))).toHaveAccessibleName(new RegExp(t("demoAccounts.newcomer")))
