@@ -155,6 +155,11 @@ export const SERVICE_REQUEST_REFUSALS = [
   "request_contest_window_closed",
   // Les réglages de prestation (SV-09).
   "booking_capacity_invalid",
+  // Le déplacement d'un rendez-vous confirmé (SV-03).
+  "reschedule_already_open",
+  "reschedule_not_open",
+  "reschedule_same_slot",
+  "reschedule_changed",
 ] as const
 export type ServiceRequestRefusal = (typeof SERVICE_REQUEST_REFUSALS)[number]
 
@@ -658,6 +663,102 @@ export function checkServiceRequestTransition(input: ServiceRequestTransitionInp
   return ok(rule.to)
 }
 
+// ═══════════════════════════════════════════════════════════════
+// Déplacer un rendez-vous confirmé (SV-03)
+// ═══════════════════════════════════════════════════════════════
+
+/** Les gestes du déplacement : proposer un autre horaire, l'accepter, le décliner (ou retirer le sien). */
+export const SERVICE_RESCHEDULE_ACTIONS = ["propose_reschedule", "accept_reschedule", "decline_reschedule"] as const
+export type ServiceRescheduleAction = (typeof SERVICE_RESCHEDULE_ACTIONS)[number]
+
+/**
+ * Un nouvel horaire proposé pour un rendez-vous confirmé : même durée, mêmes
+ * conditions ; seuls l'heure et son fuseau changent. Une seule proposition de
+ * déplacement à la fois ; elle échoit à `expiresAt`, et le rendez-vous reste
+ * alors tel quel.
+ */
+export interface ServiceReschedule {
+  readonly startAt: number
+  readonly endAt: number
+  readonly timeZone: string
+  readonly proposedBy: ServiceRequestActor
+  readonly proposedAt: number
+  readonly expiresAt: number
+}
+
+export interface ServiceRescheduleInput {
+  readonly startAt: number
+  readonly timeZone: string
+  readonly expiresAt: number
+}
+
+/** La proposition de déplacement OUVERTE : `null` s'il n'y en a pas ou si son échéance est atteinte. */
+export function openServiceReschedule(reschedule: ServiceReschedule | null, now: number): ServiceReschedule | null {
+  return reschedule !== null && now < reschedule.expiresAt ? reschedule : null
+}
+
+/**
+ * Un nouvel horaire valide pour ce rendez-vous : un autre début, futur et dans
+ * l'horizon, la MÊME durée, un fuseau valide ; une échéance future, à 14 jours
+ * au plus, avant le nouveau début ET avant l'horaire actuel (passé le début du
+ * rendez-vous, on ne le déplace plus).
+ */
+export function parseServiceReschedule(
+  input: ServiceRescheduleInput,
+  booking: ServiceWindow,
+  now: number,
+): Result<{ readonly startAt: number; readonly endAt: number; readonly timeZone: string; readonly expiresAt: number }, ServiceRequestRefusal> {
+  const timeZone = canonicalTimeZone(input.timeZone)
+  if (timeZone === null) return refuse("request_time_zone_invalid")
+  const { startAt, expiresAt } = input
+  if (!isServiceInstant(startAt) || startAt <= now || startAt > now + SERVICE_SLOT_HORIZON_DAYS * DAY_MS) return refuse("proposal_start_invalid")
+  if (startAt === booking.startAt) return refuse("reschedule_same_slot")
+  if (!isServiceInstant(expiresAt) || expiresAt <= now || expiresAt > now + SERVICE_PROPOSAL_DEADLINE_MAX_DAYS * DAY_MS || expiresAt > startAt || expiresAt > booking.startAt) {
+    return refuse("proposal_deadline_invalid")
+  }
+  return ok({ startAt, endAt: startAt + (booking.endAt - booking.startAt), timeZone, expiresAt })
+}
+
+export interface ServiceRescheduleGestureInput {
+  readonly action: ServiceRescheduleAction
+  readonly actor: ServiceRequestActor
+  /** L'état EFFECTIF de la demande. */
+  readonly status: ServiceRequestStatus
+  readonly now: number
+  /** Le début du rendez-vous CONFIRMÉ ; `null` s'il n'y en a pas. */
+  readonly bookingStartAt: number | null
+  /** La proposition de déplacement écrite, ouverte ou échue ; `null` s'il n'y en a pas. */
+  readonly reschedule: ServiceReschedule | null
+  readonly proposalVersion: number
+}
+
+/**
+ * Qui peut déplacer, et quand : l'une ou l'autre partie propose un autre horaire
+ * pour un rendez-vous CONFIRMÉ, avant son début, s'il n'y a pas déjà une
+ * proposition ouverte ; l'AUTRE partie l'accepte ; l'une ou l'autre la décline
+ * (le proposant la retire). Un déplacement accepté écrit une nouvelle version :
+ * il en faut une de libre.
+ */
+export function checkServiceRescheduleGesture(input: ServiceRescheduleGestureInput): Result<null, ServiceRequestRefusal> {
+  if (input.status === "expired") return refuse("request_expired")
+  if (isServiceRequestTerminal(input.status)) return refuse("request_closed")
+  if (input.status !== "confirmed" || input.bookingStartAt === null) return refuse("request_not_open")
+  if (input.now >= input.bookingStartAt) return refuse("booking_started")
+  const open = openServiceReschedule(input.reschedule, input.now)
+  if (input.action === "propose_reschedule") {
+    if (open !== null) return refuse("reschedule_already_open")
+    return input.proposalVersion >= SERVICE_PROPOSAL_MAX_VERSIONS ? refuse("proposal_versions_exhausted") : ok(null)
+  }
+  if (open === null) return refuse("reschedule_not_open")
+  if (input.action === "accept_reschedule" && open.proposedBy === input.actor) return refuse("request_action_forbidden")
+  return ok(null)
+}
+
+/** Les gestes de déplacement RÉELLEMENT ouverts à cet acteur maintenant. */
+export function availableServiceRescheduleActions(input: Omit<ServiceRescheduleGestureInput, "action">): ServiceRescheduleAction[] {
+  return SERVICE_RESCHEDULE_ACTIONS.filter((action) => checkServiceRescheduleGesture({ ...input, action }).ok)
+}
+
 /** Le délai pour contester une absence déclarée par la page (DG-015), compté depuis le constat. */
 export const SERVICE_NO_SHOW_CONTEST_DAYS = 14
 
@@ -710,28 +811,36 @@ export function availableServiceRequestActions(input: {
 export interface ServiceRequestEvent {
   readonly status: ServiceRequestStatus
   readonly at: number
-  /** La version d'une proposition ; `null` pour les autres étapes. */
+  /**
+   * La version d'une proposition ; `null` pour les autres étapes. Une étape
+   * `confirmed` qui porte une version est un DÉPLACEMENT accepté (SV-03).
+   */
   readonly version: number | null
 }
 
 /**
  * La chronologie d'une demande, DÉRIVÉE de ses faits (envoi, versions de
- * proposition, accord, clôture) : aucun historique recopié. Une échéance
- * atteinte que le passage d'expiration n'a pas encore écrite y figure aussi.
+ * proposition, accord, déplacements acceptés, clôture) : aucun historique
+ * recopié. Une échéance atteinte que le passage d'expiration n'a pas encore
+ * écrite y figure aussi.
  */
 export function serviceRequestTimeline(input: {
   readonly createdAt: number
-  readonly proposals: readonly { readonly version: number; readonly createdAt: number }[]
+  /** `rescheduledFrom` : la version qu'un déplacement accepté a remplacée (SV-03). */
+  readonly proposals: readonly { readonly version: number; readonly createdAt: number; readonly rescheduledFrom?: number | null }[]
   readonly confirmedAt: number | null
   readonly closed: { readonly status: ServiceRequestStatus; readonly at: number } | null
   readonly effectiveStatus: ServiceRequestStatus
   readonly deadlineAt: number | null
 }): ServiceRequestEvent[] {
   const events: ServiceRequestEvent[] = [{ status: "sent", at: input.createdAt, version: null }]
-  for (const proposal of [...input.proposals].sort((left, right) => left.version - right.version)) {
+  const sorted = [...input.proposals].sort((left, right) => left.version - right.version)
+  const isReschedule = (proposal: (typeof sorted)[number]) => proposal.rescheduledFrom !== undefined && proposal.rescheduledFrom !== null
+  for (const proposal of sorted.filter((candidate) => !isReschedule(candidate))) {
     events.push({ status: "proposed", at: proposal.createdAt, version: proposal.version })
   }
   if (input.confirmedAt !== null) events.push({ status: "confirmed", at: input.confirmedAt, version: null })
+  for (const proposal of sorted.filter(isReschedule)) events.push({ status: "confirmed", at: proposal.createdAt, version: proposal.version })
   if (input.closed !== null) events.push({ status: input.closed.status, at: input.closed.at, version: null })
   else if (input.effectiveStatus === "expired" && input.deadlineAt !== null) events.push({ status: "expired", at: input.deadlineAt, version: null })
   return events

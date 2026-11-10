@@ -39,13 +39,13 @@ const SUMMARY = {
   page: { pageId: "page-1", handle: "salon-test", name: "Salon de test", logoUrl: null },
   requester: null, windows: [{ startAt: 10, endAt: 20 }], timeZone: "Europe/Paris",
   currentProposal: { version: 1, amountMinor: 4500, currency: "EUR", startAt: 30, endAt: 40, timeZone: "Europe/Paris", expiresAt: 25 },
-  booking: null, deadlineAt: 25, createdAt: 1, updatedAt: 2,
+  booking: null, reschedule: null, deadlineAt: 25, createdAt: 1, updatedAt: 2,
 }
 const DETAIL = {
   ...SUMMARY, viewerRole: "requester", need: "Tresses pour un mariage.",
-  proposals: [{ version: 1, amountMinor: 4500, currency: "EUR", durationMinutes: 90, startAt: 30, endAt: 40, timeZone: "Europe/Paris", location: { mode: "onsite", area: "Paris 11e" }, details: "Mèches fournies.", cancellationTerms: "Libre jusqu'à la veille.", expiresAt: 25, state: "current", createdAt: 3 }],
+  proposals: [{ version: 1, amountMinor: 4500, currency: "EUR", durationMinutes: 90, startAt: 30, endAt: 40, timeZone: "Europe/Paris", location: { mode: "onsite", area: "Paris 11e" }, details: "Mèches fournies.", cancellationTerms: "Libre jusqu'à la veille.", expiresAt: 25, state: "current", rescheduledFrom: null, createdAt: 3 }],
   timeline: [{ status: "sent", at: 1, version: null }, { status: "proposed", at: 3, version: 1 }],
-  closedBy: null, closedReason: null, actions: ["cancel", "accept"],
+  closedBy: null, closedReason: null, actions: ["cancel", "accept"], rescheduleActions: [],
   // DG-015 : le moteur sert toujours la contestation d'une absence (aucune ici) et le droit de la déposer.
   noShowContest: null, canContestNoShow: false,
   // SV-04 : la proposition préremplie n'est servie qu'à l'équipe de la page.
@@ -164,6 +164,39 @@ describe("demandes de service — adaptateur moteur", () => {
     mocks.results.set("modules/diaspora/serviceRequests:getServiceRequest", { ...DETAIL, viewerRole: "page", proposalPrefill: quote })
     rerender()
     expect(result.current.status === "ready" && result.current.data?.proposalPrefill).toEqual(quote)
+  })
+
+  it("SV-03 : recopie le nouvel horaire proposé, les gestes de déplacement et la version qu'un déplacement a remplacée", () => {
+    const reschedule = { startAt: 50, endAt: 60, timeZone: "America/Toronto", proposedBy: "page", proposedAt: 4, expiresAt: 28 }
+    const moved = {
+      ...DETAIL, status: "confirmed", reschedule, rescheduleActions: ["accept_reschedule", "decline_reschedule"],
+      proposals: [{ ...DETAIL.proposals[0], version: 2, rescheduledFrom: 1 }, { ...DETAIL.proposals[0], state: "superseded" }],
+    }
+    mocks.results.set("modules/diaspora/serviceRequests:getServiceRequest", moved)
+    const { result } = renderHook(() => capability().useRequest("request-1"))
+    const data = result.current.status === "ready" ? result.current.data : null
+    expect(data?.reschedule).toEqual(reschedule)
+    expect(data?.rescheduleActions).toEqual(["accept_reschedule", "decline_reschedule"])
+    expect(data?.proposals.map((proposal) => proposal.rescheduledFrom)).toEqual([1, null])
+  })
+
+  it("SV-03 : propose, accepte et décline un déplacement par les fonctions de la tranche", async () => {
+    const { convex, mutation } = client()
+    const data = capability(convex)
+    const calls = () => mutation.mock.calls.map(([reference, args]) => [getFunctionName(reference as never), args])
+    const move = { requestId: "request-1", expectedProposalVersion: 1, startAt: 50, timeZone: "America/Toronto", expiresAt: 28 }
+    expect(await data.proposeReschedule!(move)).toEqual({ ok: true, value: null })
+    mutation.mockResolvedValueOnce({ version: 2 })
+    expect(await data.acceptReschedule!({ requestId: "request-1", expectedProposalVersion: 1, expectedStartAt: 50 })).toEqual({ ok: true, value: { version: 2 } })
+    expect(await data.declineReschedule!({ requestId: "request-1" })).toEqual({ ok: true, value: null })
+    const networkId = "network-diasporale"
+    expect(calls()).toEqual([
+      ["modules/diaspora/serviceRequests:proposeServiceReschedule", { networkId, ...move }],
+      ["modules/diaspora/serviceRequests:acceptServiceReschedule", { networkId, requestId: "request-1", expectedProposalVersion: 1, expectedStartAt: 50 }],
+      ["modules/diaspora/serviceRequests:declineServiceReschedule", { networkId, requestId: "request-1" }],
+    ])
+    mutation.mockRejectedValueOnce(new ConvexError({ code: "conflict", appRule: "reschedule_changed", appParams: {} }))
+    expect(await data.acceptReschedule!({ requestId: "request-1", expectedProposalVersion: 1, expectedStartAt: 51 })).toEqual({ ok: false, code: "reschedule_changed" })
   })
 
   it("envoie la demande au réseau DIASPORALE et rend un code fermé en cas de refus", async () => {

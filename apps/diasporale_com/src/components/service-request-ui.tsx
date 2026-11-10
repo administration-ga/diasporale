@@ -130,7 +130,11 @@ export function ServiceTimeline(props: { readonly events: readonly ServiceReques
       {props.events.map((event, index) => (
         <li key={`${event.status}-${event.at}-${index}`} className="flex min-w-0 flex-col">
           <span className="font-medium">
-            {event.version === null ? t(`serviceRequests.timeline.${event.status}`) : t("serviceRequests.timeline.proposedVersion", { version: event.version })}
+            {event.version === null
+              ? t(`serviceRequests.timeline.${event.status}`)
+              : event.status === "confirmed"
+                ? t("serviceReschedule.timeline", { version: event.version })
+                : t("serviceRequests.timeline.proposedVersion", { version: event.version })}
           </span>
           <span className="text-[13px] text-muted-foreground">{formatServiceInstant(event.at, props.viewerTimeZone, locale)}</span>
         </li>
@@ -177,6 +181,10 @@ function Item(props: { readonly label: string; readonly wide?: boolean; readonly
 export function NextStep(props: { readonly summary: ServiceRequestSummaryView; readonly viewerTimeZone: string }) {
   const { t, locale } = useDiasporaleT()
   const { summary } = props
+  // SV-03 : un nouvel horaire attend une réponse ; la liste le dit avant l'horaire actuel.
+  if (summary.reschedule && summary.status === "confirmed") {
+    return <span>{t("serviceReschedule.next", { date: formatServiceInstant(summary.reschedule.expiresAt, props.viewerTimeZone, locale) })}</span>
+  }
   if (summary.booking && summary.status === "confirmed") {
     return <span>{t("serviceRequests.next.booking", { slot: formatServiceSlot(summary.booking, summary.booking.timeZone, locale), zone: summary.booking.timeZone })}</span>
   }
