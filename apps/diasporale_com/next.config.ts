@@ -1,5 +1,8 @@
 import { createEngineNextConfig } from "@antsia/api/next-config"
 import type { NextConfig } from "next"
+import { PHASE_PRODUCTION_BUILD } from "next/constants"
+
+import { assertProductionBuild } from "./src/lib/production-build-guard"
 
 /**
  * Configuration Next.js 16 de diasporale.com — celle du moteur ANTSIA
@@ -25,4 +28,20 @@ const config: NextConfig = {
   },
 }
 
-export default config
+/**
+ * À la construction (`next build`), la garde de la source de données (LX-01) : une
+ * construction sans source déclarée, ou qui servirait la démonstration sur un domaine
+ * public, échoue ici au lieu de servir en silence les données fictives. Références
+ * LITTÉRALES des variables (cliquet `deploy-catalog` du moteur).
+ */
+export default function diasporaleNextConfig(phase: string): NextConfig {
+  if (phase === PHASE_PRODUCTION_BUILD) {
+    assertProductionBuild({
+      dataSource: process.env.NEXT_PUBLIC_DIASPORALE_DATA_SOURCE,
+      convexUrl: process.env.NEXT_PUBLIC_CONVEX_URL,
+      siteUrl: process.env.NEXT_PUBLIC_SITE_URL,
+      buildSha: process.env.NEXT_PUBLIC_BUILD_SHA,
+    })
+  }
+  return config
+}

@@ -877,10 +877,6 @@
       }
     }
   },
-  "health": {
-    "title": "Santé fonctionnelle",
-    "ok": "diasporale.com répond."
-  },
   "notFound": {
     "title": "Cette page n'existe pas.",
     "body": "L'adresse est peut-être incomplète.",
