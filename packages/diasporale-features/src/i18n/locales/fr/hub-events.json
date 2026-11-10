@@ -1,0 +1,12 @@
+{
+  "hubEvents": {
+    "lead": "Les prochains évènements ouverts au réseau des associations — {{country}}.",
+    "listLabel": "Prochains évènements — {{country}}",
+    "emptyTitle": "Aucun évènement à venir ouvert au réseau — {{country}}.",
+    "emptyBody": "Les évènements réservés aux adhérents restent sur la page de chaque association. Ceux auxquels vous êtes inscrit sont dans votre agenda.",
+    "partial": "Ce pays compte beaucoup de pages : les évènements de certaines associations peuvent manquer ici. Chacune publie les siens sur sa page.",
+    "railEmpty": "Aucun évènement à venir ouvert au réseau dans votre pays.",
+    "railError": "Les évènements de votre pays ne se lisent pas pour l'instant.",
+    "railAll": "Voir les évènements du pays"
+  }
+}

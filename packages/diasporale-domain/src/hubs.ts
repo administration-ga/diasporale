@@ -47,9 +47,10 @@ export type CounterPresentation =
 export interface HubCountersPresentation {
   /**
    * Ni membre visible, ni association, ni entreprise : le hub est annoncé « bientôt
-   * disponible », sans compteurs. Les évènements n'en décident pas : le moteur ne
-   * les compte pas encore (son passage écrit zéro jusqu'à EV-05), et ce zéro non
-   * mesuré ne fonde aucun jugement (EV-02).
+   * disponible », sans compteurs. Les évènements n'en décident pas : un évènement
+   * du hub est celui d'une association du pays, déjà comptée ; et un compteur
+   * d'évènements non mesuré (aucun comptage exact daté, HB-02) ne fonde aucun
+   * jugement (EV-02).
    */
   readonly dormant: boolean
   readonly members: CounterPresentation

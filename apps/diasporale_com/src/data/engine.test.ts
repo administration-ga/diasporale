@@ -115,9 +115,9 @@ describe("projections du moteur vers les vues de DIASPORALE", () => {
     ])
   })
 
-  it("le hub d'un pays : compteurs du serveur ; évènements « non mesurés », jamais une liste vide qui se dirait complète (EV-02)", () => {
+  it("le hub d'un pays : compteurs du serveur ; évènements « non mesurés » sans comptage exact, jamais une liste vide qui se dirait complète (EV-02)", () => {
     const counters = { dormant: false, members: { kind: "below_threshold", threshold: 20 }, associations: { kind: "value", value: 2 }, companies: { kind: "value", value: 0 }, upcomingEvents: { kind: "value", value: 0 } }
-    expect(toCountryHubView({ country: "FR", open: true, counters, countersComputedAt: 1 } as never, "FR")).toMatchObject({
+    expect(toCountryHubView({ country: "FR", open: true, counters, countersComputedAt: 1, upcomingEventsComputedAt: null } as never, "FR")).toMatchObject({
       country: "FR",
       open: true,
       counters,
@@ -125,6 +125,17 @@ describe("projections du moteur vers les vues de DIASPORALE", () => {
       events: [],
       eventsSource: "unmeasured",
     })
+    // Un moteur antérieur à HB-02 ne rend pas la date du comptage : rien n'est mesuré.
+    expect(toCountryHubView({ country: "FR", open: true, counters, countersComputedAt: 1 } as never, "FR").eventsSource).toBe("unmeasured")
+  })
+
+  it("le hub d'un pays : un comptage exact des évènements, daté par le passage nocturne, rend leur compteur « matérialisé » (HB-02)", () => {
+    const counters = { dormant: false, members: { kind: "below_threshold", threshold: 20 }, associations: { kind: "value", value: 2 }, companies: { kind: "value", value: 0 }, upcomingEvents: { kind: "value", value: 3 } }
+    const view = toCountryHubView({ country: "FR", open: true, counters, countersComputedAt: 1, upcomingEventsComputedAt: 1 } as never, "FR")
+    expect(view.eventsSource).toBe("materialized")
+    expect(view.counters.upcomingEvents).toEqual({ kind: "value", value: 3 })
+    // La liste ne se recopie pas ici : elle se lit par la capacité des évènements du pays.
+    expect(view.events).toEqual([])
   })
 
   it("une publication du moteur est de portée « diaspora » : elle paraît dans « Mon pays » et « Diaspora », « Pour vous » si elle est à soi", () => {

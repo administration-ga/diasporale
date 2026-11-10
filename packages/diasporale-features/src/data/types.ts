@@ -269,12 +269,14 @@ export interface CountryHubView {
   readonly companies: readonly PageView[]
   readonly events: readonly EventView[]
   /**
-   * D'où viennent la liste et le compteur des évènements du hub : `demo` (jeu de
-   * démonstration, compté sur les données fictives) ; `unmeasured` quand le
-   * fournisseur ne lit encore aucun évènement par pays (moteur, jusqu'à HB-02 puis
-   * EV-05). Non mesurés, ni liste ni nombre ne s'affichent : jamais un zéro de façade.
+   * D'où vient le compteur des évènements du hub : `demo` (jeu de démonstration,
+   * liste et compteur sur les données fictives jointes au hub) ; `materialized`
+   * (moteur : compté par le passage nocturne, comptage exact daté) ; `unmeasured`
+   * (aucun comptage exact : le nombre ne s'affiche pas, jamais un zéro de façade).
+   * Hors démonstration, la LISTE se lit par `associationEvents.useCountryEvents`
+   * (HB-02) quand le fournisseur la sert.
    */
-  readonly eventsSource: "demo" | "unmeasured"
+  readonly eventsSource: "demo" | "materialized" | "unmeasured"
 }
 
 export interface AccountView {
