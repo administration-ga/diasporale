@@ -25,6 +25,7 @@ import { MENTORING_ERROR_CODES } from "./mentoring-port"
 import { JOB_ERROR_CODES } from "./jobs-port"
 import { MODERATION_DESK_ERROR_CODES } from "./moderation-desk-port"
 import { PILOT_METRICS_ERROR_CODES } from "./pilot-metrics-port"
+import { CALL_SETTINGS_ERROR_CODES } from "./call-settings-port"
 
 /**
  * Les codes de refus FERMÉS que l'écran traduit par `errors.<code>`.
@@ -120,6 +121,7 @@ export const ACTION_ERROR_CODES = [
   ...MODERATION_DESK_ERROR_CODES,
   ...PILOT_METRICS_ERROR_CODES,
   ...CONVERSATION_ERROR_CODES,
+  ...CALL_SETTINGS_ERROR_CODES,
 ] as const
 
 export type ActionErrorCode = (typeof ACTION_ERROR_CODES)[number]

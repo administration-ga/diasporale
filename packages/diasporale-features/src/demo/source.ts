@@ -66,6 +66,7 @@ import { createDemoJobs } from "./jobs"
 import { createDemoModerationDesk } from "./moderation-desk"
 import { createDemoPilotMetrics } from "./pilot-metrics"
 import { createDemoPageDecisions } from "./page-decisions"
+import { createDemoCallSettings } from "./call-settings"
 import type { DemoStore } from "./store"
 
 const LOADING = { status: "loading" } as const
@@ -162,6 +163,8 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
     pilotMetrics: createDemoPilotMetrics(store),
     // P16 · G9 : décisions qui ont retiré un contenu porté par une page, relues pour un signataire vivant.
     pageDecisions: createDemoPageDecisions(store, demoPageTeams),
+    // IM-02 : réglages d'appel et de présence, fictifs, le temps de la page.
+    callSettings: createDemoCallSettings(store),
 
     useSession() {
       const version = useVersion()

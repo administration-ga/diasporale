@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   publication: vi.fn(),
   dataRights: vi.fn(),
+  callSettings: vi.fn(),
   replace: vi.fn(),
   session: { status: "loading" } as unknown,
   success: vi.fn(),
@@ -54,6 +55,12 @@ vi.mock("@/components/data-rights-settings", () => ({
   },
 }))
 vi.mock("@/components/preferences", () => ({ LanguageSwitch: () => null, ThemeSwitch: () => null }))
+vi.mock("@/components/call-settings", () => ({
+  CallSettings: (props: { membership: MembershipView }) => {
+    mocks.callSettings(props.membership)
+    return <section id="messages-et-appels" aria-label="Messages et appels" />
+  },
+}))
 
 const t = getFixedT("fr")
 const membership: MembershipView = {
@@ -213,5 +220,13 @@ describe("Réglages — les textes du site depuis l'espace membre (LX-05)", () =
     }
     // Aucun texte n'est fourni : chaque ligne le dit.
     expect(region.getAllByText(t("settings.texts.pending"))).toHaveLength(LEGAL_TEXT_KINDS.length)
+  })
+})
+
+describe("Réglages — « Messages et appels » (IM-02)", () => {
+  it("monte la rubrique des réglages d'appel pour le membre affiché", () => {
+    render(tree())
+    expect(mocks.callSettings).toHaveBeenLastCalledWith(membership)
+    expect(screen.getByRole("region", { name: "Messages et appels" })).toHaveAttribute("id", "messages-et-appels")
   })
 })

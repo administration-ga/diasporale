@@ -39,6 +39,7 @@ import { toast } from "sonner"
 import { z } from "zod"
 
 import { AppShell } from "@/components/app-shell"
+import { CallSettings } from "@/components/call-settings"
 import { DataRightsSettings } from "@/components/data-rights-settings"
 import { Gate } from "@/components/gate"
 import { ProfileImagesSettings } from "@/components/profile-images-settings"
@@ -92,6 +93,8 @@ function Settings(props: { membership: MembershipView }) {
       <ProfileImagesSettings membership={props.membership} />
       <FacetSection membership={props.membership} />
       <DirectorySection membership={props.membership} />
+      {/* « Messages et appels » (IM-02) : réglages d'appel et de présence du compte, valables aussi dans ANTSIA. */}
+      <CallSettings membership={props.membership} />
       <ConsentsSection />
       <SponsorHelpSection membership={props.membership} />
       {/* « Mes données » (DG-026) : export, effacement, décisions et recours — ouverte au membre suspendu ;

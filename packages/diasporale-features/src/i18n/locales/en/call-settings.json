@@ -1,0 +1,41 @@
+{
+  "settings": {
+    "calls": {
+      "title": "Messages and calls",
+      "lead": "Your account's settings: they also apply in ANTSIA. They decide whether a call to you rings, and what your connections see of you.",
+      "notOffered": "DIASPORALE does not yet offer calling from a profile. These settings already apply to any call made to you, here or in ANTSIA.",
+      "demoNotice": "Demo: no call is made here. These fictional settings last as long as the page.",
+      "who": "Who can call you",
+      "outside": {
+        "ring": "All members",
+        "ringHint": "A call rings, whether or not it comes from one of your connections.",
+        "silent": "My connections only",
+        "silentHint": "A call from someone outside your connections does not ring: it is written to your call log and the caller is told. A group call you belong to, or a match where you accepted the call, always rings."
+      },
+      "voicemail": "Voicemail",
+      "voicemailHint": "When you do not answer, the caller can leave you a voice message. You cannot listen to it in DIASPORALE yet.",
+      "presence": "Show my presence",
+      "presenceHint": "Your connections see whether you are online, on a call or on “Do not disturb”. Turned off, you no longer appear at all.",
+      "callWaiting": "Call waiting",
+      "callWaitingHint": "During a call, a second call is put on hold for you. Turned off, the caller is told you are busy.",
+      "dnd": {
+        "title": "Do not disturb",
+        "hint": "No call rings until the time you choose, seven days at most.",
+        "active": "Quiet until {{date}}.",
+        "duration": "Duration",
+        "oneHour": "1 hour",
+        "eightHours": "8 hours",
+        "oneDay": "24 hours",
+        "sevenDays": "7 days",
+        "enable": "Turn on",
+        "disable": "End the quiet period",
+        "enabled": "“Do not disturb” is on.",
+        "disabled": "“Do not disturb” is off."
+      }
+    }
+  },
+  "errors": {
+    "call_dnd_past": "The end of the quiet period has already passed: check your device's clock.",
+    "call_dnd_too_long": "A quiet period lasts seven days at most: check your device's clock."
+  }
+}
