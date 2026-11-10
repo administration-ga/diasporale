@@ -1,6 +1,7 @@
 "use client"
 
 import { MessagerieDock } from "@antsia/social-features/messagerie"
+import { MESSAGES_UNREAD_CAP } from "@antsia/social-features/shell/reseau-menu-destinations"
 import { useIsReseauMobile } from "@antsia/ui/overlay"
 import { parseResidenceCountry, type CountryCode, type MembershipStatus } from "@diasporale/domain"
 import {
@@ -72,6 +73,7 @@ import { navDestinationOf, type NavDestination } from "@/lib/nav-destinations"
 import { routes } from "@/lib/routes"
 
 import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
+import { MessagesUnreadReader } from "./messages-unread"
 import { useSignOutEverywhere } from "./sign-out-settings"
 import { AppDemoChip } from "./site-chrome"
 import { Wordmark } from "./wordmark"
@@ -106,6 +108,34 @@ interface NavEntry {
   readonly labelKey: string
   /** Le chemin courant relève de cette entrée : `aria-current="page"`. */
   readonly active: boolean
+  /** Les non-lus portés par l'entrée (Messages seulement, UX-06) : pastille plafonnée, nombre dans le nom accessible. */
+  readonly unread?: number
+}
+
+type ShellT = ReturnType<typeof useDiasporaleT>["t"]
+
+/**
+ * Le nom accessible d'une entrée qui porte des non-lus : « Messages, 3 non lus », « … 99 non lus ou
+ * plus » au plafond. La pastille n'est pas le seul signal : le nombre s'entend avec l'entrée. Sans
+ * non-lus, le libellé visible reste le nom.
+ */
+function unreadName(t: ShellT, entry: NavEntry): string | undefined {
+  const unread = entry.unread ?? 0
+  if (unread <= 0) return undefined
+  return unread >= MESSAGES_UNREAD_CAP ? t("nav.messagesUnreadCapped", { count: MESSAGES_UNREAD_CAP }) : t("nav.messagesUnread", { count: unread })
+}
+
+/** La pastille : le chiffre plafonné (« 99+ », même plafond que la carte iCom), muet pour les lecteurs d'écran. */
+function UnreadBadge(props: { count: number; className?: string }) {
+  return (
+    <span
+      aria-hidden
+      data-unread-badge=""
+      className={cn("min-w-5 rounded-full bg-primary px-1 text-center text-[11px] font-semibold leading-5 tabular-nums text-primary-foreground", props.className)}
+    >
+      {props.count >= MESSAGES_UNREAD_CAP ? `${MESSAGES_UNREAD_CAP}+` : props.count}
+    </span>
+  )
 }
 
 /** Le chemin d'une adresse de la table, sans requête ni ancre. */
@@ -134,8 +164,9 @@ function withinAny(pathname: string, hrefs: readonly string[]): boolean {
  * Messages n'existe qu'avec iCom (même règle qu'avant) : sans lui, la barre garde
  * quatre onglets, sans trou. Ce qui relève de chacune ne s'écrit pas ici : la table des
  * destinations le dit pour toute adresse de la table des routes (UX-05, décision 5).
+ * Messages porte ses non-lus (UX-06), lus seulement quand iCom est ouvert.
  */
-function primaryEntries(current: NavDestination | null, withMessages: boolean): NavEntry[] {
+function primaryEntries(current: NavDestination | null, withMessages: boolean, messagesUnread: number): NavEntry[] {
   const entries: NavEntry[] = [
     { id: "feed", href: routes.feed(), icon: HouseIcon, labelKey: "nav.feed", active: current === "feed" },
     { id: "explore", href: routes.explore(), icon: CompassIcon, labelKey: "nav.explore", active: current === "explore" },
@@ -143,7 +174,7 @@ function primaryEntries(current: NavDestination | null, withMessages: boolean): 
     { id: "communities", href: routes.communities(), icon: UsersRoundIcon, labelKey: "nav.communities", active: current === "communities" },
   ]
   if (withMessages) {
-    entries.push({ id: "messages", href: routes.messages(), icon: MessageCircleIcon, labelKey: "nav.messages", active: current === "messages" })
+    entries.push({ id: "messages", href: routes.messages(), icon: MessageCircleIcon, labelKey: "nav.messages", active: current === "messages", unread: messagesUnread })
   }
   return entries
 }
@@ -294,13 +325,15 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   const icom = useIcomNetwork()
   const network = useEngineNetwork()
   const desktop = useIsReseauMobile() === false
+  // Les non-lus de Messages, remontés par le lecteur monté sous l'îlot iCom (UX-06) ; rien quand iCom est fermé.
+  const [messagesUnread, setMessagesUnread] = useState(0)
   const { membership } = props
   const canPublish = membership.canPublish
   // Inconnus tant qu'ils ne sont pas lus : le composeur n'affirme alors aucun pays fermé (HB-01).
   const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : null
   // Une seule entrée relève du chemin courant, rail et barre basse confondus (UX-05).
   const current = navDestinationOf(pathname, membership.handle)
-  const primary = primaryEntries(current, icom !== null)
+  const primary = primaryEntries(current, icom !== null, icom === null ? 0 : messagesUnread)
   const desk = (useModerationDesk() ?? NO_MODERATION_DESK).useDesk(membership.personId)
   const pilot = (usePilotMetrics() ?? NO_PILOT_METRICS).useAccess()
   const personal = [
@@ -358,6 +391,13 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
         </div>
 
         <MobileTabBar entries={primary} />
+        {/* Le lecteur des non-lus de Messages : sous l'îlot iCom, et seulement iCom ouvert
+            (aucune lecture en démonstration ni pour un membre qui ne peut pas écrire). */}
+        {icom ? (
+          <IcomIsland network={icom}>
+            <MessagesUnreadReader onTotal={setMessagesUnread} />
+          </IcomIsland>
+        ) : null}
 
         {canPublish ? (
           <PostComposerSheet
@@ -429,10 +469,12 @@ function DesktopRail(props: {
 function RailLink(props: { entry: NavEntry; compact?: boolean }) {
   const { t } = useDiasporaleT()
   const Icon = props.entry.icon
+  const unread = props.entry.unread ?? 0
   return (
     <NextLink
       href={props.entry.href}
       aria-current={props.entry.active ? "page" : undefined}
+      aria-label={unreadName(t, props.entry)}
       className={cn(
         "flex min-h-11 min-w-0 items-center gap-3 rounded-[var(--esp-r-chrome)] px-3 font-medium transition-colors focus-visible:shadow-focus",
         props.compact ? "text-sm" : "text-[15px]",
@@ -441,6 +483,7 @@ function RailLink(props: { entry: NavEntry; compact?: boolean }) {
     >
       <Icon className={cn("shrink-0", props.compact ? "size-4" : "size-5")} aria-hidden />
       <span className="min-w-0 truncate">{t(props.entry.labelKey)}</span>
+      {unread > 0 ? <UnreadBadge count={unread} className="ml-auto shrink-0" /> : null}
     </NextLink>
   )
 }
@@ -687,17 +730,23 @@ function MobileTabBar(props: { entries: readonly NavEntry[] }) {
       <ul className="flex h-16 items-stretch px-1">
         {props.entries.map((entry) => {
           const Icon = entry.icon
+          const unread = entry.unread ?? 0
           return (
             <li key={entry.id} className="flex min-w-11 flex-auto">
               <NextLink
                 href={entry.href}
                 aria-current={entry.active ? "page" : undefined}
+                aria-label={unreadName(t, entry)}
                 className={cn(
                   "flex w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 text-[11px] transition-colors focus-visible:shadow-focus",
                   entry.active ? "font-semibold text-[var(--esp-accent-deep)]" : "font-medium text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className="size-5 shrink-0" aria-hidden />
+                {/* La pastille s'accroche au coin de l'icône et s'étend vers la droite : « 99+ » ne la décentre pas. */}
+                <span className="relative flex shrink-0">
+                  <Icon className="size-5 shrink-0" aria-hidden />
+                  {unread > 0 ? <UnreadBadge count={unread} className="absolute -top-1.5 left-3" /> : null}
+                </span>
                 <span className="max-w-full truncate">{t(entry.labelKey)}</span>
               </NextLink>
             </li>

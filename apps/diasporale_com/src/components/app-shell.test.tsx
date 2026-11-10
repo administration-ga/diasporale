@@ -31,6 +31,10 @@ const mocks = vi.hoisted(() => ({
   network: null as IcomNetwork | null,
   desktop: true,
   composer: vi.fn(),
+  /** Les rendus du lecteur des non-lus : aucun tant qu'iCom est fermé. */
+  unreadReads: 0,
+  /** Le chiffre que le lecteur remonte à la coque, comme le ferait le serveur. */
+  reportUnread: null as ((total: number) => void) | null,
 }))
 
 vi.mock("next/navigation", () => ({
@@ -62,6 +66,14 @@ vi.mock("@/components/icom", () => ({
   IcomIsland: (props: { children: ReactNode }) => <>{props.children}</>,
 }))
 vi.mock("@antsia/social-features/messagerie", () => ({ MessagerieDock: () => <section aria-label="Carte iCom" /> }))
+// Le lecteur des non-lus a ses propres tests (deux décomptes du serveur) : ici, une sonde que le test fait parler.
+vi.mock("@/components/messages-unread", () => ({
+  MessagesUnreadReader: (props: { onTotal: (total: number) => void }) => {
+    mocks.unreadReads += 1
+    mocks.reportUnread = props.onTotal
+    return null
+  },
+}))
 vi.mock("@antsia/ui/overlay", () => ({ useIsReseauMobile: () => !mocks.desktop }))
 
 // Le composeur a ses propres tests : ici, une sonde qui dit s'il est ouvert et avec quoi.
@@ -202,6 +214,8 @@ function accountTrigger(kind: "menu" | "dialog", name = "Menu du compte (Awa Ogo
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.desktop = true
+  mocks.unreadReads = 0
+  mocks.reportUnread = null
 })
 
 afterEach(() => {
@@ -428,6 +442,90 @@ describe("coque — une seule entrée courante pour chaque route de membre (UX-0
     const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
     expect(currentLinks(sheet)).toEqual([label])
     expect(marked()).toEqual([label])
+  })
+})
+
+describe("coque — la pastille de non-lus sur Messages (UX-06)", () => {
+  /** Le chiffre du serveur arrive : la coque le pose, sans rechargement. */
+  function report(total: number) {
+    const send = mocks.reportUnread
+    expect(send).not.toBeNull()
+    act(() => send?.(total))
+  }
+
+  function badgeOf(link: HTMLElement) {
+    return link.querySelector("[data-unread-badge]")
+  }
+
+  it("iCom fermé (démonstration, membre qui ne peut pas encore écrire) : aucune lecture, aucune pastille", () => {
+    renderShell({ icom: false, network: true })
+    expect(mocks.unreadReads).toBe(0)
+    expect(mocks.reportUnread).toBeNull()
+    expect(document.querySelector("[data-unread-badge]")).toBeNull()
+  })
+
+  it("iCom ouvert, rien d'attente : pas de pastille, Messages garde son seul libellé", () => {
+    renderShell({ icom: true })
+    expect(mocks.unreadReads).toBeGreaterThan(0)
+    report(0)
+    const { rail, bar } = mainNavigations()
+    for (const navigation of [rail, bar]) {
+      expect(badgeOf(within(navigation).getByRole("link", { name: "Messages" }))).toBeNull()
+    }
+  })
+
+  it("un message reçu fait paraître la pastille au rail et à la barre basse, annoncée avec l'entrée ; le lire la retire", () => {
+    renderShell({ icom: true })
+    report(3)
+    const { rail, bar } = mainNavigations()
+    for (const navigation of [rail, bar]) {
+      const link = within(navigation).getByRole("link", { name: "Messages, 3 non lus" })
+      expect(link).toHaveAttribute("href", "/messages")
+      // Le chiffre se voit, et ne s'entend qu'une fois : par le nom de l'entrée.
+      expect(badgeOf(link)).toHaveTextContent("3")
+      expect(badgeOf(link)).toHaveAttribute("aria-hidden", "true")
+    }
+    report(0)
+    for (const navigation of [rail, bar]) {
+      expect(badgeOf(within(navigation).getByRole("link", { name: "Messages" }))).toBeNull()
+    }
+  })
+
+  it("au singulier : « Messages, 1 non lu »", () => {
+    renderShell({ icom: true })
+    report(1)
+    const { rail, bar } = mainNavigations()
+    expect(within(rail).getByRole("link", { name: "Messages, 1 non lu" })).toBeInTheDocument()
+    expect(within(bar).getByRole("link", { name: "Messages, 1 non lu" })).toBeInTheDocument()
+  })
+
+  it("plafonnée comme la carte iCom : « 99+ » à l'écran, « 99 non lus ou plus » annoncé", () => {
+    renderShell({ icom: true })
+    report(99)
+    const { rail, bar } = mainNavigations()
+    for (const navigation of [rail, bar]) {
+      expect(badgeOf(within(navigation).getByRole("link", { name: "Messages, 99 non lus ou plus" }))).toHaveTextContent("99+")
+    }
+  })
+
+  it("sur la messagerie, l'entrée reste la seule courante et garde sa pastille", () => {
+    renderShell({ pathname: "/messages/conversation-7", icom: true })
+    report(2)
+    const { rail, bar } = mainNavigations()
+    for (const navigation of [rail, bar]) {
+      expect(within(navigation).getByRole("link", { name: "Messages, 2 non lus" })).toHaveAttribute("aria-current", "page")
+      expect(within(navigation).getAllByRole("link").filter((link) => link.hasAttribute("aria-current"))).toHaveLength(1)
+    }
+  })
+
+  it("parle anglais", () => {
+    renderShell({ icom: true, locale: "en" })
+    report(3)
+    const { rail, bar } = mainNavigations("en")
+    expect(within(rail).getByRole("link", { name: "Messages, 3 unread" })).toBeInTheDocument()
+    expect(within(bar).getByRole("link", { name: "Messages, 3 unread" })).toBeInTheDocument()
+    report(99)
+    expect(within(bar).getByRole("link", { name: "Messages, 99 or more unread" })).toBeInTheDocument()
   })
 })
 
