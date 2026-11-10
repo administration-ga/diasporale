@@ -2,8 +2,9 @@
  * Démonstration de la capacité « entraide » (DG-024 a) — données FICTIVES.
  * PROPRIÉTAIRE : ce chantier.
  *
- * L'état de l'entraide est LOCAL à ce chantier (le magasin commun n'est pas
- * modifié) : un registre en mémoire, gardé dans ce seul navigateur et remis à
+ * L'état de l'entraide est LOCAL à ce chantier (le magasin commun ne reçoit que
+ * les avis neutres aux bénévoles d'une mission annulée ou déplacée, ET-01, par
+ * `notifySystem`) : un registre en mémoire, gardé dans ce seul navigateur et remis à
  * zéro avec la démonstration (il suit la date de création du jeu fictif). Les
  * règles sont celles de `@diasporale/domain`, dans l'ordre du moteur : session
  * → adhésion au réseau → capacité → droit sur la ressource → règle de l'entraide.
@@ -233,8 +234,11 @@ const CURSOR_TAG = "demo-mutual-aid"
 type Failure = { readonly ok: false; readonly code: ActionErrorCode }
 const fail = (code: ActionErrorCode): Failure => ({ ok: false, code })
 
-/** Une écriture admise : le registre suivant et la valeur rendue à l'écran. */
-type Outcome<T> = { readonly next: DemoAidLedger; readonly value: T } | Failure
+/**
+ * Une écriture admise : le registre suivant et la valeur rendue à l'écran ; `then`, ce qui suit
+ * l'écriture une fois gardée (ET-01 : les avis aux bénévoles, comme le moteur après la transaction).
+ */
+type Outcome<T> = { readonly next: DemoAidLedger; readonly value: T; readonly then?: () => void } | Failure
 
 function isLedger(value: unknown): value is DemoAidLedger {
   if (typeof value !== "object" || value === null) return false
@@ -357,6 +361,7 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
     const outcome = work(state, viewerId, store.now())
     if ("next" in outcome) {
       commit(outcome.next)
+      outcome.then?.()
       return { ok: true, value: outcome.value }
     }
     return outcome
@@ -522,7 +527,7 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
     gesture: "close" | "cancel",
     missionId: string,
     expectedVersion: number,
-    apply: (mission: DemoAidMission, status: AidMissionStatus, base: DemoAidLedger, now: number) => Outcome<null>,
+    apply: (mission: DemoAidMission, status: AidMissionStatus, base: DemoAidLedger, now: number, state: DemoState, viewerId: string) => Outcome<null>,
   ) => act((state, viewerId, now) => {
     const refusal = demoViewerRefusal(state, now, "publish")
     if (refusal) return fail(refusal)
@@ -531,8 +536,25 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
     if (!mission) return fail("not_found")
     const check = checkAidMissionGesture({ gesture, status: mission.status, expectedVersion, version: mission.version })
     if (!check.ok) return fail(check.code)
-    return apply(mission, check.value, base, now)
+    return apply(mission, check.value, base, now, state, viewerId)
   })
+
+  /**
+   * ET-01 : après l'annulation ou un changement d'horaire, l'avis neutre à chaque bénévole à
+   * l'inscription confirmée (jamais l'auteur du geste), simulé dans la cloche de ce navigateur ;
+   * un avis par mission, changement et version, comme la clé du moteur. Ni motif ni horaire.
+   */
+  const noticeVolunteers = (state: DemoState, base: DemoAidLedger, mission: DemoAidMission, kind: "aid_mission_cancelled" | "aid_mission_rescheduled", version: number, viewerId: string) => () => {
+    const recipientIds = base.signups.filter((row) => row.missionId === mission.id && row.status === "confirmed").map((row) => row.personId)
+    if (recipientIds.length === 0) return
+    store.notifySystem({
+      kind,
+      recipientIds,
+      sourceId: viewerId,
+      noticeKey: `aidMission:${mission.id}:${kind === "aid_mission_cancelled" ? "cancelled" : "rescheduled"}:${version}`,
+      communityNotice: { audience: "volunteer", opens: "aidMission", objectId: mission.id, pageHandle: associationPage(state, mission.pageId)?.handle ?? null },
+    })
+  }
 
   return {
     // ── Lectures des questions ───────────────────────────────────
@@ -832,7 +854,13 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
       }
       const status = checkAidMissionPlacesChange(draft.value.places, mission.signupCount)
       if (!status.ok) return fail(status.code)
-      return { next: updateMissionRow(base, mission, { ...draft.value, status: status.value, updatedAt: now, version: mission.version + 1 }), value: null }
+      const version = mission.version + 1
+      return {
+        next: updateMissionRow(base, mission, { ...draft.value, status: status.value, updatedAt: now, version }),
+        value: null,
+        // ET-01 : seul un horaire changé s'annonce aux bénévoles inscrits.
+        ...(rescheduled ? { then: noticeVolunteers(state, base, mission, "aid_mission_rescheduled", version, viewerId) } : {}),
+      }
     }),
 
     closeMission: ({ missionId, expectedVersion }) => missionGesture("close", missionId, expectedVersion, (mission, status, base, now) => ({
@@ -840,10 +868,16 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
       value: null,
     })),
 
-    cancelMission: ({ missionId, expectedVersion, reason }) => missionGesture("cancel", missionId, expectedVersion, (mission, status, base, now) => {
+    cancelMission: ({ missionId, expectedVersion, reason }) => missionGesture("cancel", missionId, expectedVersion, (mission, status, base, now, state, viewerId) => {
       const parsed = parseAidReason(reason)
       if (!parsed.ok) return fail(parsed.code)
-      return { next: updateMissionRow(base, mission, { status, cancelReason: parsed.value, updatedAt: now, version: mission.version + 1 }), value: null }
+      const version = mission.version + 1
+      return {
+        next: updateMissionRow(base, mission, { status, cancelReason: parsed.value, updatedAt: now, version }),
+        value: null,
+        // ET-01 : chaque bénévole inscrit en est avisé, sans le motif (il se lit sur la fiche).
+        then: noticeVolunteers(state, base, mission, "aid_mission_cancelled", version, viewerId),
+      }
     }),
 
     // ── Gestes des bénévoles ─────────────────────────────────────

@@ -44,7 +44,7 @@ import { postMediaRefusal } from "../data/media"
 import type { ManagedPageDetailView } from "../data/page-admin-port"
 import type { PagePublicationInput } from "../data/page-publications-port"
 import type { ActionResult, CodeDestination, CommentInput, ContentPreferenceKind, IdnSignInInput, JoinInput, JoinedView, PublishInput, PublishMediaInput, PublishOutcome, ReportInput, UploadedMedia } from "../data/port"
-import { COMMENT_MAX_LENGTH, REPORT_NOTE_MAX, type ReactionKind } from "../data/types"
+import { COMMENT_MAX_LENGTH, REPORT_NOTE_MAX, type CommunityNoticeView, type ReactionKind } from "../data/types"
 import { handleRefusal, handleToken, normalizeHandle } from "../lib/handle"
 import { emailHash, fakeConsularAttestation } from "./attestation-provider"
 import { contentPreferencesRefusal, hasContentPreference, withContentPreferenceIdentities } from "./content-preferences"
@@ -72,6 +72,9 @@ const PAGE_PUBLICATIONS_KEYS_MAX = 200
 
 const OK: ActionResult = { ok: true, value: null }
 const fail = (code: ActionErrorCode): ActionResult<never> => ({ ok: false, code })
+
+/** Les avis du système qu'une démonstration voisine écrit dans la cloche (`DemoStore.notifySystem`). */
+export type DemoSystemNoticeKind = "aid_mission_cancelled" | "aid_mission_rescheduled" | "association_event_cancelled" | "association_event_seat_confirmed"
 
 /** Sujet IDN de démonstration, dérivé du nom (le vrai `sub` vient d'IDN). */
 export function demoIdnSub(firstName: string, lastName: string): string {
@@ -997,6 +1000,52 @@ export class DemoStore {
       postId,
     }
     return { ...next, notifications: [...next.notifications, notification], sequence: next.sequence + 1 }
+  }
+
+  /**
+   * Avis du SYSTÈME écrits par une démonstration voisine (ET-01 : missions bénévoles ; EV-03 :
+   * évènements d'association, annulation et place obtenue), comme la
+   * porte unique du moteur les écrit : sans acteur ni contenu, jamais à l'auteur du geste, ni à
+   * un compte effacé, suspendu ou parti ; une ligne par destinataire et par clé. Rejouée avec la
+   * même clé, une ligne existante n'est ni doublée ni rouverte, sauf `reopen`. Simulés dans ce
+   * navigateur seulement : aucune livraison hors de la cloche.
+   */
+  notifySystem(input: {
+    readonly kind: DemoSystemNoticeKind
+    readonly recipientIds: readonly string[]
+    readonly sourceId: string | null
+    readonly noticeKey: string
+    readonly communityNotice?: CommunityNoticeView
+    readonly associationEvent?: { readonly eventId: string; readonly pageHandle: string }
+    readonly reopen?: boolean
+  }): void {
+    const now = this.clock()
+    let next = this.state
+    for (const recipientId of new Set(input.recipientIds)) {
+      const status = statusOf(next, recipientId, now)
+      if (recipientId === input.sourceId || !next.persons[recipientId] || status === null || status === "suspendue" || status === "partie") continue
+      const existing = next.notifications.find((item) => item.recipientId === recipientId && item.kind === input.kind && item.noticeKey === input.noticeKey)
+      if (existing) {
+        if (input.reopen) next = { ...next, notifications: next.notifications.map((item) => (item === existing ? { ...item, createdAt: now, readAt: null } : item)) }
+        continue
+      }
+      const notification: DemoNotification = {
+        id: `n-${next.sequence}`,
+        recipientId,
+        kind: input.kind,
+        actorId: null,
+        createdAt: now,
+        readAt: null,
+        connectionRequestId: null,
+        inviteDeclined: false,
+        postId: null,
+        noticeKey: input.noticeKey,
+        ...(input.communityNotice ? { communityNotice: input.communityNotice } : {}),
+        ...(input.associationEvent ? { associationEvent: input.associationEvent } : {}),
+      }
+      next = { ...next, notifications: [...next.notifications, notification], sequence: next.sequence + 1 }
+    }
+    if (next !== this.state) this.commit(next)
   }
 
   async markNotificationRead(notificationId: string): Promise<ActionResult> {

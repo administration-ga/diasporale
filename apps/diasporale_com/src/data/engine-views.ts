@@ -38,6 +38,7 @@ import {
   type PublishMediaInput,
   type PublishOutcome,
   type SharedPostView,
+  ASSOCIATION_EVENT_NOTIFICATION_KINDS,
   COMMUNITY_NOTIFICATION_KINDS,
   CONTEXTUAL_NOTIFICATION_KINDS,
   NOTIFICATION_KINDS,
@@ -460,6 +461,9 @@ function toServiceNoticeView(notice: EngineNotification["serviceNotice"]): Servi
 /** Les avis de la vie communautaire (vague H) : l'objet qu'ils ouvrent, relu par le moteur avec les droits du lecteur. */
 const COMMUNITY_NOTICE_KINDS: ReadonlySet<string> = new Set(COMMUNITY_NOTIFICATION_KINDS)
 
+/** Les avis d'un évènement d'association (rappel ; EV-03 : annulation, place obtenue) : sans acteur, ils mènent à la fiche. */
+const ASSOCIATION_EVENT_NOTICE_KINDS: ReadonlySet<string> = new Set(ASSOCIATION_EVENT_NOTIFICATION_KINDS)
+
 /** Les avis d'une conversation de mise en relation (CC-2b) : le fil est leur seul sujet. */
 const CONTEXTUAL_NOTICE_KINDS: ReadonlySet<string> = new Set(CONTEXTUAL_NOTIFICATION_KINDS)
 
@@ -489,13 +493,13 @@ export function toNotificationView(item: EngineNotification): NotificationView {
   return {
     id: item.notificationId,
     kind,
-    actor: item.kind !== "association_event_reminder" && item.actor?.handle && item.actor.displayName ? { handle: item.actor.handle, displayName: item.actor.displayName } : null,
+    actor: !ASSOCIATION_EVENT_NOTICE_KINDS.has(item.kind) && item.actor?.handle && item.actor.displayName ? { handle: item.actor.handle, displayName: item.actor.displayName } : null,
     createdAt: item.createdAt,
     read: item.readAt !== null,
     pendingConnectionId,
     inviteOutcome,
     postId: subject?.kind === "post" ? subject.id : null,
-    ...(item.kind === "association_event_reminder" ? { associationEvent: subject?.kind === "event" && item.associationEvent?.eventId === subject.id ? { eventId: item.associationEvent.eventId, pageHandle: item.associationEvent.pageHandle } : null } : {}),
+    ...(ASSOCIATION_EVENT_NOTICE_KINDS.has(item.kind) ? { associationEvent: subject?.kind === "event" && item.associationEvent?.eventId === subject.id ? { eventId: item.associationEvent.eventId, pageHandle: item.associationEvent.pageHandle } : null } : {}),
     ...(SERVICE_NOTICE_KINDS.has(item.kind) ? { serviceNotice: toServiceNoticeView(item.serviceNotice) } : {}),
     ...(COMMUNITY_NOTICE_KINDS.has(item.kind) ? { communityNotice: toCommunityNoticeView(item.communityNotice) } : {}),
     // P16 · G9 : la carte de la page porteuse n'est servie qu'au signataire vivant d'un dossier de page ; sinon « Mes données ».

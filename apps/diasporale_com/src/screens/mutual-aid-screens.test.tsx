@@ -305,20 +305,22 @@ function remount(store: DemoStore, screenNode: ReactNode, locale: "fr" | "en" = 
 }
 
 /**
- * ET-01 — l'écran des missions ne promet que ce qui existe : aucun avis ne part à l'annulation ni à
- * la modification d'une mission (genres d'avis à déclarer au moteur), et la messagerie n'ouvre un fil
- * qu'entre personnes en relation (aucun canal entre l'équipe et un bénévole avant ET-02).
+ * ET-01 — l'écran des missions ne promet que ce qui existe : l'annulation et le changement d'horaire
+ * écrivent un avis neutre dans la cloche de chaque bénévole inscrit (le détail se lit sur la fiche),
+ * et la messagerie n'ouvre un fil qu'entre personnes en relation (aucun canal entre l'équipe et un
+ * bénévole avant ET-02).
  */
 describe("ET-01 — missions bénévoles : des promesses vraies", () => {
-  it("le bénévole : aucun message promis de l'équipe ; un changement ou une annulation se lit sur la fiche, sans avis", async () => {
+  it("le bénévole : aucun message promis de l'équipe ; une annulation ou un horaire changé s'annonce dans sa cloche", async () => {
     mount("p-nadia", <MutualAidItemScreen itemId="aid-m-1" />)
     expect(await screen.findByRole("heading", { level: 1, name: "Accueillir les nouveaux arrivants à la gare" })).toBeInTheDocument()
     expect(screen.getByText(/l'équipe ne peut vous écrire que si vous êtes en relation/)).toBeInTheDocument()
-    expect(screen.getByText(/se lit sur cette fiche et dans «\sMes inscriptions\s»\s; aucun avis ne vous est envoyé/)).toBeInTheDocument()
+    expect(screen.getByText(/Si la mission est annulée ou si son horaire change, un avis s'affiche dans votre cloche\s; le détail se lit sur cette fiche/)).toBeInTheDocument()
+    expect(screen.queryByText(/aucun avis ne vous est envoyé/)).not.toBeInTheDocument()
     expect(screen.queryByText(/vous écrira par la messagerie/)).not.toBeInTheDocument()
   })
 
-  it("l'équipe : écrire à un bénévole exige une relation ; modifier et annuler disent qu'aucun avis ne part", async () => {
+  it("l'équipe : écrire à un bénévole exige une relation ; modifier et annuler disent quel avis part", async () => {
     mount("p-steeve", <MutualAidItemScreen itemId="aid-m-1" />)
     expect(await screen.findByRole("heading", { level: 3, name: "Bénévoles inscrits" })).toBeInTheDocument()
     expect(screen.getByText(/Pour lui écrire, demandez d'abord à entrer en relation depuis son profil/)).toBeInTheDocument()
@@ -326,17 +328,18 @@ describe("ET-01 — missions bénévoles : des promesses vraies", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Modifier" }))
     const edit = await screen.findByRole("dialog", { name: "Modifier la mission" })
-    expect(within(edit).getByText(/Les changements s'affichent sur la fiche\s; aucun avis n'est envoyé aux inscrits/)).toBeInTheDocument()
+    expect(within(edit).getByText(/Un changement d'horaire est annoncé à chaque bénévole inscrit par un avis dans sa cloche\s; les autres changements s'affichent sur la fiche/)).toBeInTheDocument()
     fireEvent.click(within(edit).getByRole("button", { name: "Fermer" }))
     await waitFor(() => expect(screen.queryByRole("dialog", { name: "Modifier la mission" })).not.toBeInTheDocument())
 
     fireEvent.click(screen.getByRole("button", { name: "Annuler la mission" }))
     const cancel = await screen.findByRole("dialog", { name: /Annuler cette mission/ })
-    expect(within(cancel).getByText(/aucun avis ne leur est envoyé/)).toBeInTheDocument()
+    expect(within(cancel).getByText(/Chaque bénévole inscrit reçoit un avis dans sa cloche, sans le motif/)).toBeInTheDocument()
+    expect(within(cancel).queryByText(/aucun avis ne leur est envoyé/)).not.toBeInTheDocument()
     expect(within(cancel).queryByText(/Les inscrits verront/)).not.toBeInTheDocument()
   })
 
-  it("à deux comptes : l'équipe annule avec un motif, l'inscrite le lit sur la fiche et voit « Annulée » dans « Mes inscriptions »", async () => {
+  it("à deux comptes : l'équipe annule avec un motif, l'inscrite reçoit l'avis, lit le motif sur la fiche et voit « Annulée » dans « Mes inscriptions »", async () => {
     const store = mount("p-steeve", <MutualAidItemScreen itemId="aid-m-1" />)
     fireEvent.click(await screen.findByRole("button", { name: "Annuler la mission" }))
     const cancel = await screen.findByRole("dialog", { name: /Annuler cette mission/ })
@@ -345,7 +348,11 @@ describe("ET-01 — missions bénévoles : des promesses vraies", () => {
     expect(await screen.findByText("La mission est annulée.")).toBeInTheDocument()
     cleanup()
 
-    // p-mireille est inscrite à cette mission dans le jeu fictif.
+    // p-mireille et p-clarisse sont inscrites à cette mission dans le jeu fictif : un avis neutre chacune, sans le motif, qui mène à la mission.
+    const notices = store.getState().notifications.filter((item) => item.kind === "aid_mission_cancelled")
+    expect(notices.map((item) => item.recipientId).sort()).toEqual(["p-clarisse", "p-mireille"])
+    for (const item of notices) expect([item.actorId, item.communityNotice]).toEqual([null, { audience: "volunteer", opens: "aidMission", objectId: "aid-m-1", pageHandle: expect.any(String) }])
+    expect(JSON.stringify(notices)).not.toContain("La gare est fermée")
     await act(async () => { await store.switchTo("p-mireille") })
     remount(store, <MutualAidItemScreen itemId="aid-m-1" />)
     expect(await screen.findByText(/^Cette mission est annulée\. Motif\s: La gare est fermée ce samedi\. \(Motif fictif\.\)$/)).toBeInTheDocument()
@@ -362,7 +369,7 @@ describe("ET-01 — missions bénévoles : des promesses vraies", () => {
     mount("p-nadia", <MutualAidItemScreen itemId="aid-m-1" />, { locale: "en" })
     expect(await screen.findByRole("heading", { level: 1, name: "Accueillir les nouveaux arrivants à la gare" })).toBeInTheDocument()
     expect(screen.getByText(/the team can only write to you if you are connected/)).toBeInTheDocument()
-    expect(screen.getByText(/no notification is sent to you/)).toBeInTheDocument()
+    expect(screen.getByText(/If the mission is cancelled or its time changes, a notice shows in your notification bell/)).toBeInTheDocument()
     expect(screen.queryByText(/will write to you through messages/)).not.toBeInTheDocument()
     cleanup()
 
