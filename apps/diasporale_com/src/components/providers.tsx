@@ -17,6 +17,7 @@ import { routes } from "@/lib/routes"
 import { AccountLocale } from "./account-locale"
 import { AccountTheme } from "./account-theme"
 import { DemoAccountBootstrap } from "./demo-account-bootstrap"
+import { MembershipStatusRefresh } from "./membership-refresh"
 import { ServiceWorkerRegistration } from "./service-worker-registration"
 import { DemoFloatingCard } from "./site-chrome"
 import { ToastRegion } from "./toast-region"
@@ -133,6 +134,8 @@ export function Providers(props: { locale: Locale; children: ReactNode }) {
                 <DemoAccountBootstrap />
                 {/* Le script de fond unique du site (MO-05) : page hors-ligne en réserve, rien d'autre. */}
                 <ServiceWorkerRegistration />
+                {/* EA-03 : le statut relu quand l'identité a changé, seulement si le moteur signale un écart. */}
+                <MembershipStatusRefresh />
               </RoutingProvider>
             </AccountLocale>
           </AccountTheme>

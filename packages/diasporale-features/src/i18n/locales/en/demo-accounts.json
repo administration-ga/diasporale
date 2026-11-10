@@ -39,6 +39,10 @@
         "title": "Verified member",
         "description": "Consular registration attested; can sponsor."
       },
+      "fondateur": {
+        "title": "Founding member",
+        "description": "Verified by a recorded decision of the network, without attestation; can sponsor without waiting 30 days."
+      },
       "belgique": {
         "title": "Member in Belgium",
         "description": "Verified in Brussels, Belgium hub."

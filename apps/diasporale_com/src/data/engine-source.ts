@@ -1082,6 +1082,13 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
       return null
     }),
 
+    // EA-03 : la tranche relit les faits et applique la règle ; elle n'écrit rien sans écart.
+    refreshMembership: () =>
+      attempt(async () => {
+        const { changed } = await deps.convex.mutation(api.modules.diaspora.membership.refreshMyMembership, { networkId: await diasporale() })
+        return { changed }
+      }),
+
     updateFacet: (input) =>
       attempt(async () => {
         await deps.convex.mutation(api.modules.diaspora.facet.updateMyFacet, { networkId: await diasporale(), facet: toFacetArgs(input) })
