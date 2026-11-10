@@ -12,6 +12,7 @@ import { useActions, useOptionalDataSource } from "../data/context"
 import { REPORT_NOTE_MAX, REPORT_REASONS, type PostView } from "../data/types"
 import { POST_BODY_MAX } from "./composer"
 import { PostExplanationSheet } from "./post-explanation"
+import { ReportRulesLink } from "./report-guidance"
 import { useDiasporaleT } from "../i18n/client"
 import { cn } from "../lib/cn"
 import { Button } from "../primitives/button"
@@ -201,6 +202,8 @@ function ReportPostSheet(props: { postId: string; open: boolean; onOpenChange: (
             )}
           </Field>
           {engine ? <p className="text-[13px] text-muted-foreground">{t("report.followUp")}</p> : null}
+          {/* MD-05 : chaque motif renvoie à une règle, que la page des règles détaille. */}
+          <ReportRulesLink />
           <div className="flex flex-wrap justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => props.onOpenChange(false)}>
               {t("report.cancel")}

@@ -18,6 +18,8 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type RefObject } f
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
+import { CommunityRuleLink } from "./community-rule-link"
+
 /**
  * Les décisions de modération et leur recours, communs à « Mes données »
  * (décisions qui me concernent, DG-026) et à la gestion d'une page (décisions qui
@@ -196,6 +198,8 @@ export function DecisionItem({ decision, appeal }: { decision: ModerationDecisio
         {t("settings.dataRights.decisions.network", { name: network })} · {t("settings.dataRights.decisions.openedAt", { date: formatDate(decision.createdAt, locale) })}
       </p>
       <p className="text-sm">{t("settings.dataRights.decisions.ground", { ground })}</p>
+      {/* MD-05 : la règle que vise le motif, sur la page publique des règles. */}
+      <CommunityRuleLink ground={decision.ground} />
       {decision.decisionReason ? (
         <p className="whitespace-pre-line break-words text-sm">{t("settings.dataRights.decisions.decisionReason", { reason: decision.decisionReason })}</p>
       ) : null}

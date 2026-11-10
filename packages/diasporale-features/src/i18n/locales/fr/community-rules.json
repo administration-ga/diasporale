@@ -1,0 +1,60 @@
+{
+  "legal": {
+    "provisional": {
+      "heading": "Texte provisoire, en attente de relecture",
+      "body": "Il décrit ce que le service fait aujourd'hui. Le juriste et l'éditeur doivent encore le relire et le valider : les passages « À fournir » attendent leur réponse."
+    },
+    "community": {
+      "title": "Règles de la communauté",
+      "spirit": {
+        "title": "L'esprit du réseau",
+        "body": "DIASPORALE est le réseau des Gabonaises et des Gabonais de l'étranger : on s'y entraide, on y fait vivre ses associations, on y trouve une compétence près de chez soi. Ces règles valent pour tout ce qui s'y publie et s'y échange, dans chaque pays."
+      },
+      "respect": {
+        "title": "Respect et harcèlement",
+        "body": "Échangez avec respect, même en désaccord. Le harcèlement, l'insulte, la haine ou la discrimination, la menace et l'appel à la violence ne sont pas admis, dans une publication, un commentaire ou un message. Si une personne vous importune, vous pouvez la bloquer depuis son profil : vous ne vous verrez plus, et vos liens tombent."
+      },
+      "scams": {
+        "title": "Arnaques, faux services et fausses informations",
+        "body": "Ne proposez pas un service que vous ne rendez pas, ni une offre d'emploi, un logement ou une démarche qui n'existe pas, et ne publiez pas une information que vous savez fausse. Méfiez-vous de toute demande d'argent, d'avance ou de frais, et de toute promesse de visa, de logement ou d'emploi. DIASPORALE n'encaisse aucun paiement, l'adhésion ne se paie pas, et aucune démarche consulaire ne s'y traite. Le contact passe par la messagerie : aucune adresse ni aucun numéro de membre n'est publié."
+      },
+      "impersonation": {
+        "title": "Usurpation d'identité",
+        "body": "Ne vous faites pas passer pour une autre personne, une association, une entreprise, un poste consulaire ou une institution de l'État. Une page parle au nom de l'organisation qu'elle présente, et seul un membre vérifié peut en créer une. Les badges sont calculés par le service : aucun ne s'achète ni ne se déclare. Une attestation consulaire prouve une inscription consulaire, jamais une compétence professionnelle."
+      },
+      "politics": {
+        "title": "Débat politique",
+        "body": "Le débat d'idées est admis, dans le respect des personnes. L'injure, l'appel à la haine, l'usurpation et la publicité politique payante ne le sont pas."
+      },
+      "privacy": {
+        "title": "Vie privée et coordonnées d'autrui",
+        "body": "Ne publiez pas, sans son accord, l'adresse, le numéro de téléphone, l'adresse électronique, la photo ou la situation personnelle d'une autre personne, ni le contenu d'une conversation privée. Ne publiez jamais une pièce d'identité, un numéro de passeport ou un document consulaire, ni le vôtre ni celui d'une autre personne."
+      },
+      "prohibited": {
+        "title": "Contenus interdits",
+        "body": "Ne sont pas admis : les contenus sexuels, tout contenu préjudiciable à un mineur, l'hypertrucage d'une personne sans son accord et les contenus produits par intelligence artificielle que la loi interdit. Un tel contenu peut être retiré et entraîner une mesure contre son auteur.",
+        "pending": "À fournir (question Q1 au juriste) : la liste exacte des contenus que la loi interdit, selon le pays d'où le service est édité et celui où vous résidez."
+      },
+      "reporting": {
+        "title": "Signaler",
+        "body": "Publications, commentaires, profils, pages, évènements, contenus de l'entraide, du mentorat, du kit d'arrivée et de l'emploi : chacun porte un geste « Signaler », comme les avis sur les services. Choisissez le motif : l'équipe de modération du réseau examine le signalement, et son auteur ne sait pas qui l'a signalé. Le contenu signalé est aussitôt masqué pour vous, sauf un avis sur un service, qui reste affiché tant qu'aucune décision n'est prise. Vous suivez vos signalements dans « Mes signalements » : accusé de réception, puis décision ; pour les motifs soumis à un délai légal, l'échéance s'y affiche. Un profil est commun à DIASPORALE et à ANTSIA : son signalement est examiné par la modération d'ANTSIA.",
+        "pending": "À fournir (question Q6 au juriste) : les délais de traitement qui s'imposent selon le pays où vous résidez."
+      },
+      "measures": {
+        "title": "Mesures et recours",
+        "body": "Après examen, l'équipe de modération classe le signalement ou prend une mesure : retrait du contenu, avertissement, mise en sourdine, suspension ou exclusion. La mise en sourdine empêche de publier dans DIASPORALE ; la suspension et l'exclusion ferment l'accès à tout ANTSIA, car le compte est commun, mais « Mes données » reste ouvert. Une sourdine ou une suspension a une durée et prend fin d'elle-même ; une exclusion n'en a pas. Certains contenus, comme les évènements des pages et les avis sur les services, sont relus avant de paraître. Personne ne tranche un dossier où il est partie. Chaque décision est motivée : la personne concernée la retrouve dans « Mes données », sans le nom de qui a signalé ni de qui a décidé, et peut la contester par un recours motivé. Le recours est examiné par l'administration du réseau, puis, en second recours, par l'équipe de la plateforme ANTSIA, chaque fois par une autre personne que celle qui a décidé.",
+        "pending": "À fournir (question Q3 au juriste) : le délai pour former un recours et les autres voies de réclamation."
+      }
+    }
+  },
+  "communityRules": {
+    "reasonsLabel": "Motifs de signalement qui s'y rapportent",
+    "read": "Lire les règles de la communauté",
+    "readRule": "Règle concernée : {{rule}}"
+  },
+  "settings": {
+    "texts": {
+      "provisional": "Texte provisoire"
+    }
+  }
+}

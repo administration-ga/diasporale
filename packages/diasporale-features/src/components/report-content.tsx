@@ -38,6 +38,7 @@ import { cn } from "../lib/cn"
 import { Button } from "../primitives/button"
 import { RadioCard, RadioGroup } from "../primitives/radio-group"
 import { Sheet, SheetContent, SheetTrigger } from "../primitives/sheet"
+import { ReportRulesLink } from "./report-guidance"
 
 /** La capacité, ou `null` : fournisseur sans signalements, ou brique rendue hors de l'application. */
 export function useOptionalContentReports(): ContentReportsCapability | null {
@@ -207,6 +208,8 @@ function ReportForm(props: {
         ) : null}
       </fieldset>
       {props.capability.demonstration ? null : <p className="text-[13px] text-muted-foreground">{t("report.followUp")}</p>}
+      {/* MD-05 : chaque motif renvoie à une règle, que la page des règles détaille. */}
+      <ReportRulesLink />
       {failure !== null ? <p role="alert" className="text-sm font-medium text-destructive">{t(errorKey(failure))}</p> : null}
       <div className="flex flex-wrap justify-end gap-2">
         <Button type="button" variant="ghost" disabled={busy} onClick={props.onClose}>

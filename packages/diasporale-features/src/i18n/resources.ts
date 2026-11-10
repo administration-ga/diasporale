@@ -66,6 +66,7 @@ import enWelcomeProfile from "./locales/en/welcome-profile.json"
 import enPostPublicationState from "./locales/en/post-publication-state.json"
 import enCommentPages from "./locales/en/comment-pages.json"
 import enObjectReports from "./locales/en/object-reports.json"
+import enCommunityRules from "./locales/en/community-rules.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -121,6 +122,7 @@ import frWelcomeProfile from "./locales/fr/welcome-profile.json"
 import frPostPublicationState from "./locales/fr/post-publication-state.json"
 import frCommentPages from "./locales/fr/comment-pages.json"
 import frObjectReports from "./locales/fr/object-reports.json"
+import frCommunityRules from "./locales/fr/community-rules.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -184,6 +186,7 @@ export const LOCALE_PARTS = {
     "call-settings": frCallSettings,
     "welcome-profile": frWelcomeProfile,
     "object-reports": frObjectReports,
+    "community-rules": frCommunityRules,
   },
   en: {
     diasporale: enDiasporale,
@@ -241,6 +244,7 @@ export const LOCALE_PARTS = {
     "call-settings": enCallSettings,
     "welcome-profile": enWelcomeProfile,
     "object-reports": enObjectReports,
+    "community-rules": enCommunityRules,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 
