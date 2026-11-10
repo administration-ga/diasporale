@@ -30,6 +30,10 @@ import {
   InboxIcon,
   KeyRoundIcon,
   LandmarkIcon,
+  MessageSquareMoreIcon,
+  PhoneMissedIcon,
+  UserRoundPlusIcon,
+  VoicemailIcon,
   type LucideIcon,
   MessageCircleIcon,
   MessageCircleOffIcon,
@@ -59,6 +63,7 @@ import {
   ASSOCIATION_EVENT_NOTIFICATION_KINDS,
   COMMUNITY_NOTIFICATION_KINDS,
   CONTEXTUAL_NOTIFICATION_KINDS,
+  ICOM_NOTIFICATION_KINDS,
   PAGE_GOVERNANCE_NOTIFICATION_KINDS,
   REPORTER_NOTIFICATION_KINDS,
   SERVICE_NOTIFICATION_KINDS,
@@ -139,6 +144,11 @@ const KIND_ICONS: Readonly<Record<NotificationKind, LucideIcon>> = {
   // PG-01 du moteur : invitation à signer pour une page, revendication tranchée.
   page_signatory_invite: KeyRoundIcon,
   page_claim_decided: LandmarkIcon,
+  // IM-04 : message et invitation de groupe, appel manqué, message vocal.
+  group_message: MessageSquareMoreIcon,
+  group_added: UserRoundPlusIcon,
+  call_missed: PhoneMissedIcon,
+  voicemail_left: VoicemailIcon,
   other: BellIcon,
 }
 
@@ -163,6 +173,8 @@ export const BELL_ACTOR_LED_KINDS = [
   "album_published",
   "thematic_group_invite",
   "event_invite",
+  // IM-04 : l'auteur du message, de l'invitation, de l'appel ou du message vocal, par son profil publié.
+  ...ICOM_NOTIFICATION_KINDS,
 ] as const satisfies readonly NotificationKind[]
 type ActorLedKind = (typeof BELL_ACTOR_LED_KINDS)[number]
 const ACTOR_LED: ReadonlySet<NotificationKind> = new Set(BELL_ACTOR_LED_KINDS)

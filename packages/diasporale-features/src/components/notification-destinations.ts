@@ -27,6 +27,8 @@ export const BELL_DESTINATION_KINDS = [
   "album",
   "agenda",
   "settings",
+  "groupConversation",
+  "callJournal",
   "none",
 ] as const
 export type BellDestination = (typeof BELL_DESTINATION_KINDS)[number]
@@ -95,6 +97,12 @@ export const BELL_DESTINATIONS: Readonly<Record<NotificationKind, BellDestinatio
   // PG-01 du moteur : la page, relue pour le lecteur — l'invitation y attend sa réponse, la décision s'y lit.
   page_signatory_invite: "page",
   page_claim_decided: "page",
+  // IM-04 : la conversation de groupe d'iCom (l'invitation s'y accepte) ; l'appel manqué et le message
+  // vocal au journal d'appels — jamais un bouton d'appel (IM-01).
+  group_message: "groupConversation",
+  group_added: "groupConversation",
+  call_missed: "callJournal",
+  voicemail_left: "callJournal",
   // Un genre inconnu reste « nouvelle activité » ; il ne mène qu'à la publication qu'il désigne, s'il en désigne une.
   other: "post",
 }
@@ -216,5 +224,13 @@ export function noticeLink(item: NotificationView, routes: FeatureRoutes): Notic
     }
     case "settings":
       return { href: routes.settings(), label: "bell.openSettings" }
+    case "groupConversation": {
+      const href = item.groupThreadId ? routes.groupConversation?.(item.groupThreadId) : undefined
+      return href ? { href, label: item.kind === "group_added" ? "bell.openGroupInvite" : "bell.openGroup" } : null
+    }
+    case "callJournal": {
+      const href = routes.callJournal?.()
+      return href ? { href, label: "bell.openCallJournal" } : null
+    }
   }
 }

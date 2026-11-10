@@ -588,6 +588,15 @@ export const PAGE_GOVERNANCE_NOTIFICATION_KINDS = ["page_signatory_invite", "pag
 export type PageGovernanceNotificationKind = (typeof PAGE_GOVERNANCE_NOTIFICATION_KINDS)[number]
 
 /**
+ * IM-04 : les avis d'iCom que le moteur émet déjà — un message dans un groupe de discussion, une
+ * invitation dans un groupe, un appel manqué, un message vocal. Le sujet est le FIL ou l'APPEL,
+ * jamais un message ; l'auteur est nommé par son profil publié. Aucun ne propose d'appel (IM-01) :
+ * l'appel manqué et le message vocal mènent au journal d'appels d'iCom.
+ */
+export const ICOM_NOTIFICATION_KINDS = ["group_message", "group_added", "call_missed", "voicemail_left"] as const
+export type IcomNotificationKind = (typeof ICOM_NOTIFICATION_KINDS)[number]
+
+/**
  * Les avis de la cloche que DIASPORALE sait dire. Tout autre genre du moteur se
  * dit « nouvelle activité » (`other`) : jamais un libellé inventé.
  */
@@ -612,6 +621,7 @@ export const NOTIFICATION_KINDS = [
   ...REPORTER_NOTIFICATION_KINDS,
   ...ACTIVITY_NOTIFICATION_KINDS,
   ...PAGE_GOVERNANCE_NOTIFICATION_KINDS,
+  ...ICOM_NOTIFICATION_KINDS,
   "other",
 ] as const
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number]
@@ -677,6 +687,8 @@ export interface NotificationView {
    * le destinataire à l'instant ; `null` sinon. Jamais son nom dans l'avis.
    */
   readonly governancePageHandle?: string | null
+  /** IM-04 · message ou invitation de groupe : le fil de groupe d'iCom, relu à l'ouverture ; `null` sans sujet. */
+  readonly groupThreadId?: string | null
 }
 
 /** NP-04 : les avis lus par page sur la page des notifications ; « Afficher plus » lit la suivante. */

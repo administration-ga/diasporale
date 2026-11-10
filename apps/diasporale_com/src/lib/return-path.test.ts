@@ -118,6 +118,8 @@ describe("parseReturnPath — un chemin interne connu de la table, rien d'autre"
       routes.arrivalKit("FR", "Lyon", { q: "banque", category: "banking" }),
       routes.mentoring("FR", { domain: "housing", language: "fan", city: "Lyon" }),
       routes.talents("FR"),
+      // IM-04 : le journal d'appels d'iCom, sur sa brique.
+      routes.callJournal(),
     ]
     const keys = new Set(hrefs.flatMap((href) => [...new URLSearchParams(href.split("?")[1] ?? "").keys()]))
     expect([...keys].filter((key) => !(ROUTE_FILTER_KEYS as readonly string[]).includes(key))).toEqual([])

@@ -43,6 +43,10 @@ export interface FeatureRoutes {
   album?(handle: string, albumId: string): string
   /** NP-04 : l'agenda personnel (avis d'invitation à un évènement). */
   agenda?(): string
+  /** IM-04 : une conversation de groupe d'iCom (message ou invitation de groupe), sous la messagerie de l'application. */
+  groupConversation?(threadId: string): string
+  /** IM-04 : le journal d'appels d'iCom (appel manqué, message vocal) ; aucune route d'appel. */
+  callJournal?(): string
   hub(country: CountryCode): string
   /** Le filtre restreint le fil ; une carte peut conserver sa portée et le pays de son hub. */
   feed(tag?: string, context?: { readonly scope: FeedScope; readonly country?: CountryCode }): string

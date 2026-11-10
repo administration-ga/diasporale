@@ -4,7 +4,7 @@
  * surfaces de `@diasporale/features` ne connaissent aucune URL : elles reçoivent
  * cette table par `RoutingProvider`.
  */
-import { contextualConversationKey } from "@antsia/social-features/features/messagerie/messagerie-dock"
+import { contextualConversationKey, groupeKey } from "@antsia/social-features/features/messagerie/messagerie-dock"
 import { conversationHref } from "@antsia/social-features/features/messagerie/messagerie-routes"
 import { parseResidenceCountry, type CommunityRule, type CountryCode, type FeedScope } from "@diasporale/domain"
 import { PAGE_ASSOCIATION_TYPES, PAGE_COMPANY_SECTORS, type PageAssociationType, type PageCompanySector } from "@antsia/social-domain/pagePresentation"
@@ -237,6 +237,14 @@ export const routes = {
   messages: () => "/messages",
   /** Une conversation de mise en relation (CC-6) : `/messages/mise-en-relation/<fil>`, composée par la messagerie du moteur. */
   contextualConversation: (threadId: string) => conversationHref(contextualConversationKey(threadId), "/messages") ?? "/messages",
+  /** Une conversation de groupe d'iCom (IM-04 : message ou invitation de groupe) : `/messages/groupe/<fil>`, composée par la messagerie du moteur. */
+  groupConversation: (threadId: string) => conversationHref(groupeKey(threadId), "/messages") ?? "/messages",
+  /**
+   * Le journal d'appels d'iCom (IM-04 : appel manqué, message vocal), sur la brique iAppel de la
+   * messagerie, la même adresse que composent les avis du moteur (`icomMobileTabHref("iappel")`,
+   * égalité tenue par un test). Aucune route d'appel : IM-01.
+   */
+  callJournal: () => "/messages?brique=iappel",
   /** Statuts (stories) en plein écran, ouverts depuis iCom ; `…/nouvelle` ouvre le composeur. */
   stories: () => "/actus",
   story: (handle: string | null) => handle === null ? "/actus" : `/actus?${new URLSearchParams({ auteur: handle })}`,
@@ -368,6 +376,8 @@ export const ROUTE_FILTER_KEYS = [
   "theme",
   "domaine",
   "langue",
+  // IM-04 : la brique d'iCom ouverte (journal d'appels).
+  "brique",
 ] as const
 
 /** Ancres internes de la vitrine. */

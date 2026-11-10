@@ -479,7 +479,10 @@ function toCommunityNoticeView(notice: EngineNotification["communityNotice"]): C
  * (groupe thématique, évènement personnel ; PG-01 : signer pour une page). Comparées comme
  * chaînes : un genre que ce moteur ne déclare pas encore ne casse pas le typage.
  */
-const RESOLVED_INVITE_KINDS: ReadonlySet<string> = new Set(["thematic_group_invite", "event_invite", "page_signatory_invite"])
+const RESOLVED_INVITE_KINDS: ReadonlySet<string> = new Set(["thematic_group_invite", "event_invite", "page_signatory_invite", "group_added"])
+
+/** IM-04 : les avis d'un groupe de discussion d'iCom (message, invitation) — le fil est leur seul sujet. */
+const GROUP_THREAD_NOTICE_KINDS: ReadonlySet<string> = new Set(["group_message", "group_added"])
 
 /** NP-04 · PG-01 : les avis de gouvernance d'une page, menés à la page relue pour le lecteur. */
 const PAGE_GOVERNANCE_NOTICE_KINDS: ReadonlySet<string> = new Set(PAGE_GOVERNANCE_NOTIFICATION_KINDS)
@@ -555,6 +558,8 @@ export function toNotificationView(item: EngineNotification): NotificationView {
     ...(item.kind === "file_withheld" ? { fileReleased: isServableStatus(item.fileScanStatus) } : {}),
     // NP-04 · PG-01 : la page d'un avis de gouvernance, lisible par le destinataire à l'instant.
     ...(PAGE_GOVERNANCE_NOTICE_KINDS.has(item.kind) ? { governancePageHandle: pageTargetHandle(item.target) } : {}),
+    // IM-04 : le fil de groupe d'iCom, relu avec sa garde à l'ouverture (jamais un message).
+    ...(GROUP_THREAD_NOTICE_KINDS.has(item.kind) ? { groupThreadId: subject?.kind === "groupThread" ? subject.id : null } : {}),
   }
 }
 

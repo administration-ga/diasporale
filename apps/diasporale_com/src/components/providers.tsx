@@ -51,6 +51,9 @@ const featureRoutes: FeatureRoutes = {
   notifications: routes.notifications,
   album: routes.album,
   agenda: routes.agenda,
+  // IM-04 : la conversation de groupe d'iCom, le journal d'appels (aucune route d'appel, IM-01).
+  groupConversation: routes.groupConversation,
+  callJournal: routes.callJournal,
   hub: routes.hub,
   feed: (tag, context) => routes.feed(context?.scope, tag, context?.country),
   sponsor: routes.sponsor,
