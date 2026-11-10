@@ -332,6 +332,9 @@ describe("coque — le menu du compte, sous l'avatar", () => {
   const INFORMATION = [
     ["Mentions légales", "/mentions-legales"],
     ["Confidentialité", "/confidentialite"],
+    ["Conditions d'utilisation", "/conditions-utilisation"],
+    ["Règles de la communauté", "/regles-communaute"],
+    ["Contact", "/contact"],
     ["Charte graphique", "/charte"],
   ]
   const SIGN_OUT = "Se déconnecter partout"
@@ -404,6 +407,9 @@ describe("coque — le menu du compte, sous l'avatar", () => {
   it.each([
     ["Mentions légales", "/mentions-legales"],
     ["Confidentialité", "/confidentialite"],
+    ["Conditions d'utilisation", "/conditions-utilisation"],
+    ["Règles de la communauté", "/regles-communaute"],
+    ["Contact", "/contact"],
     ["Charte graphique", "/charte"],
   ])("« %s » est à deux gestes depuis tout écran : l'avatar, puis le lien, au bureau comme au téléphone", async (label, href) => {
     const user = userEvent.setup()
@@ -480,6 +486,9 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     expect(menuItemsOf(within(menu).getByRole("group", { name: "Information" }))).toEqual([
       ["Legal notice", "/mentions-legales"],
       ["Privacy", "/confidentialite"],
+      ["Terms of use", "/conditions-utilisation"],
+      ["Community rules", "/regles-communaute"],
+      ["Contact", "/contact"],
       ["Design charter", "/charte"],
     ])
     expect(within(menu).getByRole("menuitem", { name: "Sign out everywhere" })).not.toHaveAttribute("href")
