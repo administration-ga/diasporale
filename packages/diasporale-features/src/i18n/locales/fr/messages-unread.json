@@ -1,0 +1,7 @@
+{
+  "nav": {
+    "messagesUnread_one": "Messages, {{count}} non lu",
+    "messagesUnread_other": "Messages, {{count}} non lus",
+    "messagesUnreadCapped": "Messages, {{count}} non lus ou plus"
+  }
+}
