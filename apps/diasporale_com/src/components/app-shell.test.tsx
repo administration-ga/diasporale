@@ -1,7 +1,15 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
 import { RoutingProvider, type FeatureRoutes, type LinkComponent } from "@diasporale/features"
-import { DataSourceProvider, type DiasporaleActions, type MembershipView } from "@diasporale/features/data"
+import {
+  DataSourceProvider,
+  type DiasporaleActions,
+  type DiasporaleDataSource,
+  type Loadable,
+  type MembershipView,
+  type ModerationDeskView,
+  type PilotMetricsAccessView,
+} from "@diasporale/features/data"
 import { DemoStore, createDemoDataSource } from "@diasporale/features/demo"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
@@ -12,6 +20,7 @@ import { toast } from "sonner"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { IcomNetwork } from "@/lib/icom-state"
+import { ACCOUNT_DESTINATIONS, PRIMARY_DESTINATIONS, ROUTE_DESTINATIONS, type NavDestination, type RouteKey } from "@/lib/nav-destinations"
 import { routes } from "@/lib/routes"
 
 import { AppShell, useComposer } from "./app-shell"
@@ -22,6 +31,10 @@ const mocks = vi.hoisted(() => ({
   network: null as IcomNetwork | null,
   desktop: true,
   composer: vi.fn(),
+  /** Les rendus du lecteur des non-lus : aucun tant qu'iCom est fermé. */
+  unreadReads: 0,
+  /** Le chiffre que le lecteur remonte à la coque, comme le ferait le serveur. */
+  reportUnread: null as ((total: number) => void) | null,
 }))
 
 vi.mock("next/navigation", () => ({
@@ -53,6 +66,14 @@ vi.mock("@/components/icom", () => ({
   IcomIsland: (props: { children: ReactNode }) => <>{props.children}</>,
 }))
 vi.mock("@antsia/social-features/messagerie", () => ({ MessagerieDock: () => <section aria-label="Carte iCom" /> }))
+// Le lecteur des non-lus a ses propres tests (deux décomptes du serveur) : ici, une sonde que le test fait parler.
+vi.mock("@/components/messages-unread", () => ({
+  MessagesUnreadReader: (props: { onTotal: (total: number) => void }) => {
+    mocks.unreadReads += 1
+    mocks.reportUnread = props.onTotal
+    return null
+  },
+}))
 vi.mock("@antsia/ui/overlay", () => ({ useIsReseauMobile: () => !mocks.desktop }))
 
 // Le composeur a ses propres tests : ici, une sonde qui dit s'il est ouvert et avec quoi.
@@ -113,13 +134,35 @@ function ComposerProbe() {
   )
 }
 
+/** Un responsable reconnu par le serveur : modérateur du réseau et lecteur de la mesure du pilote (lectures stables). */
+const RESPONSIBLE_DESK: Loadable<ModerationDeskView | null> = {
+  status: "ready",
+  data: { role: "network_admin", networkWide: true, canReviewAppeals: true, canManageTeams: true, teams: [] },
+}
+const PILOT_ALLOWED: Loadable<PilotMetricsAccessView> = { status: "ready", data: { allowed: true } }
+
+function withResponsibleAccess(source: DiasporaleDataSource): DiasporaleDataSource {
+  const { moderationDesk, pilotMetrics } = source
+  if (!moderationDesk || !pilotMetrics) throw new Error("La démonstration sert la modération et la mesure du pilote.")
+  return { ...source, moderationDesk: { ...moderationDesk, useDesk: () => RESPONSIBLE_DESK }, pilotMetrics: { ...pilotMetrics, useAccess: () => PILOT_ALLOWED } }
+}
+
 function renderShell(
-  options: { pathname?: string; membership?: MembershipView; icom?: boolean; network?: boolean; locale?: "fr" | "en"; actions?: Partial<DiasporaleActions> } = {},
+  options: {
+    pathname?: string
+    membership?: MembershipView
+    icom?: boolean
+    network?: boolean
+    responsible?: boolean
+    locale?: "fr" | "en"
+    actions?: Partial<DiasporaleActions>
+  } = {},
 ) {
   mocks.pathname = options.pathname ?? "/fil"
   mocks.icom = options.icom ? NETWORK : null
   mocks.network = options.network ?? options.icom ? NETWORK : null
-  const source = createDemoDataSource(new DemoStore(null, () => NOW, 0))
+  const demo = createDemoDataSource(new DemoStore(null, () => NOW, 0))
+  const source = options.responsible ? withResponsibleAccess(demo) : demo
   return render(
     <I18nProvider locale={options.locale ?? "fr"}>
       <DataSourceProvider source={{ ...source, actions: { ...source.actions, ...options.actions } }}>
@@ -171,6 +214,8 @@ function accountTrigger(kind: "menu" | "dialog", name = "Menu du compte (Awa Ogo
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.desktop = true
+  mocks.unreadReads = 0
+  mocks.reportUnread = null
 })
 
 afterEach(() => {
@@ -249,6 +294,21 @@ describe("coque — les cinq destinations (DG-005)", () => {
     ["/pays/ca", "Communautés"],
     ["/messages", "Messages"],
     ["/messages/conversation-7", "Messages"],
+    // Décision 5 du plan 02 (UX-05) : la vie communautaire sous Communautés, les pages et les autres membres sous Explorer.
+    ["/entraide", "Communautés"],
+    ["/entraide/question-1", "Communautés"],
+    ["/kit-arrivee", "Communautés"],
+    ["/mentorat/mentor-1", "Communautés"],
+    ["/emploi/offre-1", "Communautés"],
+    ["/talents", "Communautés"],
+    ["/agenda", "Communautés"],
+    ["/pages/asso-lyon/groupe", "Communautés"],
+    ["/pages/asso-lyon/evenements/evt-42", "Communautés"],
+    ["/pages", "Explorer"],
+    ["/pages/asso-lyon", "Explorer"],
+    ["/pages/asso-lyon/revendiquer", "Explorer"],
+    ["/@autre.membre", "Explorer"],
+    ["/@autre.membre/albums/album-1", "Explorer"],
   ])("sur %s, seule la destination « %s » est courante", (pathname, current) => {
     renderShell({ pathname, icom: true })
     const { rail, bar } = mainNavigations()
@@ -256,7 +316,7 @@ describe("coque — les cinq destinations (DG-005)", () => {
     expect(currentLinks(rail)).toEqual([current])
   })
 
-  it.each(["/servicesx", "/filtre", "/messagesx", "/parametres", "/@autre.membre", "/pages/asso-lyon"])(
+  it.each(["/servicesx", "/filtre", "/messagesx", "/parametres", "/@awa.demo", "/mes-demandes"])(
     "sur %s, aucune destination principale n'est courante",
     (pathname) => {
       renderShell({ pathname, icom: true })
@@ -312,6 +372,160 @@ describe("coque — l'espace personnel du rail", () => {
   it("lire une page ou la revendiquer ne relève pas de Mon activité", () => {
     renderShell({ pathname: "/pages/asso-lyon/revendiquer", network: true })
     expect(currentLinks(personal())).toEqual([])
+  })
+})
+
+describe("coque — une seule entrée courante pour chaque route de membre (UX-05)", () => {
+  const LABEL_KEYS: Readonly<Record<NavDestination, string>> = {
+    feed: "nav.feed",
+    explore: "nav.explore",
+    services: "nav.services",
+    communities: "nav.communities",
+    messages: "nav.messages",
+    myRequests: "nav.myRequests",
+    myActivity: "nav.myActivity",
+    myAssociations: "nav.myAssociations",
+    myApplications: "nav.myApplications",
+    myMentoring: "nav.myMentoring",
+    relations: "nav.relations",
+    bookmarks: "bookmarks.title",
+    sponsor: "nav.sponsor",
+    moderation: "nav.moderation",
+    pilot: "pilotMetrics.nav",
+    profile: "nav.profile",
+    settings: "nav.settings",
+  }
+  const PRIMARY = new Set<NavDestination>(PRIMARY_DESTINATIONS)
+  const ACCOUNT = new Set<NavDestination>(ACCOUNT_DESTINATIONS)
+
+  /** Une adresse de la table, composée en donnant la même valeur à chaque paramètre : la route dit elle-même son chemin. */
+  function compose(key: RouteKey, value: string): string {
+    const route = routes[key] as unknown as (...values: readonly string[]) => string
+    return route(value, value, value).split(/[?#]/)[0] ?? ""
+  }
+
+  /** Toutes les adresses de membre de la table ; un profil l'est deux fois : le sien, puis celui d'un autre membre. */
+  const CASES = (Object.keys(ROUTE_DESTINATIONS) as RouteKey[]).flatMap((key): [string, string, NavDestination][] => {
+    const home = ROUTE_DESTINATIONS[key]
+    if (home.kind === "outside") return []
+    if (home.kind === "person") return [[key, compose(key, MEMBER.handle), "profile"], [key, compose(key, "autre.membre"), "explore"]]
+    return [[key, compose(key, "valeur-1"), home.destination]]
+  })
+
+  it("parcourt toutes les adresses de membre de la table des routes", () => {
+    expect(CASES.length).toBeGreaterThan(60)
+  })
+
+  it.each(CASES)("%s (%s) : seule l'entrée de « %s » est courante, au rail comme à la barre basse", async (_key, pathname, destination) => {
+    renderShell({ pathname, icom: true, network: true, responsible: true })
+    const label = t(LABEL_KEYS[destination])
+    const { rail, bar } = mainNavigations()
+    const personal = screen.getByRole("navigation", { name: "Mon espace" })
+    const marked = () => Array.from(document.querySelectorAll("[aria-current]")).map((element) => element.textContent)
+    if (PRIMARY.has(destination)) {
+      expect(currentLinks(rail)).toEqual([label])
+      expect(currentLinks(bar)).toEqual([label])
+      expect(currentLinks(personal)).toEqual([])
+      expect(marked()).toEqual([label, label])
+      return
+    }
+    expect(currentLinks(rail)).toEqual([])
+    expect(currentLinks(bar)).toEqual([])
+    if (!ACCOUNT.has(destination)) {
+      expect(currentLinks(personal)).toEqual([label])
+      expect(marked()).toEqual([label])
+      return
+    }
+    // Sous l'avatar : ni le rail ni la barre ne marquent d'entrée, le menu du compte marque la sienne.
+    expect(marked()).toEqual([])
+    await userEvent.setup().click(accountTrigger("dialog"))
+    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
+    expect(currentLinks(sheet)).toEqual([label])
+    expect(marked()).toEqual([label])
+  })
+})
+
+describe("coque — la pastille de non-lus sur Messages (UX-06)", () => {
+  /** Le chiffre du serveur arrive : la coque le pose, sans rechargement. */
+  function report(total: number) {
+    const send = mocks.reportUnread
+    expect(send).not.toBeNull()
+    act(() => send?.(total))
+  }
+
+  function badgeOf(link: HTMLElement) {
+    return link.querySelector("[data-unread-badge]")
+  }
+
+  it("iCom fermé (démonstration, membre qui ne peut pas encore écrire) : aucune lecture, aucune pastille", () => {
+    renderShell({ icom: false, network: true })
+    expect(mocks.unreadReads).toBe(0)
+    expect(mocks.reportUnread).toBeNull()
+    expect(document.querySelector("[data-unread-badge]")).toBeNull()
+  })
+
+  it("iCom ouvert, rien d'attente : pas de pastille, Messages garde son seul libellé", () => {
+    renderShell({ icom: true })
+    expect(mocks.unreadReads).toBeGreaterThan(0)
+    report(0)
+    const { rail, bar } = mainNavigations()
+    for (const navigation of [rail, bar]) {
+      expect(badgeOf(within(navigation).getByRole("link", { name: "Messages" }))).toBeNull()
+    }
+  })
+
+  it("un message reçu fait paraître la pastille au rail et à la barre basse, annoncée avec l'entrée ; le lire la retire", () => {
+    renderShell({ icom: true })
+    report(3)
+    const { rail, bar } = mainNavigations()
+    for (const navigation of [rail, bar]) {
+      const link = within(navigation).getByRole("link", { name: "Messages, 3 non lus" })
+      expect(link).toHaveAttribute("href", "/messages")
+      // Le chiffre se voit, et ne s'entend qu'une fois : par le nom de l'entrée.
+      expect(badgeOf(link)).toHaveTextContent("3")
+      expect(badgeOf(link)).toHaveAttribute("aria-hidden", "true")
+    }
+    report(0)
+    for (const navigation of [rail, bar]) {
+      expect(badgeOf(within(navigation).getByRole("link", { name: "Messages" }))).toBeNull()
+    }
+  })
+
+  it("au singulier : « Messages, 1 non lu »", () => {
+    renderShell({ icom: true })
+    report(1)
+    const { rail, bar } = mainNavigations()
+    expect(within(rail).getByRole("link", { name: "Messages, 1 non lu" })).toBeInTheDocument()
+    expect(within(bar).getByRole("link", { name: "Messages, 1 non lu" })).toBeInTheDocument()
+  })
+
+  it("plafonnée comme la carte iCom : « 99+ » à l'écran, « 99 non lus ou plus » annoncé", () => {
+    renderShell({ icom: true })
+    report(99)
+    const { rail, bar } = mainNavigations()
+    for (const navigation of [rail, bar]) {
+      expect(badgeOf(within(navigation).getByRole("link", { name: "Messages, 99 non lus ou plus" }))).toHaveTextContent("99+")
+    }
+  })
+
+  it("sur la messagerie, l'entrée reste la seule courante et garde sa pastille", () => {
+    renderShell({ pathname: "/messages/conversation-7", icom: true })
+    report(2)
+    const { rail, bar } = mainNavigations()
+    for (const navigation of [rail, bar]) {
+      expect(within(navigation).getByRole("link", { name: "Messages, 2 non lus" })).toHaveAttribute("aria-current", "page")
+      expect(within(navigation).getAllByRole("link").filter((link) => link.hasAttribute("aria-current"))).toHaveLength(1)
+    }
+  })
+
+  it("parle anglais", () => {
+    renderShell({ icom: true, locale: "en" })
+    report(3)
+    const { rail, bar } = mainNavigations("en")
+    expect(within(rail).getByRole("link", { name: "Messages, 3 unread" })).toBeInTheDocument()
+    expect(within(bar).getByRole("link", { name: "Messages, 3 unread" })).toBeInTheDocument()
+    report(99)
+    expect(within(bar).getByRole("link", { name: "Messages, 99 or more unread" })).toBeInTheDocument()
   })
 })
 
