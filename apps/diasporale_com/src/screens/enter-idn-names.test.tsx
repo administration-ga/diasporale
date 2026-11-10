@@ -42,7 +42,10 @@ vi.mock("@/components/entry-door", () => ({
   EntryDoor: (props: { children: ReactNode }) => <main>{props.children}</main>,
   EntryCard: (props: { children: ReactNode }) => <section>{props.children}</section>,
 }))
-vi.mock("@/components/gate", () => ({ Gate: (props: { children: () => ReactNode }) => props.children() }))
+vi.mock("@/components/gate", () => ({
+  Gate: (props: { children: (session: { membership: null }) => ReactNode }) => props.children({ membership: null }),
+  GateSkeleton: () => null,
+}))
 vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error } }))
 
 const t = getFixedT("fr")

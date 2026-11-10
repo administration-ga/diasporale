@@ -28,15 +28,19 @@ import { toast } from "sonner"
 import { z } from "zod"
 
 import { EntryCard, EntryDoor } from "@/components/entry-door"
+import { entryExit, liveMember, peekReturnPath } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 
-/** Une personne déjà connectée n'a rien à faire sur l'entrée : elle va à son fil ou à l'onboarding. */
+/**
+ * Une personne déjà connectée n'a rien à faire sur l'entrée : elle va à la page qu'elle avait
+ * demandée (UX-02, MO-03), sinon à son fil, ou à l'onboarding si elle n'est pas membre.
+ */
 export function useLeaveEntryWhenSignedIn(enabled = true) {
   const session = useSession()
   const router = useRouter()
   useEffect(() => {
     if (!enabled || session.status !== "ready" || session.data.status !== "signed_in") return
-    router.replace(session.data.membership && session.data.membership.status !== "partie" ? routes.feed() : routes.welcome())
+    router.replace(entryExit(liveMember(session.data.membership), peekReturnPath()))
   }, [enabled, session, router])
 }
 

@@ -25,7 +25,7 @@ import { useEffect, useRef } from "react"
 import { toast } from "sonner"
 
 import { forgetDemoActor, pendingDemoActor } from "@/lib/demo-account-pending"
-import { routes } from "@/lib/routes"
+import { entryExit, peekReturnPath } from "@/lib/return-path"
 
 /* Les contenus FICTIFS que les gestes publient, marqués comme tels dans leur texte. */
 const MENTOR_PROFILE = {
@@ -214,6 +214,8 @@ function EngineDemoAccountBootstrap(props: { capability: DemoAccountsCapability 
     }
     running.current = true
     const name = diasporaleDemoDisplayName(actor) ?? profile.handle
+    // La page demandée avant l'entrée (UX-02, MO-03), lue avant que l'arrivée ne l'efface.
+    const destination = peekReturnPath()
     // Un seul avis, du début à la fin : la préparation prend quelques secondes.
     const notice = toast.loading(t("demoAccounts.preparing"))
     void (async () => {
@@ -238,8 +240,10 @@ function EngineDemoAccountBootstrap(props: { capability: DemoAccountsCapability 
         const complete = firstEntry ? await playGestures(spec, equipped.value, { mentoring, jobs, services, mutualAid, associationEvents }) : true
         if (complete) toast.success(t("demoAccounts.ready", { name }), { id: notice })
         else toast.error(t("demoAccounts.equipFailed", { name }), { id: notice })
-        // Sans adhésion (extérieur au réseau), l'accueil de DIASPORALE ; sinon le fil.
-        router.replace(equipped.value.status === null ? routes.welcome() : routes.feed())
+        // Sans adhésion (extérieur au réseau), l'accueil de DIASPORALE ; sinon la page demandée
+        // avant l'entrée, ou le fil : la même sortie que la porte.
+        const status = equipped.value.status
+        router.replace(entryExit(status === null || status === "partie" ? null : { status, country: spec.country }, destination))
       } catch {
         toast.error(t("demoAccounts.equipFailed", { name }), { id: notice })
       } finally {
