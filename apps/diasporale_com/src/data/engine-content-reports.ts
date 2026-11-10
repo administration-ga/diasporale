@@ -1,9 +1,14 @@
 "use client"
 
 /**
- * Adaptateur moteur de la capacité « signalements » (G9) : la porte unique de
+ * Adaptateur moteur de la capacité « signalements » (G9, MD-02) : la porte unique de
  * modération du moteur (`moderation/cases`, geste `report`), pour les neuf natures
- * de la vague H. PROPRIÉTAIRE : chantier « confiance des surfaces ».
+ * de la vague H et les objets communs que DIASPORALE montre (publication de groupe ou
+ * de galerie, commentaire, page, évènement, profil). PROPRIÉTAIRE : chantier
+ * « confiance des surfaces ».
+ *
+ * Le réseau transmis est TOUJOURS celui de DIASPORALE : c'est le moteur qui range le
+ * dossier (pays de la cible lu au guichet ; profil versé au réseau racine).
  *
  * Écriture : la garde commune (nature du contrat, identifiant, motif fermé) est
  * jugée avant tout appel ; la personne de la session est relue ; le réseau est celui
@@ -60,6 +65,18 @@ export function engineReportTarget(target: ContentReportTarget): EngineTarget {
       return { kind: "diasporaTalentProfile", id: target.id as Id<"talentProfiles"> }
     case "diasporaJobApplication":
       return { kind: "diasporaJobApplication", id: target.id as Id<"jobApplications"> }
+    // MD-02 : les objets communs du moteur (une publication de groupe ou de galerie est une publication).
+    case "post":
+      return { kind: "post", id: target.id as Id<"posts"> }
+    case "comment":
+      return { kind: "comment", id: target.id as Id<"postComments"> }
+    case "page":
+      return { kind: "page", id: target.id as Id<"pages"> }
+    case "event":
+      return { kind: "event", id: target.id as Id<"events"> }
+    case "person":
+      // Le moteur range ce dossier au réseau racine : le profil est commun (cible `person` de `moderation/targets`).
+      return { kind: "person", id: target.id as Id<"persons"> }
   }
 }
 

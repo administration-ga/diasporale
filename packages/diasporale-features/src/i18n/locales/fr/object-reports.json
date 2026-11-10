@@ -1,0 +1,19 @@
+{
+  "contentReports": {
+    "action": {
+      "post": "Signaler la publication",
+      "comment": "Signaler",
+      "page": "Signaler la page",
+      "event": "Signaler l'évènement",
+      "person": "Signaler ce profil"
+    },
+    "title": {
+      "post": "Signaler cette publication",
+      "comment": "Signaler ce commentaire",
+      "page": "Signaler cette page",
+      "event": "Signaler cet évènement",
+      "person": "Signaler ce profil"
+    },
+    "rootNotice": "Un profil est commun à DIASPORALE et à ANTSIA, le réseau public : son signalement est examiné par la modération d'ANTSIA, pas par l'équipe de DIASPORALE."
+  }
+}
