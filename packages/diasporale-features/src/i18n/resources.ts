@@ -61,6 +61,7 @@ import enPostExplanation from "./locales/en/post-explanation.json"
 import enReporterNotices from "./locales/en/reporter-notices.json"
 import enFunctionalHealth from "./locales/en/functional-health.json"
 import enMediaPreparation from "./locales/en/media-preparation.json"
+import enProfileImages from "./locales/en/profile-images.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -111,6 +112,7 @@ import frPostExplanation from "./locales/fr/post-explanation.json"
 import frReporterNotices from "./locales/fr/reporter-notices.json"
 import frFunctionalHealth from "./locales/fr/functional-health.json"
 import frMediaPreparation from "./locales/fr/media-preparation.json"
+import frProfileImages from "./locales/fr/profile-images.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -169,6 +171,7 @@ export const LOCALE_PARTS = {
     "app-errors": frAppErrors,
     "account-menu": frAccountMenu,
     "media-preparation": frMediaPreparation,
+    "profile-images": frProfileImages,
   },
   en: {
     diasporale: enDiasporale,
@@ -221,6 +224,7 @@ export const LOCALE_PARTS = {
     "app-errors": enAppErrors,
     "account-menu": enAccountMenu,
     "media-preparation": enMediaPreparation,
+    "profile-images": enProfileImages,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

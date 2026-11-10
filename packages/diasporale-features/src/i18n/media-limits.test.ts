@@ -24,6 +24,11 @@ function phrase(locale: "fr" | "en", path: string): string {
 const LIMIT_PHRASES = [
   "errors.media_too_large",
   "errors.media_type_invalid",
+  "profile.images.requirements",
+  "profile.images.format",
+  "profile.images.inputTooLarge",
+  "profile.images.tooLargeAvatar",
+  "profile.images.tooLargeCover",
 ] as const
 
 describe("FD-02 — les bornes des médias suivent le moteur", () => {

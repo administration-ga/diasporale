@@ -192,7 +192,7 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
 
   return {
     kind: "engine",
-    profileImages: createEngineProfileImagesActions({ convex: deps.convex }),
+    profileImages: createEngineProfileImagesActions({ convex: deps.convex, prepareImage: deps.prepareImage }),
     // Capacités des chantiers du plan global (docs/14), chacune dans son fichier.
     // Les publications lues dans une fiche de page alimentent aussi « retirer ma réaction ».
     pages: createEnginePages(deps, { onPosts: (posts) => { for (const post of posts) myReactions.set(post.id, post.myReaction) } }),
