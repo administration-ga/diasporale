@@ -258,6 +258,19 @@ export const routes = {
   contact: () => "/contact",
   health: () => "/sante-fonctionnelle",
   healthApi: () => "/api/sante-fonctionnelle",
+  /**
+   * Les icônes de l'application installée que le manifeste déclare (MO-02) : 192 et 512 px, et la
+   * variante masquable (symbole tenu dans la zone sûre). L'icône d'onglet et l'icône Apple sont
+   * celles des conventions de Next (`app/icon.tsx`, `app/apple-icon.tsx`), liées par lui.
+   */
+  appIcon: (format: "192" | "512" | "masquable") => `/icone-application/${format}`,
+  /**
+   * Le script de fond UNIQUE du site (MO-05) : page hors-ligne en réserve, écouteurs de
+   * notification. Son adresse ne change pas : une autre adresse ferait un second script.
+   */
+  serviceWorker: () => "/script-de-fond",
+  /** La page hors-ligne, la seule réserve du script de fond (MO-05). */
+  offline: () => "/hors-ligne",
 } as const
 
 /**

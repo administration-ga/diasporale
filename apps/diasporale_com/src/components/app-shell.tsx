@@ -74,6 +74,7 @@ import { routes } from "@/lib/routes"
 
 import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
 import { MessagesUnreadReader } from "./messages-unread"
+import { NetworkStatusNotice } from "./network-status"
 import { useSignOutEverywhere } from "./sign-out-settings"
 import { AppDemoChip } from "./site-chrome"
 import { Wordmark } from "./wordmark"
@@ -367,6 +368,8 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
             >
               <ComposerContext.Provider value={{ open: openComposer, canPublish }}>
                 <div className="flex min-w-0 max-w-[792px] flex-col gap-4">
+                  {/* L'état du réseau (MO-05) : dit en tête du contenu, sans rien masquer. */}
+                  <NetworkStatusNotice />
                   <ZoneNotice pathname={pathname} membership={membership} />
                   {props.children}
                 </div>
