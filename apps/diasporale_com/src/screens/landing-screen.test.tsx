@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { DataSourceProvider, type DiasporaleActions, type DiasporaleDataSource } from "@diasporale/features/data"
+import { DataSourceProvider, type DiasporaleActions, type DiasporaleDataSource, type EntryDoorsView, type Loadable } from "@diasporale/features/data"
 import { DemoStore, createDemoDataSource } from "@diasporale/features/demo"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
@@ -20,6 +20,9 @@ vi.mock("next/navigation", () => ({ useRouter: () => navigation }))
 
 const t = getFixedT("fr")
 
+/** Avec le moteur, la porte suit la configuration du déploiement : ici, IDN fermée et code par e-mail ouvert. */
+const IDN_CLOSED: Loadable<EntryDoorsView> = { status: "ready", data: { idn: false, emailCode: true } }
+
 function setup(kind: DiasporaleDataSource["kind"] = "demo") {
   const store = new DemoStore(null, () => Date.UTC(2026, 9, 17, 12), 0)
   const demo = createDemoDataSource(store)
@@ -29,6 +32,7 @@ function setup(kind: DiasporaleDataSource["kind"] = "demo") {
   const source: DiasporaleDataSource = {
     ...demo,
     kind,
+    ...(kind === "engine" ? { useEntryDoors: () => IDN_CLOSED } : {}),
     actions: { ...demo.actions, requestCode, verifyCode, join },
   }
   const mount = (children: ReactNode = <LandingScreen />) => render(
@@ -45,7 +49,7 @@ afterEach(() => {
 })
 
 describe("Accueil — accès au réseau personnel", () => {
-  it("conserve une inscription par code accessible quand IDN n'est pas branchée au moteur", () => {
+  it("conserve une inscription par code accessible quand le déploiement ne sert pas IDN", () => {
     const { mount } = setup("engine")
     mount(<LandingScreen intent="sign-up" />)
     expect(screen.getByRole("heading", { level: 2, name: t("entry.signUpTitle") })).toBeInTheDocument()
@@ -79,7 +83,7 @@ describe("Accueil — accès au réseau personnel", () => {
     expect(navigation.replace).not.toHaveBeenCalled()
   })
 
-  it("explique l'indisponibilité d'IDN dans le moteur et propose uniquement le courriel", () => {
+  it("explique l'indisponibilité d'IDN quand le déploiement ne la sert pas, et propose uniquement le courriel", () => {
     const { mount } = setup("engine")
     mount()
 

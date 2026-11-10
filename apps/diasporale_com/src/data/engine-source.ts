@@ -10,9 +10,11 @@
  *   serveur devient un état `error` à code fermé, jamais un écran blanc.
  * - Écritures : client Convex et client Better Auth (codes à usage unique) ;
  *   chacune rend un résultat à code FERMÉ (`errors.<code>`), jamais une exception.
- * - Ce que le moteur ne sert pas encore rend `feature_unavailable` : IDN et SMS
+ * - Ce que le moteur ne sert pas encore rend `feature_unavailable` : le SMS
  *   (PA4) — jamais une donnée inventée. L'attestation consulaire (PD3) rend
  *   `attestation_unavailable` tant que le déploiement n'a pas sa clé de service.
+ * - IDN (EA-02) : le départ et la lecture des portes ouvertes vivent dans
+ *   `engine-idn.ts`.
  * - Les capacités du plan global (docs/14 : pages, gestion des pages, services,
  *   demandes, droits personnels, associations, avis) vivent chacune dans son
  *   fichier `engine-<capacité>.ts`, sur les briques communes de `engine-kit.ts`.
@@ -113,6 +115,7 @@ import { createEnginePilotMetrics } from "./engine-pilot-metrics"
 import { createEngineConversations } from "./engine-conversations"
 import { createEngineDemoAccounts } from "./engine-demo-accounts"
 import { createEnginePageDecisions } from "./engine-page-decisions"
+import { startIdnSignIn, useEngineEntryDoors } from "./engine-idn"
 import {
   toAccountView,
   toConsentViews,
@@ -344,6 +347,9 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
         membership: membership.value ? toMembershipView(person.value, membership.value) : null,
       })
     },
+
+    // EA-02 : les portes que ce déploiement sait servir, lues sans session.
+    useEntryDoors: useEngineEntryDoors,
 
     useOpenCountries(): Loadable<readonly OpenCountryView[]> {
       const networkId = useNetworkId()
@@ -703,11 +709,9 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     }
   }
 
-  const unavailable = async (): Promise<ActionResult<never>> => ({ ok: false, code: "feature_unavailable" })
-
   return {
-    // IDN entre par Better Auth avec l'identité du moteur (PA4).
-    signInWithIdn: unavailable,
+    // EA-02 : départ vers IDN par le client du moteur ; l'identité simulée de la démonstration est ignorée.
+    signInWithIdn: () => startIdnSignIn(deps),
 
     async requestCode(destination) {
       // Le SMS arrive avec l'identité du moteur (PA4).

@@ -1,14 +1,16 @@
 "use client"
 
 import { Button } from "@diasporale/features"
-import { useDataSource } from "@diasporale/features/data"
+import { type ActionErrorCode, type EntryDoorsErrorCode, useActions, useDataSource, useEntryDoors } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { IdCardIcon, LockKeyholeIcon } from "lucide-react"
 import NextLink from "next/link"
+import { useEffect, useId, useRef, useState } from "react"
 
 import { DemoAccountsButton } from "@/components/demo-accounts-panel"
 import { DoorVision } from "@/components/door-vision"
 import { EntryDoor } from "@/components/entry-door"
+import { forgetIdnReturnError } from "@/lib/idn-return"
 import { routes } from "@/lib/routes"
 
 import { CodeForm, useLeaveEntryWhenSignedIn } from "./enter-screens"
@@ -22,17 +24,20 @@ export type EntryIntent = "sign-in" | "sign-up"
  * Une session ouverte part à son fil ou à l'accueil du nouveau membre, sauf
  * après une déconnexion incomplète : l'avertissement reste alors lisible.
  * Sous la porte, la vision de DIASPORALE (`DoorVision`).
+ *
+ * `idnRefusal` : l'échec d'un passage par IDN, lu par la page `/entrer` dans l'adresse de retour
+ * (`lib/idn-return.ts`) ; la porte le dit, puis retire le code de l'adresse.
  */
-export function LandingScreen(props: { intent?: EntryIntent; signOutIncomplete?: boolean } = {}) {
+export function LandingScreen(props: { intent?: EntryIntent; signOutIncomplete?: boolean; idnRefusal?: EntryDoorsErrorCode | null } = {}) {
   return (
     <EntryDoor after={<DoorVision showJoin={props.intent !== "sign-up"} />}>
-      <AccessCard signUp={props.intent === "sign-up"} signOutIncomplete={props.signOutIncomplete === true} />
+      <AccessCard signUp={props.intent === "sign-up"} signOutIncomplete={props.signOutIncomplete === true} idnRefusal={props.idnRefusal ?? null} />
     </EntryDoor>
   )
 }
 
 /** Même accès par code sur l'accueil et sur sa page dédiée : aucune seconde authentification. */
-function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean }) {
+function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRefusal: EntryDoorsErrorCode | null }) {
   const { t } = useDiasporaleT()
   const source = useDataSource()
   useLeaveEntryWhenSignedIn(!props.signOutIncomplete)
@@ -58,7 +63,7 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean }) {
           {t("entry.signOutIncomplete")}
         </p>
       ) : null}
-      <IdnEntry />
+      <IdnEntry refusal={props.idnRefusal} />
       <div className="my-4 flex items-center gap-3 text-[13px] text-muted-foreground">
         <span className="h-px flex-1 bg-border" />
         <span>{t("landing.or")}</span>
@@ -100,8 +105,8 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean }) {
   )
 }
 
-/** IDN en démonstration ; avec le moteur, la porte est annoncée indisponible et ne navigue pas. */
-function IdnEntry() {
+/** IDN en démonstration : la simulation de `/entrer/idn`, inchangée. Avec le moteur : la vraie porte. */
+function IdnEntry(props: { refusal: EntryDoorsErrorCode | null }) {
   const { t } = useDiasporaleT()
   const source = useDataSource()
   if (source.kind === "demo") {
@@ -114,15 +119,87 @@ function IdnEntry() {
       </Button>
     )
   }
+  return <EngineIdnEntry refusal={props.refusal} />
+}
+
+/**
+ * « Continuer avec IDN » avec le moteur (EA-02). Le bouton n'est actif que si le déploiement
+ * sert IDN ; il dit avant le départ que l'écran d'IDN nommera ANTSIA (client IDN central du
+ * moteur). « Disponible prochainement » ne se dit que d'une porte fermée. Un départ refusé, ou
+ * l'échec rapporté au retour d'IDN, se dit sous le bouton, traduit.
+ */
+function EngineIdnEntry(props: { refusal: EntryDoorsErrorCode | null }) {
+  const { t } = useDiasporaleT()
+  const doors = useEntryDoors()
+  const actions = useActions()
+  const helpId = useId()
+  const [pending, setPending] = useState(false)
+  const starting = useRef(false)
+  const [refusal, setRefusal] = useState<ActionErrorCode | null>(props.refusal)
+
+  // L'échec rapporté au retour d'IDN est dit une fois : son code quitte l'adresse, sans recharger.
+  useEffect(() => {
+    if (props.refusal !== null) forgetIdnReturnError()
+  }, [props.refusal])
+
+  // Retour arrière depuis IDN (page restaurée du cache du navigateur) : le bouton se rouvre.
+  useEffect(() => {
+    const reopen = (event: PageTransitionEvent) => {
+      if (!event.persisted) return
+      starting.current = false
+      setPending(false)
+    }
+    window.addEventListener("pageshow", reopen)
+    return () => window.removeEventListener("pageshow", reopen)
+  }, [])
+
+  const open = doors.status === "ready" && doors.data.idn
+  const help =
+    doors.status === "loading" ? t("entryDoors.checking")
+      : doors.status === "error" ? t("entryDoors.idnUnknown")
+        : open ? t("entryDoors.idnAntsia") : t("landing.idnUnavailable")
+
+  async function start() {
+    if (!open || starting.current) return
+    starting.current = true
+    setPending(true)
+    setRefusal(null)
+    let code: ActionErrorCode
+    try {
+      const result = await actions.signInWithIdn()
+      // Départ accepté : le navigateur part chez IDN, le bouton reste « ouverture ».
+      if (result.ok) return
+      code = result.code
+    } catch {
+      code = "network_unavailable"
+    }
+    starting.current = false
+    setPending(false)
+    setRefusal(code)
+  }
+
   return (
     <>
-      <Button size="lg" variant="outline" className="w-full" disabled aria-describedby="idn-disponibilite">
+      <Button
+        size="lg"
+        variant="outline"
+        className="w-full"
+        disabled={!open || pending}
+        aria-busy={pending || undefined}
+        aria-describedby={helpId}
+        onClick={() => void start()}
+      >
         <IdCardIcon aria-hidden />
-        {t("landing.idnContinue")}
+        {pending ? t("entryDoors.idnStarting") : t("landing.idnContinue")}
       </Button>
-      <p id="idn-disponibilite" className="mt-2 text-center text-[13px] text-muted-foreground">
-        {t("landing.idnUnavailable")}
+      <p id={helpId} className="mt-2 text-center text-[13px] text-muted-foreground">
+        {help}
       </p>
+      {refusal ? (
+        <p role="alert" className="mt-2 text-center text-[13px] font-medium text-destructive">
+          {t(`errors.${refusal}`)}
+        </p>
+      ) : null}
     </>
   )
 }

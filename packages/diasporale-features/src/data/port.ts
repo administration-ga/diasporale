@@ -78,6 +78,7 @@ import type { PilotMetricsCapability } from "./pilot-metrics-port"
 import type { ConversationsCapability } from "./conversations-port"
 import type { DemoAccountsCapability } from "./demo-accounts-port"
 import type { PageDecisionsCapability } from "./page-decisions-port"
+import type { EntryDoorsView } from "./entry-doors-port"
 
 export type ActionResult<T = null> =
   | { readonly ok: true; readonly value: T }
@@ -142,7 +143,7 @@ export interface ContentPreferences {
   restore(args: { personId: string; kind: ContentPreferenceKind; choiceId: string }): Promise<ActionResult<{ restored: boolean }>>
 }
 
-/** Ce qu'IDN rend au retour OIDC (simulé en démonstration). */
+/** L'identité qu'IDN rendrait au retour OIDC, SIMULÉE par l'écran de démonstration (`/entrer/idn`). */
 export interface IdnSignInInput {
   readonly firstName: string
   readonly lastName: string
@@ -246,7 +247,14 @@ export interface ReportInput {
 }
 
 export interface DiasporaleActions {
-  signInWithIdn(input: IdnSignInInput): Promise<ActionResult>
+  /**
+   * Entrer par IDN (EA-02).
+   *   · Démonstration : l'identité simulée de `/entrer/idn` ouvre la session ; sans elle, `idn_invalid`.
+   *   · Moteur : SANS argument (une identité passée est ignorée, aucun nom civil ne part). Départ
+   *     vers IDN par le client d'authentification du moteur (fournisseur `idn`), retour sur
+   *     `/bienvenue` sans aucun paramètre ; `ok` veut dire que le navigateur part chez IDN.
+   */
+  signInWithIdn(input?: IdnSignInInput): Promise<ActionResult>
   requestCode(destination: CodeDestination): Promise<ActionResult<{ demoCode: string | null }>>
   verifyCode(code: string): Promise<ActionResult>
   /** Révocation de toutes les sessions côté serveur, puis purge locale (EXT-DG-01). */
@@ -369,6 +377,11 @@ export interface DiasporaleDataSource {
   /** Comptes de démonstration par acteur, DÉVELOPPEMENT LOCAL du moteur seulement (`demo-accounts-port.ts`). */
   readonly demoAccounts?: DemoAccountsCapability
   useSession(): Loadable<SessionView>
+  /**
+   * Les portes d'entrée que ce déploiement sait vraiment servir (EA-02, `entry-doors-port.ts`).
+   * Facultative : sans elle, la porte reste celle d'avant (`UNREAD_ENTRY_DOORS`).
+   */
+  useEntryDoors?(): Loadable<EntryDoorsView>
   useOpenCountries(): Loadable<readonly OpenCountryView[]>
   useCountryHub(country: CountryCode): Loadable<CountryHubView>
   useFeed(args: { scope: FeedScope; hubCountry?: CountryCode }): Loadable<readonly PostView[]>

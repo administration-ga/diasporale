@@ -64,6 +64,7 @@ import enWelcomeProfile from "./locales/en/welcome-profile.json"
 import enPostPublicationState from "./locales/en/post-publication-state.json"
 import enCommentPages from "./locales/en/comment-pages.json"
 import enObjectReports from "./locales/en/object-reports.json"
+import enIdnEntry from "./locales/en/idn-entry.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -117,6 +118,7 @@ import frWelcomeProfile from "./locales/fr/welcome-profile.json"
 import frPostPublicationState from "./locales/fr/post-publication-state.json"
 import frCommentPages from "./locales/fr/comment-pages.json"
 import frObjectReports from "./locales/fr/object-reports.json"
+import frIdnEntry from "./locales/fr/idn-entry.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -178,6 +180,7 @@ export const LOCALE_PARTS = {
     "account-menu": frAccountMenu,
     "welcome-profile": frWelcomeProfile,
     "object-reports": frObjectReports,
+    "idn-entry": frIdnEntry,
   },
   en: {
     diasporale: enDiasporale,
@@ -233,6 +236,7 @@ export const LOCALE_PARTS = {
     "account-menu": enAccountMenu,
     "welcome-profile": enWelcomeProfile,
     "object-reports": enObjectReports,
+    "idn-entry": enIdnEntry,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 
