@@ -2,7 +2,7 @@
 title: "DIASPORALE.COM — Plan d'implémentation en prompts"
 version: "1.0"
 date: "2026-10-14"
-maj: "2026-10-18"
+maj: "2026-11-10"
 statut: "Plan d'exécution — prompts Claude Code (Opus), à exécuter après ANTSIA PA0–PA7"
 projet: "DIASPORALE"
 reference: "NTSAGUI/DIASPORALE/PI/2026/001"
@@ -14,7 +14,129 @@ dependances:
 
 # DIASPORALE.COM — Plan d'implémentation en prompts
 
-## État d'avancement (tenu par la session de construction)
+## État d'avancement (relevé du 10/11/2026)
+
+> **Source de l'état détaillé et de la suite** : le dossier
+> [`etudes/2026-11-10-finalisation/`](etudes/2026-11-10-finalisation/00_PLAN_DIRECTEUR.md) — plan
+> directeur (§ 3 : où en est le projet ; § 5 : la feuille de route), un plan par fonctionnalité, et
+> le registre des lots [`EXECUTION.md`](etudes/2026-11-10-finalisation/EXECUTION.md). Cet encart le
+> résume prompt par prompt et lot par lot ; en cas d'écart, le dossier et les rapports datés font
+> foi. Les prompts PD0 → PD10 (§ 4) restent la référence d'origine ; le travail avance désormais par
+> les lots de ce dossier, cités ici après une flèche (→ FD-01…).
+
+Trois états, et trois seulement :
+
+- **fait et constaté** : tout le critère de fin est prouvé par un rapport daté ;
+- **écrit, non recetté** : le code existe, mais tout ou partie de son critère n'a jamais été vu
+  fonctionner ; la colonne « Déjà constaté » dit ce qui l'a été, et par quel rapport ;
+- **à faire** : rien d'utilisable n'existe encore.
+
+Le code de DIASPORALE cité ici est celui qui passait la vérification commune du 3/11
+([rapport des couleurs][r-03-11]) : un test vert n'est pas une recette. En ligne : la démonstration
+seulement, avec des comptes fictifs ; `diasporale.com` ne répond pas ; aucun backend de production
+n'a de réseau `diasporale`. Recettes sur le vrai moteur à plusieurs comptes : deux, le 19/10 en
+local ([deux comptes][r-19-10]) et le 22/10 en ligne ([démonstration][r-22-10-ligne]). Chemins de
+code relatifs à `apps/diasporale_com/src/`, sauf ceux qui commencent par `apps/` ou `packages/`.
+
+### Prompts PD0 → PD10
+
+| Prompt | État | Déjà constaté | Écrit, ou à faire |
+|---|---|---|---|
+| PD0 Câblage dans le moteur | écrit, non recetté | Espace de travail externe du moteur, vérification commune verte ([3/11][r-03-11]) ; application servie par la démonstration en ligne ([2/11][r-02-11]) | Image autoportante jamais construite (`apps/diasporale_com/Dockerfile`) ; sonde « ok » sans joindre le moteur (`app/api/sante-fonctionnelle/route.ts`) → LX-01, DS-06 |
+| PD1 Domaine et réseau `diasporale` | fait et constaté | Réseau gouverné par la tranche, adhésion ANTSIA dérivée et statuts calculés, servis par le moteur à deux comptes en local ([19/10][r-19-10]) et en ligne avec des comptes vérifié, parrainé et déclaré ([22/10][r-22-10-ligne]) ; domaine et tranche verts ([3/11][r-03-11]) | Règles : `packages/diasporale-domain/src/eligibility.ts`, `packages/diasporale-domain/src/sponsorship.ts`. Hors de ce prompt : premiers membres vérifiés → EA-01 ; évènements du hub → HB-02 |
+| PD2 Entrer : IDN, code, identifiant, consentements | écrit, non recetté | Entrée par code à usage unique, en local ([19/10][r-19-10]) et en ligne, code lu à l'écran pour un compte de démonstration ([22/10][r-22-10-ligne]) | IDN : simulation de démonstration, indisponible en mode moteur (`signInWithIdn` dans `data/engine-source.ts`) → EA-02 ; code reçu dans une vraie boîte aux lettres jamais vu → EA-06 ; profil commun réécrit à l'entrée (`join`, même fichier) → EA-04 |
+| PD3 Attestation consulaire | écrit, non recetté | — | Demande consentie et lecture de l'issue (`app/verification/page.tsx`, `packages/diasporale-domain/src/attestation.ts`) ; fermée tant que le service de consulat.ga n'est pas configuré ; contrats en PR brouillon (gabon-diplomatie#184, #185) → DG-009a |
+| PD4 Fil, hub, profils, relations | écrit, non recetté | Deux photos publiées puis lues par un autre compte ([19/10][r-19-10]) ; publication dans le hub France, en ligne ([22/10][r-22-10-ligne]) ; partage et vidéo lus en local ([18/10][r-18-10-partage], [preuve vidéo][r-18-10-video]) ; fil au format téléphone, en simulation ([18/10][r-18-10-mobile]) ; relations, stories, albums et signets vus dans Chrome en local les 16 et 17/10 ([`04_PARITE_SURFACES.md`](04_PARITE_SURFACES.md), § 4) | Photos de publication et de profil envoyées brutes (`data/engine-source.ts`, `data/engine-profile-images.ts`) → FD-01, RP-01 ; hub sans évènement en mode moteur (`data/engine-views.ts`) → HB-02, EV-02 ; au-delà de vingt commentaires, rien ne se lit → FD-03 ; portée locale gardée à l'écran seulement → HB-03 |
+| PD5 Pages, associations, entreprises, import | écrit, non recetté | Page d'association créée ; mission bénévole et offre d'emploi publiées par des pages, à deux comptes en local ([19/10][r-19-10]) | Revendication et équipe (`components/page-claim-form.tsx`, `components/page-team-panel.tsx`) jamais jouées à plusieurs ; aucune revendication ne peut être tranchée en production → AS-01 ; pages « Officiel » des postes et import de consulat.ga → DG-009b |
+| PD6 Modération par pays, données, vitrine | écrit, non recetté | Signalement et masquage pour le déclarant ([19/10][r-19-10]) ; voie « Délais légaux », retrait par une modératrice et avis au déclarant, en local ([22/10][r-22-10-bureau], [22/10][r-22-10-avis]) ; signalement et voie des délais, en ligne ([22/10][r-22-10-ligne]) | Aucun rôle de réseau posable hors des comptes de démonstration → MD-01, LX-03 ; export et effacement de bout en bout jamais joués (`components/data-rights-settings.tsx`) → DG-026 ; textes légaux en charpente (`screens/legal-screen.tsx`) → LX-05, DS-07 ; recette D1 et production → DS-05, DS-06 |
+| PD7 Évènements, groupes, iCom, direct | écrit, non recetté | — | Évènements d'association, capacité, attente, rappels, présences, galerie et agenda (`components/association-events.tsx`, `components/association-event-attendance.tsx`, `app/agenda/page.tsx`), groupe privé (`components/association-group.tsx`), iCom du moteur (`components/icom.tsx`) : jamais joués ; « Appeler » sans serveur d'appels prouvé → IM-01 ; direct à faire (route `conference` « pas encore servie », `lib/routes.ts`) |
+| PD8 Emploi, annonces, entraide, notifications, iAsted | écrit, non recetté | Entraide (question, réponse retenue), mission bénévole, mentorat, candidature et présélection, à deux comptes en local ([19/10][r-19-10]) | Kit d'arrivée (`app/kit-arrivee/page.tsx`) et talents (`app/talents/page.tsx`) jamais joués ; petites annonces à faire, carte de charte seulement (`packages/diasporale-features/src/components/cards/community-cards.tsx`) → plan 12 ; notifications hors du site et résumé par pays → plan 13 ; iAsted à faire |
+| PD9 Application mobile | à faire | — | Aucune : `apps/` ne contient que `diasporale_com` ; l'application web installable passe d'abord ([plan 16](etudes/2026-11-10-finalisation/16_APPLICATION_MOBILE_PWA.md)) |
+| PD10 Parité, lancement, passation | à faire | — | Matrice de parité tenue surtout pour PD4 ([`04_PARITE_SURFACES.md`](04_PARITE_SURFACES.md)) ; aucun rapport de parité et de lancement → DS-06 ([plan 17](etudes/2026-11-10-finalisation/17_LANCEMENT_PILOTE_EXPLOITATION_MODELE_ECONOMIQUE.md)) |
+
+### Lots du plan global G0 → G11 ([`docs/14`](14_PLAN_GLOBAL_IMPLEMENTATION_DIASPORALE.md))
+
+| Lot | État | Déjà constaté | Écrit, ou à faire |
+|---|---|---|---|
+| G0 Fermer les incertitudes | écrit, non recetté | Registre d'état et décisions du 18/10 ([`17_REGISTRE_DECISIONS_DROITS_G0.md`](17_REGISTRE_DECISIONS_DROITS_G0.md)) ; état relu dans le code le 10/11 ([plan directeur](etudes/2026-11-10-finalisation/00_PLAN_DIRECTEUR.md), § 3) | Le contrôle de départ (DS-01) n'est pas clos |
+| G1 Navigation et charte | écrit, non recetté | Charte v4 en ligne sur la démonstration ([2/11][r-02-11]) ; couleurs par famille vues en local ([3/11][r-03-11]), mises en ligne le 3/11 | Cinq destinations (`components/app-shell.tsx`) jamais testées avec de vrais utilisateurs ; six boutons sans famille (`packages/diasporale-features/src/primitives/button.tsx`) → DS-02 ; aucune page d'erreur → UX-01 ; accessibilité AA jamais mesurée → DS-08 |
+| G2 Pages et import public | écrit, non recetté | Page d'association créée en local ([19/10][r-19-10]) | Revendication, mandats, annuaire des pages (`components/page-claim-form.tsx`, `components/page-directory.tsx`) jamais joués à plusieurs → AS-01 ; import et pages « Officiel » → DG-009b |
+| G3 Associations | écrit, non recetté | Mission bénévole d'une association ([19/10][r-19-10]) | Adhésion, groupe, évènements (`app/pages/[handle]/adherents/page.tsx`, `components/association-group.tsx`, `components/association-events.tsx`) jamais joués ; évènement introuvable hors de sa page → HB-02 ; annulation sans avis aux inscrits → EV-03 |
+| G4 Catalogue de services | écrit, non recetté | Une offre de service demandée par un autre compte ([19/10][r-19-10]) | Recherche, filtres, modification et retrait (`app/services/page.tsx`) jamais joués |
+| G5 Demandes et rendez-vous | écrit, non recetté | « Coiffeur à Paris » à deux comptes en local : demande, proposition, accord, prestation constatée, avis déposé ([19/10][r-19-10]) | Conversation de mise en relation fermée sans opérateur (`components/contextual-conversations.tsx`) → DS-04, LX-04 ; avis publié et réponse de la page jamais joués (`components/page-reviews-section.tsx`) → SV-01 ; annulation et absence contestée jamais jouées |
+| G6 Découverte et médias | écrit, non recetté | — | Vue Découverte (`packages/diasporale-features/src/components/discovery/feed-discovery.tsx`) et « Pourquoi cette publication ? » (`packages/diasporale-features/src/components/post-explanation.tsx`) jamais joués ; chaîne des médias au serveur, côté moteur → DG-018 |
+| G7 Messagerie et appels | écrit, non recetté | — | iCom du moteur monté (`components/icom.tsx`), jamais joué dans DIASPORALE ; appels sans serveur prouvé → IM-01 ; aucun chiffrement de bout en bout annoncé (D-G06, [`docs/17`](17_REGISTRE_DECISIONS_DROITS_G0.md)) |
+| G8 Communauté étendue | écrit, non recetté | Entraide, mission, mentorat, candidature ([19/10][r-19-10]) | Kit d'arrivée, talents, évènements avancés (capacité concurrente, présences, galerie, rappel reçu) jamais joués ; direct à faire |
+| G9 Confiance, droits, opérations | écrit, non recetté | Signalement, délais légaux, retrait, avis au déclarant ([22/10][r-22-10-bureau], [22/10][r-22-10-avis], [22/10][r-22-10-ligne]) | Rôles du réseau hors démonstration → MD-01 ; profil, page et évènement non signalables (`packages/diasporale-features/src/data/content-reports-port.ts`) → MD-02 ; effacement de bout en bout → DG-026 ; textes relus par le juriste → DS-07 |
+| G10 Applications natives | à faire | — | [Plan 16](etudes/2026-11-10-finalisation/16_APPLICATION_MOBILE_PWA.md) : l'application web installable d'abord |
+| G11 Pilote et mesure | écrit, non recetté | — | `/pilote` (`app/pilote/page.tsx`) jamais vu avec de vrais agrégats, sans lecteur possible en production → LX-03, LX-09 ; coûts hypothétiques ([`docs/31`](31_COUTS_ALERTES_MESURE_DG027.md)) ; pilote France → DG-029 |
+
+### Tickets DG encore ouverts ([`docs/14`](14_PLAN_GLOBAL_IMPLEMENTATION_DIASPORALE.md), § 5)
+
+Clos : DG-002 (deux photos lues par un autre compte) et DG-014 (demande, proposition, rendez-vous),
+par la [recette du 19/10][r-19-10] ; DG-001, DG-004 et DG-022a, par les décisions écrites du
+[registre du 18/10](17_REGISTRE_DECISIONS_DROITS_G0.md), DG-001 étant remplacé par cet encart.
+
+| Ticket | État | Déjà constaté | Écrit, ou à faire |
+|---|---|---|---|
+| DG-003 Contenus masqués, sourdines | écrit, non recetté | — | Rubrique « Mon fil » (`components/content-preferences-settings.tsx`), jamais jouée ([`docs/16`](16_CHOIX_PRIVES_DU_FIL_DG003.md)) |
+| DG-005 Navigation | écrit, non recetté | — | Cinq destinations (`components/app-shell.tsx`, `app/explorer/page.tsx`, `app/communautes/page.tsx`) ; aucun test d'arborescence avec de vrais utilisateurs |
+| DG-006 Composants, états FR/EN | écrit, non recetté | Charte v4 et couleurs par famille ([2/11][r-02-11], [3/11][r-03-11]) | Six boutons sans famille → DS-02 ; accessibilité → DS-08 |
+| DG-007 Pages et états d'erreur | écrit, non recetté | Page d'association créée ; sa mission lue et rejointe par un autre compte ([19/10][r-19-10]) | Pages du hub et annuaire (`components/page-directory.tsx`) jamais vus à plusieurs ; aucune page d'erreur → UX-01 |
+| DG-008 Revendications, mandats | écrit, non recetté | — | `components/page-claim-form.tsx`, `components/page-team-panel.tsx` jamais joués ; aucune revendication tranchable en production → AS-01 |
+| DG-009a Attestation réelle | écrit, non recetté | — | `app/verification/page.tsx` ; fermée sans configuration du service ; contrat en PR brouillon (gabon-diplomatie#184) |
+| DG-009b Import public, pages « Officiel » | à faire | — | Aucune fonction n'écrit l'import ; voie de l'officiel au [plan 15 du dossier](etudes/2026-11-10-finalisation/15_VIE_PUBLIQUE_CONSULAIRE.md) |
+| DG-010 Association, adhésion, groupe | écrit, non recetté | — | `app/pages/[handle]/adherents/page.tsx`, `components/association-group.tsx` jamais joués |
+| DG-011 Catalogue | écrit, non recetté | Une offre de service demandée par un autre compte ([19/10][r-19-10]) | Modification et retrait jamais joués (`app/services/page.tsx`) |
+| DG-012 Recherche et filtres | écrit, non recetté | — | `app/services/page.tsx` |
+| DG-013 Conversation de prestation | écrit, non recetté | Entrées « Écrire » présentes des deux côtés, ouverture refusée ([19/10][r-19-10]) | Politique fermée, ouverte par un opérateur seulement (`components/contextual-conversations.tsx`) → DS-04, LX-04 |
+| DG-015 Annulation, absence, contestation | écrit, non recetté | — | `screens/service-request-screens.tsx` |
+| DG-016 Avis et réponse | écrit, non recetté | Avis déposé après la prestation, en attente de modération ([19/10][r-19-10]) | Publication, réponse de la page, refus des faux avis (`components/page-reviews-section.tsx`) → SV-01 |
+| DG-017 Fil vertical | écrit, non recetté | — | `packages/diasporale-features/src/components/discovery/feed-discovery.tsx` ; parcours long et téléphone jamais joués |
+| DG-018 Chaîne des médias | à faire | — | Côté moteur ; DIASPORALE la branchera → FD-20 ([plan 03](etudes/2026-11-10-finalisation/03_FIL_PUBLICATIONS_DECOUVERTE_RECHERCHE.md)) |
+| DG-019 Classement explicable | écrit, non recetté | — | `packages/diasporale-features/src/components/post-explanation.tsx` ; réinitialisation et diversité demandent le moteur |
+| DG-020 Messages et vocaux | écrit, non recetté | — | iCom du moteur (`components/icom.tsx`) |
+| DG-021 Appels web | écrit, non recetté | — | « Appeler » (`screens/profile-screens.tsx`) sans serveur d'appels prouvé → IM-01 |
+| DG-022b Preuve du chiffrement de bout en bout | à faire | — | Seulement si la promesse est retenue ; écartée à ce jour (D-G06, [`docs/17`](17_REGISTRE_DECISIONS_DROITS_G0.md)) |
+| DG-023 Évènements, liste d'attente | écrit, non recetté | — | `components/association-events.tsx`, `components/association-event-attendance.tsx`, `app/agenda/page.tsx` |
+| DG-024 Entraide, mentorat, kit | écrit, non recetté | Entraide, mission, mentorat ([19/10][r-19-10]) | Kit d'arrivée (`app/kit-arrivee/page.tsx`) jamais joué, et vide au départ → ET-06 |
+| DG-025 Talents, emploi | écrit, non recetté | Offre, candidature consentie, présélection ([19/10][r-19-10]) | Talents (`app/talents/page.tsx`) et non-sélection jamais joués |
+| DG-026 Droits personnels | écrit, non recetté | — | `components/data-rights-settings.tsx` ; effacement de bout en bout jamais joué ; droits fermés à qui n'a pas d'adhésion → NP-02, EA-05 |
+| DG-027 Coûts, alertes, mesure | écrit, non recetté | — | `app/pilote/page.tsx`, [`docs/31`](31_COUTS_ALERTES_MESURE_DG027.md) ; aucune alerte → LX-10 |
+| DG-028 Mobile natif | à faire | — | [Plan 16](etudes/2026-11-10-finalisation/16_APPLICATION_MOBILE_PWA.md) |
+| DG-029 Pilote France | à faire | — | [Plan 17](etudes/2026-11-10-finalisation/17_LANCEMENT_PILOTE_EXPLOITATION_MODELE_ECONOMIQUE.md) ; attend l'amorçage, les associations relais et les décisions du propriétaire |
+| DG-030 Paiements, outils professionnels | à faire | — | Fermé par décision (D-G03, [`docs/17`](17_REGISTRE_DECISIONS_DROITS_G0.md)) ; cadre d'abord → LX-15 |
+
+[r-18-10-partage]: recette/partage-2026-10-18/README.md
+[r-18-10-video]: recette/pd4-video-2026-10-18/preuve.json
+[r-18-10-mobile]: recette/fils-mobiles-2026-10-18/README.md
+[r-19-10]: recette/deux-comptes-2026-10-19/README.md
+[r-22-10-ligne]: recette/demo-en-ligne-2026-10-22/README.md
+[r-22-10-bureau]: recette/su01d-bureau-delais-2026-10-22/README.md
+[r-22-10-avis]: recette/su01d-avis-et-motifs-2026-10-22/README.md
+[r-02-11]: recette/charte-v4-2026-11-02/RAPPORT.md
+[r-03-11]: recette/couleurs-par-famille-2026-11-03/RAPPORT.md
+
+**Arbitrages pris par défaut** (recommandations du cahier `docs/00` §20, retenues comme
+valeurs de travail jusqu'à décision écrite du propriétaire) : A1 ANTSIA / `antsia.ga`, DIASPORALE.COM
+confirmé ; A2 un moteur, trois réseaux, deux dépôts ; A3 un parrain vérifié depuis plus de
+30 jours, dix parrainages par fenêtre glissante de 30 jours, `en_attente` en lecture seule ;
+A4 attestation consulaire par contrat minimal consenti, après validation juridique (sinon
+lancement sans badge consulaire) ; A5 Espace Communauté de consulat.ga gelé puis redirigé
+après D1 ; A6 carte téléphone 440 × 956, plancher 375 ; A7 famille Consulaire / Sable sur
+le squelette de l'espace agent ; A8 France seule au lancement, puis Espagne, Belgique,
+Canada, Maroc, Sénégal ; A9 aucune monétisation en V1 ; A10 Convex (région UE si
+disponible) et hébergement à décider ; A11 dossier APDPVP et analyse d'impact dès D0.
+
+**Numérotation des documents** : `docs/02` est pris par le prompt de lancement ; la charte est
+`docs/03`, la parité des surfaces `docs/04`. Les numéros suivants ont servi aux plans et rapports
+de tranche ; la recette D1 et le rapport de parité et de lancement, que les prompts ci-dessous
+nomment `docs/04_RECETTE_D1.md` et `docs/05_RAPPORT_PARITE_ET_LANCEMENT.md`, n'existent pas encore.
+Les rapports de recette vivent dans `docs/recette/`.
+
+### Journal de construction, 14 au 18/10/2026 (historique, non tenu à jour)
+
+> Conservé tel quel. Ses « en cours » et ses chiffres datent de leur jour ; l'état ci-dessus fait foi.
 
 État mis à jour le **18/10/2026** ; PD4 reste en cours.
 
@@ -220,21 +342,6 @@ Vérifications des étapes closes :
 - **d)** 142 tests (parcours R1, R2, R3 sur le magasin de démonstration, composants,
   parité fr / en, contrastes). Lancer depuis PD0 : `bun install` dans `ANTSIA/` (installation
   unique), puis `bun run --cwd ../ANTSIA dev:diasporale` ou `bun run dev` à la racine de DIASPORALE.
-
-**Arbitrages pris par défaut** (recommandations du cahier `docs/00` §20, retenues comme
-valeurs de travail jusqu'à décision écrite du propriétaire) : A1 ANTSIA / `antsia.ga`, DIASPORALE.COM
-confirmé ; A2 un moteur, trois réseaux, deux dépôts ; A3 un parrain vérifié depuis plus de
-30 jours, dix parrainages par fenêtre glissante de 30 jours, `en_attente` en lecture seule ;
-A4 attestation consulaire par contrat minimal consenti, après validation juridique (sinon
-lancement sans badge consulaire) ; A5 Espace Communauté de consulat.ga gelé puis redirigé
-après D1 ; A6 carte téléphone 440 × 956, plancher 375 ; A7 famille Consulaire / Sable sur
-le squelette de l'espace agent ; A8 France seule au lancement, puis Espagne, Belgique,
-Canada, Maroc, Sénégal ; A9 aucune monétisation en V1 ; A10 Convex (région UE si
-disponible) et hébergement à décider ; A11 dossier APDPVP et analyse d'impact dès D0.
-
-**Numérotation des documents** : `docs/02` est pris par le prompt de lancement ; la charte
-devient `docs/03`, la parité des surfaces `docs/04`, la recette D1 `docs/05`, le rapport de
-parité et de lancement `docs/06` (décalage d'un rang par rapport aux prompts ci-dessous).
 
 ## 0. Objet et mode d'emploi
 
