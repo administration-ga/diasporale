@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
 import { RoutingProvider, type FeatureRoutes, type LinkComponent } from "@diasporale/features"
-import { DataSourceProvider, type MembershipView } from "@diasporale/features/data"
+import { DataSourceProvider, type DiasporaleActions, type MembershipView } from "@diasporale/features/data"
 import { DemoStore, createDemoDataSource } from "@diasporale/features/demo"
+import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
-import { cleanup, render, screen, within } from "@testing-library/react"
+import { act, cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ComponentProps, ReactNode } from "react"
+import { toast } from "sonner"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { IcomNetwork } from "@/lib/icom-state"
@@ -63,6 +65,7 @@ vi.mock("@diasporale/features", async (importOriginal) => ({
 }))
 
 const NOW = Date.UTC(2026, 9, 18, 12)
+const t = getFixedT("fr")
 
 const MEMBER: MembershipView = {
   personId: "persons_awa",
@@ -110,14 +113,16 @@ function ComposerProbe() {
   )
 }
 
-function renderShell(options: { pathname?: string; membership?: MembershipView; icom?: boolean; network?: boolean; locale?: "fr" | "en" } = {}) {
+function renderShell(
+  options: { pathname?: string; membership?: MembershipView; icom?: boolean; network?: boolean; locale?: "fr" | "en"; actions?: Partial<DiasporaleActions> } = {},
+) {
   mocks.pathname = options.pathname ?? "/fil"
   mocks.icom = options.icom ? NETWORK : null
   mocks.network = options.network ?? options.icom ? NETWORK : null
   const source = createDemoDataSource(new DemoStore(null, () => NOW, 0))
   return render(
     <I18nProvider locale={options.locale ?? "fr"}>
-      <DataSourceProvider source={source}>
+      <DataSourceProvider source={{ ...source, actions: { ...source.actions, ...options.actions } }}>
         <RoutingProvider routes={featureRoutes} Link={Link}>
           <AppShell membership={options.membership ?? MEMBER}>
             <ComposerProbe />
@@ -141,6 +146,13 @@ function linksOf(container: HTMLElement) {
     .map((link) => [link.textContent, link.getAttribute("href")])
 }
 
+/** Les entrées d'un menu : Radix donne aux liens le rôle « menuitem ». */
+function menuItemsOf(container: HTMLElement) {
+  return within(container)
+    .getAllByRole("menuitem")
+    .map((item) => [item.textContent, item.getAttribute("href")])
+}
+
 function currentLinks(container: HTMLElement) {
   return within(container)
     .getAllByRole("link")
@@ -148,9 +160,9 @@ function currentLinks(container: HTMLElement) {
     .map((link) => link.textContent)
 }
 
-function accountTrigger(kind: "menu" | "dialog") {
+function accountTrigger(kind: "menu" | "dialog", name = "Menu du compte (Awa Ogooué)") {
   const trigger = screen
-    .getAllByRole("button", { name: "Menu du compte (Awa Ogooué)" })
+    .getAllByRole("button", { name })
     .find((button) => button.getAttribute("aria-haspopup") === kind)
   expect(trigger).toBeDefined()
   return trigger!
@@ -161,7 +173,32 @@ beforeEach(() => {
   mocks.desktop = true
 })
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+  vi.unstubAllGlobals()
+})
+
+/** La navigation de page (`window.location.assign`), que jsdom n'exécute pas. */
+function stubPageNavigation() {
+  const assign = vi.fn()
+  vi.stubGlobal("window", new Proxy(window, {
+    get(target, property) {
+      return property === "location" ? { assign } : Reflect.get(target, property, target)
+    },
+  }))
+  return assign
+}
+
+/** Une sortie que le test termine quand il le décide. */
+function pendingSignOut() {
+  let finish: () => void = () => {}
+  const pending = new Promise<void>((resolve) => {
+    finish = resolve
+  })
+  const action = vi.fn<DiasporaleActions["signOutEverywhere"]>().mockReturnValueOnce(pending)
+  return { action, pending, finish: () => finish() }
+}
 
 describe("coque — les cinq destinations (DG-005)", () => {
   it("pose Fil, Explorer, Services, Communautés et Messages dans cet ordre, au bureau comme au téléphone", () => {
@@ -292,6 +329,12 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     ["Parrainer", "/parrainer"],
     ["Mes données", "/parametres#mes-donnees"],
   ]
+  const INFORMATION = [
+    ["Mentions légales", "/mentions-legales"],
+    ["Confidentialité", "/confidentialite"],
+    ["Charte graphique", "/charte"],
+  ]
+  const SIGN_OUT = "Se déconnecter partout"
 
   it("au bureau : un menu au clavier — Entrée l'ouvre, les flèches le parcourent, Échap rend le focus à l'avatar", async () => {
     const user = userEvent.setup()
@@ -302,7 +345,9 @@ describe("coque — le menu du compte, sous l'avatar", () => {
 
     const menu = await screen.findByRole("menu")
     const items = within(menu).getAllByRole("menuitem")
-    expect(items.map((item) => [item.textContent, item.getAttribute("href")])).toEqual(ACCOUNT)
+    // Le compte, puis les informations du site, puis la sortie (une action, pas un lien).
+    expect(items.map((item) => [item.textContent, item.getAttribute("href")])).toEqual([...ACCOUNT, ...INFORMATION, [SIGN_OUT, null]])
+    expect(menuItemsOf(within(menu).getByRole("group", { name: "Informations" }))).toEqual(INFORMATION)
     expect(items.filter((item) => item.getAttribute("aria-current") === "page").map((item) => item.textContent)).toEqual(["Réglages"])
     expect(items[0]).toHaveFocus()
     await user.keyboard("{ArrowDown}")
@@ -324,6 +369,12 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     await user.click(trigger)
     let sheet = await screen.findByRole("dialog", { name: "Mon compte" })
     expect(linksOf(within(sheet).getByRole("navigation", { name: "Mon compte" }))).toEqual(ACCOUNT)
+    expect(linksOf(within(sheet).getByRole("navigation", { name: "Informations" }))).toEqual(INFORMATION)
+    // La sortie, en bouton neutre, est le seul bouton de la feuille hors de sa fermeture.
+    expect(within(sheet).getAllByRole("button").map((button) => button.textContent || button.getAttribute("aria-label"))).toEqual([
+      "Fermer le menu du compte",
+      SIGN_OUT,
+    ])
     expect(currentLinks(sheet)).toEqual(["Profil"])
     expect(sheet).toHaveTextContent("@awa.demo")
     await user.keyboard("{Escape}")
@@ -349,6 +400,89 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     ] as const) {
       expect(within(sheet).getByRole("link", { name: label })).toHaveAttribute("href", href)
     }
+  })
+  it.each([
+    ["Mentions légales", "/mentions-legales"],
+    ["Confidentialité", "/confidentialite"],
+    ["Charte graphique", "/charte"],
+  ])("« %s » est à deux gestes depuis tout écran : l'avatar, puis le lien, au bureau comme au téléphone", async (label, href) => {
+    const user = userEvent.setup()
+    renderShell({ pathname: "/services/offre-coiffure" })
+
+    await user.click(accountTrigger("menu"))
+    const menu = await screen.findByRole("menu")
+    expect(within(within(menu).getByRole("group", { name: "Informations" })).getByRole("menuitem", { name: label })).toHaveAttribute("href", href)
+    await user.keyboard("{Escape}")
+
+    mocks.desktop = false
+    await user.click(accountTrigger("dialog"))
+    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
+    const link = within(within(sheet).getByRole("navigation", { name: "Informations" })).getByRole("link", { name: label })
+    expect(link).toHaveAttribute("href", href)
+    await user.click(link)
+    expect(screen.queryByRole("dialog", { name: "Mon compte" })).toBeNull()
+  })
+
+  it("se déconnecter partout depuis le menu du bureau, au clavier : la porte unique est appelée une fois, le menu dit l'attente", async () => {
+    const user = userEvent.setup()
+    const exit = pendingSignOut()
+    renderShell({ actions: { signOutEverywhere: exit.action } })
+    const trigger = accountTrigger("menu")
+    trigger.focus()
+    await user.keyboard("{Enter}")
+    const menu = await screen.findByRole("menu")
+    await user.keyboard("{End}")
+    expect(within(menu).getByRole("menuitem", { name: SIGN_OUT })).toHaveFocus()
+
+    await user.keyboard("{Enter}")
+    await user.keyboard("{Enter}")
+    expect(exit.action).toHaveBeenCalledOnce()
+    // Le menu reste ouvert : la sortie s'y lit, fermée à un second geste.
+    const pending = within(screen.getByRole("menu")).getByRole("menuitem", { name: "Déconnexion…" })
+    expect(pending).toHaveAttribute("aria-disabled", "true")
+    expect(screen.getByRole("menu")).toHaveAttribute("aria-busy", "true")
+
+    // La démonstration recharge l'accueil une fois la sortie faite (le moteur garde sa propre navigation).
+    const assign = stubPageNavigation()
+    await act(async () => {
+      exit.finish()
+      await exit.pending
+    })
+    expect(assign).toHaveBeenCalledExactlyOnceWith(routes.home())
+  })
+
+  it("se déconnecter partout depuis la feuille du téléphone ; un échec reste générique, passe par un avis et laisse réessayer", async () => {
+    mocks.desktop = false
+    const user = userEvent.setup()
+    const failed = vi.spyOn(toast, "error")
+    const action = vi.fn<DiasporaleActions["signOutEverywhere"]>().mockRejectedValueOnce(new Error("diagnostic privé de la révocation")).mockReturnValue(new Promise<void>(() => {}))
+    renderShell({ actions: { signOutEverywhere: action } })
+    await user.click(accountTrigger("dialog"))
+    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
+
+    await user.click(within(sheet).getByRole("button", { name: SIGN_OUT }))
+    await vi.waitFor(() => expect(failed).toHaveBeenCalledOnce())
+    expect(failed).toHaveBeenCalledWith(t("errors.unknown"), expect.objectContaining({ id: expect.any(String) }))
+    expect(screen.queryByText(/diagnostic privé/)).toBeNull()
+    expect(within(sheet).getByRole("button", { name: SIGN_OUT })).toBeEnabled()
+
+    await user.click(within(sheet).getByRole("button", { name: SIGN_OUT }))
+    expect(action).toHaveBeenCalledTimes(2)
+    expect(within(sheet).getByRole("button", { name: "Déconnexion…" })).toBeDisabled()
+    expect(failed).toHaveBeenCalledOnce()
+  })
+
+  it("parle anglais : informations et sortie dans la langue de la personne", async () => {
+    const user = userEvent.setup()
+    renderShell({ locale: "en" })
+    await user.click(accountTrigger("menu", "Account menu (Awa Ogooué)"))
+    const menu = await screen.findByRole("menu")
+    expect(menuItemsOf(within(menu).getByRole("group", { name: "Information" }))).toEqual([
+      ["Legal notice", "/mentions-legales"],
+      ["Privacy", "/confidentialite"],
+      ["Design charter", "/charte"],
+    ])
+    expect(within(menu).getByRole("menuitem", { name: "Sign out everywhere" })).not.toHaveAttribute("href")
   })
 })
 
