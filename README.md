@@ -22,6 +22,7 @@ GitHub est `administration-ga/diasporale`.
 | [`docs/etudes/2026-11-10-finalisation/00_PLAN_DIRECTEUR.md`](docs/etudes/2026-11-10-finalisation/00_PLAN_DIRECTEUR.md) | plan directeur de finalisation (10/11/2026) : état réel, jalons, vagues ; dans le même dossier, un plan par fonctionnalité et le registre des lots |
 | [`docs/00_CAHIER_DES_CHARGES_DIASPORALE.md`](docs/00_CAHIER_DES_CHARGES_DIASPORALE.md) | cahier des charges fonctionnel et technique (exigences `EXF-DG` / `EXT-DG`, lots D0–D4, parcours R1–R10, arbitrages A1–A11) |
 | [`docs/01_PLAN_IMPLEMENTATION_PROMPTS_DIASPORALE.md`](docs/01_PLAN_IMPLEMENTATION_PROMPTS_DIASPORALE.md) | encart d'état en tête, puis les onze prompts d'origine PD0 → PD10 |
+| [`docs/37_PUBLICATION_ET_RETOUR_ARRIERE.md`](docs/37_PUBLICATION_ET_RETOUR_ARRIERE.md) | publier le site, le contrôler, revenir en arrière (`scripts/`), derrière l'accord écrit du propriétaire |
 | `../../../Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTSIA_2026-10-14.md` | plan de pilotage « réseaux dans le réseau » et ses annexes (audits du socle et de consulat.ga) |
 | `../ANTSIA/docs/00_CAHIER_DES_CHARGES_ANTSIA.md` | le moteur, préalable de ce projet |
 | `../GABON_DIPLOMATIE/docs/OPPORTUNITES_COMMUNAUTE_DIASPORA.md` | dossier produit d'origine de la communauté diaspora (F01–F17, 33 écrans) |
@@ -52,8 +53,11 @@ vis-à-vis du socle (ADR-0165) : une seule installation, dans `ANTSIA/`.
 cd ../ANTSIA && bun install            # une seule installation, dans le moteur
 bun run --cwd ../ANTSIA dev:diasporale  # http://localhost:3031
 bun run --cwd ../ANTSIA verify         # codegen + typecheck + tests + lint (moteur + DIASPORALE)
-# Publication : aucune commande tant que l'hébergement n'est pas tranché (arbitrage du propriétaire) ;
-# l'image se construit depuis ECOSYSTEMES : docker build -f DIASPORALE/apps/diasporale_com/Dockerfile .
+bun run test:scripts                   # tests des scripts de publication (sans réseau)
+# Publication (docs/37) : plan par défaut, rien ne part ; l'exécution exige l'accord écrit du propriétaire.
+node scripts/release.mjs --target demo --antsia <commit> --diasporale <commit>
+# Secours si l'hébergement (A10) l'impose : l'image autoportante, construite depuis ECOSYSTEMES :
+# docker build -f DIASPORALE/apps/diasporale_com/Dockerfile .
 ```
 
 ## Règles non négociables
