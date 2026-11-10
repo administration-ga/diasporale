@@ -8,6 +8,7 @@ import { ConvexError } from "convex/values"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { callSettingsErrorCode, createEngineCallSettings, toCallSettingsView, toUpdateArgs } from "./engine-call-settings"
+import { callPreferencesReturn } from "./engine-returns.test-utils"
 
 /**
  * L'adaptateur des réglages iCom sans moteur (IM-02) : lectures réactives jouées par un
@@ -32,21 +33,6 @@ vi.mock("convex/react", () => ({
 
 const PERSON = { _id: "person-awa", handle: "awa.recette", displayName: "Awa" }
 const MINUTE = 60_000
-/** Ce que `getMine` rend à quelqu'un qui n'a jamais rien réglé. */
-const ENGINE_DEFAULTS = {
-  dnd: null,
-  ringtone: { muted: false, vibrate: true },
-  callWaiting: true,
-  quickReplies: null,
-  voicemailEnabled: true,
-  autoMeetingDnd: null,
-  sharePresence: true,
-  pushIncoming: true,
-  outsideRelationsCalls: "silent" as const,
-  readReceipts: true,
-  journalSeenAt: null,
-  saved: false,
-}
 
 type Handler = (args: Record<string, unknown>) => unknown
 
@@ -68,7 +54,8 @@ function respondWith(overrides: Record<string, unknown> = {}) {
   mocks.respond = (name) => {
     if (name in overrides) return overrides[name]
     if (name === "modules/people/persons:getMyPerson") return PERSON
-    if (name === "modules/calls/preferences:getMine") return ENGINE_DEFAULTS
+    // Ce que `getMine` rend à quelqu'un qui n'a jamais rien réglé (fabrique des retours du moteur).
+    if (name === "modules/calls/preferences:getMine") return callPreferencesReturn()
     throw new Error(`Unexpected read: ${name}`)
   }
 }
@@ -95,7 +82,8 @@ describe("Réglages iCom — lecture (calls/preferences:getMine)", () => {
   })
 
   it("projette un silence en cours et les choix déjà faits", () => {
-    expect(toCallSettingsView({ ...ENGINE_DEFAULTS, dnd: { until: 5_000, startedAt: 1_000 }, outsideRelationsCalls: "ring", readReceipts: false, voicemailEnabled: false, sharePresence: false, callWaiting: false, saved: true })).toEqual({
+    const row = callPreferencesReturn({ dnd: { until: 5_000, startedAt: 1_000 }, outsideRelationsCalls: "ring", readReceipts: false, voicemailEnabled: false, sharePresence: false, callWaiting: false, saved: true })
+    expect(toCallSettingsView(row)).toEqual({
       outsideRelationsCalls: "ring",
       dndUntil: 5_000,
       readReceipts: false,
@@ -103,6 +91,15 @@ describe("Réglages iCom — lecture (calls/preferences:getMine)", () => {
       sharePresence: false,
       callWaiting: false,
     })
+  })
+
+  it("la fabrique rend un retour complet et ne remplace que ce que le test nomme", () => {
+    expect(callPreferencesReturn({ readReceipts: false })).toEqual({ ...callPreferencesReturn(), readReceipts: false })
+    expect(callPreferencesReturn().outsideRelationsCalls).toBe("silent")
+    // Un champ que le moteur ne rend pas (retiré ou renommé) reste refusé par le typage.
+    // @ts-expect-error -- `ringVolume` n'est pas un champ du retour de calls/preferences:getMine.
+    const unknownField = callPreferencesReturn({ ringVolume: 3 })
+    expect(unknownField).toHaveProperty("ringVolume", 3)
   })
 
   it.each(["pending", "anonymous"] as const)("ne lit rien pour une session %s", (kind) => {
