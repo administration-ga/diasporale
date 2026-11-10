@@ -17,7 +17,8 @@ import {
 } from "@diasporale/features"
 import { useActions, useHandleSuggestions, useOpenCountries } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon } from "lucide-react"
+import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon, ShieldCheckIcon } from "lucide-react"
+import NextLink from "next/link"
 import { useRouter } from "next/navigation"
 import { useId, useState, type ReactNode } from "react"
 import { Controller, useForm, useWatch, type Control, type FieldPath } from "react-hook-form"
@@ -340,15 +341,27 @@ function Onboarding() {
 }
 
 /**
- * La sortie d'un compte connecté sans adhésion : ce n'est pas le sien, ou il veut
- * en changer. Ni les réglages ni la porte ne lui sont ouverts tant qu'il n'est pas
- * membre ; sans ce geste, il restait enfermé dans l'accueil.
+ * Les sorties d'un compte connecté sans adhésion (jamais entré, ou parti) : exercer
+ * ses droits personnels sans adhérer (« Mes données », NP-02 et EA-05 : exporter,
+ * demander l'effacement, lire ses décisions), et se déconnecter — ce n'est pas son
+ * compte, ou il veut en changer. Les réglages de membre ne lui sont pas ouverts ;
+ * sans ces gestes, il restait enfermé dans l'accueil.
  */
 function WelcomeSignOut() {
   const { t } = useDiasporaleT()
   const { busy, failed, signOutEverywhere } = useSignOutEverywhere()
   return (
     <div aria-busy={busy} className="mt-10 flex flex-col items-center gap-2 text-center text-[13px] text-muted-foreground">
+      <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+        <span>{t("welcome.myDataLead")}</span>
+        <NextLink
+          href={routes.myData()}
+          className="inline-flex min-h-8 items-center gap-1.5 rounded-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:shadow-focus"
+        >
+          <ShieldCheckIcon aria-hidden className="size-3.5" />
+          {t("welcome.myData")}
+        </NextLink>
+      </p>
       <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
         <span>{t("welcome.notYourAccount")}</span>
         <button

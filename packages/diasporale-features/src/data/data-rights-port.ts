@@ -4,7 +4,8 @@
  * et recours ; « Mes signalements » (SU01d du moteur). PROPRIÉTAIRE : chantier
  * « droits personnels » (vague G1).
  *
- * Reste accessible à un membre suspendu, sans lui rouvrir les surfaces sociales.
+ * Reste accessible à un membre suspendu, à qui a quitté DIASPORALE et à qui n'y
+ * est jamais entré (`/mes-donnees`, NP-02), sans rouvrir aucune surface sociale.
  *
  * Chaque geste est SELF-SCOPED : il porte sur la personne authentifiée, jamais
  * sur une autre. Le moteur relit la session à chaque appel (portes
@@ -297,8 +298,9 @@ export interface DataRightsCapability {
   fileAppeal(input: AppealInput): Promise<ActionResult<{ readonly created: boolean }>>
   /**
    * Mes signalements (SU01d du moteur) : la destination de l'accusé de réception et de l'avis de
-   * décision. Absente du fournisseur de démonstration, qui ne transmet aucun signalement à une
-   * modération : la rubrique ne s'affiche pas.
+   * décision. Servie par le moteur et, liste vide, par la démonstration, qui ne transmet aucun
+   * signalement à une modération (NP-02). Un fournisseur qui ne la sert pas : la rubrique ne
+   * s'affiche pas.
    */
   useReports?(args: ReportsRequest): ReportsQuery
 }

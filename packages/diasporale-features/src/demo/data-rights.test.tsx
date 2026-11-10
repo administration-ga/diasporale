@@ -139,4 +139,31 @@ describe("Droits de démonstration — décisions et recours", () => {
     expect(renderHook(() => rights.useDecisions({ personId: OTHER, cursor: null })).result.current).toEqual({ status: "error", code: "not_found" })
     expect(await rights.fileAppeal({ personId: PERSON, reportId: "report-fictif", reason: "Contestation fictive." })).toEqual({ ok: false, code: "not_found" })
   })
+
+  it("« Mes signalements » est servie (NP-02) : liste vide, aucun signalement n'étant transmis ; celle d'une autre personne n'existe pas", () => {
+    const { rights } = setup()
+    expect(rights.useReports).toBeDefined()
+    expect(renderHook(() => rights.useReports!({ personId: PERSON, cursor: null })).result.current).toEqual({
+      status: "ready",
+      data: { items: [], continueCursor: null, isDone: true },
+    })
+    expect(renderHook(() => rights.useReports!({ personId: OTHER, cursor: null })).result.current).toEqual({ status: "error", code: "not_found" })
+  })
+
+  it("sans adhésion, les mêmes droits restent servis à la personne de la session", async () => {
+    const seed = createDemoSeed(NOW)
+    const memberships = { ...seed.memberships }
+    delete memberships[PERSON]
+    const { rights } = setup({ memberships })
+    expect(renderHook(() => rights.useErasure(PERSON)).result.current).toEqual({ status: "ready", data: { state: "none" } })
+    expect(renderHook(() => rights.useReports!({ personId: PERSON, cursor: null })).result.current).toMatchObject({ status: "ready" })
+    const exported = await rights.prepareExport(PERSON)
+    expect(exported.ok).toBe(true)
+    if (exported.ok) expect(JSON.parse(exported.value.json)).toMatchObject({ demonstration: true, membership: null })
+  })
+
+  it("sans session, « Mes signalements » ne se lit pas", () => {
+    const { rights } = setup({ session: { personId: null } })
+    expect(renderHook(() => rights.useReports!({ personId: PERSON, cursor: null })).result.current).toEqual({ status: "error", code: "not_signed_in" })
+  })
 })
