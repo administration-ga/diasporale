@@ -36,9 +36,9 @@ Plan : [`01_ENTREE_ADHESION_CONFIANCE.md`](01_ENTREE_ADHESION_CONFIANCE.md)
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
 | EA-01 | Amorcer la confiance : membres fondateurs admis par décision tracée | P0 | M | S2 | décision du propriétaire (qui, combien, dispense, badge affiché) | nouveau | à faire |
-| EA-02 | Entrée par IDN branchée dans DIASPORALE | P0 | M | S2 | variables IDN et origines sur le déploiement (propriétaire) ; recette avec un vrai compte IDN | nouveau | à faire |
+| EA-02 | Entrée par IDN branchée dans DIASPORALE | P0 | M | S2 | variables IDN et origines sur le déploiement (propriétaire) ; recette avec un vrai compte IDN | nouveau | fusionné (#52) ; variables IDN et recette avec un vrai compte : propriétaire ; refus chez IDN : antsia#122 |
 | EA-03 | Statut relu quand l'identité change | P0 | S | S2 | aucune | nouveau | à faire |
-| EA-04 | Accueil qui respecte un profil existant | P0 | S | S2 | aucune | nouveau | à faire |
+| EA-04 | Accueil qui respecte un profil existant | P0 | S | S2 | aucune | nouveau | fusionné (#49) |
 | EA-05 | Droits personnels et sortie sans adhésion | P0 | S | S2 | aucune | nouveau | fusionné (#40) |
 | EA-06 | Recette réelle de l'entrée de DIASPORALE | P0 | S | S2 + propriétaire | clés d'envoi et domaine (propriétaire) ; accord écrit sur le déploiement visé | nouveau | à faire |
 | EA-07 | Âge et identification dans l'accueil de DIASPORALE | P0 | M | S2 | juriste (seuil d'âge pour des résidents de France et d'ailleurs, identification) ; D-G11 | nouveau | à faire |
@@ -67,11 +67,11 @@ Plan : [`02_COQUE_NAVIGATION_CHARTE_ACCESSIBILITE.md`](02_COQUE_NAVIGATION_CHART
 | DS-03 | Écrans jamais vus, refus en mode moteur, textes | P1 | S | S2 | aucune | plan 15 | à faire |
 | DS-08 | Accessibilité AA et budget 3G | P1 | M | S2 | aucune | plan 15 | à faire |
 | UX-01 | Pages d'erreur de l'application | P0 | S | S2 | aucune | nouveau | fusionné (#41) |
-| UX-02 | Revenir à la page demandée après la connexion | P0 | S | S2 | aucune | nouveau | à faire |
+| UX-02 | Revenir à la page demandée après la connexion | P0 | S | S2 | aucune | nouveau | fusionné (#49) |
 | UX-03 | Menu du compte complet : informations, aide, déconnexion | P0 | S | S2 | aucune | nouveau | fusionné (#41) |
 | UX-04 | Aide et assistance | P1 | M | S2 | adresse d'assistance fournie par le propriétaire | nouveau | à faire |
-| UX-05 | La barre dit toujours où l'on est | P1 | S | S2 | aucune | nouveau | à faire |
-| UX-06 | Pastille de non-lus sur « Messages » | P1 | S | S2 | aucune | nouveau | à faire |
+| UX-05 | La barre dit toujours où l'on est | P1 | S | S2 | aucune | nouveau | fusionné (#54) |
+| UX-06 | Pastille de non-lus sur « Messages » | P1 | S | S2 | aucune | nouveau | fusionné (#54) |
 | UX-07 | Retour fiable et filtres gardés | P1 | M | S2 | aucune | nouveau | à faire |
 | UX-08 | Le pays visible au téléphone | P1 | S | S2 | aucune | nouveau | à faire |
 | UX-09 | États communs : chargement, erreur, refus, connexion perdue | P1 | M | S2 | aucune | nouveau | à faire |
@@ -92,11 +92,11 @@ Plan : [`03_FIL_PUBLICATIONS_DECOUVERTE_RECHERCHE.md`](03_FIL_PUBLICATIONS_DECOU
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| FD-01 | Photos nettoyées et allégées avant l'envoi | P0 | S | S2 | aucune | nouveau | à faire |
-| FD-02 | Vidéos lisibles partout et bornées | P0 | S | S2 | aucune | nouveau | à faire |
-| FD-03 | Lire tous les commentaires | P0 | S | S2 | aucune | nouveau | à faire |
-| FD-04 | L'auteur sait où en est sa publication | P0 | M | S2 | publication du moteur par S1 avant toute mise à jour de la démonstration | nouveau | à faire |
-| FD-05 | Signaler un commentaire et un statut | P0 | S | S2 | aucune | nouveau | à faire |
+| FD-01 | Photos nettoyées et allégées avant l'envoi | P0 | S | S2 | aucune | nouveau | fusionné (#53) ; images d'iCom : antsia#123 |
+| FD-02 | Vidéos lisibles partout et bornées | P0 | S | S2 | aucune | nouveau | fusionné (#53) pour la limite de poids ; formats et durée en cours |
+| FD-03 | Lire tous les commentaires | P0 | S | S2 | aucune | nouveau | fusionné (#43) |
+| FD-04 | L'auteur sait où en est sa publication | P0 | M | S2 | publication du moteur par S1 avant toute mise à jour de la démonstration | nouveau | fusionné (#43) ; l'état « en relecture » en mode moteur attend antsia#108 |
+| FD-05 | Signaler un commentaire et un statut | P0 | S | S2 | aucune | nouveau | fusionné (#48) ; signalement d'un statut en attente du moteur (SD-01) |
 | FD-06 | Partager vraiment | P1 | M | S2 | aucune | nouveau | à faire |
 | FD-07 | Envoyer une publication dans iCom | P1 | S | S2 | aucune | nouveau | à faire |
 | FD-08 | Interactions attendues | P1 | M | S2 | aucune | nouveau | à faire |
@@ -123,7 +123,7 @@ Plan : [`04_ICOM_MESSAGES_APPELS_MISE_EN_RELATION.md`](04_ICOM_MESSAGES_APPELS_M
 |---|---|---|---|---|---|---|---|
 | DS-04 (volet CC-V) | Recette CC-V et traitement au guichet | P0 | M | S2 | accord du propriétaire pour ouvrir la politique sur la démonstration (décision 1) ; publication éventuelle | plan 15 | à faire |
 | IM-01 | Appels : rien n'est proposé tant que le serveur d'appels n'est pas prouvé | P0 | S | S2 | aucune pour le code ; l'ouverture réelle attend les clés du propriétaire et IC-01 | nouveau | fusionné (#36) ; gestes d'iCom en attente d'antsia#100 |
-| IM-02 | Réglages iCom dans les paramètres de DIASPORALE | P0 | S | S2 | aucune | nouveau | à faire |
+| IM-02 | Réglages iCom dans les paramètres de DIASPORALE | P0 | S | S2 | aucune | nouveau | fusionné (#50) ; défaut et accusés de lecture : antsia#118 |
 | IM-03 | Messagerie vocale, signaler et bloquer depuis le fil : raccord dans DIASPORALE | P0 | S | S2 | aucune | nouveau | à faire |
 | IM-04 | La cloche nomme les avis d'iCom et y mène | P1 | S | S2 | aucune | nouveau | à faire |
 | IM-05 | iCom vivant sur la démonstration | P1 | M | S2 | accord pour republier la démonstration et y ouvrir la politique (décision 1) | nouveau | à faire |
@@ -150,8 +150,8 @@ Plan : [`05_PROFIL_RELATIONS_ANNUAIRE.md`](05_PROFIL_RELATIONS_ANNUAIRE.md)
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| RP-01 | Photo et couverture nettoyées et recadrées | P0 | M | S2 | aucune | nouveau | à faire |
-| RP-02 | Signaler un profil, et menu « … » de la fiche | P0 | S | S2 | aucune | nouveau | à faire |
+| RP-01 | Photo et couverture nettoyées et recadrées | P0 | M | S2 | aucune | nouveau | fusionné (#53) |
+| RP-02 | Signaler un profil, et menu « … » de la fiche | P0 | S | S2 | aucune | nouveau | fusionné (#48) |
 | RP-03 | Blocage : abonnements, textes et pages | P0 | M | S2 | décision 5 | nouveau | à faire |
 | RP-04 | Annuaire navigable par pays et par ville | P1 | L | S2 | décision 3 | nouveau | à faire |
 | RP-05 | Entraide, associations et pages sur la fiche | P1 | M | S2 | décisions 1 et 2 | nouveau | à faire |
@@ -178,10 +178,10 @@ Plan : [`06_HUBS_PAYS_VILLES_CARTE.md`](06_HUBS_PAYS_VILLES_CARTE.md)
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
 | HB-01 | Dire vrai dans un pays non ouvert | P0 | S | S2 | aucune | nouveau | fusionné (#37) |
-| HB-02 | Évènements du pays dans le hub | P0 | M | S2 | aucune en local | nouveau | à faire |
+| HB-02 | Évènements du pays dans le hub | P0 | M | S2 | aucune en local | nouveau | fusionné (#44, antsia#109) |
 | HB-03 | Gardes serveur de la portée locale | P0 | S | S1 et S2 | fichiers du moteur, donc S1 | nouveau | à faire |
-| HB-04 | Raccourcis et rubriques du pays consulté | P1 | S | S2 | aucune | nouveau | à faire |
-| HB-05 | À propos du hub : statut, règles, compteurs datés | P1 | S | S2 | aucune | nouveau | à faire |
+| HB-04 | Raccourcis et rubriques du pays consulté | P1 | S | S2 | aucune | nouveau | fusionné (#56) ; annuaire par pays en attente du plan 05 |
+| HB-05 | À propos du hub : statut, règles, compteurs datés | P1 | S | S2 | aucune | nouveau | fusionné (#56) |
 | HB-06 | Lien partageable d'un hub | P1 | S | S2 | aucune | nouveau | à faire |
 | HB-07 | Codes pays contrôlés à la console | P1 | S | S1 | fichiers du moteur, donc S1 | nouveau | à faire |
 | HB-08 | Préparer et ouvrir un pays depuis DIASPORALE | P1 | L | S2 et S1 | décision du propriétaire ; S1 | nouveau | à faire |
@@ -205,7 +205,7 @@ Plan : [`07_PAGES_ASSOCIATIONS_GROUPES.md`](07_PAGES_ASSOCIATIONS_GROUPES.md)
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
 | AS-01 | Trancher une revendication en production, par pays | P0 | M | S2 | durée de conservation des pièces (juriste) | nouveau | à faire |
-| AS-02 | Signaler une page, un groupe et ses publications | P0 | S | S2 | aucune | nouveau | à faire |
+| AS-02 | Signaler une page, un groupe et ses publications | P0 | S | S2 | aucune | nouveau | fusionné (#48) |
 | AS-03 | Rouvrir le groupe d'une association | P1 | S | S2 | aucune | nouveau | à faire |
 | AS-04 | Renommage d'une page vérifiée au grand jour | P1 | S | S2 | aucune | nouveau | à faire |
 | AS-05 | Créer une page sans faux pas : natures servies, pages au nom proche | P1 | S | S2 | aucune | nouveau | à faire |
@@ -232,10 +232,10 @@ Plan : [`08_EVENEMENTS_AGENDA.md`](08_EVENEMENTS_AGENDA.md)
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| EV-01 | Évènements de démonstration et parcours rejouables | P0 | S | S2 | accord pour les variables du backend local ; publication de la démonstration sur accord écrit | nouveau | à faire |
+| EV-01 | Évènements de démonstration et parcours rejouables | P0 | S | S2 | accord pour les variables du backend local ; publication de la démonstration sur accord écrit | nouveau | fusionné (#42) |
 | EV-02 | Le hub ne dit plus « zéro évènement » | P0 | S | S2 | aucune | nouveau | fusionné (#37) |
 | EV-03 | Avis aux inscrits : annulation, place obtenue | P0 | M | S1 puis S2 | publication du backend par S1 | nouveau | à faire |
-| EV-04 | Signaler un évènement et un ajout de galerie | P0 | S | S2 | aucune | nouveau | à faire |
+| EV-04 | Signaler un évènement et un ajout de galerie | P0 | S | S2 | aucune | nouveau | fusionné (#48) |
 | EV-05 | Évènements du pays dans le hub : liste, compteur, ville, catégorie, portée | P1 | L | S1 puis S2 | issue `[S1]` acceptée ; publication du backend par S1. Repli si S1 ne peut pas : une projection nocturne dans la tranche, avec son retard dit à l'écran | nouveau | à faire |
 | EV-06 | Liste d'une page : à venir d'abord, passés ensuite | P1 | S | S1 puis S2 | aucune | nouveau | à faire |
 | EV-07 | Faire connaître un évènement : annonce de la page, carte dans le fil, partage | P1 | M | S1 puis S2 | issue `[S1]` ; publication du backend par S1 | nouveau | à faire |
@@ -288,7 +288,7 @@ Plan : [`10_EMPLOI_TALENTS.md`](10_EMPLOI_TALENTS.md)
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| EM-01 | Fiche et candidature protégées contre les fausses offres | P0 | S | S2 | relecture du texte par le propriétaire | nouveau | à faire |
+| EM-01 | Fiche et candidature protégées contre les fausses offres | P0 | S | S2 | relecture du texte par le propriétaire | nouveau | fusionné (#45) ; textes à relire par le propriétaire |
 | EM-02 | Conservation des candidatures : durées décidées et purge | P0 | S | S2 | juriste (durées, note de refus et droit d'accès) | nouveau | à faire |
 | EM-03 | Durée de vie d'une offre et relance de l'équipe | P1 | S | S2 | décision 7 | nouveau | à faire |
 | EM-04 | Rubrique « Emplois » sur la fiche d'une page | P1 | S | S2 | aucune | nouveau | à faire |
@@ -366,7 +366,7 @@ Plan : [`13_NOTIFICATIONS_REGLAGES_DONNEES.md`](13_NOTIFICATIONS_REGLAGES_DONNEE
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| NP-01 | Consentements : portée et retrait effectifs | P0 | S | S2 | aucune | nouveau | fusionné (#40) ; correctif de la tranche du moteur : antsia#106 |
+| NP-01 | Consentements : portée et retrait effectifs | P0 | S | S2 | aucune | nouveau | fusionné (#40, antsia#106) |
 | NP-02 | « Mes données » ouverte hors adhésion, et en démonstration | P0 | S | S2 | aucune | nouveau | fusionné (#40) |
 | NP-03 | Export complet des mises en relation | P1 | S | S2 + S1 | avis du juriste conseillé | nouveau | à faire |
 | NP-04 | Cloche complète : page, suite, filtre, genres nommés | P1 | M | S2 | aucune | nouveau | à faire |
@@ -394,12 +394,12 @@ Plan : [`14_MODERATION_SECURITE_CONFORMITE.md`](14_MODERATION_SECURITE_CONFORMIT
 |---|---|---|---|---|---|---|---|
 | DS-04 (volet guichet) | Recette CC-V et traitement au guichet | P0 | M | S2 | accord pour les variables du backend local ; rien sur la démonstration en ligne sans accord écrit | plan 15 | à faire |
 | MD-01 | Responsables du réseau : nommer l'administration et les modérateurs | P0 | M | S2 + S1 | décision 2 du § 7 ; publication du moteur par S1 | nouveau | à faire |
-| MD-02 | Signaler depuis chaque objet de DIASPORALE | P0 | L | S2 | aucune | nouveau | à faire |
+| MD-02 | Signaler depuis chaque objet de DIASPORALE | P0 | L | S2 | aucune | nouveau | fusionné (#48) ; groupe et auto-signalement d'un signataire : antsia#114 |
 | MD-03 | Signaler et modérer une offre de service | P0 | M | S2 + S1 | publication du moteur par S1 | nouveau | à faire |
 | MD-04 | Réglages de modération au guichet | P0 | M | S2 | décision 4 du § 7 (valeurs de départ) | nouveau | à faire |
-| MD-05 | Règles de la communauté et charte des modérateurs | P0 | S | S2 + propriétaire | relecture du juriste (décision 1) ; décisions 7 et 9 | nouveau | à faire |
-| MD-06 | Permanence, escalade et procédure d'incident | P0 | S | S2 + propriétaire | décision 2 du § 7 ; questions 6 et 7 au juriste | nouveau | à faire |
-| MD-07 | Protéger le déclarant : l'auteur ne lit qu'une décision | P0 | S | S2 + S1 | décision 6 du § 7 | nouveau | à faire |
+| MD-05 | Règles de la communauté et charte des modérateurs | P0 | S | S2 + propriétaire | relecture du juriste (décision 1) ; décisions 7 et 9 | nouveau | fusionné (#55) ; texte provisoire, relecture du juriste et du propriétaire |
+| MD-06 | Permanence, escalade et procédure d'incident | P0 | S | S2 + propriétaire | décision 2 du § 7 ; questions 6 et 7 au juriste | nouveau | fusionné (#55) ; exercice à blanc non joué |
+| MD-07 | Protéger le déclarant : l'auteur ne lit qu'une décision | P0 | S | S2 + S1 | décision 6 du § 7 | nouveau | fusionné (#45) pour l'application ; moteur : antsia#99 et antsia#110 |
 | MD-08 | Équipes par pays : compétence scellée et routage | P1 | L | S1 puis S2 | obligatoire avant l'ouverture d'un deuxième pays | nouveau | à faire |
 | MD-09 | Mesures lourdes selon la qualité du décideur | P1 | S | S1 puis S2 | décision 3 du § 7 | nouveau | à faire |
 | MD-10 | Signaler une demande, une proposition, une demande d'adhésion | P1 | M | S2 + S1 | aucune | nouveau | à faire |
@@ -452,7 +452,7 @@ Plan : [`16_APPLICATION_MOBILE_PWA.md`](16_APPLICATION_MOBILE_PWA.md)
 |---|---|---|---|---|---|---|---|
 | MO-01 | Passe sur téléphones réels | P0 | S | S2 + propriétaire | présence du propriétaire avec ses téléphones ; accord pour toute publication de la démonstration | nouveau | à faire |
 | MO-02 | Icônes, manifeste et installation | P1 | S | S2 | icône validée par le propriétaire (décision 3) | nouveau | à faire |
-| MO-03 | Destination conservée à travers l'entrée | P1 | S | S2 | aucune | nouveau | à faire |
+| MO-03 | Destination conservée à travers l'entrée | P1 | S | S2 | aucune | nouveau | fusionné (#49) |
 | MO-04 | Reprise de la saisie du code après un aller-retour | P1 | S | S2 | aucune | nouveau | à faire |
 | MO-05 | Script de fond unique et page hors-ligne | P1 | M | S2 | aucune | nouveau | à faire |
 | MO-06 | Notifications sur l'écran d'accueil : pastille, aide iPhone, ouverture | P1 | S | S2 | clés du navigateur et déclaration de l'application `diasporale_com` (propriétaire) | nouveau | à faire |
@@ -481,14 +481,14 @@ Plan : [`17_LANCEMENT_PILOTE_EXPLOITATION_MODELE_ECONOMIQUE.md`](17_LANCEMENT_PI
 |---|---|---|---|---|---|---|---|
 | DS-01 | Contrôle de départ, état réel et documents | P0 | S | S2 | accord pour les variables du backend local | plan 15 | fusionné (#34, #35) |
 | LX-01 | Sonde de santé vraie, version servie et garde de la source de données | P0 | S | S2 | publication de la démonstration sur accord | nouveau | fusionné (#33) |
-| LX-04 | Banc de recette local : ouvrir la mise en relation sans opérateur | P0 | S | S2 | décision 2 | nouveau | à faire |
+| LX-04 | Banc de recette local : ouvrir la mise en relation sans opérateur | P0 | S | S2 | décision 2 | nouveau | fusionné (antsia#106) pour la graine locale ; ouverture de la politique : à brancher sur antsia#129 |
 | DS-05 | Campagne de recettes en mode moteur | P0 | L | S2 | aucune en local ; toute action sur la démonstration en ligne après accord | plan 15 | à faire |
-| LX-02 | Publication et retour arrière de DIASPORALE dans le dépôt | P0 | M | S2 | toute exécution réelle exige l'accord écrit du propriétaire | nouveau | à faire |
+| LX-02 | Publication et retour arrière de DIASPORALE dans le dépôt | P0 | M | S2 | toute exécution réelle exige l'accord écrit du propriétaire | nouveau | fusionné (#47) ; retour arrière non joué sur la démonstration (accord écrit requis) |
 | LX-03 | Responsables du réseau en production et lecteurs du tableau du pilote | P0 | M | S2 | nomination réelle : propriétaire | nouveau | à faire |
-| DS-06 | Dossier de mise en production | P0 | M | S2 | hébergement A10, domaine, secrets, création du réseau : propriétaire | plan 15 | à faire |
-| LX-05 | Charpente des textes manquants : conditions d'utilisation, règles de la communauté, contact | P0 | S | S2 | fond des textes : juriste | nouveau | à faire |
+| DS-06 | Dossier de mise en production | P0 | M | S2 | hébergement A10, domaine, secrets, création du réseau : propriétaire | plan 15 | fusionné (#47) ; rien du dossier n'a été joué |
+| LX-05 | Charpente des textes manquants : conditions d'utilisation, règles de la communauté, contact | P0 | S | S2 | fond des textes : juriste | nouveau | fusionné (#50) ; fond des textes : juriste |
 | DS-07 | Textes légaux définitifs | P0 | S | S2 | juriste (A11), informations de l'éditeur | plan 15 | à faire |
-| LX-06 | Garde de qualité et hygiène du dépôt public | P1 | M | S2 | aucune | nouveau | à faire |
+| LX-06 | Garde de qualité et hygiène du dépôt public | P1 | M | S2 | aucune | nouveau | fusionné (#57) ; l'historique git garde les valeurs retirées (décision du propriétaire) |
 | LX-07 | Intégration continue en lecture seule | P1 | S | S2 | décision 8 (automatisations coupées volontairement) | nouveau | à faire |
 | LX-08 | Site de démonstration : contenus d'animation et remise en état | P1 | M | S2 | accord écrit à chaque exécution en ligne ; S1 publie le backend | nouveau | à faire |
 | LX-09 | Mesure du pilote : indicateurs manquants et rapport hebdomadaire | P1 | M | S2 | aucune | nouveau | à faire |
