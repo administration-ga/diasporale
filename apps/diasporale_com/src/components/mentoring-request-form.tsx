@@ -80,6 +80,7 @@ export function MentoringRequestEntry(props: { readonly capability: MentoringCap
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <Button
+        variant="commerce"
         aria-haspopup="dialog"
         onClick={() => {
           setSheetKey((value) => value + 1)
@@ -293,7 +294,7 @@ function RequestForm(props: { readonly capability: MentoringCapability; readonly
         </div>
       ) : null}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={busy} aria-busy={busy}>{t(busy ? "mentoring.request.sending" : "mentoring.request.submit")}</Button>
+        <Button type="submit" variant="commerce" disabled={busy} aria-busy={busy}>{t(busy ? "mentoring.request.sending" : "mentoring.request.submit")}</Button>
         <Button type="button" variant="ghost" disabled={busy} onClick={props.onClose}>{t("mentoring.sheet.back")}</Button>
       </div>
     </form>

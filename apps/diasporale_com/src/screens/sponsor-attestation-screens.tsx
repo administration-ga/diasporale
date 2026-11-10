@@ -92,7 +92,7 @@ function Sponsor() {
                 />
               )}
             </Field>
-            <Button type="submit" disabled={form.formState.isSubmitting || view.remaining === 0}>
+            <Button type="submit" variant="social" disabled={form.formState.isSubmitting || view.remaining === 0}>
               <HandshakeIcon aria-hidden />
               {form.formState.isSubmitting ? t("common.pleaseWait") : t("sponsor.submit")}
             </Button>
