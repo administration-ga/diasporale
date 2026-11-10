@@ -67,6 +67,7 @@ import enPostPublicationState from "./locales/en/post-publication-state.json"
 import enCommentPages from "./locales/en/comment-pages.json"
 import enObjectReports from "./locales/en/object-reports.json"
 import enMessagesUnread from "./locales/en/messages-unread.json"
+import enInstallableApp from "./locales/en/installable-app.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -123,6 +124,7 @@ import frPostPublicationState from "./locales/fr/post-publication-state.json"
 import frCommentPages from "./locales/fr/comment-pages.json"
 import frObjectReports from "./locales/fr/object-reports.json"
 import frMessagesUnread from "./locales/fr/messages-unread.json"
+import frInstallableApp from "./locales/fr/installable-app.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -187,6 +189,7 @@ export const LOCALE_PARTS = {
     "welcome-profile": frWelcomeProfile,
     "object-reports": frObjectReports,
     "messages-unread": frMessagesUnread,
+    "installable-app": frInstallableApp,
   },
   en: {
     diasporale: enDiasporale,
@@ -245,6 +248,7 @@ export const LOCALE_PARTS = {
     "welcome-profile": enWelcomeProfile,
     "object-reports": enObjectReports,
     "messages-unread": enMessagesUnread,
+    "installable-app": enInstallableApp,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

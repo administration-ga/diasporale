@@ -40,6 +40,8 @@ const OUTSIDE_SHELL: readonly RouteKey[] = [
   "health",
   "healthApi",
   "appIcon",
+  "serviceWorker",
+  "offline",
 ]
 
 /**

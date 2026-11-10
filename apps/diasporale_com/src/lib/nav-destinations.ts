@@ -173,8 +173,10 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   contact: outside("public"),
   health: outside("public"),
   healthApi: outside("public"),
-  // Les fichiers de l'application installée (MO-02) : servis à tous, aucune page de membre.
+  // Les fichiers de l'application installée (MO-02, MO-05) : servis à tous, aucune page de membre.
   appIcon: outside("public"),
+  serviceWorker: outside("public"),
+  offline: outside("public"),
 }
 
 interface Row {

@@ -1,0 +1,15 @@
+{
+  "installableApp": {
+    "offline": {
+      "documentTitle": "Offline · {{brand}}",
+      "title": "You're offline",
+      "body": "{{brand}} needs an Internet connection to open this page. Check your connection, then try again.",
+      "retry": "Try again"
+    },
+    "network": {
+      "offline": "Offline: what's already on screen stays readable; posting, writing or reacting needs an Internet connection.",
+      "restored": "Back online."
+    },
+    "notificationBody": "You have a new notification."
+  }
+}

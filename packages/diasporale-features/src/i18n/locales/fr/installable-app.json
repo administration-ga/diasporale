@@ -1,0 +1,15 @@
+{
+  "installableApp": {
+    "offline": {
+      "documentTitle": "Hors ligne · {{brand}}",
+      "title": "Vous êtes hors ligne",
+      "body": "{{brand}} a besoin d'Internet pour ouvrir cette page. Vérifiez votre connexion, puis réessayez.",
+      "retry": "Réessayer"
+    },
+    "network": {
+      "offline": "Hors ligne : ce qui est déjà affiché reste lisible ; publier, écrire ou réagir demande une connexion à Internet.",
+      "restored": "De nouveau en ligne."
+    },
+    "notificationBody": "Vous avez une nouvelle notification."
+  }
+}
