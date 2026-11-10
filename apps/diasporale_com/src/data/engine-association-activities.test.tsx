@@ -453,3 +453,42 @@ describe("calendrier associatif — fournisseur moteur", () => {
     if (state === "absent") expect(query.mock.calls.some(([ref]) => getFunctionName(ref as never) === "modules/events/pageEventCalendar:exportIcal")).toBe(false)
   })
 })
+
+describe("évènements d'un pays dans le hub — fournisseur moteur (HB-02)", () => {
+  const ROW = { eventId: "event-pays", pageId: "page-1", title: "Fête de l'indépendance", location: "Lyon", startAt: 1_800_000_000_000, endAt: 1_800_007_200_000, timeZone: "Europe/Paris", organizer: { name: "Association de démonstration", handle: "association-demo" } }
+
+  it("lit la tranche avec le pays, l'instant et le curseur de l'écran, une fenêtre bornée, et projette la seule carte", () => {
+    mocks.rows.set("modules/diaspora/hubEvents:listCountryEvents", {
+      country: "FR",
+      items: [{ ...ROW, confirmedCount: 12, participants: ["private-person"], organizer: { ...ROW.organizer, email: "private-email" } }],
+      continueCursor: "opaque-suite", isDone: false, partial: true,
+    })
+    const { events } = setup()
+    const { result, rerender } = renderHook((props: { cursor: string | null; limit?: number }) => events.useCountryEvents!({ country: "FR", anchor: 1_700_000_000_000, ...props }), { initialProps: { cursor: null as string | null } as { cursor: string | null; limit?: number } })
+    expect(mocks.loaded).toHaveBeenLastCalledWith("modules/diaspora/hubEvents:listCountryEvents", { networkId: "network-diasporale", country: "FR", anchor: 1_700_000_000_000, cursor: null, numItems: 10 })
+    expect(result.current).toEqual({ status: "ready", data: { items: [ROW], continueCursor: "opaque-suite", isDone: false, partial: true } })
+    expect(JSON.stringify(result.current)).not.toContain("private-")
+    const first = result.current
+    rerender({ cursor: null })
+    expect(result.current).toBe(first)
+    rerender({ cursor: "opaque-suite", limit: 500 })
+    expect(mocks.loaded).toHaveBeenLastCalledWith("modules/diaspora/hubEvents:listCountryEvents", { networkId: "network-diasporale", country: "FR", anchor: 1_700_000_000_000, cursor: "opaque-suite", numItems: 20 })
+    mocks.rows.set("modules/diaspora/hubEvents:listCountryEvents", { country: "FR", items: [], continueCursor: "fin", isDone: true, partial: false })
+    rerender({ cursor: "opaque-suite", limit: 3 })
+    expect(result.current).toEqual({ status: "ready", data: { items: [], continueCursor: null, isDone: true, partial: false } })
+    mocks.rows.set("modules/diaspora/hubEvents:listCountryEvents", new ConvexError({ code: "notFound" }))
+    rerender({ cursor: null })
+    expect(result.current).toEqual({ status: "error", code: "not_found" })
+  })
+
+  it.each([
+    { label: "sans session", setup: () => { mocks.auth = { isAuthenticated: false, isPending: false, isUnauthenticated: true } }, code: "not_signed_in" },
+    { label: "sans adhésion", setup: () => { mocks.membership = null }, code: "not_member" },
+    { label: "suspendue", setup: () => { mocks.membership = { status: "suspendue", capabilities: [] } }, code: "suspended" },
+  ])("refuse la lecture $label avant toute requête", ({ setup: refuse, code }) => {
+    refuse()
+    const { events } = setup()
+    expect(renderHook(() => events.useCountryEvents!({ country: "FR", anchor: 1, cursor: null })).result.current).toEqual({ status: "error", code })
+    expect(mocks.loaded.mock.calls.some(([name]) => String(name).includes("hubEvents:"))).toBe(false)
+  })
+})
