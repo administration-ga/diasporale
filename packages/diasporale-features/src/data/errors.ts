@@ -52,6 +52,8 @@ export const DATA_ERROR_CODES = [
   "display_name_invalid",
   "headline_too_long",
   "handle_taken",
+  // Rendu aussi par l'entrée dans le réseau (EA-04) quand aucun identifiant n'est fourni : refus d'action, pas seulement de formulaire.
+  "handle_required",
   // Un profil commun retiré se republie par le geste de la personne avant d'entrer (EA-04).
   "profile_republish_required",
   "consent_social_profile_required",
@@ -92,7 +94,6 @@ export const FORM_ERROR_CODES = [
   "idn_identity_required",
   "idn_consent_required",
   "code_format",
-  "handle_required",
   "attestation_consent_required",
   "clipboard_unavailable",
 ] as const
