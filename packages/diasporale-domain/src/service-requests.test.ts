@@ -1,19 +1,24 @@
 import { describe, expect, it } from "bun:test"
 
 import {
+  SERVICE_BOOKING_CAPACITY_MAX,
   SERVICE_NO_SHOW_CONTEST_DAYS,
   SERVICE_PROPOSAL_MAX_VERSIONS,
   SERVICE_REQUEST_ACTIONS,
   SERVICE_REQUEST_REFUSALS,
+  SERVICE_RESCHEDULE_ACTIONS,
   SERVICE_REQUEST_STATUSES,
   SERVICE_REQUEST_TERMINAL_STATUSES,
   availableServiceRequestActions,
+  availableServiceRescheduleActions,
+  bookingCapacityAllows,
   canContestNoShow,
   canonicalTimeZone,
   checkNoShowContest,
   checkProposalVersion,
   checkServiceRequestTiming,
   checkServiceRequestTransition,
+  checkServiceRescheduleGesture,
   effectiveServiceRequestStatus,
   isServiceIdempotencyKey,
   isServiceInstant,
@@ -21,8 +26,12 @@ import {
   nextProposalVersion,
   normalizeServiceRequestDraft,
   normalizeServiceText,
+  NO_PROVIDER_SETTINGS,
+  openServiceReschedule,
   parseServiceProposal,
+  parseServiceProviderSettings,
   parseServiceReason,
+  parseServiceReschedule,
   serviceRequestDeadline,
   serviceRequestFingerprint,
   serviceRequestTimeline,
@@ -32,6 +41,7 @@ import {
   zonedWallTimeToUtc,
   type ServiceProposalInput,
   type ServiceRequestStatus,
+  type ServiceReschedule,
 } from "./service-requests"
 import { DAY_MS, HOUR_MS, MINUTE_MS } from "./time"
 
@@ -257,6 +267,65 @@ describe("la proposition", () => {
   })
 })
 
+describe("réglages de prestation (SV-04)", () => {
+  it("rien de réglé : chaque champ reste vide", () => {
+    expect(parseServiceProviderSettings({})).toEqual({ ok: true, value: NO_PROVIDER_SETTINGS })
+    expect(parseServiceProviderSettings({ timeZone: "  ", location: null, cancellationTerms: " \n " })).toEqual({ ok: true, value: NO_PROVIDER_SETTINGS })
+  })
+
+  it("normalise un fuseau canonique, un lieu approximatif et des conditions bornées", () => {
+    expect(parseServiceProviderSettings({ timeZone: " Africa/Libreville ", location: { mode: "onsite", area: "  Paris   11e " }, cancellationTerms: " Annulation  libre jusqu'à la veille. " })).toEqual({
+      ok: true,
+      value: { timeZone: "Africa/Libreville", location: { mode: "onsite", area: "Paris 11e" }, cancellationTerms: "Annulation libre jusqu'à la veille.", bookingCapacity: 1 },
+    })
+    expect(parseServiceProviderSettings({ location: { mode: "remote" } })).toEqual({ ok: true, value: { ...NO_PROVIDER_SETTINGS, location: { mode: "remote" } } })
+  })
+
+  it.each([
+    [{ timeZone: "+02:00" }, "request_time_zone_invalid"],
+    [{ location: { mode: "onsite" as const, area: " x " } }, "proposal_location_invalid"],
+    [{ location: { mode: "onsite" as const, area: "y".repeat(81) } }, "proposal_location_invalid"],
+    [{ location: { mode: "onsite" as const, area: "8 rue Oberkampf" } }, "request_address_forbidden"],
+    [{ cancellationTerms: "t" }, "proposal_terms_invalid"],
+    [{ cancellationTerms: "t".repeat(501) }, "proposal_terms_invalid"],
+    [{ cancellationTerms: "Prévenir au 07 12 34 56 78" }, "request_contact_forbidden"],
+    [{ bookingCapacity: 0 }, "booking_capacity_invalid"],
+    [{ bookingCapacity: 1.5 }, "booking_capacity_invalid"],
+    [{ bookingCapacity: SERVICE_BOOKING_CAPACITY_MAX + 1 }, "booking_capacity_invalid"],
+  ] as const)("refuse %o par %s, comme la proposition", (input, code) => {
+    expect(parseServiceProviderSettings(input)).toEqual({ ok: false, code })
+  })
+
+  it("SV-09 : un rendez-vous à la fois par défaut, jusqu'à dix rendez-vous simultanés", () => {
+    expect(NO_PROVIDER_SETTINGS.bookingCapacity).toBe(1)
+    expect(parseServiceProviderSettings({ bookingCapacity: null })).toEqual({ ok: true, value: NO_PROVIDER_SETTINGS })
+    expect(parseServiceProviderSettings({ bookingCapacity: SERVICE_BOOKING_CAPACITY_MAX })).toEqual({ ok: true, value: { ...NO_PROVIDER_SETTINGS, bookingCapacity: 10 } })
+  })
+})
+
+describe("capacité simultanée d'une page (SV-09)", () => {
+  const booked = (...capacities: number[]) => capacities.map((capacity) => ({ capacity }))
+
+  it("à un partout, aucun chevauchement : l'agenda unique d'avant", () => {
+    expect(bookingCapacityAllows({ capacity: 1, overlapping: [] })).toBe(true)
+    expect(bookingCapacityAllows({ capacity: 1, overlapping: booked(1) })).toBe(false)
+  })
+
+  it("capacité deux : un second rendez-vous passe, pas un troisième", () => {
+    expect(bookingCapacityAllows({ capacity: 2, overlapping: booked(2) })).toBe(true)
+    expect(bookingCapacityAllows({ capacity: 2, overlapping: booked(2, 2) })).toBe(false)
+  })
+
+  it("la plus petite capacité en jeu l'emporte : nul ne dépasse la sienne", () => {
+    // Un rendez-vous déjà pris « seul » (capacité un) ferme son créneau aux autres.
+    expect(bookingCapacityAllows({ capacity: 3, overlapping: booked(1) })).toBe(false)
+    // Une prestation « seule » ne se glisse pas à côté d'un rendez-vous existant.
+    expect(bookingCapacityAllows({ capacity: 1, overlapping: booked(3) })).toBe(false)
+    expect(bookingCapacityAllows({ capacity: 3, overlapping: booked(3, 2) })).toBe(false)
+    expect(bookingCapacityAllows({ capacity: 3, overlapping: booked(3, 3) })).toBe(true)
+  })
+})
+
 describe("échéances et créneaux", () => {
   it("fait courir l'échéance de la demande, puis celle de la proposition, puis aucune", () => {
     const base = { expiresAt: NOW + DAY_MS, proposalExpiresAt: NOW + 2 * DAY_MS }
@@ -346,6 +415,22 @@ describe("chronologie", () => {
     ])
   })
 
+  it("SV-03 : un déplacement accepté se lit comme un nouvel horaire convenu, après l'accord", () => {
+    expect(serviceRequestTimeline({
+      createdAt: 1,
+      proposals: [{ version: 2, createdAt: 9, rescheduledFrom: 1 }, { version: 1, createdAt: 3, rescheduledFrom: null }],
+      confirmedAt: 5,
+      closed: null,
+      effectiveStatus: "confirmed",
+      deadlineAt: null,
+    })).toEqual([
+      { status: "sent", at: 1, version: null },
+      { status: "proposed", at: 3, version: 1 },
+      { status: "confirmed", at: 5, version: null },
+      { status: "confirmed", at: 9, version: 2 },
+    ])
+  })
+
   it("montre une échéance atteinte que le passage d'expiration n'a pas encore écrite", () => {
     expect(serviceRequestTimeline({ createdAt: 1, proposals: [], confirmedAt: null, closed: null, effectiveStatus: "expired", deadlineAt: 4 })).toEqual([
       { status: "sent", at: 1, version: null },
@@ -354,6 +439,78 @@ describe("chronologie", () => {
     expect(serviceRequestTimeline({ createdAt: 1, proposals: [], confirmedAt: null, closed: null, effectiveStatus: "sent", deadlineAt: 4 })).toEqual([
       { status: "sent", at: 1, version: null },
     ])
+  })
+})
+
+describe("déplacer un rendez-vous confirmé (SV-03)", () => {
+  const BOOKING = { startAt: NOW + 3 * DAY_MS, endAt: NOW + 3 * DAY_MS + 90 * MINUTE_MS }
+  const pending = (overrides: Partial<ServiceReschedule> = {}): ServiceReschedule => ({
+    startAt: NOW + 4 * DAY_MS, endAt: NOW + 4 * DAY_MS + 90 * MINUTE_MS, timeZone: "Europe/Paris", proposedBy: "page", proposedAt: NOW, expiresAt: NOW + DAY_MS, ...overrides,
+  })
+  const gesture = (action: (typeof SERVICE_RESCHEDULE_ACTIONS)[number], overrides: Partial<Parameters<typeof checkServiceRescheduleGesture>[0]> = {}) =>
+    checkServiceRescheduleGesture({ action, actor: "requester", status: "confirmed", now: NOW, bookingStartAt: BOOKING.startAt, reschedule: null, proposalVersion: 1, ...overrides })
+
+  it("un autre horaire garde la durée ; l'échéance précède le nouveau début et l'horaire actuel", () => {
+    expect(parseServiceReschedule({ startAt: NOW + 4 * DAY_MS, timeZone: " Europe/Paris ", expiresAt: NOW + DAY_MS }, BOOKING, NOW)).toEqual({
+      ok: true, value: { startAt: NOW + 4 * DAY_MS, endAt: NOW + 4 * DAY_MS + 90 * MINUTE_MS, timeZone: "Europe/Paris", expiresAt: NOW + DAY_MS },
+    })
+    // Avancer le rendez-vous : l'échéance précède le nouveau début.
+    expect(parseServiceReschedule({ startAt: NOW + DAY_MS, timeZone: "Europe/Paris", expiresAt: NOW + DAY_MS }, BOOKING, NOW).ok).toBe(true)
+  })
+
+  it.each([
+    [{ timeZone: "+02:00" }, "request_time_zone_invalid"],
+    [{ startAt: NOW }, "proposal_start_invalid"],
+    [{ startAt: NOW + 181 * DAY_MS }, "proposal_start_invalid"],
+    [{ startAt: 2.5 }, "proposal_start_invalid"],
+    [{ startAt: NOW + 3 * DAY_MS }, "reschedule_same_slot"],
+    [{ expiresAt: NOW }, "proposal_deadline_invalid"],
+    [{ expiresAt: 1.5 }, "proposal_deadline_invalid"],
+    [{ startAt: NOW + 20 * DAY_MS, expiresAt: NOW + 15 * DAY_MS }, "proposal_deadline_invalid"],
+    [{ startAt: NOW + DAY_MS, expiresAt: NOW + 2 * DAY_MS }, "proposal_deadline_invalid"],
+    [{ startAt: NOW + 5 * DAY_MS, expiresAt: NOW + 4 * DAY_MS }, "proposal_deadline_invalid"],
+  ] as const)("refuse %o par %s", (overrides, code) => {
+    expect(parseServiceReschedule({ startAt: NOW + 4 * DAY_MS, timeZone: "Europe/Paris", expiresAt: NOW + DAY_MS, ...overrides }, BOOKING, NOW)).toEqual({ ok: false, code })
+  })
+
+  it("une proposition de déplacement est ouverte jusqu'à son échéance, exclue", () => {
+    expect(openServiceReschedule(null, NOW)).toBeNull()
+    expect(openServiceReschedule(pending(), NOW + DAY_MS - 1)).toEqual(pending())
+    expect(openServiceReschedule(pending(), NOW + DAY_MS)).toBeNull()
+  })
+
+  it("l'une ou l'autre partie propose, avant le début, une seule à la fois, dans la limite des versions", () => {
+    expect(gesture("propose_reschedule")).toEqual({ ok: true, value: null })
+    expect(gesture("propose_reschedule", { actor: "page" })).toEqual({ ok: true, value: null })
+    expect(gesture("propose_reschedule", { reschedule: pending() })).toEqual({ ok: false, code: "reschedule_already_open" })
+    // Une proposition échue ne bloque plus : le rendez-vous est resté tel quel.
+    expect(gesture("propose_reschedule", { reschedule: pending(), now: NOW + DAY_MS })).toEqual({ ok: true, value: null })
+    expect(gesture("propose_reschedule", { proposalVersion: SERVICE_PROPOSAL_MAX_VERSIONS })).toEqual({ ok: false, code: "proposal_versions_exhausted" })
+    expect(gesture("propose_reschedule", { now: BOOKING.startAt })).toEqual({ ok: false, code: "booking_started" })
+  })
+
+  it("seule l'autre partie accepte ; chacune décline (le proposant retire la sienne) ; rien sans proposition ouverte", () => {
+    expect(gesture("accept_reschedule", { reschedule: pending() })).toEqual({ ok: true, value: null })
+    expect(gesture("accept_reschedule", { actor: "page", reschedule: pending() })).toEqual({ ok: false, code: "request_action_forbidden" })
+    expect(gesture("decline_reschedule", { reschedule: pending() })).toEqual({ ok: true, value: null })
+    expect(gesture("decline_reschedule", { actor: "page", reschedule: pending() })).toEqual({ ok: true, value: null })
+    expect(gesture("accept_reschedule")).toEqual({ ok: false, code: "reschedule_not_open" })
+    expect(gesture("decline_reschedule", { reschedule: pending(), now: NOW + DAY_MS })).toEqual({ ok: false, code: "reschedule_not_open" })
+  })
+
+  it("seulement un rendez-vous confirmé, ni clos ni expiré", () => {
+    expect(gesture("propose_reschedule", { status: "proposed", bookingStartAt: null })).toEqual({ ok: false, code: "request_not_open" })
+    expect(gesture("propose_reschedule", { bookingStartAt: null })).toEqual({ ok: false, code: "request_not_open" })
+    expect(gesture("propose_reschedule", { status: "expired" })).toEqual({ ok: false, code: "request_expired" })
+    expect(gesture("accept_reschedule", { status: "cancelled", reschedule: pending() })).toEqual({ ok: false, code: "request_closed" })
+  })
+
+  it("liste les gestes réellement ouverts à chaque partie", () => {
+    const base = { status: "confirmed" as const, now: NOW, bookingStartAt: BOOKING.startAt, proposalVersion: 1 }
+    expect(availableServiceRescheduleActions({ ...base, actor: "requester", reschedule: null })).toEqual(["propose_reschedule"])
+    expect(availableServiceRescheduleActions({ ...base, actor: "requester", reschedule: pending() })).toEqual(["accept_reschedule", "decline_reschedule"])
+    expect(availableServiceRescheduleActions({ ...base, actor: "page", reschedule: pending() })).toEqual(["decline_reschedule"])
+    expect(availableServiceRescheduleActions({ ...base, actor: "page", reschedule: null, status: "completed" })).toEqual([])
   })
 })
 
