@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
+import { DAY_MS, DEFAULT_FACET_VISIBILITY, HOUR_MS } from "@diasporale/domain"
 import type { DemoEquipmentView, Loadable, MembershipView, SessionView } from "@diasporale/features/data"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
@@ -22,6 +22,8 @@ const mocks = vi.hoisted(() => ({
   createServiceOffer: vi.fn(),
   createJobOffer: vi.fn(),
   createMission: vi.fn(),
+  createEvent: vi.fn(),
+  associationEvents: true,
   router: { replace: vi.fn() },
   toast: { loading: vi.fn(() => "avis"), success: vi.fn(), error: vi.fn() },
 }))
@@ -37,6 +39,7 @@ vi.mock("@diasporale/features/data", async (importOriginal) => ({
   useJobs: () => ({ saveTalentProfile: mocks.saveTalentProfile, createOffer: mocks.createJobOffer }),
   useServices: () => ({ createOffer: mocks.createServiceOffer }),
   useMutualAid: () => ({ createMission: mocks.createMission }),
+  useAssociationEvents: () => (mocks.associationEvents ? { create: mocks.createEvent } : null),
 }))
 
 const membership: MembershipView = {
@@ -77,7 +80,9 @@ beforeEach(() => {
   mocks.session = signedIn(null)
   mocks.demoAccounts = demoAccounts()
   mocks.join.mockResolvedValue({ ok: true, value: { country: "FR" } })
+  mocks.associationEvents = true
   for (const gesture of [mocks.becomeMentor, mocks.saveTalentProfile, mocks.createServiceOffer, mocks.createJobOffer, mocks.createMission]) gesture.mockResolvedValue({ ok: true, value: {} })
+  mocks.createEvent.mockResolvedValue({ ok: true, value: { eventId: "events_demo", created: true } })
 })
 
 afterEach(() => {
@@ -138,6 +143,72 @@ describe("Amorçage d'un compte de démonstration", () => {
     await waitFor(() => expect(mocks.router.replace).toHaveBeenCalled())
     expect(mocks.join).toHaveBeenCalledTimes(1)
     expect(mocks.createMission).not.toHaveBeenCalled()
+    expect(mocks.createEvent).not.toHaveBeenCalled()
+  })
+
+  it("EV-01 : l'association crée la mission et deux évènements fictifs de sa page, par la capacité du port", async () => {
+    window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "association")
+    mocks.demoAccounts = demoAccounts(equipment({ pageId: "pages_lyon", pageCreated: true }))
+    const before = Date.now()
+    mount()
+
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledExactlyOnceWith(routes.feed()))
+    const after = Date.now()
+    expect(mocks.createMission).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ pageId: "pages_lyon", country: "FR", city: "Lyon" }))
+    expect(mocks.createEvent).toHaveBeenCalledTimes(2)
+    const [open, members] = mocks.createEvent.mock.calls.map(([input]) => input as Record<string, unknown>)
+    // Le premier, ouvert à tout DIASPORALE, deux places, dans sept jours ; le second, réservé aux adhérents, sans limite.
+    expect(open).toMatchObject({ pageId: "pages_lyon", audience: "network", capacity: 2, timeZone: "Europe/Paris", idempotencyKey: "diasporale-demo:association-event:accueil" })
+    expect(members).toMatchObject({ pageId: "pages_lyon", audience: "association", capacity: null, timeZone: "Europe/Paris", idempotencyKey: "diasporale-demo:association-event:assemblee" })
+    for (const [event, leadDays, hours] of [[open, 7, 3], [members, 14, 2]] as const) {
+      const startAt = Number(event?.startAt)
+      expect(startAt % HOUR_MS).toBe(0)
+      expect(startAt).toBeGreaterThanOrEqual(before + leadDays * DAY_MS)
+      expect(startAt).toBeLessThanOrEqual(after + leadDays * DAY_MS + HOUR_MS)
+      expect(event?.endAt).toBe(startAt + hours * HOUR_MS)
+      // Contenus marqués fictifs ; aucune adresse privée.
+      expect(String(event?.title)).toContain("(démonstration)")
+      expect(String(event?.location)).toContain("(lieu fictif)")
+    }
+    expect(mocks.toast.success).toHaveBeenCalledWith(t("demoAccounts.ready", { name: "Mireille ENGONE" }), { id: "avis" })
+  })
+
+  it("EV-01 : rejoué, le geste renvoie les mêmes clés d'idempotence ; un membre déjà entré ne le rejoue pas", async () => {
+    for (let run = 0; run < 2; run += 1) {
+      window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "association")
+      mocks.demoAccounts = demoAccounts(equipment({ pageId: "pages_lyon", pageCreated: true }))
+      mount()
+      await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledTimes(run + 1))
+      cleanup()
+    }
+    const keys = mocks.createEvent.mock.calls.map(([input]) => (input as { idempotencyKey: string }).idempotencyKey)
+    expect(keys).toEqual([
+      "diasporale-demo:association-event:accueil",
+      "diasporale-demo:association-event:assemblee",
+      "diasporale-demo:association-event:accueil",
+      "diasporale-demo:association-event:assemblee",
+    ])
+
+    mocks.createEvent.mockClear()
+    window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "association")
+    mocks.session = signedIn({ ...membership, handle: "demo.association", displayName: "Mireille ENGONE" })
+    mount()
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledTimes(3))
+    expect(mocks.createEvent).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ["un évènement refusé par le moteur", () => mocks.createEvent.mockResolvedValueOnce({ ok: false, code: "association_event_invalid" })],
+    ["un fournisseur sans évènements d'association", () => { mocks.associationEvents = false }],
+  ])("EV-01 : %s se dit, sans bloquer l'arrivée sur le fil", async (_label, arrange) => {
+    arrange()
+    window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "association")
+    mocks.demoAccounts = demoAccounts(equipment({ pageId: "pages_lyon", pageCreated: true }))
+    mount()
+
+    await waitFor(() => expect(mocks.toast.error).toHaveBeenCalledWith(t("demoAccounts.equipFailed", { name: "Mireille ENGONE" }), { id: "avis" }))
+    expect(mocks.router.replace).toHaveBeenCalledExactlyOnceWith(routes.feed())
+    expect(mocks.toast.success).not.toHaveBeenCalled()
   })
 
   it("l'extérieur au réseau : l'accueil d'ANTSIA seulement, jamais join, puis l'accueil de DIASPORALE", async () => {
