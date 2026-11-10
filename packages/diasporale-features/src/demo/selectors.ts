@@ -211,6 +211,8 @@ export function notificationsView(state: DemoState, viewerId: string): Notificat
         postId: item.postId,
         // ET-01 : l'objet qu'ouvre un avis du système écrit par une démonstration voisine (une mission).
         ...(item.communityNotice ? { communityNotice: item.communityNotice } : {}),
+        // EV-03 : la fiche de l'évènement annoncé (annulation, place obtenue).
+        ...(item.associationEvent ? { associationEvent: item.associationEvent } : {}),
       }
     })
 }

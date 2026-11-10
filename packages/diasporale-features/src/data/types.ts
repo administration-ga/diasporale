@@ -547,6 +547,14 @@ export const REPORTER_NOTIFICATION_KINDS = ["report_received", "report_decided"]
 export type ReporterNotificationKind = (typeof REPORTER_NOTIFICATION_KINDS)[number]
 
 /**
+ * Les avis d'un ÉVÈNEMENT D'ASSOCIATION (mêmes genres que le moteur) : le rappel, et EV-03 —
+ * l'évènement est annulé, la personne en attente obtient sa place. Avis du système, sans acteur
+ * ni titre, lieu, date, nom de page ou motif ; ils mènent à la fiche de l'évènement.
+ */
+export const ASSOCIATION_EVENT_NOTIFICATION_KINDS = ["association_event_reminder", "association_event_cancelled", "association_event_seat_confirmed"] as const
+export type AssociationEventNotificationKind = (typeof ASSOCIATION_EVENT_NOTIFICATION_KINDS)[number]
+
+/**
  * Les avis de la cloche que DIASPORALE sait dire. Tout autre genre du moteur se
  * dit « nouvelle activité » (`other`) : jamais un libellé inventé.
  */
@@ -562,7 +570,7 @@ export const NOTIFICATION_KINDS = [
   "sponsorship_withdrawn",
   "attestation_verified",
   "attestation_not_confirmed",
-  "association_event_reminder",
+  ...ASSOCIATION_EVENT_NOTIFICATION_KINDS,
   ...SERVICE_NOTIFICATION_KINDS,
   ...COMMUNITY_NOTIFICATION_KINDS,
   ...CONTEXTUAL_NOTIFICATION_KINDS,
@@ -602,7 +610,7 @@ export interface NotificationView {
   readonly inviteOutcome: InviteOutcome | null
   /** La publication dont parle l'avis (réaction, commentaire, citation) : de quoi l'ouvrir. */
   readonly postId: string | null
-  /** Lien vers l'événement de page, relu avec les droits du destinataire. */
+  /** Lien vers l'événement de page (rappel, annulation, place obtenue), relu avec les droits du destinataire. */
   readonly associationEvent?: { readonly eventId: string; readonly pageHandle: string } | null
   /** Avis de mise en relation : sa cible relue (demande ou page) ; `null` si elle ne se lit plus. */
   readonly serviceNotice?: ServiceNoticeView | null

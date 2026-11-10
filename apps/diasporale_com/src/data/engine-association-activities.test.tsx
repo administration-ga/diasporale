@@ -153,6 +153,27 @@ describe("activités associatives — fournisseur moteur", () => {
     ])
   })
 
+  it("EV-03 : transmet le motif fermé d'une annulation et lit le motif à part, avec les droits du lecteur", async () => {
+    const { events, mutation } = setup()
+    expect(events.outcomeNotices).toBe("engine")
+    await events.cancel({ eventId: "event-1", expectedVersion: 3, reason: "organizer_unavailable" })
+    expect(mutation.mock.calls.map(([ref, args]) => [getFunctionName(ref as never), args])).toEqual([
+      ["modules/events/pageEvents:cancel", { networkId: "network-diasporale", eventId: "event-1", expectedVersion: 3, reason: "organizer_unavailable" }],
+    ])
+    const read = events.useCancellation
+    if (!read) throw new Error("Lecture du motif absente")
+    mocks.rows.set("modules/events/pageEvents:cancellationReason", { reason: "weather", privateNote: "jamais projetée" })
+    const { result, rerender } = renderHook(() => read("event-1"))
+    expect(mocks.loaded).toHaveBeenLastCalledWith("modules/events/pageEvents:cancellationReason", { networkId: "network-diasporale", eventId: "event-1" })
+    expect(result.current).toEqual({ status: "ready", data: { reason: "weather" } })
+    mocks.rows.set("modules/events/pageEvents:cancellationReason", { reason: null })
+    rerender()
+    expect(result.current).toEqual({ status: "ready", data: { reason: null } })
+    mocks.rows.set("modules/events/pageEvents:cancellationReason", null)
+    rerender()
+    expect(result.current).toEqual({ status: "ready", data: null })
+  })
+
   it("projette les compteurs et mon seul rang, sans exposer la file ni les identités", () => {
     const waiting = { ...EVENT, capacity: 2, confirmedCount: 2, waitlistCount: 3, remainingPlaces: 0, registration: "waitlisted", waitlistPosition: 2, canRegister: false }
     mocks.rows.set("modules/events/pageEvents:get", { ...waiting, queue: [{ personId: "private-person", handle: "private-handle" }] })

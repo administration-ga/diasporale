@@ -8,6 +8,7 @@ import {
   CalendarCheckIcon,
   CalendarClockIcon,
   CalendarOffIcon,
+  CalendarX2Icon,
   CalendarXIcon,
   CheckIcon,
   CircleCheckIcon,
@@ -30,6 +31,7 @@ import {
   ScaleIcon,
   ShieldQuestionIcon,
   SparklesIcon,
+  TicketCheckIcon,
   UserCheckIcon,
   UserPlusIcon,
   UserRoundCheckIcon,
@@ -45,6 +47,7 @@ import { toast } from "sonner"
 import type { ActionResult } from "../data/port"
 import { useActions, useNotifications, useUnreadCount } from "../data/context"
 import {
+  ASSOCIATION_EVENT_NOTIFICATION_KINDS,
   COMMUNITY_NOTIFICATION_KINDS,
   CONTEXTUAL_NOTIFICATION_KINDS,
   REPORTER_NOTIFICATION_KINDS,
@@ -76,6 +79,9 @@ const KIND_ICONS: Readonly<Record<NotificationKind, LucideIcon>> = {
   attestation_verified: BadgeCheckIcon,
   attestation_not_confirmed: ShieldQuestionIcon,
   association_event_reminder: CalendarIcon,
+  // EV-03 : l'évènement est annulé ; la personne en attente obtient sa place.
+  association_event_cancelled: CalendarX2Icon,
+  association_event_seat_confirmed: TicketCheckIcon,
   // Mise en relation (DG-010, DG-015, DG-016).
   service_request_received: InboxIcon,
   service_proposal_received: FileTextIcon,
@@ -146,7 +152,7 @@ export const BELL_SYSTEM_KINDS = [
   "sponsorship_withdrawn",
   "attestation_verified",
   "attestation_not_confirmed",
-  "association_event_reminder",
+  ...ASSOCIATION_EVENT_NOTIFICATION_KINDS,
   ...SERVICE_NOTIFICATION_KINDS,
   ...COMMUNITY_NOTIFICATION_KINDS,
   ...CONTEXTUAL_NOTIFICATION_KINDS,
@@ -156,6 +162,8 @@ export const BELL_SYSTEM_KINDS = [
 ] as const satisfies readonly NotificationKind[]
 type SystemKind = (typeof BELL_SYSTEM_KINDS)[number]
 const REPORTER_NOTICES: ReadonlySet<NotificationKind> = new Set(REPORTER_NOTIFICATION_KINDS)
+/** Les avis d'un évènement d'association (rappel, annulation, place obtenue) : ils mènent à sa fiche. */
+const ASSOCIATION_EVENT_NOTICES: ReadonlySet<NotificationKind> = new Set(ASSOCIATION_EVENT_NOTIFICATION_KINDS)
 
 /** La clé d'une phrase du système : un genre nouveau, sans phrase ni nom devant, ne compile pas. */
 function systemSentence(kind: SystemKind): `bell.system.${SystemKind}` {
@@ -366,7 +374,7 @@ function NotificationRow(props: { item: NotificationView; now: number; onNavigat
   const [busy, setBusy] = useState(false)
   const { item } = props
   const Icon = KIND_ICONS[item.kind]
-  const eventHref = item.kind === "association_event_reminder" && item.associationEvent
+  const eventHref = ASSOCIATION_EVENT_NOTICES.has(item.kind) && item.associationEvent
     ? routes.associationEvent?.(item.associationEvent.pageHandle, item.associationEvent.eventId) ?? routes.page(item.associationEvent.pageHandle) : null
   // Mise en relation : la route qui relit les droits, ou la fiche de la page ; rien sans cible relue.
   const serviceNotice = item.serviceNotice ?? null

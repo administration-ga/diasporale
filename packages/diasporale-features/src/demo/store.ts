@@ -74,7 +74,7 @@ const OK: ActionResult = { ok: true, value: null }
 const fail = (code: ActionErrorCode): ActionResult<never> => ({ ok: false, code })
 
 /** Les avis du système qu'une démonstration voisine écrit dans la cloche (`DemoStore.notifySystem`). */
-export type DemoSystemNoticeKind = "aid_mission_cancelled" | "aid_mission_rescheduled"
+export type DemoSystemNoticeKind = "aid_mission_cancelled" | "aid_mission_rescheduled" | "association_event_cancelled" | "association_event_seat_confirmed"
 
 /** Sujet IDN de démonstration, dérivé du nom (le vrai `sub` vient d'IDN). */
 export function demoIdnSub(firstName: string, lastName: string): string {
@@ -1002,7 +1002,8 @@ export class DemoStore {
   }
 
   /**
-   * Avis du SYSTÈME écrits par une démonstration voisine (ET-01 : missions bénévoles), comme la
+   * Avis du SYSTÈME écrits par une démonstration voisine (ET-01 : missions bénévoles ; EV-03 :
+   * évènements d'association, annulation et place obtenue), comme la
    * porte unique du moteur les écrit : sans acteur ni contenu, jamais à l'auteur du geste, ni à
    * un compte effacé, suspendu ou parti ; une ligne par destinataire et par clé. Rejouée avec la
    * même clé, une ligne existante n'est ni doublée ni rouverte, sauf `reopen`. Simulés dans ce
@@ -1014,6 +1015,7 @@ export class DemoStore {
     readonly sourceId: string | null
     readonly noticeKey: string
     readonly communityNotice?: CommunityNoticeView
+    readonly associationEvent?: { readonly eventId: string; readonly pageHandle: string }
     readonly reopen?: boolean
   }): void {
     const now = this.clock()
@@ -1038,6 +1040,7 @@ export class DemoStore {
         postId: null,
         noticeKey: input.noticeKey,
         ...(input.communityNotice ? { communityNotice: input.communityNotice } : {}),
+        ...(input.associationEvent ? { associationEvent: input.associationEvent } : {}),
       }
       next = { ...next, notifications: [...next.notifications, notification], sequence: next.sequence + 1 }
     }

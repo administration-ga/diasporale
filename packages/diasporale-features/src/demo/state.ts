@@ -227,6 +227,8 @@ export interface DemoNotification {
    * qui le dédoublonne. Absente des avis plus anciens, qui gardent leur propre rapprochement.
    */
   readonly noticeKey?: string
+  /** EV-03 : l'évènement d'association annoncé (annulation, place obtenue), pour ouvrir sa fiche. */
+  readonly associationEvent?: { readonly eventId: string; readonly pageHandle: string }
   /** ET-01 : l'objet qu'ouvre un avis de la vie communautaire (mission annulée ou déplacée). */
   readonly communityNotice?: CommunityNoticeView
 }
