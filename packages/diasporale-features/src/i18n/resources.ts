@@ -69,6 +69,8 @@ import enCommentPages from "./locales/en/comment-pages.json"
 import enObjectReports from "./locales/en/object-reports.json"
 import enHubShortcuts from "./locales/en/hub-shortcuts.json"
 import enHubAbout from "./locales/en/hub-about.json"
+import enCommunityRules from "./locales/en/community-rules.json"
+import enReportEmergency from "./locales/en/report-emergency.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -127,6 +129,8 @@ import frCommentPages from "./locales/fr/comment-pages.json"
 import frObjectReports from "./locales/fr/object-reports.json"
 import frHubShortcuts from "./locales/fr/hub-shortcuts.json"
 import frHubAbout from "./locales/fr/hub-about.json"
+import frCommunityRules from "./locales/fr/community-rules.json"
+import frReportEmergency from "./locales/fr/report-emergency.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -193,6 +197,8 @@ export const LOCALE_PARTS = {
     "object-reports": frObjectReports,
     "hub-shortcuts": frHubShortcuts,
     "hub-about": frHubAbout,
+    "community-rules": frCommunityRules,
+    "report-emergency": frReportEmergency,
   },
   en: {
     diasporale: enDiasporale,
@@ -253,6 +259,8 @@ export const LOCALE_PARTS = {
     "object-reports": enObjectReports,
     "hub-shortcuts": enHubShortcuts,
     "hub-about": enHubAbout,
+    "community-rules": enCommunityRules,
+    "report-emergency": enReportEmergency,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

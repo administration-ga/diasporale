@@ -40,37 +40,6 @@
         "body": "À fournir : le droit applicable et le règlement des litiges."
       }
     },
-    "community": {
-      "title": "Règles de la communauté",
-      "spirit": {
-        "title": "L'esprit du réseau",
-        "body": "À fournir : ce que le réseau veut permettre entre ses membres."
-      },
-      "respect": {
-        "title": "Respect des personnes",
-        "body": "À fournir : ce qui est attendu de chacun dans les échanges."
-      },
-      "safety": {
-        "title": "Arnaques et sécurité",
-        "body": "À fournir : comment se protéger des arnaques, et ce qui est interdit."
-      },
-      "privacy": {
-        "title": "Vie privée des autres",
-        "body": "À fournir : ce qu'on ne publie pas sur une autre personne."
-      },
-      "offers": {
-        "title": "Offres, annonces et services",
-        "body": "À fournir : ce qui peut être proposé dans le réseau, et comment."
-      },
-      "reporting": {
-        "title": "Signaler",
-        "body": "À fournir : quand signaler un contenu ou une personne."
-      },
-      "sanctions": {
-        "title": "Sanctions et recours",
-        "body": "À fournir : les mesures possibles et la façon de les contester."
-      }
-    },
     "contact": {
       "title": "Contact",
       "report": {
@@ -102,7 +71,7 @@
   },
   "settings": {
     "texts": {
-      "lead": "Les textes du site, avec leur version et leur date. Ceux qui ne sont pas encore fournis le disent.",
+      "lead": "Les textes du site, avec leur version et leur date. Ceux qui ne sont pas encore fournis, ou pas encore relus, le disent.",
       "pending": "Texte à fournir"
     }
   }

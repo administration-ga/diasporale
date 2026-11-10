@@ -8,6 +8,7 @@ import {
   LEGAL_TEXT_KINDS,
   LEGAL_TEXTS,
   type ConsentPurpose,
+  type LegalTextStatus,
   type DirectoryVisibility,
   type FacetField,
   type FieldVisibility,
@@ -114,9 +115,16 @@ function Settings(props: { membership: MembershipView }) {
   )
 }
 
+/** Le repère d'un texte qui n'est pas définitif : à fournir, ou provisoire (MD-05) ; aucun pour un texte définitif. */
+const LEGAL_TEXT_STATUS_LABELS: Readonly<Record<LegalTextStatus, string | null>> = {
+  missing: "settings.texts.pending",
+  provisional: "settings.texts.provisional",
+  final: null,
+}
+
 /**
  * Les textes du site depuis l'espace membre (LX-05) : chacun avec sa version et sa date, lues
- * dans le domaine ; un texte non fourni le dit, sans rien affirmer de son contenu.
+ * dans le domaine ; un texte non fourni ou provisoire le dit, sans rien affirmer de son contenu.
  */
 function LegalTextsSection() {
   const { t, locale } = useDiasporaleT()
@@ -125,6 +133,7 @@ function LegalTextsSection() {
       <ul className="flex flex-col divide-y divide-border">
         {LEGAL_TEXT_KINDS.map((kind) => {
           const edition = LEGAL_TEXTS[kind]
+          const statusLabel = LEGAL_TEXT_STATUS_LABELS[edition.status]
           return (
             <li key={kind} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2">
               <NextLink
@@ -135,7 +144,7 @@ function LegalTextsSection() {
               </NextLink>
               <span className="font-mono text-[11px] text-muted-foreground">
                 {t("legal.edition", { version: edition.version, date: formatLegalTextDate(edition.date, locale) })}
-                {edition.provided ? null : <span className="ml-2 rounded-sm bg-muted px-1.5 py-0.5">{t("settings.texts.pending")}</span>}
+                {statusLabel === null ? null : <span className="ml-2 rounded-sm bg-muted px-1.5 py-0.5">{t(statusLabel)}</span>}
               </span>
             </li>
           )
