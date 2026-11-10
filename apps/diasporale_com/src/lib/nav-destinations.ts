@@ -170,6 +170,7 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   privacy: outside("public"),
   terms: outside("public"),
   communityRules: outside("public"),
+  communityRule: outside("public"),
   contact: outside("public"),
   health: outside("public"),
   healthApi: outside("public"),

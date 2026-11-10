@@ -1,7 +1,7 @@
 "use client"
 
 /** DG-016 : avis du service, preuve exacte et droit de réponse de l'équipe. */
-import { Button, Card, Sheet, SheetContent, Skeleton } from "@diasporale/features"
+import { Button, Card, ReportEmergencyNotice, Sheet, SheetContent, Skeleton } from "@diasporale/features"
 import {
   SERVICE_REVIEW_REPORT_REASONS,
   useServiceReviews,
@@ -15,6 +15,7 @@ import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { useId, useState } from "react"
 import { toast } from "sonner"
 
+import { CommunityRuleLink } from "./community-rule-link"
 import { ServicePager } from "./service-pager"
 import { ServiceReviewEditor, ServiceReviewReplyEditor, useReviewTask } from "./service-review-editor"
 import { ConfirmSheet } from "./service-request-sheets"
@@ -178,10 +179,14 @@ function ReviewReport(props: { readonly capability: ServiceReviewsCapability; re
     <Sheet open onOpenChange={(open) => { if (!open) close() }}>
       <SheetContent title={t("serviceReviews.report.title")} description={t("serviceReviews.report.description")} closeLabel={t("serviceReviews.close")}>
         <div className="flex flex-col gap-4">
+          {/* MD-06 : un signalement n'alerte pas les secours ; la consigne d'urgence passe en tête. */}
+          <ReportEmergencyNotice />
           <label htmlFor={id} className="text-sm font-medium">{t("serviceReviews.report.reason")}</label>
           <select id={id} value={reason} disabled={task.busy} onChange={(event) => { const value = event.target.value; if (SERVICE_REVIEW_REPORT_REASONS.some((candidate) => candidate === value)) setReason(value as ServiceReviewReportReason) }} className="h-11 rounded-md border border-input bg-card px-3 focus-visible:shadow-focus">
             {SERVICE_REVIEW_REPORT_REASONS.map((value) => <option key={value} value={value}>{t(REPORT_KEYS[value])}</option>)}
           </select>
+          {/* MD-05 : la règle que vise le motif choisi, sur la page publique des règles. */}
+          <CommunityRuleLink ground={reason} />
           {task.error ? <p role="alert" className="text-sm text-destructive">{t(`errors.${task.error}`)}</p> : null}
           <div className="flex flex-wrap gap-2">
             <Button disabled={task.busy} aria-busy={task.busy} onClick={() => void task.run(() => props.capability.report({ target: props.target, reason }), () => { props.onClose(); toast.success(t("serviceReviews.report.saved")) })}>{t(task.busy ? "serviceReviews.working" : "serviceReviews.report.send")}</Button>
