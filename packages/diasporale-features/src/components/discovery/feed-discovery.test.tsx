@@ -67,6 +67,8 @@ function post(rank: number | string, options: { at?: number; media?: readonly Po
 
 const textFeed = (count: number) => Array.from({ length: count }, (_, index) => post(index + 1))
 const videoFeed = (count: number) => Array.from({ length: count }, (_, index) => post(index + 1, { media: [video(index + 1)] }))
+/** Une page de commentaires vide et stable (lectures paginées, FD-03). */
+const NO_COMMENTS = { data: { items: [], continueCursor: "", isDone: true }, isLoading: false, error: null, retry: () => undefined }
 
 /** Un fournisseur réactif minimal : le même découpage que le moteur (trente par page, curseur de la dernière ligne). */
 function fakeSource(initial: readonly PostView[]) {
@@ -91,8 +93,8 @@ function fakeSource(initial: readonly PostView[]) {
   const source = {
     kind: "demo",
     useSession: () => session,
-    useComments: () => ({ status: "ready", data: [] }),
-    useReplies: () => ({ status: "ready", data: [] }),
+    useCommentsPage: () => NO_COMMENTS,
+    useRepliesPage: () => NO_COMMENTS,
     useFeedPage(args: FeedPageRequest): FeedPageQuery {
       const current = useSyncExternalStore(subscribe, getVersion, getVersion)
       requests.push(args)
@@ -124,8 +126,8 @@ function failingSource(error: "suspended" | "network_unavailable") {
   const source = {
     kind: "demo",
     useSession: () => session,
-    useComments: () => ({ status: "ready", data: [] }),
-    useReplies: () => ({ status: "ready", data: [] }),
+    useCommentsPage: () => NO_COMMENTS,
+    useRepliesPage: () => NO_COMMENTS,
     useFeedPage: (): FeedPageQuery => ({ data: undefined, isLoading: false, error, retry }),
     actions: { react: vi.fn(async () => ({ ok: true as const, value: null })) },
   } as unknown as DiasporaleDataSource

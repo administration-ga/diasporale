@@ -8,7 +8,8 @@
  *   · `/emploi/<id>` : la fiche d'une offre — la page qui recrute et son badge,
  *     le contrat, le lieu, les langues, la rémunération ANNONCÉE, la date limite,
  *     puis « Candidater » ; une offre indisponible est un état neutre ; l'offre
- *     d'une autre page se signale (G9, chantier « confiance des surfaces ») ;
+ *     d'une autre page se signale (G9, chantier « confiance des surfaces »), depuis
+ *     l'encart « On ne paie jamais pour candidater » (EM-01) ;
  *   · `/mes-candidatures` : mes candidatures PRIVÉES, leur état, le retrait ;
  *   · `/talents` : mon profil de talent (opt-in, révocable) et la recherche
  *     BORNÉE des talents visibles, sans coordonnée ni nom complet.
@@ -57,9 +58,9 @@ import { AppShell } from "@/components/app-shell"
 import { ObjectConversationEntry } from "@/components/contextual-conversations"
 import { Gate } from "@/components/gate"
 import { JobApplyEntry } from "@/components/job-apply-entry"
-import { formatJobPay, JobChip, JobDetail, JobModerationNote, JobOfferCard, jobPlace, jobSelectClass, JobsUnavailable, TalentHitCard } from "@/components/job-parts"
+import { formatJobPay, JobChip, JobDetail, JobFraudNotice, JobModerationNote, JobOfferCard, jobPlace, jobSelectClass, JobsUnavailable, TalentHitCard } from "@/components/job-parts"
 import { MyTalentProfileSection } from "@/components/job-talent-profile"
-import { ReportContentAction, ReportedContent } from "@/components/report-content-sheet"
+import { ReportedContent } from "@/components/report-content-sheet"
 import { languageList } from "@/components/service-format"
 import { ServicePager } from "@/components/service-pager"
 import { ConfirmSheet } from "@/components/service-request-sheets"
@@ -381,8 +382,9 @@ function JobOfferArticle(props: { readonly offer: JobOfferDetailView }) {
         </Card>
       ) : (
         <>
+          {/* EM-01 : on ne paie jamais pour candidater ; « Signaler » est dans l'encart, juste à côté. */}
+          <JobFraudNotice offerId={offer.id} />
           <JobApplyEntry offer={offer} />
-          <ReportContentAction target={reportTarget} className="self-start" />
         </>
       )}
     </article>

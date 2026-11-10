@@ -6,7 +6,7 @@
  */
 import { contextualConversationKey } from "@antsia/social-features/features/messagerie/messagerie-dock"
 import { conversationHref } from "@antsia/social-features/features/messagerie/messagerie-routes"
-import { parseResidenceCountry, type CountryCode, type FeedScope } from "@diasporale/domain"
+import { parseResidenceCountry, type CommunityRule, type CountryCode, type FeedScope } from "@diasporale/domain"
 import { PAGE_ASSOCIATION_TYPES, PAGE_COMPANY_SECTORS, type PageAssociationType, type PageCompanySector } from "@antsia/social-domain/pagePresentation"
 
 /** Le jeton peut contenir une expansion Unicode de minuscule (İ → i̇) : ne pas le redécouper. */
@@ -105,6 +105,22 @@ function servicesHref(filters?: ServiceSearchParams): string {
 /** Le segment « nouveau statut » de la route des statuts (lu aussi par la page des statuts). */
 export const STORIES_NEW_SEGMENT = "nouvelle"
 
+/**
+ * L'ancre de chaque règle de la communauté (MD-05) sur sa page, dans la langue des adresses :
+ * la fiche d'une décision et le guichet renvoient à la règle que vise un motif.
+ */
+export const COMMUNITY_RULE_ANCHORS: Readonly<Record<CommunityRule, string>> = {
+  spirit: "esprit",
+  respect: "respect",
+  scams: "arnaques",
+  impersonation: "usurpation",
+  politics: "debat-politique",
+  privacy: "vie-privee",
+  prohibited: "contenus-interdits",
+  reporting: "signaler",
+  measures: "mesures-et-recours",
+}
+
 export const routes = {
   home: () => "/",
   enter: () => "/entrer",
@@ -116,6 +132,8 @@ export const routes = {
   welcome: () => "/bienvenue",
   feed: feedHref,
   hub: (country: CountryCode) => `/pays/${country.toLowerCase()}`,
+  /** Le hub d'un nouveau membre, avec l'avis de bienvenue : la fin de l'accueil. */
+  hubWelcome: (country: CountryCode) => `/pays/${country.toLowerCase()}?bienvenue=1`,
   /** Adresse publique `/@handle` (réécrite vers `/profil/handle` par next.config). */
   profile: (handle: string) => `/@${handle}`,
   /** Se voir comme les autres membres (EXF-DG-07, `?apercu=1`). */
@@ -232,9 +250,40 @@ export const routes = {
   charte: () => "/charte",
   legalNotice: () => "/mentions-legales",
   privacy: () => "/confidentialite",
+  /** Les textes du site ajoutés par LX-05 : chacun sa page, sa version, sa date et son marqueur tant qu'il n'est pas fourni. */
+  terms: () => "/conditions-utilisation",
+  communityRules: () => "/regles-communaute",
+  /** Une règle de la communauté, à son ancre (MD-05) : celle que vise le motif d'un signalement. */
+  communityRule: (rule: CommunityRule) => `/regles-communaute#${COMMUNITY_RULE_ANCHORS[rule]}`,
+  contact: () => "/contact",
   health: () => "/sante-fonctionnelle",
   healthApi: () => "/api/sante-fonctionnelle",
 } as const
+
+/**
+ * Les paramètres de filtre que cette table compose (pays, ville, onglet…) : les seuls qu'une page
+ * demandée avant la connexion garde (UX-02, MO-03). Un jeton, un code ou un traceur n'y survivent
+ * pas. Un test vérifie qu'aucune adresse de la table n'en emploie un autre, hors de l'entrée.
+ */
+export const ROUTE_FILTER_KEYS = [
+  "scope",
+  "tag",
+  "country",
+  "vue",
+  "pays",
+  "ville",
+  "q",
+  "type",
+  "activite",
+  "secteur",
+  "categorie",
+  "mode",
+  "apercu",
+  "onglet",
+  "modifier",
+  "nouveau",
+  "auteur",
+] as const
 
 /** Ancres internes de la vitrine. */
 export const anchors = {

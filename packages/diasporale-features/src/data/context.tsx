@@ -3,8 +3,9 @@
 import type { CountryCode, FeedScope } from "@diasporale/domain"
 import { createContext, useContext, type ReactNode } from "react"
 
+import { type EntryDoorsView, UNREAD_ENTRY_DOORS } from "./entry-doors-port"
 import type { DiasporaleDataSource } from "./port"
-import type { BookmarksPageRequest, FeedPageRequest, ProfilePostsPageRequest } from "./types"
+import type { BookmarksPageRequest, CommentsPageRequest, FeedPageRequest, Loadable, ProfilePostsPageRequest, RepliesPageRequest } from "./types"
 
 const DataSourceContext = createContext<DiasporaleDataSource | null>(null)
 
@@ -30,6 +31,11 @@ export function useOptionalDataSource(): DiasporaleDataSource | null {
 }
 
 export const useSession = () => useDataSource().useSession()
+/**
+ * Les portes d'entrée ouvertes (EA-02). La source ne change pas pendant la vie de l'arbre :
+ * l'appel facultatif est donc stable d'un rendu à l'autre.
+ */
+export const useEntryDoors = (): Loadable<EntryDoorsView> => useDataSource().useEntryDoors?.() ?? UNREAD_ENTRY_DOORS
 export const useOpenCountries = () => useDataSource().useOpenCountries()
 export const useCountryHub = (country: CountryCode) => useDataSource().useCountryHub(country)
 export const useFeed = (args: { scope: FeedScope; hubCountry?: CountryCode }) => useDataSource().useFeed(args)
@@ -38,12 +44,12 @@ export const useProfile = (handle: string) => useDataSource().useProfile(handle)
 export const useProfilePostsPage = (args: ProfilePostsPageRequest) => useDataSource().useProfilePostsPage(args)
 export const useRelation = (personId: string) => useDataSource().useRelation(personId)
 export const useMemberSearch = (args: { query: string; country?: CountryCode }) => useDataSource().useMemberSearch(args)
-export const useComments = (postId: string) => useDataSource().useComments(postId)
+export const useCommentsPage = (args: CommentsPageRequest) => useDataSource().useCommentsPage(args)
 export const useSuggestions = () => useDataSource().useSuggestions()
 export const usePost = (postId: string) => useDataSource().usePost(postId)
 export const useBookmarks = () => useDataSource().useBookmarks()
 export const useBookmarksPage = (args: BookmarksPageRequest) => useDataSource().useBookmarksPage(args)
-export const useReplies = (args: { postId: string; commentId: string | null }) => useDataSource().useReplies(args)
+export const useRepliesPage = (args: RepliesPageRequest) => useDataSource().useRepliesPage(args)
 export const useNotifications = () => useDataSource().useNotifications()
 export const useUnreadCount = () => useDataSource().useUnreadCount()
 export const usePage = (handle: string) => useDataSource().usePage(handle)
@@ -72,3 +78,4 @@ export const usePilotMetrics = () => useDataSource().pilotMetrics ?? null
 export const usePageDecisions = () => useDataSource().pageDecisions ?? null
 export const useConversations = () => useDataSource().conversations ?? null
 export const useDemoAccounts = () => useDataSource().demoAccounts ?? null
+export const useCallSettings = () => useDataSource().callSettings ?? null

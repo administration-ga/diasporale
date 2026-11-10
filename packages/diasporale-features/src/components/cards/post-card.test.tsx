@@ -195,3 +195,41 @@ describe("PostCard — partage accessible en lecture seule", () => {
     expect(screen.queryByRole("button", { name: t("post.share") })).not.toBeInTheDocument()
   })
 })
+
+describe("PostCard — l'auteur sait où en est sa publication (FD-04)", () => {
+  const mine = { ...post, author: { kind: "person" as const, id: "person-moi", handle: "membre.a", displayName: "Membre A", badges: [] }, isMine: true }
+
+  it("en relecture : l'avis dit à l'auteur « En relecture », visible de lui seul", () => {
+    const t = getFixedT("fr")
+    mount({ ...mine, moderation: "pending_review" })
+    const banner = document.querySelector('[data-slot="moderation-banner"]')
+    expect(banner).toHaveAttribute("data-state", "pending_review")
+    expect(banner).toHaveTextContent(t("moderation.pending"))
+    expect(banner).toHaveTextContent(t("moderation.pendingHint"))
+  })
+
+  it("refusée : l'avis dit le refus à l'auteur", () => {
+    const t = getFixedT("fr")
+    mount({ ...mine, moderation: "rejected" })
+    expect(document.querySelector('[data-slot="moderation-banner"]')).toHaveTextContent(t("moderation.rejected"))
+  })
+
+  it("publiée : aucun avis, même pour l'auteur", () => {
+    mount({ ...mine, moderation: "published" })
+    expect(document.querySelector('[data-slot="moderation-banner"]')).toBeNull()
+  })
+
+  it.each(["pending_review", "rejected"] as const)("un autre lecteur ne voit jamais l'état « %s »", (state) => {
+    const t = getFixedT("fr")
+    mount({ ...post, moderation: state, isMine: false })
+    expect(document.querySelector('[data-slot="moderation-banner"]')).toBeNull()
+    expect(screen.queryByText(t("moderation.pending"))).not.toBeInTheDocument()
+    expect(screen.queryByText(t("moderation.rejected"))).not.toBeInTheDocument()
+  })
+
+  it("en anglais, le même avis pour l'auteur", () => {
+    const en = getFixedT("en")
+    mount({ ...mine, moderation: "pending_review" }, "en")
+    expect(document.querySelector('[data-slot="moderation-banner"]')).toHaveTextContent(en("moderation.pending"))
+  })
+})

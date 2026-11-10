@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { createEngineContentReports } from "./engine-content-reports"
 
 /**
- * Les signalements de la vague H — fournisseur moteur (G9) : la porte unique
+ * Les signalements de la vague H et des objets communs (G9, MD-02) — fournisseur moteur : la porte unique
  * `moderation/cases` reçoit exactement le réseau, la cible typée et le motif ; la
  * garde commune juge avant tout appel ; les refus deviennent des codes fermés ; le
  * masque de l'onglet ne vaut que pour la personne qui a signalé. Données fictives.
@@ -56,7 +56,7 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe("signalements — fournisseur moteur", () => {
-  it("transmet exactement le réseau DIASPORALE, la cible typée et le motif, pour chacune des neuf natures", async () => {
+  it("transmet exactement le réseau DIASPORALE, la cible typée et le motif, pour chacune des natures du contrat", async () => {
     const { convex, mutation } = client()
     const data = capability(convex)
     expect(data.demonstration).toBe(false)
@@ -65,6 +65,24 @@ describe("signalements — fournisseur moteur", () => {
     }
     expect(mutation.mock.calls.map(([reference, args]) => [getFunctionName(reference as never), args])).toEqual(
       CONTENT_REPORT_KINDS.map((kind) => ["modules/moderation/cases:report", { networkId: "network-diasporale", target: { kind, id: `${kind}-1` }, reason: "misinformation" }]),
+    )
+  })
+
+  it("MD-02 : chaque objet commun part avec sa nature et le réseau DIASPORALE ; le moteur range lui-même le profil au réseau racine", async () => {
+    const { convex, mutation } = client()
+    const data = capability(convex)
+    const targets: readonly ContentReportTarget[] = [
+      { kind: "post", id: "posts_groupe_1" },
+      { kind: "comment", id: "postComments_1" },
+      { kind: "page", id: "pages_association_1" },
+      { kind: "event", id: "events_rencontre_1" },
+      { kind: "person", id: "persons_boris" },
+    ]
+    for (const target of targets) {
+      expect(await data.report({ ...target, reason: "harassment" })).toEqual({ ok: true, value: { created: true } })
+    }
+    expect(mutation.mock.calls.map(([reference, args]) => [getFunctionName(reference as never), args])).toEqual(
+      targets.map((target) => ["modules/moderation/cases:report", { networkId: "network-diasporale", target: { kind: target.kind, id: target.id }, reason: "harassment" }]),
     )
   })
 
@@ -77,7 +95,8 @@ describe("signalements — fournisseur moteur", () => {
   it("juge la nature, l'identifiant et le motif avant tout appel au moteur", async () => {
     const { convex, query, mutation } = client()
     const data = capability(convex)
-    expect(await data.report(hostile({ kind: "post", id: "post-1", reason: "other" }))).toEqual({ ok: false, code: "content_report_target_invalid" })
+    // Une surface du moteur hors contrat (statut : lot SD-01 du moteur) reste refusée avant tout appel.
+    expect(await data.report(hostile({ kind: "story", id: "story-1", reason: "other" }))).toEqual({ ok: false, code: "content_report_target_invalid" })
     expect(await data.report(hostile({ kind: "diasporaJobOffer", id: "", reason: "other" }))).toEqual({ ok: false, code: "content_report_target_invalid" })
     expect(await data.report(hostile({ kind: "diasporaJobOffer", id: "job-1", reason: "spam" }))).toEqual({ ok: false, code: "report_reason_required" })
     expect(query).not.toHaveBeenCalled()

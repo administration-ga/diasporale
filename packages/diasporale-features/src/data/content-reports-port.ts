@@ -1,21 +1,28 @@
 /**
- * Capacité « signalements » du port (G9) — signaler un contenu de la vague H
- * (entraide, mentorat, kit d'arrivée, emploi) par la porte unique de modération du
- * moteur (`moderation/cases`, geste `report`). PROPRIÉTAIRE : chantier « confiance
- * des surfaces ». Facultative : un fournisseur qui ne la sert pas la laisse absente,
- * et l'écran n'offre alors aucun geste « Signaler ».
+ * Capacité « signalements » du port (G9, MD-02) — signaler un objet de DIASPORALE par
+ * la porte unique de modération du moteur (`moderation/cases`, geste `report`).
+ * PROPRIÉTAIRE : chantier « confiance des surfaces », étendu par MD-02 (signaler
+ * depuis chaque objet). Facultative : un fournisseur qui ne la sert pas la laisse
+ * absente, et l'écran n'offre alors aucun geste « Signaler ».
  *
  * CONTRAT FIGÉ des natures signalables (mêmes noms que les surfaces du moteur,
- * `MODERATION_SURFACES`, vérifié à la compilation) : diasporaAidQuestion,
- * diasporaAidAnswer, diasporaAidMission, diasporaMentorProfile,
- * diasporaMentoringRequest (signalée par le mentor), diasporaKitResource (abus ou
- * fausse information, distinct d'une information périmée), diasporaJobOffer,
- * diasporaTalentProfile, diasporaJobApplication (signalée par l'équipe recruteuse).
+ * `MODERATION_SURFACES`, vérifié à la compilation) :
+ *   · vague H : diasporaAidQuestion, diasporaAidAnswer, diasporaAidMission,
+ *     diasporaMentorProfile, diasporaMentoringRequest (signalée par le mentor),
+ *     diasporaKitResource (abus ou fausse information, distinct d'une information
+ *     périmée), diasporaJobOffer, diasporaTalentProfile, diasporaJobApplication
+ *     (signalée par l'équipe recruteuse) ;
+ *   · MD-02 : post (publication du mur d'un groupe d'association, ajout de la
+ *     galerie d'un évènement), comment, page, event (évènement d'association), person
+ *     (profil). Le moteur range le dossier d'un profil au réseau RACINE : le profil
+ *     est commun à tout le moteur (`ROOT_NETWORK_REPORT_KINDS`).
+ * La publication du fil garde son propre geste (`reportPost`, avec précision écrite).
  *
  * Ce que le geste fait, et ne fait pas :
  *   · un motif FERMÉ, ceux du moteur (`REPORT_REASONS`), aucune saisie libre ;
- *   · jamais sur son propre contenu : l'écran n'offre pas le geste, et le moteur le
- *     refuse d'un refus indistinct (`not_found`) ;
+ *   · jamais sur son propre contenu, ni sur la page que l'on administre ou ce qu'elle
+ *     publie : l'écran n'offre pas le geste, et le moteur refuse son propre contenu
+ *     d'un refus indistinct (`not_found`) ;
  *   · rejoué, il ne crée rien de plus : `created: false` dit « déjà signalé » ;
  *   · la cible est aussitôt MASQUÉE pour la personne qui signale ; son auteur
  *     n'apprend jamais qui l'a signalée ;
@@ -37,8 +44,25 @@ export const CONTENT_REPORT_KINDS = [
   "diasporaJobOffer",
   "diasporaTalentProfile",
   "diasporaJobApplication",
+  // MD-02 : les objets communs du moteur, montrés par DIASPORALE.
+  "post",
+  "comment",
+  "page",
+  "event",
+  "person",
 ] as const satisfies readonly ModerationSurface[]
 export type ContentReportKind = (typeof CONTENT_REPORT_KINDS)[number]
+
+/**
+ * Les natures dont le moteur range le dossier au réseau RACINE (ANTSIA), pas à celui
+ * de DIASPORALE : le profil est commun, et une suspension vaut partout. La feuille le dit.
+ */
+export const ROOT_NETWORK_REPORT_KINDS = ["person"] as const satisfies readonly ContentReportKind[]
+
+/** Vrai si le dossier de cette nature est traité par la modération du réseau racine. */
+export function reportReachesRootNetwork(kind: ContentReportKind): boolean {
+  return (ROOT_NETWORK_REPORT_KINDS as readonly ContentReportKind[]).includes(kind)
+}
 
 /** Codes de refus propres aux signalements, traduits par errors.<code> dans leur fragment. */
 export const CONTENT_REPORT_ERROR_CODES = [
@@ -87,7 +111,7 @@ export interface ContentReportsCapability {
   /** Vrai pour la démonstration : rien n'est transmis, la cible est masquée dans ce seul navigateur. */
   readonly demonstration: boolean
   /**
-   * Signaler une cible de la vague H, pour un motif fermé. Rejoué, le fournisseur rend
+   * Signaler une cible du contrat, pour un motif fermé. Rejoué, le fournisseur rend
    * le signalement existant : `created: false` (« déjà signalé »), rien n'est recréé.
    */
   report(input: ContentReportInput): Promise<ActionResult<{ readonly created: boolean }>>

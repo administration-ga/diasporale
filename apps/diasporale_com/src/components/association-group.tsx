@@ -1,8 +1,13 @@
 "use client"
 
-/** DG-010 : entrée volontaire et mur privé du groupe thématique lié à l'association. */
+/**
+ * DG-010 : entrée volontaire et mur privé du groupe thématique lié à l'association.
+ * AS-02 : chaque publication d'autrui du mur se signale (nature « post ») et se masque
+ * aussitôt pour qui l'a signalée ; jamais la sienne, ni par qui anime le groupe (il la
+ * retire lui-même). Le groupe en tant que tel attend sa cible au moteur (MC-01).
+ */
 import { Button, Card, Field, Skeleton, Textarea } from "@diasporale/features"
-import { useAssociationGroups, useSession, type ActionErrorCode, type AssociationGroupView, type AssociationGroupsCapability } from "@diasporale/features/data"
+import { useAssociationGroups, useSession, type ActionErrorCode, type AssociationGroupPostView, type AssociationGroupView, type AssociationGroupsCapability } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import NextLink from "next/link"
@@ -13,6 +18,7 @@ import { z } from "zod"
 
 import { routes } from "@/lib/routes"
 
+import { ReportContentAction, ReportedContent } from "./report-content-sheet"
 import { ServicePager } from "./service-pager"
 import { ConfirmSheet } from "./service-request-sheets"
 import { useReviewTask as useActivityTask } from "./service-review-editor"
@@ -104,16 +110,22 @@ function GroupWall(props: { readonly group: AssociationGroupView; readonly capab
       <h2 id={id} className="text-xl font-semibold">{t("associationActivities.group.wall")}</h2>
       {props.group.canPublish ? <GroupPostForm groupId={props.group.groupId} capability={props.capability} /> : null}
       <ServicePager read={(cursor) => props.capability.usePosts({ groupId: props.group.groupId, cursor })} keyOf={(post) => post.postId} empty={<p className="rounded-lg bg-muted p-4">{t("associationActivities.group.empty")}</p>}>
-        {(posts) => <ul className="flex flex-col gap-3">{posts.map((post) => <li key={post.postId}><Card className="flex min-w-0 flex-col gap-3 p-4">
+        {(posts) => <ul className="flex flex-col gap-3">{posts.map((post) => <li key={post.postId}><ReportedContent target={{ kind: "post", id: post.postId }}><Card className="flex min-w-0 flex-col gap-3 p-4">
           <div className="flex flex-wrap justify-between gap-2"><p className="font-semibold">{post.author.displayName ?? t("associationActivities.group.authorUnavailable")}</p><time dateTime={new Date(post.createdAt).toISOString()} className="text-sm text-muted-foreground">{formatter.format(post.createdAt)}</time></div>
           <p className="whitespace-pre-line break-words">{post.body}</p>
           {post.moderation === "pending_review" ? <p role="status" className="text-sm text-muted-foreground">{t("associationActivities.pending")}</p> : null}
           {post.canRemove ? <Button className="self-start" variant="ghost" size="sm" onClick={() => setRemove({ postId: post.postId, isMine: post.isMine })}>{t("associationActivities.group.removePost")}</Button> : null}
-        </Card></li>)}</ul>}
+          {canReportGroupPost(post) ? <ReportContentAction target={{ kind: "post", id: post.postId }} className="self-start" /> : null}
+        </Card></ReportedContent></li>)}</ul>}
       </ServicePager>
       {remove ? <ConfirmSheet open onOpenChange={(open) => { if (!open) setRemove(null) }} title={t("associationActivities.group.removePost")} description={t("associationActivities.group.removeDescription")} confirmLabel={t("associationActivities.group.removePost")} destructive onConfirm={withdraw} /> : null}
     </section>
   )
+}
+
+/** AS-02 : une publication publiée d'autrui ; qui anime le groupe la retire lui-même au lieu de la signaler. */
+function canReportGroupPost(post: AssociationGroupPostView): boolean {
+  return !post.isMine && !post.canRemove && post.moderation === "published"
 }
 
 const postSchema = z.object({ body: z.string().trim().min(1, "post_empty").max(2000, "post_too_long") })

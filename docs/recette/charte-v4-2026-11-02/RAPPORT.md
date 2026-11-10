@@ -1,12 +1,12 @@
 # Charte v4 de DIASPORALE : ce qu'elle changerait — 2 novembre 2026
 
-**Le propriétaire a adopté la v4 le 2 novembre 2026, et elle est en ligne sur https://diasporale-demo.vercel.app depuis 23 h 26.** Comparatif des écrans : `comparaison-v3-v4.jpg`. Rendu en ligne, sur le vrai moteur : `en-ligne-fil-1280.jpg`, `en-ligne-fil-390.jpg`.
+**Le propriétaire a adopté la v4 le 2 novembre 2026, et elle est en ligne sur le site de démonstration de DIASPORALE depuis 23 h 26.** Comparatif des écrans : `comparaison-v3-v4.jpg`. Rendu en ligne, sur le vrai moteur : `en-ligne-fil-1280.jpg`, `en-ligne-fil-390.jpg`.
 
 ## Où on en est
 
 | Question | Constat |
 | --- | --- |
-| Que servait `diasporale-demo.vercel.app` avant la publication ? | **La v3** : 204 jetons égaux sur 210 avec la v3, 99 sur 137 avec la v4 ; IBM Plex (feuilles du déploiement `dpl_AHPTXYChXkVMRYwFtFwHhDVQaaTo`, relues le 2/11) |
+| Que servait le site de démonstration avant la publication ? | **La v3** : 204 jetons égaux sur 210 avec la v3, 99 sur 137 avec la v4 ; IBM Plex (feuilles du déploiement précédent, relues le 2/11) |
 | D'où vient la v4 ? | D'une demande du propriétaire du 20/10, écrite en tête de `diasporale.css` : la maquette « ANTSIA — sept thèmes, toutes les pages » devient la charte de DIASPORALE |
 | Où est-elle ? | Dans l'arbre local et dans la copie publiée d'ANTSIA, où elle n'a aucun effet visible (`data-charte="diasporale…"`) ; dans aucun `origin/main` |
 | Qu'en dit la documentation ? | `docs/03_CHARTE_DIASPORALE.md` et la page `/charte` en restent à la version 3.3 |
@@ -56,10 +56,10 @@ Relevés sur les captures :
 
 | | |
 | --- | --- |
-| Site | https://diasporale-demo.vercel.app, le seul site DIASPORALE en ligne |
-| Version | `diasporale-77f518658024-antsia-26741caadd16-demo`, `dpl_4c5BjhiHqT66RwRvkAM7RdP85fKz` |
-| Retour arrière | promouvoir `dpl_AHPTXYChXkVMRYwFtFwHhDVQaaTo`, qui sert la v3 |
-| Non touchés | le moteur Convex ; `antsia.vercel.app`, toujours `main-8ba2da363777` |
+| Site | le site de démonstration de DIASPORALE, le seul site DIASPORALE en ligne |
+| Version | `diasporale-77f518658024-antsia-26741caadd16-demo` (l'identifiant du déploiement chez l'hébergeur est retiré du dépôt public, lot LX-06) |
+| Retour arrière | promouvoir le déploiement précédent, qui sert la v3 |
+| Non touchés | le moteur Convex ; le site de démonstration d'ANTSIA, toujours `main-8ba2da363777` |
 
 Par rapport au front précédent, le code applicatif ne change que par `globals.css`, la page `/charte` et des commentaires.
 
