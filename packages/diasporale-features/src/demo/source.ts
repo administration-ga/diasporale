@@ -476,9 +476,10 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
         if (!facts.ok) return facts
         // Le stockage du navigateur ne garderait pas une vidéo d'une visite à l'autre : pas de vidéo en démonstration.
         if (facts.value.kind === "video") return { ok: false, code: "feature_unavailable" }
+        // La règle du moteur (FD-01) : ré-encodée par son module, sans métadonnées, refus fermés ; aucun dépôt.
         const image = await downscaleImage(file, DEMO_IMAGE_MAX_SIDE)
-        if (!image) return { ok: false, code: "media_upload_failed" }
-        return { ok: true, value: store.stageMedia({ kind: "image", url: image.dataUrl, width: image.width, height: image.height }) }
+        if (!image.ok) return image
+        return { ok: true, value: store.stageMedia({ kind: "image", url: image.value.dataUrl, width: image.value.width, height: image.value.height }) }
       },
       publish: (input) => store.publish(input),
       react: (postId, kind) => store.react(postId, kind),
