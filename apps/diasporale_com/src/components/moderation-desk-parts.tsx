@@ -10,11 +10,15 @@
 import type { CountryCode } from "@diasporale/domain"
 import { Button, CountryTag, Field, PostMediaGrid, Skeleton, Textarea, formatDate, handleRefusal, normalizeHandle, residenceCountryOptions } from "@diasporale/features"
 import {
+  DESK_BLOCKED_TERM_LENGTH,
+  DESK_BLOCKED_TERMS_MAX,
+  DESK_POLICY_BOUNDS,
   DESK_REASON_MAX,
   DESK_REASON_MIN,
   DESK_SURFACES,
   DESK_TEAM_NAME_MAX,
   DESK_TEAM_NAME_MIN,
+  DESK_WINDOW_MINUTES,
   useOpenCountries,
   type DeskCaseLevel,
   type DeskGround,
@@ -33,8 +37,22 @@ import { z } from "zod"
 
 export const deskSelectClass = "h-11 w-full rounded-md border border-input bg-card px-3 text-[15px] focus-visible:shadow-focus aria-invalid:border-destructive"
 
-/** Les bornes que citent les phrases d'erreur du guichet (motif, nom d'équipe). */
-export const DESK_ERROR_VALUES = { min: DESK_REASON_MIN, max: DESK_REASON_MAX, nameMin: DESK_TEAM_NAME_MIN, nameMax: DESK_TEAM_NAME_MAX } as const
+/** Les bornes que citent les phrases d'erreur du guichet (motif, nom d'équipe, réglages et mots bloqués du moteur). */
+export const DESK_ERROR_VALUES = {
+  min: DESK_REASON_MIN,
+  max: DESK_REASON_MAX,
+  nameMin: DESK_TEAM_NAME_MIN,
+  nameMax: DESK_TEAM_NAME_MAX,
+  linksMin: DESK_POLICY_BOUNDS.maxLinks.min,
+  linksMax: DESK_POLICY_BOUNDS.maxLinks.max,
+  writesMin: DESK_POLICY_BOUNDS.maxWrites.min,
+  writesMax: DESK_POLICY_BOUNDS.maxWrites.max,
+  windowMin: DESK_WINDOW_MINUTES.min,
+  windowMax: DESK_WINDOW_MINUTES.max,
+  termMin: DESK_BLOCKED_TERM_LENGTH.min,
+  termMax: DESK_BLOCKED_TERM_LENGTH.max,
+  termsMax: DESK_BLOCKED_TERMS_MAX,
+} as const
 
 /** Le motif d'une décision, tel que le guichet le borne (clé d'erreur fermée). */
 export const deskReasonSchema = z.string().trim().min(DESK_REASON_MIN, "moderation_desk_reason_length").max(DESK_REASON_MAX, "moderation_desk_reason_length")

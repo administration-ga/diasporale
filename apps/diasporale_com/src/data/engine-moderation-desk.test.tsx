@@ -1,14 +1,26 @@
 // @vitest-environment jsdom
 import type { EngineAuthClient } from "@antsia/api/auth-client"
 import { CONTENT_REPORT_REASONS } from "@antsia/social-domain/moderation"
-import { DESK_GROUNDS, DESK_PAGE_SIZE, SERVICE_REVIEW_REPORT_REASONS, type DeskQueueRequest } from "@diasporale/features/data"
+import { DESK_BLOCKED_TERMS_PAGE, DESK_GROUNDS, DESK_PAGE_SIZE, SERVICE_REVIEW_REPORT_REASONS, type DeskQueueRequest } from "@diasporale/features/data"
 import { cleanup, renderHook } from "@testing-library/react"
 import type { ConvexReactClient } from "convex/react"
 import { getFunctionName } from "convex/server"
 import { ConvexError } from "convex/values"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { createEngineModerationDesk, engineZone, moderationDeskErrorCode, responsibleRoleErrorCode, toCaseView, toDeadlineView, toPendingView, toPreviewView } from "./engine-moderation-desk"
+import {
+  blockedTermErrorCode,
+  createEngineModerationDesk,
+  engineZone,
+  moderationDeskErrorCode,
+  moderationPolicyErrorCode,
+  responsibleRoleErrorCode,
+  toBlockedTermsWindow,
+  toCaseView,
+  toDeadlineView,
+  toPendingView,
+  toPreviewView,
+} from "./engine-moderation-desk"
 
 /**
  * L'adaptateur du guichet de modération sans moteur : lectures réactives jouées
@@ -42,6 +54,7 @@ const DESK_ROW = {
   networkWide: true,
   canReviewAppeals: false,
   canManageTeams: false,
+  canManagePolicy: false,
   teams: [{ teamId: "team-fr", name: "France (fixture)", scope: null, isMember: true }],
 }
 const CASE_ROW = {
@@ -450,5 +463,78 @@ describe("Guichet — responsables du réseau (MD-01)", () => {
     expect(responsibleRoleErrorCode(engineError({ code: "policyRefused" }))).toBe("moderation_desk_limit")
     expect(responsibleRoleErrorCode(engineError({ code: "rateLimited", retryAfterMs: 1000 }))).toBe("rate_limited")
     expect(moderationDeskErrorCode(engineError({ code: "invalidArgument", rule: "NETWORK_LAST_ADMIN", params: {} }))).toBe("moderation_desk_last_admin")
+  })
+})
+
+describe("Guichet — réglages de modération (MD-04)", () => {
+  const POLICIES = "modules/moderation/cases:policies"
+  const TERMS = "modules/moderation/cases:blockedTermsPage"
+  const SET_POLICY = "modules/moderation/cases:setPolicy"
+  const SET_TERM = "modules/moderation/cases:setBlockedTerm"
+  const DEFAULTS = { preReview: false, maxLinks: 2, maxWrites: 30, windowMs: 60_000 }
+  const SETTINGS_ROW = {
+    defaults: DEFAULTS,
+    surfaces: [
+      { surface: "event", withoutPolicy: "defaults", policy: null },
+      { surface: "diasporaJobOffer", withoutPolicy: "unchecked", policy: { preReview: true, maxLinks: 1, maxWrites: 10, windowMs: 120_000, updatedAt: NOW - DAY } },
+    ],
+  }
+  const POLICY = { personId: PERSON._id, surface: "diasporaJobOffer" as const, preReview: true, maxLinks: 2, maxWrites: 30, windowMs: 60_000, reason: "  Relecture des offres d'emploi au lancement.  " }
+
+  it("lit les réglages et les défauts tels que le moteur les sert, pour le seul réseau diasporale", () => {
+    respondWith({ [POLICIES]: SETTINGS_ROW })
+    const { desk } = setup()
+    const { result, rerender } = renderHook(() => desk.useSettings(PERSON._id))
+    expect(result.current).toEqual({ status: "ready", data: SETTINGS_ROW })
+    const first = result.current
+    rerender()
+    expect(result.current).toBe(first)
+    expect(lastArgs(POLICIES)).toEqual({ networkId: DIASPORALE._id })
+    // Un modérateur ou un simple membre : le refus indistinct du moteur, sans son détail.
+    respondWith({ [POLICIES]: engineError({ code: "notFound", detail: "PRIVATE_DETAIL" }) })
+    rerender()
+    expect(result.current).toEqual({ status: "error", code: "not_found" })
+  })
+
+  it("lit les mots bloqués par fenêtres de cinquante et ferme le curseur d'une fin de liste", () => {
+    respondWith({ [TERMS]: { page: [{ termId: "term-1", term: "consulat", updatedAt: NOW }], isDone: true, continueCursor: "fin" } })
+    const { desk } = setup()
+    const { result } = renderHook(() => desk.useBlockedTerms({ personId: PERSON._id, cursor: "c1" }))
+    expect(lastArgs(TERMS)).toEqual({ networkId: DIASPORALE._id, paginationOpts: { cursor: "c1", numItems: DESK_BLOCKED_TERMS_PAGE } })
+    expect(result.current).toEqual({ status: "ready", data: { items: [{ termId: "term-1", term: "consulat", updatedAt: NOW }], continueCursor: null, isDone: true } })
+    expect(toBlockedTermsWindow({ page: [], isDone: false, continueCursor: "suite" })).toEqual({ items: [], continueCursor: "suite", isDone: false })
+  })
+
+  it("pose un réglage par le moteur, motif compris (le moteur le journalise) ; motif et bornes jugés avant tout appel", async () => {
+    const { desk, calls, writes } = setup({ [SET_POLICY]: () => ({ policyId: "policy-1" }) })
+    expect(await desk.setPolicy({ ...POLICY, reason: "Court" })).toEqual({ ok: false, code: "moderation_desk_reason_length" })
+    expect(await desk.setPolicy({ ...POLICY, maxLinks: 21 })).toEqual({ ok: false, code: "moderation_desk_links_bounds" })
+    expect(await desk.setPolicy({ ...POLICY, windowMs: 500 })).toEqual({ ok: false, code: "moderation_desk_window_bounds" })
+    expect(calls).toEqual([])
+    expect(await desk.setPolicy(POLICY)).toEqual({ ok: true, value: null })
+    expect(writes().map(({ name, args }) => [name, args])).toEqual([
+      [SET_POLICY, { networkId: DIASPORALE._id, surface: "diasporaJobOffer", preReview: true, maxLinks: 2, maxWrites: 30, windowMs: 60_000, reason: "Relecture des offres d'emploi au lancement." }],
+    ])
+    const other = setup({ "modules/people/persons:getMyPerson": () => ({ _id: "autre-personne" }), [SET_POLICY]: () => ({ policyId: "policy-2" }) })
+    expect(await other.desk.setPolicy(POLICY)).toEqual({ ok: false, code: "not_found" })
+    expect(other.writes()).toEqual([])
+  })
+
+  it("bloque et débloque un mot par le moteur ; traduit ses refus en codes fermés", async () => {
+    const { desk, writes } = setup({ [SET_TERM]: () => ({ termId: "term-1" }) })
+    expect(await desk.setBlockedTerm({ personId: PERSON._id, term: " é ", active: true, reason: "Mot réservé aux institutions." })).toEqual({ ok: false, code: "moderation_desk_term_length" })
+    expect(await desk.setBlockedTerm({ personId: PERSON._id, term: "  Consulat ", active: true, reason: "Mot réservé aux institutions." })).toEqual({ ok: true, value: null })
+    expect(await desk.setBlockedTerm({ personId: PERSON._id, term: "consulat", active: false, reason: "Le mot ne pose plus de difficulté." })).toEqual({ ok: true, value: null })
+    expect(writes().map(({ args }) => [args.term, args.active, args.reason])).toEqual([
+      ["Consulat", true, "Mot réservé aux institutions."],
+      ["consulat", false, "Le mot ne pose plus de difficulté."],
+    ])
+    const full = setup({ [SET_TERM]: () => { throw engineError({ code: "policyRefused" }) } })
+    expect(await full.desk.setBlockedTerm({ personId: PERSON._id, term: "ambassade", active: true, reason: "Mot réservé aux institutions." })).toEqual({ ok: false, code: "moderation_desk_terms_full" })
+    const refused = setup({ [SET_TERM]: () => { throw engineError({ code: "notFound" }) } })
+    expect(await refused.desk.setBlockedTerm({ personId: PERSON._id, term: "ambassade", active: true, reason: "Mot réservé aux institutions." })).toEqual({ ok: false, code: "not_found" })
+    expect(blockedTermErrorCode(engineError({ code: "invalidArgument", field: "term" }))).toBe("moderation_desk_term_length")
+    expect(moderationPolicyErrorCode(engineError({ code: "invalidArgument", field: "maxWrites" }))).toBe("moderation_desk_writes_bounds")
+    expect(moderationPolicyErrorCode(engineError({ code: "notFound" }))).toBe("not_found")
   })
 })

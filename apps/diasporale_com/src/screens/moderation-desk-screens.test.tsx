@@ -4,6 +4,8 @@ import type {
   ActionResult,
   DeskAppealDecisionInput,
   DeskAppealView,
+  DeskBlockedTermInput,
+  DeskBlockedTermView,
   DeskCandidateView,
   DeskCaseDetailView,
   DeskCaseView,
@@ -13,12 +15,14 @@ import type {
   DeskDecisionInput,
   DeskPage,
   DeskPendingView,
+  DeskPolicyInput,
   DeskPreviewView,
   DeskQueueRequest,
   DeskResponsibleRoleInput,
   DeskResponsibleRoleResult,
   DeskResponsiblesView,
   DeskRosterView,
+  DeskSettingsView,
   DeskTeamMemberInput,
   Loadable,
   MembershipView,
@@ -97,9 +101,21 @@ const MODERATOR: ModerationDeskView = {
   networkWide: true,
   canReviewAppeals: false,
   canManageTeams: false,
+  canManagePolicy: false,
   teams: [{ teamId: "team-fr", name: "Équipe France (fixture)", scope: null, isMember: true }],
 }
-const ADMIN: ModerationDeskView = { ...MODERATOR, role: "network_admin", canReviewAppeals: true, canManageTeams: true }
+const ADMIN: ModerationDeskView = { ...MODERATOR, role: "network_admin", canReviewAppeals: true, canManageTeams: true, canManagePolicy: true }
+
+/** MD-04 : les défauts servis par le moteur (valeurs de fixture, distinctes de celles du moteur) et deux rubriques. */
+const SETTINGS: DeskSettingsView = {
+  defaults: { preReview: false, maxLinks: 3, maxWrites: 12, windowMs: 2 * 60 * MINUTE },
+  surfaces: [
+    { surface: "event", withoutPolicy: "defaults", policy: null },
+    { surface: "diasporaJobOffer", withoutPolicy: "unchecked", policy: { preReview: true, maxLinks: 1, maxWrites: 5, windowMs: 10 * MINUTE, updatedAt: NOW - HOUR } },
+    { surface: "commerceOffer", withoutPolicy: "held", policy: null },
+  ],
+}
+const TERM: DeskBlockedTermView = { termId: "term-1", term: "consulat", updatedAt: NOW - HOUR }
 
 const CASE: DeskCaseView = {
   reportId: "report-1", surface: "post", country: "FR", ground: "harassment", status: "open", level: "network",
@@ -167,6 +183,11 @@ function fakeDesk(options: {
   const responsibles: Loadable<DeskResponsiblesView> = ready(RESPONSIBLES)
   const setResponsibleRole = vi.fn(async (input: DeskResponsibleRoleInput): Promise<ActionResult<DeskResponsibleRoleResult>> =>
     options.roleResult?.(input) ?? { ok: true, value: { role: input.role, changed: true } })
+  const settings: Loadable<DeskSettingsView> = ready(SETTINGS)
+  const terms = windowOf([TERM])
+  const settingsReads: string[] = []
+  const setPolicy = vi.fn(async (_input: DeskPolicyInput): Promise<ActionResult> => OK)
+  const setBlockedTerm = vi.fn(async (_input: DeskBlockedTermInput): Promise<ActionResult> => OK)
   const desk: ModerationDeskCapability = {
     demonstration: options.demonstration ?? false,
     useDesk: () => view,
@@ -192,8 +213,15 @@ function fakeDesk(options: {
     setTeamMember,
     useResponsibles: () => responsibles,
     setResponsibleRole,
+    useSettings: (personId) => {
+      settingsReads.push(personId)
+      return settings
+    },
+    useBlockedTerms: () => terms,
+    setPolicy,
+    setBlockedTerm,
   }
-  return { desk, queueReads, deadlineReads, decide, decideAppeal, setTeamMember, findMember, setResponsibleRole }
+  return { desk, queueReads, deadlineReads, decide, decideAppeal, setTeamMember, findMember, setResponsibleRole, settingsReads, setPolicy, setBlockedTerm }
 }
 
 const tree = () => <I18nProvider locale="fr"><ModerationDesk membership={MEMBER} /></I18nProvider>
@@ -609,6 +637,125 @@ describe("Guichet — responsables du réseau (MD-01)", () => {
   })
 })
 
+describe("Guichet — réglages de modération (MD-04)", () => {
+  it("n'offre pas l'onglet « Réglages » à un modérateur, et ne lit rien pour lui même par l'adresse", () => {
+    mocks.params = new URLSearchParams("onglet=reglages")
+    const fake = fakeDesk()
+    mocks.desk = fake.desk
+    render(tree())
+    const nav = screen.getByRole("navigation", { name: text("moderationDesk.tabsLabel") })
+    expect(within(nav).queryByRole("link", { name: text("moderationDesk.tab.settings") })).toBeNull()
+    expect(screen.getByText(text("moderationDesk.settings.restricted"))).toBeInTheDocument()
+    expect(fake.settingsReads).toEqual([])
+    expect(screen.queryByRole("heading", { name: text("moderationDesk.settings.terms.title") })).toBeNull()
+  })
+
+  it("dit ce qui vaut sans réglage en lisant les défauts servis, et les contenus relus d'office", () => {
+    mocks.params = new URLSearchParams("onglet=reglages")
+    const fake = fakeDesk({ view: ready(ADMIN) })
+    mocks.desk = fake.desk
+    render(tree())
+    const nav = screen.getByRole("navigation", { name: text("moderationDesk.tabsLabel") })
+    expect(within(nav).getByRole("link", { name: text("moderationDesk.tab.settings") })).toHaveAttribute("aria-current", "page")
+    expect(fake.settingsReads).toContain(ME)
+    // Les nombres viennent des défauts servis (fixture : 3 liens, 12 écritures en 2 heures), jamais du texte.
+    expect(screen.getByText(text("moderationDesk.settings.defaults.links", { count: 3 }))).toBeInTheDocument()
+    expect(screen.getByText(text("moderationDesk.settings.defaults.writes", { count: 12, window: translate("moderationDesk.settings.window.hours", { count: 2 }) }))).toBeInTheDocument()
+    for (const content of ["associationEvents", "reviews", "reviewReplies", "eventGallery"]) {
+      expect(screen.getByText(text(`moderationDesk.settings.held.${content}`))).toBeInTheDocument()
+    }
+    // Les rubriques de DIASPORALE seules : « Évènement » sans réglage dit sa relecture d'office ; l'offre de boutique n'est pas montrée.
+    const event = screen.getByRole("heading", { name: text("moderationDesk.surface.event") }).closest("li")
+    if (!event) throw new Error("ligne « Évènement » absente")
+    expect(within(event).getByText(text("moderationDesk.settings.without.defaults"))).toBeInTheDocument()
+    expect(within(event).getByText(text("moderationDesk.settings.heldNote.associationEvents"))).toBeInTheDocument()
+    const jobs = screen.getByRole("heading", { name: text("moderationDesk.surface.diasporaJobOffer") }).closest("li")
+    if (!jobs) throw new Error("ligne « Offre d'emploi de la diaspora » absente")
+    expect(within(jobs).getByText(text("moderationDesk.settings.policy.links", { count: 1 }))).toBeInTheDocument()
+    expect(within(jobs).getByText(text("moderationDesk.settings.policy.writes", { count: 5, window: translate("moderationDesk.settings.window.minutes", { count: 10 }) }))).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: text("moderationDesk.surface.commerceOffer") })).toBeNull()
+    expect(screen.getByText(TERM.term)).toBeInTheDocument()
+  })
+
+  it("pose un réglage motivé : motif exigé, valeurs et motif transmis au moteur qui le journalise", async () => {
+    mocks.params = new URLSearchParams("onglet=reglages")
+    const fake = fakeDesk({ view: ready(ADMIN) })
+    mocks.desk = fake.desk
+    const user = userEvent.setup()
+    render(tree())
+    const event = screen.getByRole("heading", { name: text("moderationDesk.surface.event") }).closest("li")
+    if (!event) throw new Error("ligne « Évènement » absente")
+    await user.click(within(event).getByRole("button", { name: text("moderationDesk.settings.policy.set") }))
+    // Le titre porte des espaces insécables : la feuille se trouve par son rôle, son titre se lit dedans.
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).getByText(text("moderationDesk.settings.sheet.title", { surface: translate("moderationDesk.surface.event") }))).toBeInTheDocument()
+    // Le formulaire part des défauts servis ; il dit qu'il lève la relecture d'office des évènements d'association.
+    expect(within(dialog).getByLabelText(text("moderationDesk.settings.sheet.maxLinks"))).toHaveValue(3)
+    expect(within(dialog).getByLabelText(text("moderationDesk.settings.sheet.window"))).toHaveValue(120)
+    expect(within(dialog).getByText(text("moderationDesk.settings.sheet.liftsHeld.associationEvents"))).toBeInTheDocument()
+    await user.click(within(dialog).getByRole("button", { name: text("moderationDesk.settings.sheet.submit") }))
+    expect(await within(dialog).findByText(text("errors.moderation_desk_reason_length", DESK_ERROR_VALUES))).toBeInTheDocument()
+    expect(fake.setPolicy).not.toHaveBeenCalled()
+    await user.click(within(dialog).getByLabelText(text("moderationDesk.settings.sheet.preReview")))
+    const links = within(dialog).getByLabelText(text("moderationDesk.settings.sheet.maxLinks"))
+    await user.clear(links)
+    await user.type(links, "1")
+    await user.type(within(dialog).getByLabelText(text("moderationDesk.decision.reason")), "Relecture des évènements au lancement du pilote.")
+    await act(async () => {
+      await user.click(within(dialog).getByRole("button", { name: text("moderationDesk.settings.sheet.submit") }))
+    })
+    await waitFor(() => expect(fake.setPolicy).toHaveBeenCalledExactlyOnceWith({
+      personId: ME, surface: "event", preReview: true, maxLinks: 1, maxWrites: 12, windowMs: 2 * 60 * MINUTE, reason: "Relecture des évènements au lancement du pilote.",
+    }))
+    expect(mocks.success).toHaveBeenCalledWith(translate("moderationDesk.settings.sheet.saved", { surface: translate("moderationDesk.surface.event") }))
+  })
+
+  it("refuse une valeur hors des bornes du moteur avant tout envoi", async () => {
+    mocks.params = new URLSearchParams("onglet=reglages")
+    const fake = fakeDesk({ view: ready(ADMIN) })
+    mocks.desk = fake.desk
+    const user = userEvent.setup()
+    render(tree())
+    const jobs = screen.getByRole("heading", { name: text("moderationDesk.surface.diasporaJobOffer") }).closest("li")
+    if (!jobs) throw new Error("ligne absente")
+    await user.click(within(jobs).getByRole("button", { name: text("moderationDesk.settings.policy.change") }))
+    const dialog = await screen.findByRole("dialog")
+    const links = within(dialog).getByLabelText(text("moderationDesk.settings.sheet.maxLinks"))
+    await user.clear(links)
+    await user.type(links, String(DESK_ERROR_VALUES.linksMax + 1))
+    await user.type(within(dialog).getByLabelText(text("moderationDesk.decision.reason")), "Plafond de liens trop large pour le test.")
+    await user.click(within(dialog).getByRole("button", { name: text("moderationDesk.settings.sheet.submit") }))
+    expect(await within(dialog).findByText(text("errors.moderation_desk_links_bounds", DESK_ERROR_VALUES))).toBeInTheDocument()
+    expect(fake.setPolicy).not.toHaveBeenCalled()
+  })
+
+  it("bloque un mot par un geste motivé, puis débloque un mot de la liste", async () => {
+    mocks.params = new URLSearchParams("onglet=reglages")
+    const fake = fakeDesk({ view: ready(ADMIN) })
+    mocks.desk = fake.desk
+    const user = userEvent.setup()
+    render(tree())
+    const block = screen.getByRole("heading", { name: text("moderationDesk.settings.terms.title") }).closest("section")
+    if (!block) throw new Error("bloc des mots bloqués absent")
+    await user.type(within(block).getByLabelText(text("moderationDesk.settings.terms.term")), "Ambassade")
+    await user.type(within(block).getByLabelText(text("moderationDesk.decision.reason")), "Nom réservé aux postes diplomatiques.")
+    await act(async () => {
+      await user.click(within(block).getByRole("button", { name: text("moderationDesk.settings.terms.add") }))
+    })
+    await waitFor(() => expect(fake.setBlockedTerm).toHaveBeenCalledExactlyOnceWith({ personId: ME, term: "Ambassade", active: true, reason: "Nom réservé aux postes diplomatiques." }))
+    expect(mocks.success).toHaveBeenCalledWith(translate("moderationDesk.settings.terms.added", { term: "ambassade" }))
+
+    await user.click(within(block).getByRole("button", { name: text("moderationDesk.settings.terms.remove") }))
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).getByText(text("moderationDesk.settings.terms.removeTitle", { term: TERM.term }))).toBeInTheDocument()
+    await user.type(within(dialog).getByLabelText(text("moderationDesk.decision.reason")), "Le mot ne vise plus aucune usurpation.")
+    await act(async () => {
+      await user.click(within(dialog).getByRole("button", { name: text("moderationDesk.settings.terms.removeConfirm") }))
+    })
+    await waitFor(() => expect(fake.setBlockedTerm).toHaveBeenLastCalledWith({ personId: ME, term: TERM.term, active: false, reason: "Le mot ne vise plus aucune usurpation." }))
+  })
+})
+
 describe("Guichet — rôle posé puis retiré, effet au rendu suivant (LX-03)", () => {
   it("un administrateur nommé voit les recours et les responsables ; rétrogradé il les perd, retiré le guichet se dit indisponible", () => {
     mocks.params = new URLSearchParams("onglet=equipe")
@@ -617,7 +764,7 @@ describe("Guichet — rôle posé puis retiré, effet au rendu suivant (LX-03)",
     mocks.desk = { ...fake.desk, useDesk: () => current } satisfies ModerationDeskCapability
     const { rerender } = render(tree())
     const links = () => within(screen.getByRole("navigation", { name: text("moderationDesk.tabsLabel") })).getAllByRole("link").map((link) => link.getAttribute("href"))
-    expect(links()).toEqual(["/moderation?onglet=file", "/moderation?onglet=recours", "/moderation?onglet=equipe"])
+    expect(links()).toEqual(["/moderation?onglet=file", "/moderation?onglet=recours", "/moderation?onglet=equipe", "/moderation?onglet=reglages"])
     expect(screen.getByRole("heading", { name: text("moderationDesk.responsibles.title") })).toBeInTheDocument()
 
     // Rétrogradé à la modération du réseau : plus de recours, plus de nomination ; la file reste.

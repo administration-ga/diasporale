@@ -25,7 +25,12 @@
  *     prévient personne ;
  *   · les règles sont celles du moteur et du port : motif borné, mesures, durée,
  *     personne partie au dossier, refus indistinct pour une autre session ou un
- *     membre qui n'agit pas.
+ *     membre qui n'agit pas ;
+ *   · MD-04 : aucun réglage ni mot bloqué au départ, comme un réseau neuf ; les
+ *     défauts sont ceux du moteur (`MODERATION_POLICY_DEFAULTS`) et la règle
+ *     « sans réglage » celle de `moderationWithoutPolicy` du moteur. Un réglage
+ *     ou un mot posé ici (administration seule, motif, bornes du moteur) reste
+ *     dans la mémoire de la page : il ne retient ni ne publie rien.
  * Aucune statistique : une fenêtre liste, elle ne compte rien.
  */
 import { reportDecisionDueAt, reportLegalBasis } from "@antsia/social-domain/moderation"
@@ -34,13 +39,19 @@ import { useMemo, useSyncExternalStore } from "react"
 
 import type { ActionErrorCode } from "../data/errors"
 import {
+  DESK_BLOCKED_TERMS_MAX,
   DESK_DEADLINES_MAX,
+  DESK_POLICY_DEFAULTS,
+  DESK_SURFACES,
+  deskAdmissibleTerm,
+  deskPolicyRefusal,
   deskReasonRefusal,
   deskSanctions,
   deskTeamNameRefusal,
   deskZoneFromKey,
   deskZoneKey,
   isInDeskZone,
+  type DeskBlockedTermView,
   type DeskCaseDetailView,
   type DeskCaseView,
   type DeskDeadlineLane,
@@ -52,14 +63,17 @@ import {
   type DeskPage,
   type DeskParty,
   type DeskPendingView,
+  type DeskPolicyValues,
   type DeskPreviewView,
   type DeskResponsibleRole,
   type DeskResponsibleView,
   type DeskResponsiblesView,
   type DeskRoleChoice,
   type DeskRosterView,
+  type DeskSettingsView,
   type DeskSurface,
   type DeskTeamMemberView,
+  type DeskWithoutPolicy,
   type DeskAppealView,
   type ModerationDeskCapability,
   type ModerationDeskView,
@@ -157,6 +171,22 @@ interface DeskWorld {
    * geste ne l'a changé ; toute autre personne est simple membre.
    */
   readonly roles: Map<string, DeskRoleChoice>
+  /** MD-04 : les réglages posés dans ce jeu, par rubrique. */
+  readonly policies: Map<DeskSurface, DeskPolicyValues & { readonly updatedAt: number }>
+  /** MD-04 : les mots bloqués actifs, par mot normalisé. */
+  readonly blockedTerms: Map<string, { readonly termId: string; readonly updatedAt: number }>
+  termSequence: number
+}
+
+/**
+ * MD-04 : la règle du moteur pour une rubrique sans réglage (`moderationWithoutPolicy`) —
+ * la vague H de DIASPORALE (natures `diaspora…`) publiée sans règle, les avis et les
+ * contenus commerciaux relus d'office, le reste aux défauts prudents.
+ */
+const HELD_WITHOUT_POLICY: ReadonlySet<DeskSurface> = new Set<DeskSurface>(["serviceReview", "serviceReviewReply", "commerceOffer", "commerceStorefront", "commerceJob"])
+function withoutPolicyOf(surface: DeskSurface): DeskWithoutPolicy {
+  if (surface.startsWith("diaspora")) return "unchecked"
+  return HELD_WITHOUT_POLICY.has(surface) ? "held" : "defaults"
 }
 
 /** Ce que la personne de la session lit et décide, selon son rôle fictif (mêmes règles que `myDesk`). */
@@ -260,7 +290,10 @@ function seedWorld(world: number): DeskWorld {
     members: new Map<string, DemoMemberLabel>([[FICTIVE_MODERATOR.personId, FICTIVE_MODERATOR.label]]),
     removed: new Set<string>(),
   }
-  return { world, cases, pending, appeals, decided: new Map(), reviewed: new Set(), settled: new Set(), teams: [team], teamSequence: 1, roles: new Map() }
+  return {
+    world, cases, pending, appeals, decided: new Map(), reviewed: new Set(), settled: new Set(), teams: [team], teamSequence: 1, roles: new Map(),
+    policies: new Map(), blockedTerms: new Map(), termSequence: 0,
+  }
 }
 
 /**
@@ -416,6 +449,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
             networkWide: capacity.networkWide,
             canReviewAppeals: capacity.admin,
             canManageTeams: capacity.admin,
+            canManagePolicy: capacity.admin,
             teams,
           },
         }
@@ -674,6 +708,73 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
       desk.roles.set(target, input.role)
       emit()
       return { ok: true, value: { role: input.role, changed: true } }
+    },
+
+    useSettings(personId) {
+      const version = useSnapshot()
+      return useMemo((): Loadable<DeskSettingsView> => {
+        if (version === null) return LOADING
+        const refusal = viewerRefusal(personId)
+        if (refusal !== null) return refused(refusal)
+        const desk = deskWorld()
+        if (!capacityOf(desk, personId).admin) return refused("not_found")
+        return {
+          status: "ready",
+          data: {
+            defaults: { ...DESK_POLICY_DEFAULTS },
+            surfaces: DESK_SURFACES.map((surface) => ({ surface, withoutPolicy: withoutPolicyOf(surface), policy: desk.policies.get(surface) ?? null })),
+          },
+        }
+      }, [version, personId])
+    },
+
+    useBlockedTerms({ personId, cursor }) {
+      const version = useSnapshot()
+      return useMemo((): Loadable<DeskPage<DeskBlockedTermView>> => {
+        if (version === null) return LOADING
+        const refusal = viewerRefusal(personId)
+        if (refusal !== null) return refused(refusal)
+        const desk = deskWorld()
+        if (!capacityOf(desk, personId).admin) return refused("not_found")
+        const rows = [...desk.blockedTerms].map(([term, row]) => ({ termId: row.termId, term, updatedAt: row.updatedAt }))
+        return windowed(rows, cursor, desk.world)
+      }, [version, personId, cursor])
+    },
+
+    async setPolicy(input) {
+      const refusal = viewerRefusal(input.personId)
+      if (refusal !== null) return fail(refusal)
+      const desk = deskWorld()
+      // Comme le moteur : le refus indistinct d'abord, puis le motif, puis les bornes du réglage.
+      if (!capacityOf(desk, input.personId).admin) return fail("not_found")
+      const reasonRefusal = deskReasonRefusal(input.reason)
+      if (reasonRefusal !== null) return fail(reasonRefusal)
+      const bounds = deskPolicyRefusal(input)
+      if (bounds !== null) return fail(bounds)
+      desk.policies.set(input.surface, { preReview: input.preReview, maxLinks: input.maxLinks, maxWrites: input.maxWrites, windowMs: input.windowMs, updatedAt: store.now() })
+      emit()
+      return { ok: true, value: null }
+    },
+
+    async setBlockedTerm(input) {
+      const refusal = viewerRefusal(input.personId)
+      if (refusal !== null) return fail(refusal)
+      const desk = deskWorld()
+      if (!capacityOf(desk, input.personId).admin) return fail("not_found")
+      const reasonRefusal = deskReasonRefusal(input.reason)
+      if (reasonRefusal !== null) return fail(reasonRefusal)
+      const term = deskAdmissibleTerm(input.term)
+      if (term === null) return fail("moderation_desk_term_length")
+      const existing = desk.blockedTerms.get(term)
+      if (!input.active) desk.blockedTerms.delete(term)
+      else {
+        // Comme le moteur : un mot de plus au-delà du plafond des mots actifs est refusé ; le retrait reste possible.
+        if (existing === undefined && desk.blockedTerms.size >= DESK_BLOCKED_TERMS_MAX) return fail("moderation_desk_terms_full")
+        desk.termSequence += 1
+        desk.blockedTerms.set(term, { termId: existing?.termId ?? `demo-mot-${desk.termSequence}`, updatedAt: store.now() })
+      }
+      emit()
+      return { ok: true, value: null }
     },
   }
 }

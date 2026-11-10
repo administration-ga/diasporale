@@ -27,14 +27,25 @@
  * (`responsibles`) et se nomment par `diaspora/membership` (`setResponsibleRole`), qui appelle l'aide
  * du moteur (EX-08) et journalise ; la règle `NETWORK_LAST_ADMIN` se dit
  * `moderation_desk_last_admin`, le refus indistinct `moderation_desk_role_refused`.
+ *
+ * MD-04 : les réglages se lisent et se posent par les fonctions du moteur livrées
+ * par MC-02 (`moderation/cases` : `policies`, `blockedTermsPage`, `setPolicy`,
+ * `setBlockedTerm`), réservées à l'administration du réseau (refus indistinct
+ * sinon) et journalisées par le moteur. Comme la voie des délais légaux, elles ne
+ * connaissent pas la personne attendue : l'écran ne les lit que sous un guichet
+ * ouvert pour elle, avec `canManagePolicy`.
  */
 import { engineErrorCode, engineErrorRule } from "@antsia/social-contracts/errors"
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
 import {
+  DESK_BLOCKED_TERMS_PAGE,
   DESK_PAGE_SIZE,
+  deskBlockedTermRefusal,
   deskCountry,
   deskGround,
+  deskPolicyFieldRefusal,
+  deskPolicyRefusal,
   deskReasonRefusal,
   deskSanctions,
   deskTeamNameRefusal,
@@ -42,6 +53,7 @@ import {
   type ActionErrorCode,
   type ActionResult,
   type DeskAppealView,
+  type DeskBlockedTermView,
   type DeskCaseDetailView,
   type DeskCaseView,
   type DeskDeadlineLane,
@@ -51,6 +63,7 @@ import {
   type DeskPreviewView,
   type DeskResponsiblesView,
   type DeskRosterView,
+  type DeskSettingsView,
   type DeskSurface,
   type DeskZone,
   type Loadable,
@@ -90,6 +103,8 @@ type AppealRow = FunctionReturnType<typeof DESK.appealQueue>["items"][number]
 type RosterRow = FunctionReturnType<typeof DESK.teamRoster>
 type ResponsiblesRow = FunctionReturnType<typeof DESK.responsibles>
 type PreviewRow = FunctionReturnType<typeof PREVIEW>
+type SettingsRow = FunctionReturnType<typeof CASES.policies>
+type BlockedTermsRow = FunctionReturnType<typeof CASES.blockedTermsPage>
 type EngineZone = FunctionArgs<typeof DESK.queue>["zone"]
 type EngineTarget = FunctionArgs<typeof CASES.reviewContent>["target"]
 type Window<Row> = { readonly items: readonly Row[]; readonly continueCursor: string | null; readonly isDone: boolean }
@@ -129,6 +144,22 @@ export function responsibleRoleErrorCode(error: unknown): ActionErrorCode {
   return moderationDeskErrorCode(error)
 }
 
+/** MD-04 : les refus d'un réglage ; le champ hors bornes nommé par le moteur se dit par son code. */
+export function moderationPolicyErrorCode(error: unknown): ActionErrorCode {
+  if (error instanceof Refusal) return error.code
+  const field = invalidField(error)
+  const refusal = field === null ? null : deskPolicyFieldRefusal(field)
+  return refusal ?? moderationDeskErrorCode(error)
+}
+
+/** MD-04 : les refus d'un mot bloqué (mot trop court ou trop long, plafond des mots actifs atteint). */
+export function blockedTermErrorCode(error: unknown): ActionErrorCode {
+  if (error instanceof Refusal) return error.code
+  if (invalidField(error) === "term") return "moderation_desk_term_length"
+  if (engineErrorCode(error) === "policyRefused") return "moderation_desk_terms_full"
+  return moderationDeskErrorCode(error)
+}
+
 async function run<T>(work: () => Promise<T>, errorCode: (error: unknown) => ActionErrorCode = moderationDeskErrorCode): Promise<ActionResult<T>> {
   try {
     return { ok: true, value: await work() }
@@ -145,6 +176,7 @@ export function toDeskView(row: NonNullable<DeskRow>): ModerationDeskView {
     networkWide: row.networkWide,
     canReviewAppeals: row.canReviewAppeals,
     canManageTeams: row.canManageTeams,
+    canManagePolicy: row.canManagePolicy,
     teams: row.teams.map((team) => ({ teamId: team.teamId, name: team.name, scope: team.scope, isMember: team.isMember })),
   }
 }
@@ -263,6 +295,29 @@ export function toResponsiblesView(row: ResponsiblesRow): DeskResponsiblesView {
       isMe: member.isMe,
     })),
     more: row.more,
+  }
+}
+
+/** MD-04 : les réglages tels que le moteur les sert, défauts compris ; aucune valeur n'est complétée ici. */
+export function toSettingsView(row: SettingsRow): DeskSettingsView {
+  return {
+    defaults: { preReview: row.defaults.preReview, maxLinks: row.defaults.maxLinks, maxWrites: row.defaults.maxWrites, windowMs: row.defaults.windowMs },
+    surfaces: row.surfaces.map((item) => ({
+      surface: item.surface,
+      withoutPolicy: item.withoutPolicy,
+      policy: item.policy === null
+        ? null
+        : { preReview: item.policy.preReview, maxLinks: item.policy.maxLinks, maxWrites: item.policy.maxWrites, windowMs: item.policy.windowMs, updatedAt: item.policy.updatedAt },
+    })),
+  }
+}
+
+/** MD-04 : une fenêtre des mots bloqués actifs. */
+export function toBlockedTermsWindow(row: BlockedTermsRow): DeskPage<DeskBlockedTermView> {
+  return {
+    items: row.page.map((item) => ({ termId: item.termId, term: item.term, updatedAt: item.updatedAt })),
+    continueCursor: row.isDone ? null : row.continueCursor,
+    isDone: row.isDone,
   }
 }
 
@@ -568,6 +623,52 @@ export function createEngineModerationDesk(deps: EngineSourceDeps): ModerationDe
         })
         return { role: result.role, changed: result.changed }
       }, responsibleRoleErrorCode)
+    },
+
+    useSettings(personId) {
+      const reader = useDeskReader(personId)
+      const loaded = useLoaded(CASES.policies, reader.networkId ? { networkId: reader.networkId } : "skip")
+      return useProjected(reader, loaded, toSettingsView)
+    },
+
+    useBlockedTerms({ personId, cursor }) {
+      const reader = useDeskReader(personId)
+      const loaded = useLoaded(CASES.blockedTermsPage, reader.networkId
+        ? { networkId: reader.networkId, paginationOpts: { cursor, numItems: DESK_BLOCKED_TERMS_PAGE } }
+        : "skip")
+      return useProjected(reader, loaded, toBlockedTermsWindow)
+    },
+
+    async setPolicy(input) {
+      return await run(async () => {
+        const reason = requireReason(input.reason)
+        const refusal = deskPolicyRefusal(input)
+        if (refusal) throw new Refusal(refusal)
+        await expectPerson(input.personId)
+        const networkId = await resolveDiasporaleNetworkId(deps.convex)
+        await deps.convex.mutation(CASES.setPolicy, {
+          networkId,
+          surface: input.surface,
+          preReview: input.preReview,
+          maxLinks: input.maxLinks,
+          maxWrites: input.maxWrites,
+          windowMs: input.windowMs,
+          reason,
+        })
+        return null
+      }, moderationPolicyErrorCode)
+    },
+
+    async setBlockedTerm(input) {
+      return await run(async () => {
+        const reason = requireReason(input.reason)
+        const refusal = deskBlockedTermRefusal(input.term)
+        if (refusal) throw new Refusal(refusal)
+        await expectPerson(input.personId)
+        const networkId = await resolveDiasporaleNetworkId(deps.convex)
+        await deps.convex.mutation(CASES.setBlockedTerm, { networkId, term: input.term.trim(), active: input.active, reason })
+        return null
+      }, blockedTermErrorCode)
     },
   }
 }

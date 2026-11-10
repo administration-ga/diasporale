@@ -1,11 +1,18 @@
 // @vitest-environment jsdom
 import { reportDecisionDueAt, reportLegalBasis } from "@antsia/social-domain/moderation"
+import { MODERATION_POLICY_DEFAULTS, MODERATION_SURFACES } from "@antsia/social-domain/moderationPolicy"
 import { act, cleanup, renderHook } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
+  DESK_BLOCKED_TERMS_MAX,
   deskCountdown,
+  deskHeldContentOf,
+  deskPolicyRefusal,
   deskSanctions,
+  deskWindowMinutes,
+  deskWindowMsOf,
+  deskWindowUnit,
   isHeavyDecision,
   withoutDeadlineCases,
   type DeskCaseView,
@@ -73,7 +80,7 @@ describe("Guichet de démonstration — capacité et file fictives", () => {
     const { desk } = setup()
     expect(desk.demonstration).toBe(true)
     const view = ready(renderHook(() => desk.useDesk(PERSON)).result.current)
-    expect(view).toMatchObject({ role: "network_admin", networkWide: true, canReviewAppeals: true, canManageTeams: true })
+    expect(view).toMatchObject({ role: "network_admin", networkWide: true, canReviewAppeals: true, canManageTeams: true, canManagePolicy: true })
     expect(view?.teams).toEqual([{ teamId: DEMO_DESK_TEAM_ID, name: "Équipe France (fictive)", scope: null, isMember: true }])
     expect(renderHook(() => desk.useDesk(OTHER)).result.current).toEqual({ status: "error", code: "not_found" })
   })
@@ -298,7 +305,9 @@ describe("Guichet de démonstration — responsables du réseau (MD-01)", () => 
     await act(async () => {
       expect(await desk.setResponsibleRole({ personId: PERSON, memberPersonId: PERSON, role: "network_moderator", reason: REASON })).toEqual({ ok: true, value: { role: "network_moderator", changed: true } })
     })
-    expect(capacity(desk)).toMatchObject({ role: "network_moderator", networkWide: true, canReviewAppeals: false, canManageTeams: false })
+    expect(capacity(desk)).toMatchObject({ role: "network_moderator", networkWide: true, canReviewAppeals: false, canManageTeams: false, canManagePolicy: false })
+    // MD-04 : les réglages quittent un modérateur avec le rôle d'administration.
+    expect(renderHook(() => desk.useSettings(PERSON)).result.current).toEqual({ status: "error", code: "not_found" })
     expect(renderHook(() => desk.useAppeals({ personId: PERSON, zone: { kind: "all" }, surface: null, cursor: null })).result.current).toEqual({ status: "error", code: "not_found" })
     expect(responsibles(desk)).toEqual({ status: "error", code: "not_found" })
     expect(await desk.setResponsibleRole({ personId: PERSON, memberPersonId: PERSON, role: "network_admin", reason: REASON })).toEqual({ ok: false, code: "not_found" })
@@ -311,7 +320,7 @@ describe("Guichet de démonstration — responsables du réseau (MD-01)", () => 
     await act(async () => { await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-steeve", role: "network_admin", reason: REASON }) })
     await act(async () => { await desk.setResponsibleRole({ personId: PERSON, memberPersonId: PERSON, role: "member", reason: REASON }) })
     expect(capacity(desk)).toEqual({
-      role: "team_member", networkWide: false, canReviewAppeals: false, canManageTeams: false,
+      role: "team_member", networkWide: false, canReviewAppeals: false, canManageTeams: false, canManagePolicy: false,
       teams: [{ teamId: DEMO_DESK_TEAM_ID, name: "Équipe France (fictive)", scope: null, isMember: true }],
     })
     const queue = (teamId: string | null) => renderHook(() => desk.useQueue({ personId: PERSON, zone: { kind: "all" }, surface: null, teamId, cursor: null })).result.current
@@ -320,6 +329,74 @@ describe("Guichet de démonstration — responsables du réseau (MD-01)", () => 
     expect(ready(queue(DEMO_DESK_TEAM_ID)).items.every((row) => row.level === "team")).toBe(true)
     expect(renderHook(() => desk.useCase({ personId: PERSON, reportId: "demo-dossier-1" })).result.current).toEqual({ status: "error", code: "not_found" })
     expect(await desk.setTeamMember({ personId: PERSON, teamId: DEMO_DESK_TEAM_ID, memberPersonId: PERSON, active: false, reason: REASON })).toEqual({ ok: false, code: "not_found" })
+  })
+})
+
+describe("Guichet de démonstration — réglages de modération (MD-04)", () => {
+  const settings = (desk: ReturnType<typeof setup>["desk"], personId = PERSON) => renderHook(() => desk.useSettings(personId)).result.current
+  const terms = (desk: ReturnType<typeof setup>["desk"]) => ready(renderHook(() => desk.useBlockedTerms({ personId: PERSON, cursor: null })).result.current)
+
+  it("part d'un réseau sans réglage : les défauts et la règle sans réglage sont ceux du moteur", () => {
+    const { desk } = setup()
+    const view = ready(settings(desk))
+    expect(view.defaults).toEqual(MODERATION_POLICY_DEFAULTS)
+    expect(view.surfaces.map((row) => row.surface)).toEqual([...MODERATION_SURFACES])
+    expect(view.surfaces.every((row) => row.policy === null)).toBe(true)
+    const rule = (surface: string) => view.surfaces.find((row) => row.surface === surface)?.withoutPolicy
+    expect(["diasporaJobOffer", "diasporaKitResource", "serviceReview", "serviceReviewReply", "event", "post", "page"].map(rule)).toEqual(["unchecked", "unchecked", "held", "held", "defaults", "defaults", "defaults"])
+    expect(terms(desk)).toEqual({ items: [], continueCursor: null, isDone: true })
+    expect(settings(desk, OTHER)).toEqual({ status: "error", code: "not_found" })
+  })
+
+  it("pose un réglage motivé dans les bornes du moteur, puis le change ; sans effet sur le magasin", async () => {
+    const { store, desk } = setup()
+    const before = store.getState()
+    const values = { personId: PERSON, surface: "diasporaJobOffer" as const, preReview: true, maxLinks: 2, maxWrites: 30, windowMs: HOUR, reason: REASON }
+    expect(await desk.setPolicy({ ...values, reason: "Court" })).toEqual({ ok: false, code: "moderation_desk_reason_length" })
+    expect(await desk.setPolicy({ ...values, maxLinks: 21 })).toEqual({ ok: false, code: "moderation_desk_links_bounds" })
+    expect(await desk.setPolicy({ ...values, maxWrites: 0 })).toEqual({ ok: false, code: "moderation_desk_writes_bounds" })
+    expect(await desk.setPolicy({ ...values, windowMs: 500 })).toEqual({ ok: false, code: "moderation_desk_window_bounds" })
+    expect(await desk.setPolicy({ ...values, personId: OTHER })).toEqual({ ok: false, code: "not_found" })
+    await act(async () => { expect(await desk.setPolicy(values)).toEqual({ ok: true, value: null }) })
+    expect(ready(settings(desk)).surfaces.find((row) => row.surface === "diasporaJobOffer")?.policy).toEqual({ preReview: true, maxLinks: 2, maxWrites: 30, windowMs: HOUR, updatedAt: NOW })
+    await act(async () => { expect(await desk.setPolicy({ ...values, preReview: false })).toEqual({ ok: true, value: null }) })
+    expect(ready(settings(desk)).surfaces.find((row) => row.surface === "diasporaJobOffer")?.policy?.preReview).toBe(false)
+    expect(store.getState()).toBe(before)
+  })
+
+  it("bloque un mot normalisé, le débloque, et refuse un mot hors bornes ou au-delà du plafond", async () => {
+    const { desk } = setup()
+    expect(await desk.setBlockedTerm({ personId: PERSON, term: " é ", active: true, reason: REASON })).toEqual({ ok: false, code: "moderation_desk_term_length" })
+    expect(await desk.setBlockedTerm({ personId: PERSON, term: "Ambassade", active: true, reason: "Court" })).toEqual({ ok: false, code: "moderation_desk_reason_length" })
+    await act(async () => { expect(await desk.setBlockedTerm({ personId: PERSON, term: "  Ambassade ", active: true, reason: REASON })).toEqual({ ok: true, value: null }) })
+    expect(terms(desk).items.map((row) => row.term)).toEqual(["ambassade"])
+    await act(async () => { expect(await desk.setBlockedTerm({ personId: PERSON, term: "AMBASSADE", active: false, reason: REASON })).toEqual({ ok: true, value: null }) })
+    expect(terms(desk).items).toEqual([])
+    for (let n = 0; n < DESK_BLOCKED_TERMS_MAX; n += 1) {
+      await act(async () => { await desk.setBlockedTerm({ personId: PERSON, term: `motfictif${n}`, active: true, reason: REASON }) })
+    }
+    expect(await desk.setBlockedTerm({ personId: PERSON, term: "un-de-trop", active: true, reason: REASON })).toEqual({ ok: false, code: "moderation_desk_terms_full" })
+    // Débloquer reste possible au plafond.
+    await act(async () => { expect(await desk.setBlockedTerm({ personId: PERSON, term: "motfictif0", active: false, reason: REASON })).toEqual({ ok: true, value: null }) })
+  })
+})
+
+describe("Règles pures du port — réglages (MD-04)", () => {
+  it("dit le champ hors bornes par son code et la fenêtre dans l'unité la plus ronde", () => {
+    expect(deskPolicyRefusal(MODERATION_POLICY_DEFAULTS)).toBeNull()
+    expect(deskPolicyRefusal({ ...MODERATION_POLICY_DEFAULTS, maxLinks: 1.5 })).toBe("moderation_desk_links_bounds")
+    expect(deskPolicyRefusal({ ...MODERATION_POLICY_DEFAULTS, maxWrites: 101 })).toBe("moderation_desk_writes_bounds")
+    expect(deskPolicyRefusal({ ...MODERATION_POLICY_DEFAULTS, windowMs: 2 * DAY })).toBe("moderation_desk_window_bounds")
+    expect(deskWindowUnit(MINUTE)).toEqual({ unit: "minutes", count: 1 })
+    expect(deskWindowUnit(2 * HOUR)).toEqual({ unit: "hours", count: 2 })
+    expect(deskWindowUnit(90 * MINUTE)).toEqual({ unit: "minutes", count: 90 })
+    expect(deskWindowUnit(30 * 1000)).toEqual({ unit: "seconds", count: 30 })
+    expect(deskWindowMinutes(30 * 1000)).toBe(1)
+    expect(deskWindowMsOf(deskWindowMinutes(MODERATION_POLICY_DEFAULTS.windowMs))).toBe(MODERATION_POLICY_DEFAULTS.windowMs)
+    // Les contenus relus d'office de DIASPORALE et la rubrique qui les porte.
+    expect(deskHeldContentOf("event")).toBe("associationEvents")
+    expect(deskHeldContentOf("post")).toBe("eventGallery")
+    expect(deskHeldContentOf("comment")).toBeNull()
   })
 })
 
