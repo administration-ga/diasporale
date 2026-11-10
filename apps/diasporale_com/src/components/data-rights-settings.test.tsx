@@ -403,11 +403,43 @@ describe("Mes données — décisions et recours", () => {
     expect(screen.getByText(t("settings.dataRights.decisions.appealHint.platform"))).toBeInTheDocument()
   })
 
-  it("ne propose aucun recours sans décision suivie d'effet", () => {
-    const { rights } = fakeRights({ decisions: page([{ ...DECISION, status: "dismissed", sanctions: [], appealLevel: null }]) })
+  it("MD-07 : un dossier ouvert et un classement ne s'affichent pas à l'auteur ; la mesure prise, oui, avec son recours", () => {
+    const open: ModerationDecisionView = { ...DECISION, reportId: "dossier-ouvert", status: "open", decisionReason: null, sanctions: [], appealLevel: null }
+    const reviewing: ModerationDecisionView = { ...open, reportId: "dossier-en-examen", status: "reviewing" }
+    const dismissed: ModerationDecisionView = { ...open, reportId: "classement", status: "dismissed", decisionReason: "Rien à reprocher." }
+    const { rights, update } = fakeRights({ decisions: page([open, reviewing, dismissed]) })
     mocks.rights = rights
     render(tree())
-    expect(screen.getByText(t("settings.dataRights.decisions.status.dismissed"))).toBeInTheDocument()
+    const region = () => within(screen.getByRole("region", { name: raw("settings.dataRights.decisions.title") }))
+    // Rien ne trahit qu'un dossier existe : la liste se dit vide, comme sans aucun signalement.
+    expect(region().getByText(t("settings.dataRights.decisions.empty"))).toBeInTheDocument()
+    expect(region().queryAllByRole("listitem")).toEqual([])
+    expect(region().queryByText(/Rien à reprocher/)).toBeNull()
+    expect(region().getByText(t("settings.dataRights.decisions.lead"))).toBeInTheDocument()
+
+    act(() => update({ decisions: page([open, DECISION, dismissed]) }))
+    // Les fiches de décision : les enfants directs de la première liste (les mesures ont leur propre liste).
+    const items = Array.from(region().getAllByRole("list")[0]!.children)
+    expect(items).toHaveLength(1)
+    expect(items[0]).toHaveTextContent(t("settings.dataRights.decisions.status.actioned"))
+    expect(items[0]).toHaveTextContent(t("settings.dataRights.decisions.decisionReason", { reason: DECISION.decisionReason! }))
+    expect(region().getByRole("button", { name: raw("settings.dataRights.decisions.appeal") })).toBeEnabled()
+    expect(region().queryByText(/Rien à reprocher/)).toBeNull()
+  })
+
+  it("MD-07 : une mesure annulée sur recours reste lisible avec la réponse du recours, sans nouveau recours", () => {
+    const overturned: ModerationDecisionView = {
+      ...DECISION,
+      status: "dismissed",
+      sanctions: [{ ...DECISION.sanctions[0]!, status: "revoked" }],
+      appeals: [{ level: "network", status: "overturned", decisionReason: "Le contexte a été mal lu." }],
+      appealLevel: null,
+    }
+    const { rights } = fakeRights({ decisions: page([overturned]) })
+    mocks.rights = rights
+    render(tree())
+    expect(screen.getByText(t("settings.dataRights.decisions.status.overturned"))).toBeInTheDocument()
+    expect(screen.getByText(t("settings.dataRights.decisions.appealAnswer", { reason: "Le contexte a été mal lu." }))).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: raw("settings.dataRights.decisions.appeal") })).not.toBeInTheDocument()
   })
 
