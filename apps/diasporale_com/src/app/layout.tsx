@@ -5,6 +5,7 @@ import { AppearanceBootScript } from "@/components/appearance-boot-script"
 import { Providers } from "@/components/providers"
 import { getAppT } from "@/i18n/server"
 import { DEFAULT_CHARTE } from "@/lib/appearance"
+import { installPalette } from "@/lib/install-palette"
 import { anchors } from "@/lib/routes"
 
 import "./globals.css"
@@ -16,13 +17,28 @@ export async function generateMetadata(): Promise<Metadata> {
     description: t("meta.description"),
     applicationName: t("brand.name"),
     robots: { index: false, follow: false },
+    // Ajouté à l'écran d'accueil de l'iPhone (MO-02) : ouverture en plein écran, nom de la marque
+    // sous l'icône, barre d'état sur le fond de la page.
+    appleWebApp: { capable: true, title: t("brand.name"), statusBarStyle: "default" },
   }
 }
+
+const palette = installPalette()
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Couleur de la barre du système (MO-02) : le fond de page de la charte, en clair et en sombre
+  // selon le réglage du téléphone. Sans palette (outil hors de Next), la barre garde la sienne.
+  ...(palette
+    ? {
+        themeColor: [
+          { media: "(prefers-color-scheme: light)", color: palette.light.background },
+          { media: "(prefers-color-scheme: dark)", color: palette.dark.background },
+        ],
+      }
+    : {}),
 }
 
 /**

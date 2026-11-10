@@ -145,16 +145,19 @@ export function idnGroundFromLink(link: { readonly loa?: number | undefined; rea
 }
 
 /** Sources de vérification du moteur (`networkMemberships.verifiedBy`) qu'emploie DIASPORALE. */
-export type EngineVerificationSource = "consulat" | "idn"
+export type EngineVerificationSource = "consulat" | "idn" | "operator"
 
 /**
  * Qui a vérifié, au vocabulaire du moteur, quand les faits vérifient :
- * l'attestation consulaire d'abord, sinon IDN (`loa ≥ 2`, avec parrainage).
- * `null` quand les faits ne vérifient pas.
+ * l'attestation consulaire d'abord, puis IDN (`loa ≥ 2`, avec parrainage), et
+ * l'admission fondatrice décidée par un opérateur seulement quand rien d'autre
+ * ne vérifie (EA-01) : les faits propres de la personne priment, et retirer la
+ * décision ne change alors pas la source. `null` quand les faits ne vérifient pas.
  */
 export function engineVerificationSource(grounds: MembershipGrounds, now: number): EngineVerificationSource | null {
   if (deriveMembershipStatus(grounds, now) !== "verifiee") return null
-  return grounds.consularAttestation ? "consulat" : "idn"
+  if (grounds.consularAttestation) return "consulat"
+  return deriveMembershipStatus({ ...grounds, foundingAdmission: null }, now) === "verifiee" ? "idn" : "operator"
 }
 
 /**
