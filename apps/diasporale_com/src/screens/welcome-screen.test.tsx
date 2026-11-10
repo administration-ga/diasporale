@@ -112,6 +112,16 @@ describe("/bienvenue — l'onboarding en trois écrans", () => {
     expect(store.statusOf(me)).toBe("declaree")
     expect(store.getState().memberships[me]?.directoryVisibility).toBe("hidden")
   })
+
+  it("un pays pas encore ouvert : l'avis dit ce qui est possible, sans promettre de relecture (HB-01)", async () => {
+    const { user } = await signedInAwa()
+    await user.click(await screen.findByRole("combobox", { name: "Pays de résidence" }))
+    await user.type(screen.getByRole("searchbox"), "Espagne")
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: /Espagne/ }))
+    const notice = await screen.findByText(t("welcome.countryNotOpen").replace(/\s+/g, " "))
+    expect(notice).toHaveTextContent(/publiez pour toute la diaspora/)
+    expect(notice).not.toHaveTextContent(/relue|relecture/i)
+  })
 })
 
 describe("/bienvenue — la sortie d'un compte connecté sans adhésion", () => {

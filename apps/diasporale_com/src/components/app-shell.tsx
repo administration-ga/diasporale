@@ -362,7 +362,8 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   const desktop = useIsReseauMobile() === false
   const { membership } = props
   const canPublish = membership.canPublish
-  const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : []
+  // Inconnus tant qu'ils ne sont pas lus : le composeur n'affirme alors aucun pays fermé (HB-01).
+  const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : null
   const primary = primaryEntries(membership, pathname, icom !== null)
   const desk = (useModerationDesk() ?? NO_MODERATION_DESK).useDesk(membership.personId)
   const pilot = (usePilotMetrics() ?? NO_PILOT_METRICS).useAccess()

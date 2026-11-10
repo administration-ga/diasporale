@@ -137,8 +137,10 @@ export function toOpenCountries(hubs: readonly HubView[]): OpenCountryView[] {
  * sous seuil, associations et entreprises actives du pays — DG-007), jamais
  * comptés à la lecture. Ses pages se lisent par la capacité « pages »
  * (`diaspora.hubPages.listCountryPages`, bornée par nature, `toHubPagesView`) :
- * les listes du hub restent vides ici plutôt que recopiées ; les évènements
- * arrivent avec PD7.
+ * les listes du hub restent vides ici plutôt que recopiées. Les évènements d'un
+ * pays ne se lisent pas encore (HB-02, puis EV-05) : le compteur `upcomingEvents`
+ * du moteur vaut toujours zéro sans rien mesurer, la source le dit « non mesurée »
+ * et l'écran ne montre ni liste ni nombre (EV-02).
  */
 export function toCountryHubView(hub: HubView, country: CountryCode): CountryHubView {
   return {
@@ -150,6 +152,7 @@ export function toCountryHubView(hub: HubView, country: CountryCode): CountryHub
     associations: [],
     companies: [],
     events: [],
+    eventsSource: "unmeasured",
   }
 }
 
