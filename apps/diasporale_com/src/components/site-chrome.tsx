@@ -101,6 +101,10 @@ export function SiteFooter(props: { compact?: boolean } = {}) {
           <NextLink href={routes.privacy()} className="inline-flex min-h-11 items-center hover:underline focus-visible:shadow-focus">
             {t("footer.privacy")}
           </NextLink>
+          {/* Les droits personnels, adhésion facultative (EA-05) : la connexion est demandée si besoin. */}
+          <NextLink href={routes.myData()} className="inline-flex min-h-11 items-center hover:underline focus-visible:shadow-focus">
+            {t("footer.myData")}
+          </NextLink>
           <NextLink href={routes.charte()} className="inline-flex min-h-11 items-center hover:underline focus-visible:shadow-focus">
             {t("footer.charte")}
           </NextLink>

@@ -9,31 +9,48 @@ import { routes } from "@/lib/routes"
 
 type SignedIn = Extract<SessionView, { status: "signed_in" }>
 
+/** L'exigence d'une page : ce que la session doit porter pour qu'elle s'affiche. */
+export type GateRequirement = "account" | "member" | "person"
+
+/** Une adhésion vivante (en attente, déclarée, vérifiée ou suspendue) ; un départ n'en est plus une. */
+function hasLiveMembership(session: SignedIn): boolean {
+  return session.membership !== null && session.membership.status !== "partie"
+}
+
+/** Où renvoyer une session qui ne convient pas à la page ; `null` si elle y est admise. */
+export function gateRedirect(session: SessionView, require: GateRequirement): string | null {
+  if (session.status === "anonymous") return routes.enter()
+  if (require === "member" && !hasLiveMembership(session)) return routes.welcome()
+  if (require === "account" && hasLiveMembership(session)) return routes.feed()
+  return null
+}
+
 /**
  * Garde de session CÔTÉ CLIENT — confort de navigation seulement : l'autorité
  * reste au serveur (le moteur refuse toute lecture ou écriture hors adhésion).
  *
  *   · `account` : il faut être connecté ; un membre est renvoyé vers son fil ;
- *   · `member`  : il faut une adhésion à DIASPORALE ; sans elle → onboarding.
+ *   · `member`  : il faut une adhésion à DIASPORALE ; sans elle, ou après un
+ *     départ → accueil ;
+ *   · `person`  : il faut être connecté, l'adhésion est facultative — membre,
+ *     partie, suspendue ou sans adhésion. Réservée aux droits personnels
+ *     (« Mes données », NP-02) : les portes du moteur qu'ils appellent ne lisent
+ *     aucune adhésion, et la page ne monte aucune surface sociale.
  */
 export function Gate(props: {
-  require: "account" | "member"
+  require: GateRequirement
   children: (session: SignedIn & { membership: MembershipView | null }) => ReactNode
 }) {
   const session = useSession()
   const router = useRouter()
   const ready = session.status === "ready" ? session.data : null
+  const redirect = ready === null ? null : gateRedirect(ready, props.require)
 
   useEffect(() => {
-    if (ready === null) return
-    if (ready.status === "anonymous") router.replace(routes.enter())
-    else if (props.require === "member" && (ready.membership === null || ready.membership.status === "partie")) router.replace(routes.welcome())
-    else if (props.require === "account" && ready.membership !== null && ready.membership.status !== "partie") router.replace(routes.feed())
-  }, [ready, props.require, router])
+    if (redirect !== null) router.replace(redirect)
+  }, [redirect, router])
 
-  if (ready === null || ready.status === "anonymous") return <GateSkeleton />
-  if (props.require === "member" && (ready.membership === null || ready.membership.status === "partie")) return <GateSkeleton />
-  if (props.require === "account" && ready.membership !== null && ready.membership.status !== "partie") return <GateSkeleton />
+  if (ready === null || ready.status === "anonymous" || redirect !== null) return <GateSkeleton />
   return <>{props.children(ready)}</>
 }
 

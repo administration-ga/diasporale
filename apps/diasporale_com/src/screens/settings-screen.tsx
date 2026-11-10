@@ -91,8 +91,9 @@ function Settings(props: { membership: MembershipView }) {
       <DirectorySection membership={props.membership} />
       <ConsentsSection />
       <SponsorHelpSection membership={props.membership} />
-      {/* « Mes données » (DG-026) : export, effacement, décisions et recours — ouverte au membre suspendu. */}
-      <DataRightsSettings membership={props.membership} />
+      {/* « Mes données » (DG-026) : export, effacement, décisions et recours — ouverte au membre suspendu ;
+          hors adhésion, la même section vit à `/mes-donnees` (NP-02). */}
+      <DataRightsSettings person={{ personId: props.membership.personId, handle: props.membership.handle, canLeave: true }} />
       <Section id="apparence" title={t("settings.appearance")}>
         <div className="flex flex-col gap-3">
           <LanguageSwitch className="self-start" />

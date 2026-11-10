@@ -46,8 +46,8 @@ vi.mock("@/components/sign-out-settings", () => ({ SignOutSettings: () => null }
 // Sections branchées sur leur propre capacité, éprouvées par leurs tests : ici, seulement leur montage.
 vi.mock("@/components/content-preferences-settings", () => ({ ContentPreferencesSettings: () => null }))
 vi.mock("@/components/data-rights-settings", () => ({
-  DataRightsSettings: (props: { membership: MembershipView }) => {
-    mocks.dataRights(props.membership)
+  DataRightsSettings: (props: { person: { personId: string; handle: string | null; canLeave: boolean } }) => {
+    mocks.dataRights(props.person)
     return <section id="mes-donnees" aria-label="Mes données" />
   },
 }))
@@ -174,7 +174,8 @@ describe("Réglages — « Mes données » (DG-026)", () => {
 
   it("monte la section des droits pour la personne affichée, à la place de l'ancien export immédiat", () => {
     render(tree())
-    expect(mocks.dataRights).toHaveBeenLastCalledWith(membership)
+    // La section reçoit la personne, jamais l'adhésion (NP-02) ; un membre peut aussi « quitter ».
+    expect(mocks.dataRights).toHaveBeenLastCalledWith({ personId: membership.personId, handle: membership.handle, canLeave: true })
     expect(screen.getByRole("region", { name: "Mes données" })).toHaveAttribute("id", "mes-donnees")
     expect(screen.queryByRole("button", { name: t("settings.export") })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: t("settings.delete") })).not.toBeInTheDocument()
@@ -189,6 +190,6 @@ describe("Réglages — « Mes données » (DG-026)", () => {
     cleanup()
     mocks.membership = suspended
     render(tree())
-    expect(mocks.dataRights).toHaveBeenLastCalledWith(suspended)
+    expect(mocks.dataRights).toHaveBeenLastCalledWith({ personId: suspended.personId, handle: suspended.handle, canLeave: true })
   })
 })
