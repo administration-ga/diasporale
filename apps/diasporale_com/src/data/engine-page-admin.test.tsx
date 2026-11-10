@@ -1,5 +1,8 @@
 // @vitest-environment jsdom
 import type { EngineAuthClient } from "@antsia/api/auth-client"
+import { jpegHasGpsMetadata, listImageMetadata } from "@antsia/social-domain/imageMetadata"
+import { isPreparedImage, type PrepareImage } from "@antsia/social-features/media-upload"
+import { TEST_JPEG_WITH_GPS_BYTES, testPrepareImage } from "@antsia/social-features/tests/image-runtime"
 import type { PageManagement } from "@diasporale/features/data"
 import { cleanup, renderHook } from "@testing-library/react"
 import type { ConvexReactClient } from "convex/react"
@@ -60,7 +63,7 @@ function results(extra: Record<string, unknown> = {}) {
   }
 }
 
-function source(options: { mutation?: (name: string, args: unknown) => unknown; fetch?: typeof fetch } = {}) {
+function source(options: { mutation?: (name: string, args: unknown) => unknown; fetch?: typeof fetch; prepareImage?: PrepareImage } = {}) {
   const calls: { name: string; args: unknown }[] = []
   const mutation = vi.fn(async (reference: Parameters<typeof getFunctionName>[0], args: unknown) => {
     const name = getFunctionName(reference)
@@ -72,7 +75,8 @@ function source(options: { mutation?: (name: string, args: unknown) => unknown; 
     throw new Error("Lecture ponctuelle inattendue")
   })
   const capability = createEnginePageAdmin(
-    { convex: { mutation, query } as unknown as ConvexReactClient, authClient: {} as EngineAuthClient },
+    // La préparation RÉELLE du moteur, sur un décodeur et un canvas simulés (`jsdom` n'en a pas).
+    { convex: { mutation, query } as unknown as ConvexReactClient, authClient: {} as EngineAuthClient, prepareImage: options.prepareImage ?? testPrepareImage() },
     options.fetch ? { fetch: options.fetch } : {},
   )
   return { capability, management: capability.management as PageManagement, calls, mutation }
@@ -252,9 +256,13 @@ describe("gestion des pages — écritures du moteur", () => {
     const receipt = pdf("recepisse.png", "image/png")
     const result = await management.requestClaim({ pageId: "page-1", note: " Mandat déclaré : présidence. ", evidence: [statutes, receipt] })
     expect(result).toEqual({ ok: true, value: { claimId: "claim-neuve" } })
+    // Le document part tel quel ; la photo part PRÉPARÉE (FD-01), jamais l'original.
+    const preparedReceipt = deposit.mock.calls[1]?.[1]?.body
+    expect(preparedReceipt).not.toBe(receipt)
+    expect(isPreparedImage(preparedReceipt as File)).toBe(true)
     expect(deposit.mock.calls.map(([url, init]) => [url, init?.body, (init?.headers as Record<string, string>)["Content-Type"]])).toEqual([
       ["https://depot.exemple.test/1", statutes, "application/pdf"],
-      ["https://depot.exemple.test/2", receipt, "image/png"],
+      ["https://depot.exemple.test/2", preparedReceipt, "image/png"],
     ])
     expect(calls).toEqual([
       { name: "modules/pages/claims:generateClaimEvidenceUploadUrl", args: { networkId: "network-diasporale" } },
@@ -279,6 +287,29 @@ describe("gestion des pages — écritures du moteur", () => {
     expect(await management.requestClaim({ pageId: "page-1", evidence: [pdf("lourd.pdf", "application/pdf", 11 * 1024 * 1024)] })).toEqual({ ok: false, code: "page_claim_evidence_too_large" })
     expect(mutation).not.toHaveBeenCalled()
     expect(deposit).not.toHaveBeenCalled()
+  })
+
+  it("FD-01 : une photo de pièce portant sa position GPS part sans métadonnées ; une préparation impossible arrête tout avant le premier dépôt", async () => {
+    let upload = 0
+    const deposit = vi.fn<typeof fetch>(async () => new Response(JSON.stringify({ storageId: `stockage-${++upload}` }), { status: 200 }))
+    const leaky = testPrepareImage({ output: { bytes: TEST_JPEG_WITH_GPS_BYTES, type: "image/jpeg" } })
+    const { management } = source({
+      fetch: deposit,
+      prepareImage: leaky,
+      mutation: (name) => (name === "modules/pages/claims:generateClaimEvidenceUploadUrl" ? `https://depot.exemple.test/${upload + 1}` : { claimId: "claim-neuve" }),
+    })
+    const photo = new File([TEST_JPEG_WITH_GPS_BYTES as Uint8Array<ArrayBuffer>], "recepisse.jpg", { type: "image/jpeg" })
+    expect(await management.requestClaim({ pageId: "page-1", evidence: [photo] })).toEqual({ ok: true, value: { claimId: "claim-neuve" } })
+    const sent = new Uint8Array(await (deposit.mock.calls[0]?.[1]?.body as File).arrayBuffer())
+    expect(jpegHasGpsMetadata(sent)).toBe(false)
+    expect(listImageMetadata(sent, "image/jpeg")).toEqual([])
+
+    const refused = vi.fn<typeof fetch>()
+    const blocked = source({ fetch: refused, prepareImage: testPrepareImage({ canvas: "absent" }) })
+    expect(await blocked.management.requestClaim({ pageId: "page-1", evidence: [pdf(), photo] })).toEqual({ ok: false, code: "media_preparation_unavailable" })
+    expect(await blocked.management.setImage!("page-1", "logo", photo)).toEqual({ ok: false, code: "media_preparation_unavailable" })
+    expect(blocked.mutation).not.toHaveBeenCalled()
+    expect(refused).not.toHaveBeenCalled()
   })
 
   it("un dépôt en échec n'ouvre aucune demande", async () => {
@@ -359,6 +390,10 @@ describe("gestion des pages — écritures du moteur", () => {
     })
     const logo = pdf("logo.png", "image/png")
     expect(await management.setImage!("page-1", "logo", logo)).toEqual({ ok: true, value: { url: null, withheld } })
+    // Le logo part PRÉPARÉ (FD-01), déclaré sous le type du fichier préparé.
+    const sentLogo = deposit.mock.calls[0]?.[1]?.body
+    expect(sentLogo).not.toBe(logo)
+    expect(isPreparedImage(sentLogo as File)).toBe(true)
     expect(calls).toEqual([
       { name: "modules/pages/identity:generatePageImageUploadUrl", args: { networkId: "network-diasporale", slot: "logo" } },
       { name: "modules/pages/identity:setPageImage", args: { networkId: "network-diasporale", pageId: "page-1", slot: "logo", storageId: "logo-neuf", mimeType: "image/png" } },
