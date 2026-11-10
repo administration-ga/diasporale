@@ -274,3 +274,117 @@ describe("démonstration — demandes de service", () => {
     expect(ready(renderHook(() => pending.capability.useMyRequests({ cursor: null })).result.current).items).toEqual([])
   })
 })
+
+describe("démonstration — proposition préremplie (SV-04)", () => {
+  it("l'équipe lit ce que l'offre et ses réglages préremplissent ; le demandeur n'en lit rien ; rien n'est proposé d'office", async () => {
+    const { store, capability, offers } = setup()
+    const proposalPrefill = {
+      pricing: { mode: "fixed" as const, amountMinor: 4500, currency: "EUR" }, durationMinutes: 90, delivery: "onsite" as const, city: "Paris",
+      settings: { timeZone: "Europe/Paris", location: { mode: "onsite" as const, area: "Paris 18e (démo)" }, cancellationTerms: "Annulation libre jusqu'à la veille (démo).", bookingCapacity: 1 },
+    }
+    offers.set("offre-coiffure", offerRef("offre-coiffure", { proposalPrefill }))
+    const requestId = await sent(capability)
+    const detail = renderHook(() => capability.useRequest(requestId))
+    expect(ready(detail.result.current)?.proposalPrefill).toBeNull()
+    await as(store, "p-mireille")
+    expect(ready(detail.result.current)).toMatchObject({ viewerRole: "page", proposalPrefill, currentProposal: null, proposals: [] })
+  })
+})
+
+describe("démonstration — plusieurs rendez-vous simultanés (SV-09)", () => {
+  const prefill = (bookingCapacity: number) => ({
+    pricing: { mode: "fixed" as const, amountMinor: 4500, currency: "EUR" }, durationMinutes: 90, delivery: "onsite" as const, city: "Paris",
+    settings: { timeZone: "Europe/Paris", location: null, cancellationTerms: null, bookingCapacity },
+  })
+
+  async function threeOnOneSlot(bookingCapacity: number) {
+    const { store, capability, offers } = setup()
+    offers.set("offre-coiffure", offerRef("offre-coiffure", { proposalPrefill: prefill(bookingCapacity) }))
+    const people = ["p-prisca", "p-steeve", "p-nadia"]
+    const requestIds: string[] = []
+    for (const person of people) {
+      await as(store, person)
+      requestIds.push(await sent(capability))
+    }
+    await as(store, "p-mireille")
+    for (const requestId of requestIds) expect((await capability.propose(proposalInput(requestId))).ok).toBe(true)
+    const accept = async (index: number) => {
+      await as(store, people[index]!)
+      return await capability.accept({ requestId: requestIds[index]!, expectedProposalVersion: 1 })
+    }
+    return { accept }
+  }
+
+  it("capacité deux : deux accords sur le même créneau réussissent, le troisième est refusé", async () => {
+    const { accept } = await threeOnOneSlot(2)
+    expect((await accept(0)).ok).toBe(true)
+    expect((await accept(1)).ok).toBe(true)
+    expect(await accept(2)).toEqual({ ok: false, code: "booking_slot_unavailable" })
+  })
+
+  it("par défaut, un seul rendez-vous à la fois", async () => {
+    const { accept } = await threeOnOneSlot(1)
+    expect((await accept(0)).ok).toBe(true)
+    expect(await accept(1)).toEqual({ ok: false, code: "booking_slot_unavailable" })
+  })
+})
+
+describe("démonstration — déplacer un rendez-vous confirmé (SV-03)", () => {
+  const NEW_START = NOW + 2 * DAY
+
+  async function booked() {
+    const context = setup()
+    const { store, capability } = context
+    const requestId = await sent(capability)
+    await as(store, "p-mireille")
+    await capability.propose(proposalInput(requestId))
+    await as(store, "p-prisca")
+    await capability.accept({ requestId, expectedProposalVersion: 1 })
+    return { ...context, requestId }
+  }
+
+  it("la page propose un autre horaire, la personne l'accepte : même rendez-vous, mêmes conditions, nouvelle version", async () => {
+    const { store, capability, requestId } = await booked()
+    await as(store, "p-mireille")
+    expect(await capability.proposeReschedule!({ requestId, expectedProposalVersion: 1, startAt: NEW_START, timeZone: "America/Toronto", expiresAt: NOW + 12 * HOUR })).toEqual({ ok: true, value: null })
+    const detail = renderHook(() => capability.useRequest(requestId))
+    expect(ready(detail.result.current)).toMatchObject({ rescheduleActions: ["decline_reschedule"], reschedule: { startAt: NEW_START, endAt: NEW_START + 90 * MINUTE, proposedBy: "page" } })
+    expect(await capability.acceptReschedule!({ requestId, expectedProposalVersion: 1, expectedStartAt: NEW_START })).toEqual({ ok: false, code: "request_action_forbidden" })
+    await as(store, "p-prisca")
+    expect(ready(detail.result.current)).toMatchObject({ rescheduleActions: ["accept_reschedule", "decline_reschedule"] })
+    expect(await capability.acceptReschedule!({ requestId, expectedProposalVersion: 1, expectedStartAt: NEW_START + HOUR })).toEqual({ ok: false, code: "reschedule_changed" })
+    await act(async () => { expect(await capability.acceptReschedule!({ requestId, expectedProposalVersion: 1, expectedStartAt: NEW_START })).toEqual({ ok: true, value: { version: 2 } }) })
+    const moved = ready(detail.result.current) as ServiceRequestDetailView
+    expect(moved).toMatchObject({ status: "confirmed", reschedule: null, booking: { startAt: NEW_START, timeZone: "America/Toronto", status: "confirmed" }, currentProposal: { version: 2, amountMinor: 4500 } })
+    expect(moved.proposals.map((proposal) => [proposal.version, proposal.state, proposal.rescheduledFrom, proposal.cancellationTerms])).toEqual([
+      [2, "current", 1, "Annulation libre jusqu'à la veille."],
+      [1, "superseded", null, "Annulation libre jusqu'à la veille."],
+    ])
+    expect(moved.timeline.map((event) => [event.status, event.version])).toEqual([["sent", null], ["proposed", 1], ["confirmed", null], ["confirmed", 2]])
+  })
+
+  it("décliné ou échu, le rendez-vous reste tel quel ; un créneau pris est refusé", async () => {
+    const { store, capability, requestId } = await booked()
+    const move = { requestId, expectedProposalVersion: 1, startAt: NEW_START, timeZone: "Europe/Paris", expiresAt: NOW + HOUR }
+    expect(await capability.proposeReschedule!(move)).toEqual({ ok: true, value: null })
+    expect(await capability.proposeReschedule!(move)).toEqual({ ok: false, code: "reschedule_already_open" })
+    await as(store, "p-mireille")
+    expect(await capability.declineReschedule!({ requestId })).toEqual({ ok: true, value: null })
+    expect(await capability.declineReschedule!({ requestId })).toEqual({ ok: false, code: "reschedule_not_open" })
+    expect(await capability.proposeReschedule!(move)).toEqual({ ok: true, value: null })
+    clock = NOW + HOUR
+    await as(store, "p-prisca")
+    const detail = renderHook(() => capability.useRequest(requestId))
+    expect(ready(detail.result.current)).toMatchObject({ reschedule: null, rescheduleActions: ["propose_reschedule"], booking: { startAt: NOW + DAY + HOUR } })
+    expect(await capability.acceptReschedule!({ requestId, expectedProposalVersion: 1, expectedStartAt: NEW_START })).toEqual({ ok: false, code: "reschedule_not_open" })
+    // Un autre rendez-vous de la page occupe déjà le nouvel horaire (un à la fois).
+    await as(store, "p-steeve")
+    const other = await sent(capability, sendInput({ idempotencyKey: OTHER_KEY }))
+    await as(store, "p-mireille")
+    await capability.propose(proposalInput(other, { startAt: NEW_START, expiresAt: NOW + 12 * HOUR }))
+    await as(store, "p-steeve")
+    await capability.accept({ requestId: other, expectedProposalVersion: 1 })
+    await as(store, "p-prisca")
+    expect(await capability.proposeReschedule!({ ...move, expiresAt: NOW + 2 * HOUR })).toEqual({ ok: false, code: "booking_slot_unavailable" })
+  })
+})

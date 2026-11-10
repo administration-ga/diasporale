@@ -1,0 +1,49 @@
+{
+  "mutualAid": {
+    "questions": {
+      "view": {
+        "unanswered": "Unanswered"
+      },
+      "empty": {
+        "unanswered": {
+          "title": "No unanswered question here",
+          "body": "Every open question in this place has already received at least one answer."
+        }
+      }
+    },
+    "search": {
+      "label": "Search the questions",
+      "query": "Words to find",
+      "hint": "In the title and details of the questions, at least two letters.",
+      "submit": "Search",
+      "clear": "Clear the search",
+      "theme": "Topic",
+      "anyTheme": "All topics",
+      "emptyTitle": "No question matches",
+      "emptyBody": "Try other words, another topic or the whole country. You can also ask the question."
+    }
+  },
+  "arrivalKit": {
+    "search": {
+      "label": "Search the kit",
+      "query": "Words to find",
+      "hint": "In the title and summary of the resources, at least two letters.",
+      "submit": "Search",
+      "clear": "Clear the search",
+      "emptyQuery": "No resource contains these words: try others."
+    }
+  },
+  "mentoring": {
+    "search": {
+      "language": "Language spoken",
+      "anyLanguage": "All languages",
+      "city": "City (optional)",
+      "cityHint": "Type the city: only mentors who show it to you are found.",
+      "emptyFilters": "No active mentor matches this language or this city ({{country}}). Widen the search."
+    }
+  },
+  "errors": {
+    "aid_query_too_long": "The search is too long: one hundred characters at most.",
+    "arrival_kit_query_too_long": "The search is too long: one hundred characters at most."
+  }
+}

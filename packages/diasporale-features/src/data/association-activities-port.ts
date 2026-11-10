@@ -1,4 +1,6 @@
 /** DG-010 : groupe privé et événements d'une association, participations volontaires. */
+import { isPageEventCancellationReason, PAGE_EVENT_CANCELLATION_REASONS, type PageEventCancellationReason } from "@antsia/social-domain/events"
+
 import type { ActionResult } from "./port"
 import type { Loadable } from "./types"
 import type { AssociationEventReminderState, CountryCode } from "@diasporale/domain"
@@ -18,6 +20,20 @@ export const ASSOCIATION_ACTIVITY_ERROR_CODES = [
   "association_event_attendance_closed", "association_event_attendance_code_invalid", "association_event_attendance_changed",
   "association_event_gallery_not_open", "association_event_gallery_media_required",
 ] as const
+
+/**
+ * EV-03 : le motif d'une annulation, pris dans la liste FERMÉE du moteur, sans texte libre
+ * (plan 08, décision 2 : lieu indisponible, météo, organisateur empêché, autre). Il se lit sur la
+ * fiche avec les droits du lecteur, jamais dans l'avis de la cloche.
+ */
+export const ASSOCIATION_EVENT_CANCELLATION_REASONS = PAGE_EVENT_CANCELLATION_REASONS
+export type AssociationEventCancellationReason = PageEventCancellationReason
+export const isAssociationEventCancellationReason = isPageEventCancellationReason
+
+/** Ce que la fiche d'un évènement annulé dit de son annulation ; `reason: null` : annulé sans motif. */
+export interface AssociationEventCancellationView {
+  readonly reason: AssociationEventCancellationReason | null
+}
 
 export interface AssociationActivityPage<T> {
   readonly items: readonly T[]
@@ -168,7 +184,22 @@ export interface AssociationEventsCapability {
   useEvent(eventId: string): Loadable<AssociationEventView | null>
   create(input: AssociationEventInput & { readonly idempotencyKey: string }): Promise<ActionResult<{ readonly eventId: string; readonly created: boolean }>>
   update(input: AssociationEventInput & { readonly eventId: string; readonly expectedVersion: number }): Promise<ActionResult>
-  cancel(input: { readonly eventId: string; readonly expectedVersion: number }): Promise<ActionResult>
+  /**
+   * Annuler l'évènement (terminal). EV-03 : `reason`, facultatif pour le fournisseur, est pris dans
+   * la liste fermée ; chaque inscrit et chaque personne en attente en est avisé, sans le motif.
+   */
+  cancel(input: { readonly eventId: string; readonly expectedVersion: number; readonly reason?: AssociationEventCancellationReason }): Promise<ActionResult>
+  /**
+   * EV-03 : le motif d'un évènement ANNULÉ, relu avec les droits du lecteur ; `null` quand
+   * l'évènement ne se lit pas ou n'est pas annulé. Facultatif : un fournisseur qui ne le sert pas
+   * le laisse absent, et la fiche ne dit que « annulé ».
+   */
+  useCancellation?(eventId: string): Loadable<AssociationEventCancellationView | null>
+  /**
+   * EV-03 : qui écrit les avis d'issue (annulation, place obtenue) — le moteur, ou la démonstration
+   * qui les simule dans ce navigateur. Absent : aucun avis promis par l'écran.
+   */
+  readonly outcomeNotices?: "engine" | "simulated"
   /** Demande une place ou rejoint la file ; un rejeu garde l'ordre et reprend son traitement borné. */
   register(eventId: string): Promise<ActionResult>
   unregister(eventId: string): Promise<ActionResult>

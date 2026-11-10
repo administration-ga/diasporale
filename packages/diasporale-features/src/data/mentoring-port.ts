@@ -26,6 +26,7 @@ import {
   type MentoringRequestStatus,
   type MentoringRole,
   type MentoringSlot,
+  type MentorLanguageCode,
   type MentorProfileState,
   type TrustBadge,
 } from "@diasporale/domain"
@@ -180,7 +181,15 @@ export interface MentoringCapability {
   /** Mon profil de mentor (tout état) ; `null` : je ne suis pas mentor. */
   useMyProfile(): Loadable<MyMentorProfileView | null>
   /** Les mentors actifs d'un pays, tous domaines (`domain` à `null`) ou un domaine. */
-  useSearch(args: { readonly country: CountryCode; readonly domain: MentoringDomain | null; readonly cursor: string | null }): MentorsPageQuery
+  useSearch(args: {
+    readonly country: CountryCode
+    readonly domain: MentoringDomain | null
+    /** ET-04 — une langue parlée par le mentor ; absente ou `null`, toutes. */
+    readonly language?: MentorLanguageCode | null
+    /** ET-04 — une ville saisie, jugée sur ce que le lecteur voit de la ville du mentor. */
+    readonly city?: string
+    readonly cursor: string | null
+  }): MentorsPageQuery
   /** La fiche d'un mentor ; `null` : introuvable pour moi (inconnu, en pause, retiré, bloqué). */
   useMentor(mentorId: string): Loadable<MentorDetailView | null>
   /** Mes demandes comme mentoré, des plus récemment mises à jour. */

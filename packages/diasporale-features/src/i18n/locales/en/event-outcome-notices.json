@@ -1,0 +1,33 @@
+{
+  "bell": {
+    "system": {
+      "association_event_cancelled": "An event you registered for was cancelled.",
+      "association_event_seat_confirmed": "A place opened up: your registration for an event is confirmed."
+    }
+  },
+  "associationActivities": {
+    "eventCancel": {
+      "reasonLegend": "Reason for cancelling",
+      "reasonHint": "The reason shows on the event page. It is chosen from this list, without free text.",
+      "reason": {
+        "venue_unavailable": "Venue unavailable",
+        "weather": "Bad weather",
+        "organizer_unavailable": "Organiser unable to attend",
+        "other": "Other reason"
+      },
+      "notice": "Everyone registered and everyone on the waiting list gets a notice in their notification bell, without the reason.",
+      "noticeDemo": "In the demo, these notices are simulated in this browser, on the fictitious accounts.",
+      "back": "Keep the event",
+      "done": "The event is cancelled."
+    },
+    "eventCancellation": {
+      "reason": "Reason: {{reason}}"
+    },
+    "eventSeat": {
+      "waitlistNotice": "If a place opens up, it is given to you in waiting-list order and a notice tells you in your notification bell."
+    }
+  },
+  "errors": {
+    "association_event_cancel_reason_required": "Choose the reason for cancelling."
+  }
+}

@@ -209,12 +209,21 @@ export function createEngineMentoring(deps: EngineSourceDeps): MentoringCapabili
       return useStableLoaded(reader.error, loaded, (error, result) => nullableQuery(error, result, myMentorProfileView))
     },
 
-    useSearch({ country, domain, cursor }) {
+    useSearch({ country, domain, language, city, cursor }) {
       const reader = useReader()
+      // ET-04 : une langue et une ville ne s'envoient que si elles restreignent.
+      const typedCity = city?.trim() ?? ""
       const loaded = useLoaded(
         M.searchMentors,
         reader.networkId
-          ? { networkId: reader.networkId, country, ...(domain === null ? {} : { domain }), paginationOpts: { cursor, numItems: MENTORS_PAGE_SIZE } }
+          ? {
+            networkId: reader.networkId,
+            country,
+            ...(domain === null ? {} : { domain }),
+            ...(language ? { language } : {}),
+            ...(typedCity.length > 0 ? { city: typedCity } : {}),
+            paginationOpts: { cursor, numItems: MENTORS_PAGE_SIZE },
+          }
           : "skip",
       )
       return useStableLoaded(reader.error, loaded, (error, result) => pageQuery(error, result, mentorCardView))

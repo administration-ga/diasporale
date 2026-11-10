@@ -26,6 +26,17 @@ describe("rappel associatif dans la cloche DIASPORALE", () => {
     expect(toNotificationView(notice({ associationEvent: null })).associationEvent).toBeNull()
     expect(toNotificationView(notice({ subject: null })).associationEvent).toBeNull()
   })
+  it("EV-03 : l'annulation et la place obtenue sont dites par leur nom et mènent à la fiche, sans acteur", () => {
+    for (const kind of ["association_event_cancelled", "association_event_seat_confirmed"] as const) {
+      const actor = { personId: "personne-demo" as Id<"persons">, displayName: "Awa OGOOUÉ", handle: "awa", avatarUrl: null, badges: [] }
+      expect(toNotificationView(notice({ kind, actor }))).toEqual({
+        id: "notice-demo", kind, actor: null,
+        createdAt: 42, read: false, pendingConnectionId: null, inviteOutcome: null,
+        postId: null, associationEvent: { eventId: EVENT, pageHandle: "association-demo" },
+      })
+      expect(toNotificationView(notice({ kind, subject: { kind: "event", id: "autre" } })).associationEvent).toBeNull()
+    }
+  })
   it("préserve le format des autres genres et ne leur ajoute aucun lien d'événement", () => {
     const projected = toNotificationView(notice({ kind: "post_reaction", subject: { kind: "post", id: "post-demo" } }))
     expect(projected.kind).toBe("post_reaction")

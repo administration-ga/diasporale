@@ -4,6 +4,9 @@ import {
   CURRENCY_CODES,
   parseMajorAmount,
   parseServiceOffer,
+  parseServiceProviderSettings,
+  SERVICE_BOOKING_CAPACITY_MAX,
+  SERVICE_CANCELLATION_TERMS_MAX_LENGTH,
   SERVICE_CATEGORIES,
   SERVICE_CITY_MAX_LENGTH,
   SERVICE_DELIVERY_MODES,
@@ -11,6 +14,7 @@ import {
   SERVICE_DESCRIPTION_MIN_LENGTH,
   SERVICE_LANGUAGE_CODES,
   SERVICE_LANGUAGES_MAX,
+  SERVICE_LOCATION_AREA_MAX_LENGTH,
   SERVICE_PRICING_MODES,
   SERVICE_TITLE_MAX_LENGTH,
   SERVICE_TITLE_MIN_LENGTH,
@@ -18,9 +22,10 @@ import {
   type ServiceOfferInput,
   type ServiceOfferRefusal,
   type ServicePricingLike,
+  serviceTextRefusal,
 } from "@diasporale/domain"
 import { Button, Card, Field, Input, Textarea, residenceCountryOptions } from "@diasporale/features"
-import type { ActionErrorCode, ServiceOfferDetailView, ServiceOfferInputView, ServicesCapability } from "@diasporale/features/data"
+import type { ActionErrorCode, ServiceOfferDetailView, ServiceOfferInputView, ServiceProviderSettingsView, ServicesCapability } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useId, useLayoutEffect, useMemo, useRef, useState } from "react"
@@ -29,11 +34,23 @@ import { toast } from "sonner"
 import { z } from "zod"
 
 import { formatServiceDuration, languageName, majorAmountInput } from "./service-format"
+import { browserTimeZone, timeZoneOptions } from "./service-request-ui"
 
 /** Durées proposées, en minutes ; une durée déjà enregistrée hors de cette liste reste proposée. */
 const DURATION_CHOICES = [15, 30, 45, 60, 90, 120, 180, 240, 360, 480, 720] as const
 
 const selectClass = "h-11 w-full rounded-md border border-input bg-card px-3 text-[15px] focus-visible:shadow-focus aria-invalid:border-destructive"
+
+/** SV-04 : le lieu habituel d'une prestation — aucun (la ville de l'offre), sur place approximatif, ou à distance. */
+const SETTINGS_LOCATION_MODES = ["none", "onsite", "remote"] as const
+const SETTINGS_LOCATION_LABELS = {
+  none: "serviceProposalSettings.locationNone",
+  onsite: "serviceProposalSettings.locationOnsite",
+  remote: "serviceProposalSettings.locationRemote",
+} as const satisfies Record<(typeof SETTINGS_LOCATION_MODES)[number], string>
+
+/** SV-09 : de un (par défaut) à dix rendez-vous simultanés. */
+const CAPACITY_CHOICES = Array.from({ length: SERVICE_BOOKING_CAPACITY_MAX }, (_, index) => index + 1)
 
 /**
  * Le formulaire d'une offre (React Hook Form + Zod). Les bornes de Zod sont
@@ -58,6 +75,11 @@ const schema = z
     pricingMode: z.enum(SERVICE_PRICING_MODES, { message: "service_pricing_invalid" }),
     amount: z.string(),
     currency: z.string(),
+    settingsLocationMode: z.enum(SETTINGS_LOCATION_MODES),
+    settingsArea: z.string().max(SERVICE_LOCATION_AREA_MAX_LENGTH, "proposal_location_invalid"),
+    settingsTerms: z.string().max(SERVICE_CANCELLATION_TERMS_MAX_LENGTH, "proposal_terms_invalid"),
+    settingsTimeZone: z.string(),
+    settingsCapacity: z.string(),
   })
   .superRefine((values, ctx) => {
     const input = inputOf(values)
@@ -66,7 +88,13 @@ const schema = z
       return
     }
     const offer = parseServiceOffer(input.value)
-    if (!offer.ok) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [fieldOf(offer.code)], message: offer.code })
+    if (!offer.ok) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: [fieldOf(offer.code)], message: offer.code })
+      return
+    }
+    // SV-04 : les réglages de prestation, jugés par la règle du domaine (mêmes refus que la proposition).
+    const settings = parseServiceProviderSettings(settingsOf(values))
+    if (!settings.ok) ctx.addIssue({ code: z.ZodIssueCode.custom, path: [settingsFieldOf(settings.code, values)], message: settings.code })
   })
 
 type Values = z.infer<typeof schema>
@@ -94,10 +122,32 @@ const FIELD_OF: Partial<Record<string, FieldPath<Values>>> = {
   amount_invalid: "amount",
   amount_too_large: "amount",
   currency_invalid: "currency",
+  request_time_zone_invalid: "settingsTimeZone",
+  proposal_location_invalid: "settingsArea",
+  proposal_terms_invalid: "settingsTerms",
+  booking_capacity_invalid: "settingsCapacity",
 }
 
 function fieldOf(code: string): FieldPath<Values> {
   return FIELD_OF[code] ?? "title"
+}
+
+/** SV-04 : les réglages saisis, en réglages de prestation (un champ vide n'est pas réglé). */
+function settingsOf(values: Values): ServiceProviderSettingsView {
+  return {
+    timeZone: values.settingsTimeZone === "" ? null : values.settingsTimeZone,
+    location: values.settingsLocationMode === "remote" ? { mode: "remote" } : values.settingsLocationMode === "onsite" ? { mode: "onsite", area: values.settingsArea } : null,
+    cancellationTerms: values.settingsTerms.trim() === "" ? null : values.settingsTerms,
+    bookingCapacity: Number(values.settingsCapacity),
+  }
+}
+
+/** Le champ d'un refus des réglages : une coordonnée ou une adresse se dit là où elle est écrite. */
+function settingsFieldOf(code: string, values: Values): FieldPath<Values> {
+  if (code === "request_contact_forbidden" || code === "request_address_forbidden") {
+    return values.settingsLocationMode === "onsite" && serviceTextRefusal(values.settingsArea) !== null ? "settingsArea" : "settingsTerms"
+  }
+  return fieldOf(code)
 }
 
 /** Les valeurs du formulaire, en saisie du domaine (le montant lisible devient des unités mineures). */
@@ -138,9 +188,16 @@ function defaultsOf(offer: ServiceOfferDetailView | null, fallback: { readonly c
       pricingMode: "quote",
       amount: "",
       currency: "EUR",
+      settingsLocationMode: "none",
+      settingsArea: "",
+      settingsTerms: "",
+      settingsTimeZone: "",
+      settingsCapacity: "1",
     }
   }
   const { pricing } = offer
+  const settings = offer.providerSettings ?? null
+  const location = settings?.location ?? null
   return {
     title: offer.title,
     description: offer.description,
@@ -153,6 +210,11 @@ function defaultsOf(offer: ServiceOfferDetailView | null, fallback: { readonly c
     pricingMode: pricing.mode,
     amount: pricing.mode === "quote" ? "" : majorAmountInput(pricing.amountMinor, pricing.currency),
     currency: pricing.mode === "quote" ? "EUR" : pricing.currency,
+    settingsLocationMode: location?.mode ?? "none",
+    settingsArea: location?.mode === "onsite" ? location.area : "",
+    settingsTerms: settings?.cancellationTerms ?? "",
+    settingsTimeZone: settings?.timeZone ?? "",
+    settingsCapacity: String(settings?.bookingCapacity ?? 1),
   }
 }
 
@@ -184,6 +246,12 @@ export function ServiceOfferForm(props: ServiceOfferFormProps) {
     return current !== null && !choices.includes(current) ? [...choices, current].sort((left, right) => left - right) : choices
   }, [offer?.durationMinutes])
   const pricingMode = useWatch({ control: form.control, name: "pricingMode" })
+  const settingsLocationMode = useWatch({ control: form.control, name: "settingsLocationMode" })
+  // Le fuseau déjà réglé reste choisissable, même hors de la liste du navigateur.
+  const zones = useMemo(() => {
+    const saved = offer?.providerSettings?.timeZone ?? null
+    return [...new Set([...(saved ? [saved] : []), ...timeZoneOptions(browserTimeZone())])]
+  }, [offer?.providerSettings?.timeZone])
   useLayoutEffect(() => {
     titleInput.current?.focus()
   }, [])
@@ -210,6 +278,7 @@ export function ServiceOfferForm(props: ServiceOfferFormProps) {
         languages: values.languages,
         durationMinutes: parsed.value.durationMinutes ?? null,
         pricing: parsed.value.pricing,
+        providerSettings: settingsOf(values),
       }
       try {
         const result = offer === null
@@ -342,6 +411,45 @@ export function ServiceOfferForm(props: ServiceOfferFormProps) {
               </Field>
             </div>
           ) : null}
+        </fieldset>
+
+        <fieldset className="flex min-w-0 flex-col gap-3 rounded-lg border border-border p-3" aria-describedby={`${id}-reglages-aide`}>
+          <legend className="px-1 text-sm font-medium">{t("serviceProposalSettings.title")}</legend>
+          <p id={`${id}-reglages-aide`} className="text-[13px] text-muted-foreground">{t("serviceProposalSettings.lead")}</p>
+          <fieldset className="flex min-w-0 flex-col gap-2">
+            <legend className="mb-1 text-sm font-medium">{t("serviceProposalSettings.location")}</legend>
+            <div className="flex flex-wrap gap-x-4 gap-y-2">
+              {SETTINGS_LOCATION_MODES.map((mode) => (
+                <label key={mode} className="inline-flex min-h-11 items-center gap-2 text-sm">
+                  <input type="radio" value={mode} className="size-5 accent-primary" disabled={busy} {...form.register("settingsLocationMode")} />
+                  {t(SETTINGS_LOCATION_LABELS[mode])}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          {settingsLocationMode === "onsite" ? (
+            <Field id={`${id}-settings-area`} label={t("serviceProposalSettings.area")} hint={t("serviceProposalSettings.areaHint")} error={error("settingsArea")}>
+              {(field) => <Input id={field.id} aria-describedby={field.describedBy} aria-invalid={field.invalid || undefined} maxLength={SERVICE_LOCATION_AREA_MAX_LENGTH} autoComplete="off" disabled={busy} {...form.register("settingsArea")} />}
+            </Field>
+          ) : null}
+          <Field id={`${id}-settings-terms`} label={t("serviceProposalSettings.terms")} hint={t("serviceProposalSettings.termsHint")} error={error("settingsTerms")}>
+            {(field) => <Textarea id={field.id} aria-describedby={field.describedBy} aria-invalid={field.invalid || undefined} rows={2} maxLength={SERVICE_CANCELLATION_TERMS_MAX_LENGTH} disabled={busy} {...form.register("settingsTerms")} />}
+          </Field>
+          <Field id={`${id}-settings-zone`} label={t("serviceProposalSettings.timeZone")} hint={t("serviceProposalSettings.timeZoneHint")} error={error("settingsTimeZone")}>
+            {(field) => (
+              <select id={field.id} aria-describedby={field.describedBy} aria-invalid={field.invalid || undefined} className={selectClass} disabled={busy} {...form.register("settingsTimeZone")}>
+                <option value="">{t("serviceProposalSettings.timeZoneDevice")}</option>
+                {zones.map((zone) => <option key={zone} value={zone}>{zone}</option>)}
+              </select>
+            )}
+          </Field>
+          <Field id={`${id}-settings-capacity`} label={t("serviceProposalSettings.capacity")} hint={t("serviceProposalSettings.capacityHint")} error={error("settingsCapacity")}>
+            {(field) => (
+              <select id={field.id} aria-describedby={field.describedBy} aria-invalid={field.invalid || undefined} className={selectClass} disabled={busy} {...form.register("settingsCapacity")}>
+                {CAPACITY_CHOICES.map((count) => <option key={count} value={String(count)}>{count}</option>)}
+              </select>
+            )}
+          </Field>
         </fieldset>
 
         <p className="rounded-lg bg-muted px-3 py-2 text-[13px]">{t("services.offer.noPayment")}</p>

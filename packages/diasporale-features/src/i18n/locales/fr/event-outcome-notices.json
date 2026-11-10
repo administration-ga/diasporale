@@ -1,0 +1,33 @@
+{
+  "bell": {
+    "system": {
+      "association_event_cancelled": "Un événement auquel vous êtes inscrit a été annulé.",
+      "association_event_seat_confirmed": "Une place s’est libérée : votre inscription à un événement est confirmée."
+    }
+  },
+  "associationActivities": {
+    "eventCancel": {
+      "reasonLegend": "Motif de l’annulation",
+      "reasonHint": "Le motif s’affiche sur la fiche de l’événement. Il se choisit dans cette liste, sans texte libre.",
+      "reason": {
+        "venue_unavailable": "Lieu indisponible",
+        "weather": "Météo défavorable",
+        "organizer_unavailable": "Organisateur empêché",
+        "other": "Autre raison"
+      },
+      "notice": "Chaque inscrit et chaque personne en attente reçoit un avis dans sa cloche, sans le motif.",
+      "noticeDemo": "En démonstration, ces avis sont simulés dans ce navigateur, sur les comptes fictifs.",
+      "back": "Garder l’événement",
+      "done": "L’événement est annulé."
+    },
+    "eventCancellation": {
+      "reason": "Motif : {{reason}}"
+    },
+    "eventSeat": {
+      "waitlistNotice": "Si une place se libère, elle vous est attribuée dans l’ordre de la liste et un avis vous le dit dans votre cloche."
+    }
+  },
+  "errors": {
+    "association_event_cancel_reason_required": "Choisissez le motif de l’annulation."
+  }
+}
