@@ -5,6 +5,10 @@
  * attendent la modération ; aucun faux modérateur ne les approuve ici.
  * Le choix de rappel est conservé sans scheduler ni notification : sans reçu
  * historique, l'échéance atteinte devient « expired » dans cette démo.
+ * EV-03 : l'annulation garde son motif (liste fermée) ; ses avis neutres aux
+ * inscrits et aux personnes en attente, et l'avis « place confirmée » à la
+ * personne promue, sont SIMULÉS dans la cloche du magasin commun
+ * (`notifySystem`), jamais à l'auteur du geste — l'écran le dit.
  */
 import { isProfilePublished, PERSONAL_POST_MAX_LENGTH } from "@antsia/social-domain/content"
 import { assertPersonalEventDescription, assertPersonalEventLocation, assertPersonalEventTimeZone, assertPersonalEventTitle, assertPersonalEventWindow } from "@antsia/social-domain/events"
@@ -15,7 +19,10 @@ import { useMemo, useSyncExternalStore } from "react"
 
 import {
   ASSOCIATION_ACTIVITY_PAGE_SIZE,
+  isAssociationEventCancellationReason,
   type AssociationActivityPage,
+  type AssociationEventCancellationReason,
+  type AssociationEventCancellationView,
   type AssociationEventInput,
   type AssociationEventsCapability,
   type AssociationEventView,
@@ -45,7 +52,7 @@ type Moderation = AssociationGroupPostView["moderation"]
 interface GroupRow { readonly id: string; readonly pageId: string; readonly name: string; readonly createdById: string; readonly idempotencyKey: string; readonly closedAt: number | null; readonly createdAt: number }
 interface GroupMemberRow { readonly groupId: string; readonly personId: string; readonly leftAt: number | null }
 interface PostRow { readonly id: string; readonly groupId: string; readonly authorId: string; readonly body: string; readonly idempotencyKey: string; readonly moderation: Moderation; readonly createdAt: number; readonly removedAt: number | null }
-interface EventRow extends AssociationEventInput { readonly id: string; readonly idempotencyKey: string; readonly status: "scheduled" | "cancelled"; readonly version: number; readonly moderation: Moderation; readonly createdAt: number; readonly updatedAt?: number; readonly cancelledAt?: number | null; readonly capacity: number | null; readonly registrationClosesAt: number | null }
+interface EventRow extends AssociationEventInput { readonly id: string; readonly idempotencyKey: string; readonly status: "scheduled" | "cancelled"; readonly version: number; readonly moderation: Moderation; readonly createdAt: number; readonly updatedAt?: number; readonly cancelledAt?: number | null; readonly capacity: number | null; readonly registrationClosesAt: number | null; readonly cancellationReason?: AssociationEventCancellationReason | null }
 interface GalleryRow { readonly id: string; readonly eventId: string; readonly body: string; readonly media: readonly DemoMedia[]; readonly mediaKey: string; readonly createdAt: number; readonly idempotencyKey: string; readonly removedAt?: number | null; readonly moderation: Moderation }
 /** La séquence appartient à une demande en attente ; les anciennes confirmations n'en ont pas. */
 interface RegistrationRow {
@@ -93,7 +100,8 @@ function isState(value: unknown): value is StoredActivitiesState {
     && Array.isArray(value.members) && value.members.every((row: unknown) => record(row) && typeof row.groupId === "string" && typeof row.personId === "string" && (row.leftAt === null || typeof row.leftAt === "number"))
     && Array.isArray(value.posts) && value.posts.every((row: unknown) => record(row) && typeof row.id === "string" && typeof row.groupId === "string" && typeof row.authorId === "string" && typeof row.body === "string" && typeof row.idempotencyKey === "string" && moderation(row.moderation) && typeof row.createdAt === "number" && (row.removedAt === null || typeof row.removedAt === "number"))
     && Array.isArray(value.events) && value.events.every((row: unknown) => record(row) && typeof row.id === "string" && typeof row.pageId === "string" && typeof row.title === "string" && typeof row.description === "string" && typeof row.location === "string" && typeof row.startAt === "number" && typeof row.endAt === "number" && typeof row.timeZone === "string" && (row.audience === "network" || row.audience === "association") && (row.status === "scheduled" || row.status === "cancelled") && typeof row.idempotencyKey === "string" && Number.isSafeInteger(row.version) && (row.version as number) > 0 && moderation(row.moderation) && typeof row.createdAt === "number" && parseAssociationEventCapacity(row.capacity).ok && parseAssociationEventDeadline(row.registrationClosesAt, row.startAt).ok)
-    && value.events.every((row: unknown) => record(row) && (row.updatedAt === undefined || Number.isSafeInteger(row.updatedAt)) && (row.cancelledAt === undefined || row.cancelledAt === null || Number.isSafeInteger(row.cancelledAt)))
+    && value.events.every((row: unknown) => record(row) && (row.updatedAt === undefined || Number.isSafeInteger(row.updatedAt)) && (row.cancelledAt === undefined || row.cancelledAt === null || Number.isSafeInteger(row.cancelledAt))
+      && (row.cancellationReason === undefined || row.cancellationReason === null || isAssociationEventCancellationReason(row.cancellationReason)))
     && Array.isArray(value.registrations) && value.registrations.every((row: unknown) => record(row) && typeof row.eventId === "string" && typeof row.personId === "string"
       && (row.status === "accepted" || row.status === "declined" || row.status === "pending")
       && (row.sequence === undefined ? row.status !== "pending" : Number.isSafeInteger(row.sequence) && (row.sequence as number) > 0)
@@ -228,6 +236,8 @@ export function createDemoAssociationActivities(store: DemoStore, deps: DemoAsso
     const affected = new Set(data.registrations.filter((row) => !personExists(row.personId)).map((row) => row.eventId))
     for (const event of next.events) if (affected.has(event.id)) next = resumeWaitlist(next, event)
     commit(next)
+    // EV-03 : une place libérée par un effacement est annoncée à qui l'obtient.
+    for (const event of next.events) if (affected.has(event.id)) noticeSeats(event, promotedBetween(data, next, event.id), store.getState().session.personId)
   }
   function confirmedCount(data: DemoAssociationActivitiesState, eventId: string): number {
     // Une perte de droit ne révoque pas une place ; un compte effacé ne la réserve plus.
@@ -270,6 +280,26 @@ export function createDemoAssociationActivities(store: DemoStore, deps: DemoAsso
       }
     }
     return changed ? { ...data, registrations } : data
+  }
+  /** EV-03 : les personnes passées de la file d'attente à une place confirmée d'un évènement, entre deux états. */
+  function promotedBetween(before: DemoAssociationActivitiesState, after: DemoAssociationActivitiesState, eventId: string): string[] {
+    const waitingBefore = new Set(before.registrations.filter((row) => row.eventId === eventId && row.status === "pending").map((row) => row.personId))
+    return after.registrations.filter((row) => row.eventId === eventId && row.status === "accepted" && waitingBefore.has(row.personId)).map((row) => row.personId)
+  }
+  /**
+   * EV-03 : l'avis « place confirmée » à chaque personne promue depuis la file, simulé dans la
+   * cloche ; jamais à l'auteur du geste en cours (inscription, retrait, capacité relevée). Une place
+   * de nouveau obtenue rafraîchit sa ligne, comme le moteur.
+   */
+  function noticeSeats(event: EventRow, personIds: readonly string[], sourceId: string | null): void {
+    const page = pageOf(event.pageId)
+    if (!page || personIds.length === 0) return
+    store.notifySystem({ kind: "association_event_seat_confirmed", recipientIds: personIds, sourceId, noticeKey: `event:${event.id}:seat`, associationEvent: { eventId: event.id, pageHandle: page.handle }, reopen: true })
+  }
+  /** Écrit l'état suivant, puis avise les personnes promues de l'évènement (EV-03). */
+  function commitWithSeatNotices(before: DemoAssociationActivitiesState, next: DemoAssociationActivitiesState, event: EventRow, sourceId: string | null): void {
+    commit(next)
+    noticeSeats(event, promotedBetween(before, next, event.id), sourceId)
   }
   function eventView(event: EventRow): AssociationEventView {
     const page = pageOf(event.pageId)!
@@ -741,6 +771,8 @@ export function createDemoAssociationActivities(store: DemoStore, deps: DemoAsso
     },
     events: {
       reminderDelivery: "preferences_only",
+      // EV-03 : avis d'annulation et de place obtenue simulés dans la cloche de ce navigateur.
+      outcomeNotices: "simulated",
       attendance,
       gallery,
       calendar,
@@ -779,6 +811,17 @@ export function createDemoAssociationActivities(store: DemoStore, deps: DemoAsso
           if (code) return failed(code)
           const event = data.events.find((row) => row.id === eventId)
           return ready(event && canReadEvent(event) ? eventView(event) : null)
+        }, [tick, eventId])
+      },
+      useCancellation(eventId) {
+        const tick = useSnapshot()
+        return useMemo<Loadable<AssociationEventCancellationView | null>>(() => {
+          if (tick === "") return LOADING
+          const code = refusal()
+          if (code) return failed(code)
+          const event = current().events.find((row) => row.id === eventId)
+          // Même garde que la fiche : un évènement illisible, ou non annulé, ne dit rien.
+          return ready(event && event.status === "cancelled" && canReadEvent(event) ? { reason: event.cancellationReason ?? null } : null)
         }, [tick, eventId])
       },
       async create(input) {
@@ -823,17 +866,30 @@ export function createDemoAssociationActivities(store: DemoStore, deps: DemoAsso
         if (rescheduled && parsed.startAt <= store.now()) return fail("association_event_invalid")
         const contentChanged = JSON.stringify(parsedEvent(event)) !== JSON.stringify(parsed)
         const nextEvent: EventRow = { ...event, ...parsed, capacity: capacity.value, registrationClosesAt: deadline.value, updatedAt: store.now(), version: event.version + 1, moderation: contentChanged ? "pending_review" : event.moderation }
-        const next = { ...current(), events: replaceEvent(nextEvent) }
-        commit(resumeWaitlist(next, nextEvent))
+        const before = current()
+        const next = { ...before, events: replaceEvent(nextEvent) }
+        commitWithSeatNotices(before, resumeWaitlist(next, nextEvent), nextEvent, viewerId())
         return OK
       },
-      async cancel({ eventId, expectedVersion }) {
+      async cancel({ eventId, expectedVersion, reason }) {
         const code = refusal(true)
         if (code) return fail(code)
+        // EV-03 : un motif hors de la liste fermée est refusé, comme le validateur du moteur.
+        if (reason !== undefined && !isAssociationEventCancellationReason(reason)) return fail("association_event_invalid")
         const event = managedEvent(eventId)
         if (!event) return fail("not_found")
         if (!versionMatches(expectedVersion, event.version)) return fail("association_event_version_changed")
-        if (event.status !== "cancelled") commit({ ...current(), events: replaceEvent({ ...event, status: "cancelled", updatedAt: store.now(), cancelledAt: store.now(), version: event.version + 1 }) })
+        // Rejouée sur un évènement déjà annulé : ni motif ni avis ne changent.
+        if (event.status === "cancelled") return OK
+        const now = store.now()
+        const data = current()
+        commit({ ...data, events: replaceEvent({ ...event, status: "cancelled", updatedAt: now, cancelledAt: now, version: event.version + 1, cancellationReason: reason ?? null }) })
+        // EV-03 : chaque inscrit confirmé et chaque personne en attente, avant la fin de l'évènement publié ; jamais l'auteur du geste.
+        const page = pageOf(event.pageId)
+        if (page && event.moderation === "published" && now < event.endAt) {
+          const recipientIds = data.registrations.filter((row) => row.eventId === event.id && (row.status === "accepted" || row.status === "pending") && personExists(row.personId)).map((row) => row.personId)
+          if (recipientIds.length > 0) store.notifySystem({ kind: "association_event_cancelled", recipientIds, sourceId: viewerId(), noticeKey: `event:${event.id}:cancelled`, associationEvent: { eventId: event.id, pageHandle: page.handle } })
+        }
         return OK
       },
       async register(eventId) {
@@ -859,7 +915,7 @@ export function createDemoAssociationActivities(store: DemoStore, deps: DemoAsso
           next = { ...data, sequence: data.sequence + (queued ? 1 : 0), registrations: mine ? data.registrations.map((candidate) => candidate === mine ? row : candidate) : [...data.registrations, row] }
         }
         next = resumeWaitlist(next, event)
-        if (next !== data) commit(next)
+        if (next !== data) commitWithSeatNotices(data, next, event, viewerId())
         return OK
       },
       async unregister(eventId) {
@@ -872,7 +928,7 @@ export function createDemoAssociationActivities(store: DemoStore, deps: DemoAsso
         const event = data.events.find((row) => row.id === eventId)!
         const withdrawn = mine.status !== "declined" || mine.reminderEnabled === true ? { ...data, registrations: data.registrations.map((row): RegistrationRow => row === mine ? { ...invalidateAttendance(row), status: "declined", reminderEnabled: false } : row) } : data
         const next = resumeWaitlist(withdrawn, event)
-        if (next !== data) commit(next)
+        if (next !== data) commitWithSeatNotices(data, next, event, viewerId())
         return OK
       },
       async setReminder({ eventId, enabled }) {

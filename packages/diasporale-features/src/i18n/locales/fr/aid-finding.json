@@ -1,0 +1,49 @@
+{
+  "mutualAid": {
+    "questions": {
+      "view": {
+        "unanswered": "Sans réponse"
+      },
+      "empty": {
+        "unanswered": {
+          "title": "Aucune question sans réponse ici",
+          "body": "Toutes les questions ouvertes de ce lieu ont déjà reçu au moins une réponse."
+        }
+      }
+    },
+    "search": {
+      "label": "Chercher dans les questions",
+      "query": "Mots cherchés",
+      "hint": "Dans le titre et les précisions des questions, deux lettres au moins.",
+      "submit": "Chercher",
+      "clear": "Effacer la recherche",
+      "theme": "Thème",
+      "anyTheme": "Tous les thèmes",
+      "emptyTitle": "Aucune question ne correspond",
+      "emptyBody": "Essayez d'autres mots, un autre thème ou tout le pays. Vous pouvez aussi poser la question."
+    }
+  },
+  "arrivalKit": {
+    "search": {
+      "label": "Chercher dans le kit",
+      "query": "Mots cherchés",
+      "hint": "Dans le titre et le résumé des ressources, deux lettres au moins.",
+      "submit": "Chercher",
+      "clear": "Effacer la recherche",
+      "emptyQuery": "Aucune ressource ne contient ces mots : essayez-en d'autres."
+    }
+  },
+  "mentoring": {
+    "search": {
+      "language": "Langue parlée",
+      "anyLanguage": "Toutes les langues",
+      "city": "Ville (facultatif)",
+      "cityHint": "Saisissez la ville : seuls les mentors qui vous la montrent sont trouvés.",
+      "emptyFilters": "Aucun mentor actif ne correspond à cette langue ou à cette ville ({{country}}). Élargissez la recherche."
+    }
+  },
+  "errors": {
+    "aid_query_too_long": "La recherche est trop longue : cent caractères au plus.",
+    "arrival_kit_query_too_long": "La recherche est trop longue : cent caractères au plus."
+  }
+}

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
-import type { AssociationAgendaEventView, AssociationAgendaView, AssociationEventCalendarCapability, AssociationEventsCapability, Loadable, MembershipView } from "@diasporale/features/data"
+import { DataSourceProvider, type AidMissionCardView, type AssociationAgendaEventView, type AssociationAgendaView, type AssociationEventCalendarCapability, type AssociationEventsCapability, type DiasporaleDataSource, type Loadable, type MembershipView, type MutualAidCapability } from "@diasporale/features/data"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
@@ -194,5 +194,29 @@ describe("/agenda — panneau moteur existant et démonstration honnête", () =>
     view.rerender(tree())
     expect(screen.queryByRole("link", { name: ASSOCIATION.title })).not.toBeInTheDocument()
     expect(mocks.readPage.mock.calls.every(([input]) => input.readerPersonId === "person-suivante" && input.cursor === null)).toBe(true)
+  })
+})
+
+describe("agenda — ET-09 : mes inscriptions bénévoles", () => {
+  const mission = (id: string, startsAt: number, status: AidMissionCardView["status"] = "open"): AidMissionCardView => ({
+    id, page: { id: "page-1", handle: "association-recette", name: "Association de recette", badge: "community" }, title: `Mission ${id}`, description: "Mission fictive.",
+    country: "FR", city: "Lyon", area: null, startsAt, endsAt: null, timeZone: "Europe/Paris", places: 3, signupCount: 1, status, signedUp: true,
+  })
+
+  it("les missions à venir où je suis inscrit, des plus proches aux plus lointaines ; une passée n'y est plus ; une annulée le dit", () => {
+    const signups = { status: "ready" as const, data: { items: [mission("loin", NOW + 9 * 86_400_000), mission("passee", NOW - 86_400_000), mission("proche", NOW + 86_400_000, "cancelled")], continueCursor: null, isDone: true } }
+    const source = { kind: "demo", mutualAid: { useMySignups: () => signups } as unknown as MutualAidCapability } as unknown as DiasporaleDataSource
+    render(<DataSourceProvider source={source}>{tree()}</DataSourceProvider>)
+    const section = screen.getByRole("region", { name: "Mes missions bénévoles" })
+    expect(within(section).getAllByRole("link").map((link) => link.textContent)).toEqual(["Mission proche", "Mission loin", t("aidOnTheWay.agenda.all")])
+    expect(within(section).getByText(t("mutualAid.missionStatus.cancelled"))).toBeInTheDocument()
+    expect(within(section).getByRole("link", { name: t("aidOnTheWay.agenda.all") })).toHaveAttribute("href", routes.mutualAid(undefined, undefined, { tab: "missions", view: "mine" }))
+  })
+
+  it("sans inscription à venir : aucune section", () => {
+    const empty = { status: "ready" as const, data: { items: [], continueCursor: null, isDone: true } }
+    const source = { kind: "demo", mutualAid: { useMySignups: () => empty } as unknown as MutualAidCapability } as unknown as DiasporaleDataSource
+    render(<DataSourceProvider source={source}>{tree()}</DataSourceProvider>)
+    expect(screen.queryByRole("region", { name: "Mes missions bénévoles" })).not.toBeInTheDocument()
   })
 })

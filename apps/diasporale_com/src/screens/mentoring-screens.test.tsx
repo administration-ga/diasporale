@@ -18,9 +18,10 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { routes } from "@/lib/routes"
 import { filledButtons } from "@/test-utils"
 
-import { mentoringCountryOf, MentoringScreen, MentorProfileScreen, MyMentoringScreen } from "./mentoring-screens"
+import { mentoringCountryOf, MentoringScreen, mentoringSearchFromParams, MentorProfileScreen, MyMentoringScreen } from "./mentoring-screens"
 
 const mocks = vi.hoisted(() => ({
   capability: null as unknown,
@@ -170,8 +171,25 @@ describe("/mentorat", () => {
     fireEvent.change(screen.getByLabelText("Pays"), { target: { value: "FR" } })
     fireEvent.change(screen.getByLabelText("Domaine d’aide"), { target: { value: "housing" } })
     await click(screen.getByRole("button", { name: "Chercher" }))
-    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/mentorat?pays=FR"))
-    expect(capability.useSearch).toHaveBeenLastCalledWith({ country: "BE", domain: "housing", cursor: null })
+    // ET-04 : le domaine s'écrit dans l'adresse avec le pays, et la recherche les suit tous deux.
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/mentorat?pays=FR&domaine=housing"))
+    expect(capability.useSearch).toHaveBeenLastCalledWith({ country: "FR", domain: "housing", cursor: null })
+  })
+
+  it("ET-04 : domaine, langue et ville saisie se lisent dans l'adresse et filtrent la recherche ; une valeur inconnue est ignorée", async () => {
+    expect(mentoringSearchFromParams(new URLSearchParams("pays=be&domaine=work&langue=fan&ville=%20Li%C3%A8ge%20"), "FR")).toEqual({ country: "BE", domain: "work", language: "fan", city: "Liège" })
+    expect(mentoringSearchFromParams(new URLSearchParams("domaine=sport&langue=klingon"), "FR")).toEqual({ country: "FR", domain: null, language: null, city: "" })
+    mocks.params = new URLSearchParams("pays=FR&langue=en&ville=Lyon")
+    const capability = fake({ search: page([CARD]) })
+    render(tree(<MentoringScreen />))
+    expect(capability.useSearch).toHaveBeenCalledWith({ country: "FR", domain: null, language: "en", city: "Lyon", cursor: null })
+    expect(screen.getByLabelText("Langue parlée")).toHaveValue("en")
+    expect(screen.getByLabelText("Ville (facultatif)")).toHaveValue("Lyon")
+    fireEvent.change(screen.getByLabelText("Langue parlée"), { target: { value: "" } })
+    fireEvent.change(screen.getByLabelText("Ville (facultatif)"), { target: { value: "" } })
+    await click(screen.getByRole("button", { name: "Chercher" }))
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith(routes.mentoring("FR")))
+    expect(capability.useSearch).toHaveBeenLastCalledWith({ country: "FR", domain: null, cursor: null })
   })
 
   it("dit le vide, puis l'indisponibilité quand le fournisseur ne sert pas le mentorat", () => {

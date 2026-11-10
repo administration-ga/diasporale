@@ -97,6 +97,8 @@ export const SERVICE_CANCELLATION_TERMS_MIN_LENGTH = 2
 export const SERVICE_CANCELLATION_TERMS_MAX_LENGTH = 500
 export const SERVICE_REASON_MAX_LENGTH = 500
 export const SERVICE_TIME_ZONE_MAX_LENGTH = 64
+/** SV-09 : rendez-vous simultanés qu'une prestation admet, de un (par défaut) à dix. */
+export const SERVICE_BOOKING_CAPACITY_MAX = 10
 /** Le plus grand instant qu'une date JavaScript sait représenter. */
 const MAX_INSTANT = 8_640_000_000_000_000
 
@@ -151,6 +153,13 @@ export const SERVICE_REQUEST_REFUSALS = [
   // La contestation d'une absence (DG-015).
   "request_contest_unavailable",
   "request_contest_window_closed",
+  // Les réglages de prestation (SV-09).
+  "booking_capacity_invalid",
+  // Le déplacement d'un rendez-vous confirmé (SV-03).
+  "reschedule_already_open",
+  "reschedule_not_open",
+  "reschedule_same_slot",
+  "reschedule_changed",
 ] as const
 export type ServiceRequestRefusal = (typeof SERVICE_REQUEST_REFUSALS)[number]
 
@@ -489,6 +498,78 @@ export function parseServiceProposal(input: ServiceProposalInput, now: number): 
   })
 }
 
+// ═══════════════════════════════════════════════════════════════
+// Réglages de prestation (SV-04)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Les réglages de prestation d'une offre, lus par l'équipe de sa page seulement :
+ * les conditions HABITUELLES reprises dans chaque nouvelle proposition (fuseau,
+ * lieu approximatif ou à distance, conditions d'annulation) et, SV-09, les
+ * rendez-vous simultanés que la prestation admet. Chaque prestation porte les
+ * siens : une offre a déjà sa ville et son mode, une coupe et un mariage n'ont
+ * pas les mêmes conditions. `null` : rien de réglé ; capacité : un par défaut.
+ */
+export interface ServiceProviderSettings {
+  readonly timeZone: string | null
+  readonly location: ServiceLocation | null
+  readonly cancellationTerms: string | null
+  readonly bookingCapacity: number
+}
+
+export const NO_PROVIDER_SETTINGS: ServiceProviderSettings = Object.freeze({ timeZone: null, location: null, cancellationTerms: null, bookingCapacity: 1 })
+
+export interface ServiceProviderSettingsInput {
+  readonly timeZone?: string | null
+  readonly location?: ServiceLocation | null
+  readonly cancellationTerms?: string | null
+  readonly bookingCapacity?: number | null
+}
+
+/**
+ * Des réglages de prestation valides : un fuseau IANA canonique, un lieu
+ * approximatif (mêmes bornes que la proposition) ou « à distance », des
+ * conditions bornées ; les mêmes refus de coordonnée et d'adresse exacte que
+ * la proposition. Un champ vide ou absent reste non réglé.
+ */
+export function parseServiceProviderSettings(input: ServiceProviderSettingsInput): Result<ServiceProviderSettings, ServiceRequestRefusal> {
+  const rawZone = input.timeZone?.trim() ?? ""
+  const timeZone = rawZone.length === 0 ? null : canonicalTimeZone(rawZone)
+  if (rawZone.length > 0 && timeZone === null) return refuse("request_time_zone_invalid")
+  let location: ServiceLocation | null = null
+  if (input.location) {
+    if (input.location.mode === "remote") location = { mode: "remote" }
+    else {
+      const area = singleLine(input.location.area)
+      if (area.length < SERVICE_LOCATION_AREA_MIN_LENGTH || area.length > SERVICE_LOCATION_AREA_MAX_LENGTH) return refuse("proposal_location_invalid")
+      location = { mode: "onsite", area }
+    }
+  }
+  const terms = normalizeServiceText(input.cancellationTerms ?? "")
+  if (terms.length > 0 && (terms.length < SERVICE_CANCELLATION_TERMS_MIN_LENGTH || terms.length > SERVICE_CANCELLATION_TERMS_MAX_LENGTH)) return refuse("proposal_terms_invalid")
+  for (const text of [location?.mode === "onsite" ? location.area : "", terms]) {
+    const textRefusal = serviceTextRefusal(text)
+    if (textRefusal !== null) return refuse(textRefusal)
+  }
+  const bookingCapacity = input.bookingCapacity ?? 1
+  if (!Number.isSafeInteger(bookingCapacity) || bookingCapacity < 1 || bookingCapacity > SERVICE_BOOKING_CAPACITY_MAX) return refuse("booking_capacity_invalid")
+  return ok({ timeZone, location, cancellationTerms: terms.length > 0 ? terms : null, bookingCapacity })
+}
+
+/**
+ * SV-09 — la règle de capacité d'une page : un rendez-vous de capacité `capacity`
+ * n'est admis que si les rendez-vous CONFIRMÉS de la page qui le chevauchent sont
+ * moins nombreux que la plus petite capacité en jeu (la sienne et celle de chacun
+ * d'eux). À tout instant, aucun rendez-vous ne se tient donc avec plus de
+ * rendez-vous simultanés que sa capacité déclarée ; à un partout (par défaut),
+ * c'est l'agenda unique d'avant : aucun chevauchement. Le compte est prudent :
+ * deux rendez-vous qui se suivent mais chevauchent tous deux le nouveau comptent.
+ */
+export function bookingCapacityAllows(input: { readonly capacity: number; readonly overlapping: readonly { readonly capacity: number }[] }): boolean {
+  const limit = input.overlapping.reduce((smallest, booking) => Math.min(smallest, booking.capacity), input.capacity)
+  return input.overlapping.length < limit
+}
+
 /** La version citée par un geste doit être la version COURANTE (deux onglets, deux signataires). */
 export function checkProposalVersion(expected: number, current: number): Result<null, "proposal_version_changed"> {
   return expected === current ? ok(null) : refuse("proposal_version_changed")
@@ -582,6 +663,102 @@ export function checkServiceRequestTransition(input: ServiceRequestTransitionInp
   return ok(rule.to)
 }
 
+// ═══════════════════════════════════════════════════════════════
+// Déplacer un rendez-vous confirmé (SV-03)
+// ═══════════════════════════════════════════════════════════════
+
+/** Les gestes du déplacement : proposer un autre horaire, l'accepter, le décliner (ou retirer le sien). */
+export const SERVICE_RESCHEDULE_ACTIONS = ["propose_reschedule", "accept_reschedule", "decline_reschedule"] as const
+export type ServiceRescheduleAction = (typeof SERVICE_RESCHEDULE_ACTIONS)[number]
+
+/**
+ * Un nouvel horaire proposé pour un rendez-vous confirmé : même durée, mêmes
+ * conditions ; seuls l'heure et son fuseau changent. Une seule proposition de
+ * déplacement à la fois ; elle échoit à `expiresAt`, et le rendez-vous reste
+ * alors tel quel.
+ */
+export interface ServiceReschedule {
+  readonly startAt: number
+  readonly endAt: number
+  readonly timeZone: string
+  readonly proposedBy: ServiceRequestActor
+  readonly proposedAt: number
+  readonly expiresAt: number
+}
+
+export interface ServiceRescheduleInput {
+  readonly startAt: number
+  readonly timeZone: string
+  readonly expiresAt: number
+}
+
+/** La proposition de déplacement OUVERTE : `null` s'il n'y en a pas ou si son échéance est atteinte. */
+export function openServiceReschedule(reschedule: ServiceReschedule | null, now: number): ServiceReschedule | null {
+  return reschedule !== null && now < reschedule.expiresAt ? reschedule : null
+}
+
+/**
+ * Un nouvel horaire valide pour ce rendez-vous : un autre début, futur et dans
+ * l'horizon, la MÊME durée, un fuseau valide ; une échéance future, à 14 jours
+ * au plus, avant le nouveau début ET avant l'horaire actuel (passé le début du
+ * rendez-vous, on ne le déplace plus).
+ */
+export function parseServiceReschedule(
+  input: ServiceRescheduleInput,
+  booking: ServiceWindow,
+  now: number,
+): Result<{ readonly startAt: number; readonly endAt: number; readonly timeZone: string; readonly expiresAt: number }, ServiceRequestRefusal> {
+  const timeZone = canonicalTimeZone(input.timeZone)
+  if (timeZone === null) return refuse("request_time_zone_invalid")
+  const { startAt, expiresAt } = input
+  if (!isServiceInstant(startAt) || startAt <= now || startAt > now + SERVICE_SLOT_HORIZON_DAYS * DAY_MS) return refuse("proposal_start_invalid")
+  if (startAt === booking.startAt) return refuse("reschedule_same_slot")
+  if (!isServiceInstant(expiresAt) || expiresAt <= now || expiresAt > now + SERVICE_PROPOSAL_DEADLINE_MAX_DAYS * DAY_MS || expiresAt > startAt || expiresAt > booking.startAt) {
+    return refuse("proposal_deadline_invalid")
+  }
+  return ok({ startAt, endAt: startAt + (booking.endAt - booking.startAt), timeZone, expiresAt })
+}
+
+export interface ServiceRescheduleGestureInput {
+  readonly action: ServiceRescheduleAction
+  readonly actor: ServiceRequestActor
+  /** L'état EFFECTIF de la demande. */
+  readonly status: ServiceRequestStatus
+  readonly now: number
+  /** Le début du rendez-vous CONFIRMÉ ; `null` s'il n'y en a pas. */
+  readonly bookingStartAt: number | null
+  /** La proposition de déplacement écrite, ouverte ou échue ; `null` s'il n'y en a pas. */
+  readonly reschedule: ServiceReschedule | null
+  readonly proposalVersion: number
+}
+
+/**
+ * Qui peut déplacer, et quand : l'une ou l'autre partie propose un autre horaire
+ * pour un rendez-vous CONFIRMÉ, avant son début, s'il n'y a pas déjà une
+ * proposition ouverte ; l'AUTRE partie l'accepte ; l'une ou l'autre la décline
+ * (le proposant la retire). Un déplacement accepté écrit une nouvelle version :
+ * il en faut une de libre.
+ */
+export function checkServiceRescheduleGesture(input: ServiceRescheduleGestureInput): Result<null, ServiceRequestRefusal> {
+  if (input.status === "expired") return refuse("request_expired")
+  if (isServiceRequestTerminal(input.status)) return refuse("request_closed")
+  if (input.status !== "confirmed" || input.bookingStartAt === null) return refuse("request_not_open")
+  if (input.now >= input.bookingStartAt) return refuse("booking_started")
+  const open = openServiceReschedule(input.reschedule, input.now)
+  if (input.action === "propose_reschedule") {
+    if (open !== null) return refuse("reschedule_already_open")
+    return input.proposalVersion >= SERVICE_PROPOSAL_MAX_VERSIONS ? refuse("proposal_versions_exhausted") : ok(null)
+  }
+  if (open === null) return refuse("reschedule_not_open")
+  if (input.action === "accept_reschedule" && open.proposedBy === input.actor) return refuse("request_action_forbidden")
+  return ok(null)
+}
+
+/** Les gestes de déplacement RÉELLEMENT ouverts à cet acteur maintenant. */
+export function availableServiceRescheduleActions(input: Omit<ServiceRescheduleGestureInput, "action">): ServiceRescheduleAction[] {
+  return SERVICE_RESCHEDULE_ACTIONS.filter((action) => checkServiceRescheduleGesture({ ...input, action }).ok)
+}
+
 /** Le délai pour contester une absence déclarée par la page (DG-015), compté depuis le constat. */
 export const SERVICE_NO_SHOW_CONTEST_DAYS = 14
 
@@ -634,28 +811,36 @@ export function availableServiceRequestActions(input: {
 export interface ServiceRequestEvent {
   readonly status: ServiceRequestStatus
   readonly at: number
-  /** La version d'une proposition ; `null` pour les autres étapes. */
+  /**
+   * La version d'une proposition ; `null` pour les autres étapes. Une étape
+   * `confirmed` qui porte une version est un DÉPLACEMENT accepté (SV-03).
+   */
   readonly version: number | null
 }
 
 /**
  * La chronologie d'une demande, DÉRIVÉE de ses faits (envoi, versions de
- * proposition, accord, clôture) : aucun historique recopié. Une échéance
- * atteinte que le passage d'expiration n'a pas encore écrite y figure aussi.
+ * proposition, accord, déplacements acceptés, clôture) : aucun historique
+ * recopié. Une échéance atteinte que le passage d'expiration n'a pas encore
+ * écrite y figure aussi.
  */
 export function serviceRequestTimeline(input: {
   readonly createdAt: number
-  readonly proposals: readonly { readonly version: number; readonly createdAt: number }[]
+  /** `rescheduledFrom` : la version qu'un déplacement accepté a remplacée (SV-03). */
+  readonly proposals: readonly { readonly version: number; readonly createdAt: number; readonly rescheduledFrom?: number | null }[]
   readonly confirmedAt: number | null
   readonly closed: { readonly status: ServiceRequestStatus; readonly at: number } | null
   readonly effectiveStatus: ServiceRequestStatus
   readonly deadlineAt: number | null
 }): ServiceRequestEvent[] {
   const events: ServiceRequestEvent[] = [{ status: "sent", at: input.createdAt, version: null }]
-  for (const proposal of [...input.proposals].sort((left, right) => left.version - right.version)) {
+  const sorted = [...input.proposals].sort((left, right) => left.version - right.version)
+  const isReschedule = (proposal: (typeof sorted)[number]) => proposal.rescheduledFrom !== undefined && proposal.rescheduledFrom !== null
+  for (const proposal of sorted.filter((candidate) => !isReschedule(candidate))) {
     events.push({ status: "proposed", at: proposal.createdAt, version: proposal.version })
   }
   if (input.confirmedAt !== null) events.push({ status: "confirmed", at: input.confirmedAt, version: null })
+  for (const proposal of sorted.filter(isReschedule)) events.push({ status: "confirmed", at: proposal.createdAt, version: proposal.version })
   if (input.closed !== null) events.push({ status: input.closed.status, at: input.closed.at, version: null })
   else if (input.effectiveStatus === "expired" && input.deadlineAt !== null) events.push({ status: "expired", at: input.deadlineAt, version: null })
   return events

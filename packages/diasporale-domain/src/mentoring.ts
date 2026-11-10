@@ -30,7 +30,7 @@ import { parseResidenceCountry, type CountryCode } from "./countries"
 import { isFieldVisibleTo, type DiasporaFacet, type FacetViewer } from "./facet"
 import { ok, refuse, type Result } from "./result"
 import { canonicalTimeZone, isServiceInstant, normalizeServiceText, serviceTextRefusal, zonedWallTimeToUtc } from "./service-requests"
-import { isServiceLanguageCode, SERVICE_LANGUAGE_CODES } from "./services"
+import { cityKeyOf, isServiceLanguageCode, SERVICE_LANGUAGE_CODES } from "./services"
 import { DAY_MS, MINUTE_MS } from "./time"
 
 // ═══════════════════════════════════════════════════════════════
@@ -360,6 +360,44 @@ export function projectMentorPlace(input: {
     city: input.city !== null && isFieldVisibleTo(facet.visibility.city, viewer) ? input.city : null,
     arrivedAt: facet.arrivedAt !== undefined && isFieldVisibleTo(facet.visibility.arrivedAt, viewer) ? facet.arrivedAt : null,
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Retrouver un mentor (ET-04) : langue et ville
+// ═══════════════════════════════════════════════════════════════
+
+export function isMentorLanguageCode(value: string): value is MentorLanguageCode {
+  return (MENTOR_LANGUAGE_CODES as readonly string[]).includes(value)
+}
+
+/** Les filtres d'une recherche de mentors, en plus du pays et du domaine : chacun RESTREINT. */
+export interface MentorSearchFilters {
+  /** `null` : toutes les langues. */
+  readonly language: MentorLanguageCode | null
+  /** La ville saisie, repliée ; `null` : tout le pays. */
+  readonly cityKey: string | null
+}
+
+/** La langue (liste fermée) et la ville saisie (repliée, sans GPS) d'une recherche ; vide : aucun filtre. */
+export function parseMentorSearchFilters(input: { readonly language?: string | null | undefined; readonly city?: string | null | undefined }): Result<MentorSearchFilters, MentoringRefusal> {
+  const language = (input.language ?? "").trim()
+  if (language.length > 0 && !isMentorLanguageCode(language)) return refuse("mentor_language_invalid")
+  const city = (input.city ?? "").replace(/\s+/g, " ").trim()
+  if (city.length > MENTOR_CITY_MAX_LENGTH) return refuse("mentor_city_invalid")
+  const cityKey = city.length > 0 ? cityKeyOf(city) : ""
+  if (city.length > 0 && cityKey.length === 0) return refuse("mentor_city_invalid")
+  return ok({ language: language.length > 0 && isMentorLanguageCode(language) ? language : null, cityKey: cityKey.length > 0 ? cityKey : null })
+}
+
+/**
+ * Un mentor garde-t-il sa place dans la recherche ? La ville se juge sur ce que le
+ * LECTEUR en voit (`projectMentorPlace`) : une ville tenue cachée ne se devine jamais
+ * par un filtre. Rejugé sur chaque carte servie.
+ */
+export function matchesMentorSearch(mentor: { readonly languages: readonly string[]; readonly visibleCity: string | null }, filters: MentorSearchFilters): boolean {
+  if (filters.language !== null && !mentor.languages.includes(filters.language)) return false
+  if (filters.cityKey === null) return true
+  return mentor.visibleCity !== null && cityKeyOf(mentor.visibleCity) === filters.cityKey
 }
 
 // ═══════════════════════════════════════════════════════════════

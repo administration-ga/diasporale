@@ -35,6 +35,7 @@ import {
   effectiveMentoringStatus,
   hasCapability,
   isMentoringIdempotencyKey,
+  matchesMentorSearch,
   mentorAcceptsRequests,
   mentoringRequestDeadline,
   mentoringRequestFingerprint,
@@ -42,6 +43,7 @@ import {
   parseMentoringReason,
   parseMentoringSlot,
   parseMentorProfile,
+  parseMentorSearchFilters,
   projectMentorPlace,
   transitionMentorState,
   type CountryCode,
@@ -562,17 +564,21 @@ export function createDemoMentoring(store: DemoStore, deps: DemoMentoringDeps = 
       }, [tick])
     },
 
-    useSearch({ country, domain, cursor }) {
+    useSearch({ country, domain, language, city, cursor }) {
       const tick = useSnapshot()
       return useMemo<Loadable<MentoringPage<MentorCardView>>>(() => {
         if (tick === "") return LOADING
         const access = viewer("read_network")
         if (!access.ok) return failed(access.code)
+        // ET-04 : langue et ville, même règle que le moteur — la ville jugée sur ce que ce lecteur en voit.
+        const filters = parseMentorSearchFilters({ language, city })
+        if (!filters.ok) return failed(filters.code)
         const data = current()
         const now = store.now()
-        const rows = data.mentors.filter((row) => row.state === "active" && row.country === country && (domain === null || row.domains.includes(domain)) && visibleMentor(row, access.personId))
+        const rows = data.mentors.filter((row) => row.state === "active" && row.country === country && (domain === null || row.domains.includes(domain)) && visibleMentor(row, access.personId)
+          && matchesMentorSearch({ languages: row.languages, visibleCity: cardFor(data, row, access.personId, now).city }, filters.value))
         return pageOf(rows, cursor, MENTORS_PAGE_SIZE, (row) => ({ at: row.listedAt, id: row.id }), (row) => cardFor(data, row, access.personId, now))
-      }, [tick, country, domain, cursor])
+      }, [tick, country, domain, language, city, cursor])
     },
 
     useMentor(mentorId) {

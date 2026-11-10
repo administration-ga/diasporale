@@ -45,6 +45,8 @@ import {
   transitionMentorState,
   type MentoringRequestInput,
   type MentorProfileInput,
+  matchesMentorSearch,
+  parseMentorSearchFilters,
 } from "./mentoring"
 import { SERVICE_LANGUAGE_CODES } from "./services"
 import { DAY_MS, HOUR_MS, MINUTE_MS } from "./time"
@@ -318,5 +320,24 @@ describe("échéance et transitions", () => {
     expect(availableMentoringActions({ role: "mentee", status: "accepted" })).toEqual(["close"])
     for (const status of MENTORING_REQUEST_TERMINAL_STATUSES) expect(availableMentoringActions({ role: "mentor", status })).toEqual([])
     expect(MENTORING_REQUEST_ACTIONS).toEqual(["accept", "decline", "cancel", "propose_slot", "close"])
+  })
+})
+
+describe("ET-04 — retrouver un mentor : langue et ville", () => {
+  it("la langue vient de la liste fermée ; la ville saisie se replie ; vide, aucun filtre", () => {
+    expect(parseMentorSearchFilters({})).toEqual({ ok: true, value: { language: null, cityKey: null } })
+    expect(parseMentorSearchFilters({ language: "fan", city: " Saint-Étienne " })).toEqual({ ok: true, value: { language: "fan", cityKey: "saint etienne" } })
+    expect(parseMentorSearchFilters({ language: "klingon" })).toEqual({ ok: false, code: "mentor_language_invalid" })
+    expect(parseMentorSearchFilters({ city: "x".repeat(81) })).toEqual({ ok: false, code: "mentor_city_invalid" })
+    expect(parseMentorSearchFilters({ city: "--" })).toEqual({ ok: false, code: "mentor_city_invalid" })
+  })
+
+  it("la ville se juge sur ce que le lecteur voit : une ville cachée ne se devine pas", () => {
+    const filters = { language: "fr" as const, cityKey: "lyon" }
+    expect(matchesMentorSearch({ languages: ["fr", "en"], visibleCity: "Lyon" }, filters)).toBe(true)
+    expect(matchesMentorSearch({ languages: ["en"], visibleCity: "Lyon" }, filters)).toBe(false)
+    // La ville du mentor est Lyon, mais il la tient cachée à ce lecteur : il n'est pas trouvé par la ville.
+    expect(matchesMentorSearch({ languages: ["fr"], visibleCity: null }, filters)).toBe(false)
+    expect(matchesMentorSearch({ languages: ["fr"], visibleCity: null }, { language: null, cityKey: null })).toBe(true)
   })
 })

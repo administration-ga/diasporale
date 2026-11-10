@@ -14,6 +14,7 @@ import {
   type AssociationEventGalleryItem,
   type AssociationAgendaView,
   type AssociationAgendaEventView,
+  type AssociationEventCancellationView,
   type AssociationEventsCapability,
   type AssociationEventView,
   type AssociationGroupsCapability,
@@ -140,6 +141,8 @@ export function createEngineAssociationActivities(deps: EngineSourceDeps): { rea
     },
     events: {
       reminderDelivery: "engine",
+      // EV-03 : le moteur écrit les avis d'annulation et de place obtenue (pageEventNotices).
+      outcomeNotices: "engine",
       calendar: {
         mode: "engine",
         useAgendaPage({ anchor, period, cursor, readerPersonId }) {
@@ -237,12 +240,18 @@ export function createEngineAssociationActivities(deps: EngineSourceDeps): { rea
         const loaded = useLoaded(EVENTS.get, reader.networkId ? { networkId: reader.networkId, eventId: eventId as Id<"events"> } : "skip")
         return useStableLoaded(reader.error, loaded, (row): AssociationEventView | null => row ? eventView(row) : null)
       },
+      // EV-03 : la projection à part du motif, relue avec les droits du lecteur ; la vue de la fiche ne change pas.
+      useCancellation(eventId) {
+        const reader = useReader()
+        const loaded = useLoaded(EVENTS.cancellationReason, reader.networkId ? { networkId: reader.networkId, eventId: eventId as Id<"events"> } : "skip")
+        return useStableLoaded(reader.error, loaded, (row): AssociationEventCancellationView | null => row ? { reason: row.reason } : null)
+      },
       create: (input) => attemptAction(async () => {
         const row = await deps.convex.mutation(EVENTS.create, { networkId: await networkOf(), ...eventInput(input), idempotencyKey: input.idempotencyKey })
         return { eventId: row.eventId as string, created: row.created }
       }),
       update: (input) => attemptAction(async () => { await deps.convex.mutation(EVENTS.update, { networkId: await networkOf(), ...eventInput(input), eventId: input.eventId as Id<"events">, expectedVersion: input.expectedVersion }); return null }),
-      cancel: ({ eventId, expectedVersion }) => attemptAction(async () => { await deps.convex.mutation(EVENTS.cancel, { networkId: await networkOf(), eventId: eventId as Id<"events">, expectedVersion }); return null }),
+      cancel: ({ eventId, expectedVersion, reason }) => attemptAction(async () => { await deps.convex.mutation(EVENTS.cancel, { networkId: await networkOf(), eventId: eventId as Id<"events">, expectedVersion, ...(reason === undefined ? {} : { reason }) }); return null }),
       register: (eventId) => attemptAction(async () => { await deps.convex.mutation(EVENTS.register, { networkId: await networkOf(), eventId: eventId as Id<"events"> }); return null }),
       unregister: (eventId) => attemptAction(async () => { await deps.convex.mutation(EVENTS.unregister, { networkId: await networkOf(), eventId: eventId as Id<"events"> }); return null }),
       setReminder: ({ eventId, enabled }) => attemptAction(async () => { await deps.convex.mutation(REMINDERS.setReminder, { networkId: await networkOf(), eventId: eventId as Id<"events">, enabled }); return null }),

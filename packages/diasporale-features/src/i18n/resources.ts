@@ -61,6 +61,8 @@ import enCommunityNotifications from "./locales/en/community-notifications.json"
 import enPostExplanation from "./locales/en/post-explanation.json"
 import enReporterNotices from "./locales/en/reporter-notices.json"
 import enFunctionalHealth from "./locales/en/functional-health.json"
+import enServiceProposalSettings from "./locales/en/service-proposal-settings.json"
+import enServiceReschedule from "./locales/en/service-reschedule.json"
 import enMediaPreparation from "./locales/en/media-preparation.json"
 import enProfileImages from "./locales/en/profile-images.json"
 import enLegalTexts from "./locales/en/legal-texts.json"
@@ -75,7 +77,13 @@ import enCommunityRules from "./locales/en/community-rules.json"
 import enReportEmergency from "./locales/en/report-emergency.json"
 import enMessagesUnread from "./locales/en/messages-unread.json"
 import enIdnEntry from "./locales/en/idn-entry.json"
+import enMissionVolunteerNotices from "./locales/en/mission-volunteer-notices.json"
+import enEventOutcomeNotices from "./locales/en/event-outcome-notices.json"
 import enNetworkResponsibles from "./locales/en/network-responsibles.json"
+import enAidFinding from "./locales/en/aid-finding.json"
+import enAidOnTheWay from "./locales/en/aid-on-the-way.json"
+import enAidUsefulness from "./locales/en/aid-usefulness.json"
+import enInstallableApp from "./locales/en/installable-app.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -126,6 +134,8 @@ import frCommunityNotifications from "./locales/fr/community-notifications.json"
 import frPostExplanation from "./locales/fr/post-explanation.json"
 import frReporterNotices from "./locales/fr/reporter-notices.json"
 import frFunctionalHealth from "./locales/fr/functional-health.json"
+import frServiceProposalSettings from "./locales/fr/service-proposal-settings.json"
+import frServiceReschedule from "./locales/fr/service-reschedule.json"
 import frMediaPreparation from "./locales/fr/media-preparation.json"
 import frProfileImages from "./locales/fr/profile-images.json"
 import frLegalTexts from "./locales/fr/legal-texts.json"
@@ -140,7 +150,13 @@ import frCommunityRules from "./locales/fr/community-rules.json"
 import frReportEmergency from "./locales/fr/report-emergency.json"
 import frMessagesUnread from "./locales/fr/messages-unread.json"
 import frIdnEntry from "./locales/fr/idn-entry.json"
+import frMissionVolunteerNotices from "./locales/fr/mission-volunteer-notices.json"
+import frEventOutcomeNotices from "./locales/fr/event-outcome-notices.json"
 import frNetworkResponsibles from "./locales/fr/network-responsibles.json"
+import frAidFinding from "./locales/fr/aid-finding.json"
+import frAidOnTheWay from "./locales/fr/aid-on-the-way.json"
+import frAidUsefulness from "./locales/fr/aid-usefulness.json"
+import frInstallableApp from "./locales/fr/installable-app.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -201,6 +217,8 @@ export const LOCALE_PARTS = {
     "comment-pages": frCommentPages,
     "app-errors": frAppErrors,
     "account-menu": frAccountMenu,
+    "service-proposal-settings": frServiceProposalSettings,
+    "service-reschedule": frServiceReschedule,
     "media-preparation": frMediaPreparation,
     "profile-images": frProfileImages,
     "legal-texts": frLegalTexts,
@@ -213,7 +231,13 @@ export const LOCALE_PARTS = {
     "report-emergency": frReportEmergency,
     "messages-unread": frMessagesUnread,
     "idn-entry": frIdnEntry,
+    "mission-volunteer-notices": frMissionVolunteerNotices,
+    "event-outcome-notices": frEventOutcomeNotices,
     "network-responsibles": frNetworkResponsibles,
+    "aid-finding": frAidFinding,
+    "aid-on-the-way": frAidOnTheWay,
+    "aid-usefulness": frAidUsefulness,
+    "installable-app": frInstallableApp,
   },
   en: {
     diasporale: enDiasporale,
@@ -268,6 +292,8 @@ export const LOCALE_PARTS = {
     "comment-pages": enCommentPages,
     "app-errors": enAppErrors,
     "account-menu": enAccountMenu,
+    "service-proposal-settings": enServiceProposalSettings,
+    "service-reschedule": enServiceReschedule,
     "media-preparation": enMediaPreparation,
     "profile-images": enProfileImages,
     "legal-texts": enLegalTexts,
@@ -280,7 +306,13 @@ export const LOCALE_PARTS = {
     "report-emergency": enReportEmergency,
     "messages-unread": enMessagesUnread,
     "idn-entry": enIdnEntry,
+    "mission-volunteer-notices": enMissionVolunteerNotices,
+    "event-outcome-notices": enEventOutcomeNotices,
     "network-responsibles": enNetworkResponsibles,
+    "aid-finding": enAidFinding,
+    "aid-on-the-way": enAidOnTheWay,
+    "aid-usefulness": enAidUsefulness,
+    "installable-app": enInstallableApp,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 
