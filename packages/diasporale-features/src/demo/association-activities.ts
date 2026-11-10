@@ -22,6 +22,9 @@ import {
   type AssociationGroupsCapability,
   type AssociationGroupPostView,
   type AssociationGroupView,
+  type CountryEventsPage,
+  type CountryEventView,
+  countryEventsPageSize,
 } from "../data/association-activities-port"
 import type { AssociationEventAttendanceCapability, AssociationEventAttendancePreview, AssociationEventAttendanceRow, AssociationEventAttendanceView } from "../data/association-attendance-port"
 import type { AssociationEventGalleryCapability, AssociationEventGalleryItem, AssociationEventGalleryState } from "../data/association-event-gallery-port"
@@ -293,6 +296,22 @@ export function createDemoAssociationActivities(store: DemoStore, deps: DemoAsso
       remainingPlaces: event.capacity === null ? null : Math.max(0, event.capacity - count), registration,
       waitlistPosition: registration === "waitlisted" && mine ? queue.indexOf(mine) + 1 : null,
       registrationClosesAt: event.registrationClosesAt, registrationOpen, reminderEnabled, reminderAt, reminderState,
+    }
+  }
+  /**
+   * HB-02, mêmes règles que le moteur : un évènement d'une association DU pays,
+   * ouvert au réseau, programmé, publié, à venir à partir de l'instant de l'écran,
+   * et lisible par ce lecteur. Une audience réservée aux adhérents n'y paraît jamais.
+   */
+  function isCountryEvent(event: EventRow, country: string, anchor: number): boolean {
+    return pageOf(event.pageId)?.country === country && event.audience === "network" && event.status === "scheduled"
+      && event.moderation === "published" && event.startAt >= anchor && canReadEvent(event)
+  }
+  function countryEventView(event: EventRow): CountryEventView {
+    const page = pageOf(event.pageId)!
+    return {
+      eventId: event.id, pageId: event.pageId, title: event.title, location: event.location,
+      startAt: event.startAt, endAt: event.endAt, timeZone: event.timeZone, organizer: { name: page.name, handle: page.handle },
     }
   }
   function attendanceCandidateEligible(event: EventRow, personId: string): boolean {
@@ -589,7 +608,7 @@ export function createDemoAssociationActivities(store: DemoStore, deps: DemoAsso
     },
   }
   /** Curseurs composites liés à leur liste : aucune pagination par index mutable. */
-  function page<T extends { readonly id: string }>(rows: readonly T[], cursor: string | null, scope: string, instant: (row: T) => number, direction: -1 | 1 = -1): Loadable<AssociationActivityPage<T>> {
+  function page<T extends { readonly id: string }>(rows: readonly T[], cursor: string | null, scope: string, instant: (row: T) => number, direction: -1 | 1 = -1, size = ASSOCIATION_ACTIVITY_PAGE_SIZE): Loadable<AssociationActivityPage<T>> {
     let boundary: { readonly at: number; readonly id: string } | null = null
     if (cursor !== null) {
       try {
@@ -601,9 +620,9 @@ export function createDemoAssociationActivities(store: DemoStore, deps: DemoAsso
     const after = boundary
     const remaining = [...rows].sort((a, b) => direction * (instant(a) - instant(b) || (a.id === b.id ? 0 : a.id < b.id ? -1 : 1)))
       .filter((row) => after === null || direction * (instant(row) - after.at) > 0 || (instant(row) === after.at && (direction === 1 ? row.id > after.id : row.id < after.id)))
-    const items = remaining.slice(0, ASSOCIATION_ACTIVITY_PAGE_SIZE)
+    const items = remaining.slice(0, size)
     const last = items[items.length - 1]
-    const isDone = remaining.length <= ASSOCIATION_ACTIVITY_PAGE_SIZE
+    const isDone = remaining.length <= size
     return ready({ items, isDone, continueCursor: !isDone && last ? JSON.stringify(["demo-association-activities", scope, instant(last), last.id]) : null })
   }
   function managedEvent(eventId: string): EventRow | null {
@@ -725,6 +744,20 @@ export function createDemoAssociationActivities(store: DemoStore, deps: DemoAsso
       attendance,
       gallery,
       calendar,
+      useCountryEvents({ country, anchor, cursor, limit }) {
+        const tick = useSnapshot()
+        return useMemo<Loadable<CountryEventsPage>>(() => {
+          if (tick === "") return LOADING
+          const data = current()
+          const code = refusal()
+          if (code) return failed(code)
+          if (!Number.isFinite(anchor)) return failed("unknown")
+          // Le curseur reste attaché au pays et à l'instant de l'écran, comme celui du moteur.
+          const result = page(data.events.filter((row) => isCountryEvent(row, country, anchor)), cursor, `country-events:${country}:${anchor}`, (row) => row.startAt, 1, countryEventsPageSize(limit))
+          // La démonstration lit tout son état local : aucune fenêtre de pages n'est tronquée.
+          return result.status === "ready" ? ready({ ...result.data, items: result.data.items.map(countryEventView), partial: false }) : result
+        }, [tick, country, anchor, cursor, limit])
+      },
       useEvents({ pageId, cursor }) {
         const tick = useSnapshot()
         return useMemo<Loadable<AssociationActivityPage<AssociationEventView>>>(() => {
