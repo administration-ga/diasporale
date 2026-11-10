@@ -23,6 +23,7 @@ import enDemoAccounts from "./locales/en/demo-accounts.json"
 import enDiasporale from "./locales/en/diasporale.json"
 import enDiscovery from "./locales/en/discovery.json"
 import enDoorVision from "./locales/en/door-vision.json"
+import enHubNotices from "./locales/en/hub-notices.json"
 import enNavigation from "./locales/en/navigation.json"
 import enPageAdmin from "./locales/en/page-admin.json"
 import enPageBrowsing from "./locales/en/page-browsing.json"
@@ -69,6 +70,7 @@ import frDemoAccounts from "./locales/fr/demo-accounts.json"
 import frDiasporale from "./locales/fr/diasporale.json"
 import frDiscovery from "./locales/fr/discovery.json"
 import frDoorVision from "./locales/fr/door-vision.json"
+import frHubNotices from "./locales/fr/hub-notices.json"
 import frNavigation from "./locales/fr/navigation.json"
 import frPageAdmin from "./locales/fr/page-admin.json"
 import frPageBrowsing from "./locales/fr/page-browsing.json"
@@ -122,6 +124,7 @@ export const LOCALE_PARTS = {
     "demo-accounts": frDemoAccounts,
     discovery: frDiscovery,
     "door-vision": frDoorVision,
+    "hub-notices": frHubNotices,
     navigation: frNavigation,
     "page-admin": frPageAdmin,
     "page-browsing": frPageBrowsing,
@@ -170,6 +173,7 @@ export const LOCALE_PARTS = {
     "demo-accounts": enDemoAccounts,
     discovery: enDiscovery,
     "door-vision": enDoorVision,
+    "hub-notices": enHubNotices,
     navigation: enNavigation,
     "page-admin": enPageAdmin,
     "page-browsing": enPageBrowsing,

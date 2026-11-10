@@ -89,6 +89,7 @@ const hub: CountryHubView = {
   associations: [],
   companies: [],
   events: [],
+  eventsSource: "unmeasured",
 }
 
 function tree(iso = "CA") {
@@ -156,5 +157,24 @@ describe("HubScreen — reprise des informations du pays", () => {
     }))
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
     expect(container.querySelector('[data-slot="skeleton"]')).not.toBeInTheDocument()
+  })
+})
+
+describe("HubScreen — pays pas encore ouvert (HB-01)", () => {
+  it("dit ce qui est possible (tout lire, publier pour toute la diaspora), sans promettre de relecture", () => {
+    mocks.hub = { status: "ready", data: { ...hub, country: "ES", open: false } }
+    render(tree("es"))
+
+    const notice = screen.getByRole("note")
+    expect(notice).toHaveTextContent("Pas encore ouvert")
+    expect(notice).toHaveTextContent("Espagne n'est pas encore ouvert. Vous lisez tout et publiez pour toute la diaspora")
+    expect(notice).toHaveTextContent(/le hub du pays attend son ouverture/)
+    expect(notice).not.toHaveTextContent(/relue|relecture/i)
+  })
+
+  it("un pays ouvert ne montre aucun avis", () => {
+    mocks.hub = { status: "ready", data: hub }
+    render(tree())
+    expect(screen.queryByRole("note")).not.toBeInTheDocument()
   })
 })

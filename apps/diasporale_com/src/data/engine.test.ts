@@ -10,6 +10,7 @@ import { createEngineActions, feedRequest } from "./engine-source"
 import {
   toBookmarkView,
   toCommentThreadView,
+  toCountryHubView,
   toDeclaredMedia,
   toFacetArgs,
   toFeed,
@@ -112,6 +113,18 @@ describe("projections du moteur vers les vues de DIASPORALE", () => {
     expect(toOpenCountries([{ country: "FR", open: true, counters, countersComputedAt: 1 } as never, { country: "ZZ" } as never])).toEqual([
       { country: "FR", counters, countersSource: "materialized" },
     ])
+  })
+
+  it("le hub d'un pays : compteurs du serveur ; évènements « non mesurés », jamais une liste vide qui se dirait complète (EV-02)", () => {
+    const counters = { dormant: false, members: { kind: "below_threshold", threshold: 20 }, associations: { kind: "value", value: 2 }, companies: { kind: "value", value: 0 }, upcomingEvents: { kind: "value", value: 0 } }
+    expect(toCountryHubView({ country: "FR", open: true, counters, countersComputedAt: 1 } as never, "FR")).toMatchObject({
+      country: "FR",
+      open: true,
+      counters,
+      countersSource: "materialized",
+      events: [],
+      eventsSource: "unmeasured",
+    })
   })
 
   it("une publication du moteur est de portée « diaspora » : elle paraît dans « Mon pays » et « Diaspora », « Pour vous » si elle est à soi", () => {

@@ -35,7 +35,7 @@ function PagePublisher(props: { page: PageView; membership: MembershipView; capa
         open={open}
         onOpenChange={setOpen}
         memberCountry={props.page.country ?? props.membership.facet.countryOfResidence}
-        openCountries={countries.status === "ready" ? countries.data.map((row) => row.country) : []}
+        openCountries={countries.status === "ready" ? countries.data.map((row) => row.country) : null}
         draftKey={`diasporale:brouillon:${props.membership.personId}:page:${props.page.id}`}
         page={{ id: props.page.id, name: props.page.name, country: props.page.country, publish: props.capability.publish }}
       />

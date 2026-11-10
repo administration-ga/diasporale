@@ -569,19 +569,10 @@ export function createDemoSeed(now: number): DemoState {
     ),
   ]
 
+  // Aucun évènement de poste consulaire : le moteur réserve les évènements de page aux
+  // associations (VC-01) ; la démonstration ne montre pas ce que la production ne sert pas.
+  // La permanence du poste fictif reste un communiqué de sa page (`post-1` ci-dessus).
   const events: DemoEvent[] = [
-    {
-      id: "evt-1",
-      title: "Permanence consulaire mobile (démo)",
-      startsAt: now + 11 * DAY,
-      city: "Lyon",
-      scope: { reach: "local", country: "FR" },
-      category: "diplomacy",
-      organizerPageId: "page-poste-fr",
-      capacity: null,
-      registered: 0,
-      moderation: "published",
-    },
     {
       id: "evt-2",
       title: "Tournoi de football inter-associations",
