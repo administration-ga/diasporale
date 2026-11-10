@@ -4,6 +4,7 @@ import { Button, Field, Skeleton, Textarea, formatDate } from "@diasporale/featu
 import {
   APPEAL_REASON_MAX,
   APPEAL_REASON_MIN,
+  authorDecisionOutcome,
   type ActionErrorCode,
   type ActionResult,
   type DecisionAppealLevel,
@@ -29,6 +30,10 @@ import { CommunityRuleLink } from "./community-rule-link"
  * Aucun déclarant, aucun contenu, aucune identité du modérateur : seulement ce
  * qu'il faut pour comprendre et contester. Le geste de recours est fourni par
  * l'appelant (`appeal`), lié à la personne ou à la page affichée.
+ *
+ * MD-07 (protéger le déclarant) : l'auteur ne lit qu'une mesure prise, ou cette
+ * mesure annulée sur son recours (`authorDecisionOutcome`) ; un dossier ouvert ou
+ * classé sans suite ne s'affiche jamais, quel que soit le fournisseur.
  */
 
 export interface Feedback {
@@ -136,6 +141,8 @@ export function DecisionResults(props: { query: Loadable<ModerationDecisionsPage
   const { query, navigation } = props
   const nextCursor = query.status === "ready" && !query.data.isDone ? query.data.continueCursor : null
   const canNext = navigation.canNext(nextCursor)
+  // MD-07 : seules les mesures prises se montrent à l'auteur, même si un fournisseur rendait davantage.
+  const items = query.status === "ready" ? query.data.items.filter((decision) => authorDecisionOutcome(decision) !== null) : []
 
   return (
     <>
@@ -143,13 +150,13 @@ export function DecisionResults(props: { query: Loadable<ModerationDecisionsPage
         <LoadingLine />
       ) : query.status === "error" ? (
         <p role="alert" className="text-sm text-destructive">{t(props.copy.loadError)}</p>
-      ) : query.data.items.length === 0 ? (
+      ) : items.length === 0 ? (
         <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">
           {t(navigation.index > 0 ? props.copy.emptyPage : props.copy.empty)}
         </p>
       ) : (
         <ul className="flex min-w-0 flex-col gap-3">
-          {query.data.items.map((decision) => (
+          {items.map((decision) => (
             <DecisionItem key={decision.reportId} decision={decision} appeal={props.appeal} />
           ))}
         </ul>
@@ -187,12 +194,15 @@ export function DecisionItem({ decision, appeal }: { decision: ModerationDecisio
   const ground = decision.ground === "pre_review"
     ? t("settings.dataRights.decisions.preReview")
     : decision.ground === "unspecified" ? t("settings.dataRights.decisions.unspecified") : t(`report.reason.${decision.ground}`)
+  // MD-07 : un dossier qui n'emporte aucune mesure ne se montre pas à l'auteur.
+  const outcome = authorDecisionOutcome(decision)
+  if (outcome === null) return null
 
   return (
     <li className="flex min-w-0 flex-col gap-2 rounded-xl border border-border p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="font-semibold">{t(`settings.dataRights.decisions.surface.${decision.surface}`)}</p>
-        <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">{t(`settings.dataRights.decisions.status.${decision.status}`)}</span>
+        <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">{t(`settings.dataRights.decisions.status.${outcome}`)}</span>
       </div>
       <p className="text-xs text-muted-foreground">
         {t("settings.dataRights.decisions.network", { name: network })} · {t("settings.dataRights.decisions.openedAt", { date: formatDate(decision.createdAt, locale) })}

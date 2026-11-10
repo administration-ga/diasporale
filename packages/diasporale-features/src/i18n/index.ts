@@ -18,10 +18,12 @@ import {
 } from "@antsia/social-features/i18n"
 import type { i18n as I18nInstance } from "i18next"
 
+import { MEDIA_LIMIT_VARIABLES } from "./media-limits"
 import { DIASPORALE_LOCALES } from "./resources"
 
 export { DEFAULT_LOCALE, isSupportedLocale, SUPPORTED_LOCALES, type AppResources, type Locale }
 export { DIASPORALE_LOCALES, LOCALE_PARTS, mergeLocaleParts, type LocaleTree } from "./resources"
+export { formatNames, MEDIA_LIMIT_VARIABLES, megabytes } from "./media-limits"
 
 /** Cookie de langue : lu par le rendu serveur, posé par le sélecteur de langue. */
 export const LOCALE_COOKIE = "diasporale-langue"
@@ -40,7 +42,8 @@ export const diasporaleResources: AppResources = {
 /**
  * Instance i18next ISOLÉE (une par requête côté serveur, une par arbre côté
  * client), construite par le moteur : ressources en mémoire, initialisation
- * synchrone, aucun écart d'hydratation.
+ * synchrone, aucun écart d'hydratation. Les bornes des médias y entrent comme
+ * variables par défaut, tirées du domaine du moteur (`MEDIA_LIMIT_VARIABLES`).
  */
 export function createAppI18n(options: { locale: Locale; appResources?: AppResources; defaultNS?: string }): I18nInstance {
   const appResources = {} as AppResources
@@ -51,7 +54,7 @@ export function createAppI18n(options: { locale: Locale; appResources?: AppResou
     locale: options.locale,
     appResources,
     defaultNS: options.defaultNS ?? DIASPORALE_NAMESPACE,
-    defaultVariables: { brand: DIASPORALE_BRAND },
+    defaultVariables: { brand: DIASPORALE_BRAND, ...MEDIA_LIMIT_VARIABLES },
   })
 }
 

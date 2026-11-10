@@ -61,6 +61,8 @@ import enCommunityNotifications from "./locales/en/community-notifications.json"
 import enPostExplanation from "./locales/en/post-explanation.json"
 import enReporterNotices from "./locales/en/reporter-notices.json"
 import enFunctionalHealth from "./locales/en/functional-health.json"
+import enMediaPreparation from "./locales/en/media-preparation.json"
+import enProfileImages from "./locales/en/profile-images.json"
 import enLegalTexts from "./locales/en/legal-texts.json"
 import enCallSettings from "./locales/en/call-settings.json"
 import enWelcomeProfile from "./locales/en/welcome-profile.json"
@@ -124,6 +126,8 @@ import frCommunityNotifications from "./locales/fr/community-notifications.json"
 import frPostExplanation from "./locales/fr/post-explanation.json"
 import frReporterNotices from "./locales/fr/reporter-notices.json"
 import frFunctionalHealth from "./locales/fr/functional-health.json"
+import frMediaPreparation from "./locales/fr/media-preparation.json"
+import frProfileImages from "./locales/fr/profile-images.json"
 import frLegalTexts from "./locales/fr/legal-texts.json"
 import frCallSettings from "./locales/fr/call-settings.json"
 import frWelcomeProfile from "./locales/fr/welcome-profile.json"
@@ -197,6 +201,8 @@ export const LOCALE_PARTS = {
     "comment-pages": frCommentPages,
     "app-errors": frAppErrors,
     "account-menu": frAccountMenu,
+    "media-preparation": frMediaPreparation,
+    "profile-images": frProfileImages,
     "legal-texts": frLegalTexts,
     "call-settings": frCallSettings,
     "welcome-profile": frWelcomeProfile,
@@ -262,6 +268,8 @@ export const LOCALE_PARTS = {
     "comment-pages": enCommentPages,
     "app-errors": enAppErrors,
     "account-menu": enAccountMenu,
+    "media-preparation": enMediaPreparation,
+    "profile-images": enProfileImages,
     "legal-texts": enLegalTexts,
     "call-settings": enCallSettings,
     "welcome-profile": enWelcomeProfile,

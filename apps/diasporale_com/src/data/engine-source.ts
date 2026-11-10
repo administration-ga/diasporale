@@ -71,7 +71,7 @@ import type {
   SuggestionView,
   UnreadCountView,
 } from "@diasporale/features/data"
-import { BOOKMARKS_PAGE_SIZE, COMMENT_REPLIES_PAGE, COMMENTS_PAGE, describeMediaFile, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
+import { BOOKMARKS_PAGE_SIZE, COMMENT_REPLIES_PAGE, COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH, prepareMediaFile } from "@diasporale/features/data"
 import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
@@ -199,7 +199,7 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
 
   return {
     kind: "engine",
-    profileImages: createEngineProfileImagesActions({ convex: deps.convex }),
+    profileImages: createEngineProfileImagesActions({ convex: deps.convex, prepareImage: deps.prepareImage }),
     // Capacités des chantiers du plan global (docs/14), chacune dans son fichier.
     // Les publications lues dans une fiche de page alimentent aussi « retirer ma réaction ».
     pages: createEnginePages(deps, { onPosts: (posts) => { for (const post of posts) myReactions.set(post.id, post.myReaction) } }),
@@ -799,22 +799,26 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
 
     // Dépôt en deux temps (garde des fichiers du moteur) : URL de dépôt pour l'usage
     // `media_social`, puis envoi du fichier ; il n'existe pour personne tant
-    // qu'une publication ne l'a pas vérifié et embarqué.
+    // qu'une publication ne l'a pas vérifié et embarqué. Une photo part PRÉPARÉE
+    // (FD-01) : ré-encodée, 2 048 px au plus, sans métadonnées ; un échec la
+    // refuse avant toute URL de dépôt, et l'original ne part jamais. Ce même
+    // dépôt sert le fil, les publications de page et la galerie d'évènement.
     uploadMedia: (file) =>
       attempt(async () => {
-        const facts = await describeMediaFile(file)
-        if (!facts.ok) throw new Refusal(facts.code)
+        const prepared = await prepareMediaFile(file, deps.prepareImage)
+        if (!prepared.ok) throw new Refusal(prepared.code)
+        const { file: upload, facts } = prepared.value
         const networkId = await diasporale()
         const url = await deps.convex.mutation(api.modules.media.media.generateUploadUrl, { networkId, usage: "media_social" })
         let storageId: string
         try {
-          const response = await fetch(url, { method: "POST", headers: { "Content-Type": file.type }, body: file })
+          const response = await fetch(url, { method: "POST", headers: { "Content-Type": upload.type }, body: upload })
           if (!response.ok) throw new Refusal("media_upload_failed")
           storageId = ((await response.json()) as { storageId: string }).storageId
         } catch (error) {
           throw error instanceof Refusal ? error : new Refusal("media_upload_failed")
         }
-        return { ref: storageId, ...facts.value }
+        return { ref: storageId, ...facts }
       }),
 
     publish: (input) =>
