@@ -2,8 +2,11 @@ import { describe, expect, test } from "bun:test"
 import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 
+// Le validateur de facette du moteur, celui que la console applique après son schéma strict.
+import { validateFacetSchema } from "../../ANTSIA/packages/social-domain/src/facets.ts"
+import { consoleFacetSchemaJson, diasporaleConsoleNetworkForm } from "../packages/diasporale-domain/src/index.ts"
 import { buildReleasePlan } from "./release.mjs"
-import { DIASPORALE_ROOT, SHARED_VARIABLE_NAMES, targetVariableNames } from "./release-lib.mjs"
+import { DIASPORALE_ROOT, PUBLIC_RELEASE_VARIABLES, SHARED_VARIABLE_NAMES, targetVariableNames } from "./release-lib.mjs"
 
 /**
  * Les documents de publication restent vrais (mêmes variables, mêmes étapes que les
@@ -23,11 +26,12 @@ const IDENTIFIER_PATTERNS = [
 const read = (path) => readFileSync(join(DIASPORALE_ROOT, path), "utf8")
 const scriptFiles = () => readdirSync(join(DIASPORALE_ROOT, "scripts")).filter((name) => name.endsWith(".mjs")).map((name) => `scripts/${name}`)
 const PUBLICATION_DOC = "docs/37_PUBLICATION_ET_RETOUR_ARRIERE.md"
+const PRODUCTION_DOC = "docs/36_MISE_EN_PRODUCTION.md"
 
 describe("aucun identifiant dans le dépôt public", () => {
-  test("ni les scripts, ni leurs tests, ni le document de publication", () => {
+  test("ni les scripts, ni leurs tests, ni les documents de publication et de mise en production", () => {
     const findings = []
-    for (const path of [...scriptFiles(), PUBLICATION_DOC]) {
+    for (const path of [...scriptFiles(), PUBLICATION_DOC, PRODUCTION_DOC]) {
       read(path)
         .split("\n")
         .forEach((line, index) => {
@@ -70,5 +74,68 @@ describe("le document de publication dit ce que font les scripts", () => {
     expect(doc).toContain("l'accord écrit et")
     for (const point of ["commit de chaque dépôt", "cible", "ordre", "retour arrière"]) expect(doc).toContain(point)
     expect(doc).toContain("Aucune option\nne contourne la porte")
+  })
+})
+
+/** Le schéma STRICT du formulaire de la console (`facetShape`, console-dashboard.tsx du moteur). */
+const CONSOLE_FIELD_KEYS = ["key", "kind", "required", "defaultVisibility", "maxLength", "maxItems", "enumValues", "excludedValues"]
+
+/** Les champs du formulaire « Créer un réseau », sous leur libellé français dans la console. */
+const CONSOLE_LABELS = [
+  ["slug", "Identifiant public"],
+  ["name", "Nom du réseau"],
+  ["membershipPolicy", "Politique d’adhésion"],
+  ["defaultVisibility", "Visibilité par défaut"],
+  ["reachValues", "Portées autorisées"],
+  ["openCountries", "Pays ouverts"],
+  ["theme", "Thème"],
+  ["managedBy", "Admission du réseau"],
+]
+
+describe("le dossier de mise en production (DS-06)", () => {
+  const doc = read(PRODUCTION_DOC)
+  const facetBlock = () => /```json\n([\s\S]*?)\n```/.exec(doc)?.[1]
+
+  test("le JSON de facette à coller est exactement celui que rend le domaine", () => {
+    expect(facetBlock()).toBe(consoleFacetSchemaJson())
+    expect(diasporaleConsoleNetworkForm().facetSchema).toBe(facetBlock())
+  })
+
+  test("la console l'accepte : schéma strict, puis validateur du moteur", () => {
+    const schema = JSON.parse(facetBlock())
+    expect(Object.keys(schema)).toEqual(["fields"])
+    for (const field of schema.fields) for (const key of Object.keys(field)) expect(CONSOLE_FIELD_KEYS).toContain(key)
+    expect(validateFacetSchema(schema)).toEqual([])
+    expect(facetBlock().length).toBeLessThanOrEqual(20_000)
+  })
+
+  test("chaque champ du formulaire porte la valeur du domaine", () => {
+    const form = diasporaleConsoleNetworkForm()
+    const rows = doc.split("\n")
+    for (const [key, label] of CONSOLE_LABELS) {
+      const row = rows.find((line) => line.startsWith(`| ${label} |`))
+      expect(row).toBeDefined()
+      expect(row).toContain(`\`${form[key]}\``)
+    }
+  })
+
+  test("les étapes suivent l'ordre du lot, du backend au retour arrière, et finissent par les décisions du propriétaire", () => {
+    const headings = doc.split("\n").filter((line) => line.startsWith("## ")).map((line) => line.slice(3))
+    const expected = ["backend", "réseau", "passage nocturne", "équipe", "mise en relation", "variables", "domaine", "indexation", "publication", "retour arrière", "sous-traitants", "décisions"]
+    const positions = expected.map((word) => headings.findIndex((heading) => heading.toLowerCase().includes(word)))
+    expect(positions.every((position) => position >= 0)).toBe(true)
+    expect(positions).toEqual([...positions].sort((a, b) => a - b))
+    expect(headings.at(-1)).toContain("Décisions et gestes qui restent au propriétaire")
+  })
+
+  test("les variables sont nommées, jamais valorisées : moteur et site", () => {
+    for (const name of ["TRUSTED_ORIGINS", "NOTIFICATION_APPLICATIONS_JSON", "RESEND_FROM_ADDRESS", ...PUBLIC_RELEASE_VARIABLES]) expect(doc).toContain(`\`${name}\``)
+    for (const name of [...Object.values(targetVariableNames("production")), SHARED_VARIABLE_NAMES.orgId, SHARED_VARIABLE_NAMES.scope]) expect(doc).toContain(name)
+    expect(doc).not.toMatch(/`[A-Z_]+=[^`<\s]+`/)
+  })
+
+  test("aucun compte de démonstration ni aucune graine en production", () => {
+    expect(doc).toContain("`modules/diaspora/demoAccounts:catalogue` rend `[]`")
+    for (const name of ["ANTSIA_DEMO_DEPLOYMENT", "ANTSIA_DEV_TOOLS", "ANTSIA_SEEDS_ALLOWED"]) expect(doc).toContain(name)
   })
 })
