@@ -133,6 +133,11 @@ describe("entraide — lectures du moteur", () => {
 
     renderHook(() => aid.useQuestions({ country: "BE", city: " Liège ", status: "resolved", cursor: "opaque-next" }))
     expect(calls(Q.questions)).toContainEqual({ networkId: NETWORK, country: "BE", city: "Liège", status: "resolved", paginationOpts: { cursor: "opaque-next", numItems: 20 } })
+    // ET-04 : thème, mots et « sans réponse » partent quand ils restreignent ; vides ou faux, rien n'est envoyé.
+    renderHook(() => aid.useQuestions({ country: "FR", status: "open", theme: "housing", query: " colocation ", unanswered: true, cursor: null }))
+    expect(calls(Q.questions)).toContainEqual({ networkId: NETWORK, country: "FR", status: "open", theme: "housing", query: "colocation", unanswered: true, paginationOpts: { cursor: null, numItems: 20 } })
+    renderHook(() => aid.useQuestions({ country: "CA", status: "closed", theme: null, query: "  ", unanswered: false, cursor: null }))
+    expect(calls(Q.questions)).toContainEqual({ networkId: NETWORK, country: "CA", status: "closed", paginationOpts: { cursor: null, numItems: 20 } })
     const mine = renderHook(() => aid.useMyQuestions({ cursor: null })).result.current
     expect(mine).toMatchObject({ status: "ready", data: { continueCursor: null, isDone: true, items: [{ id: "question-1", isMine: true }] } })
   })

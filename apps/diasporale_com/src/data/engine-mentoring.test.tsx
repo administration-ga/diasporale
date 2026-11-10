@@ -83,6 +83,14 @@ describe("mentorat — adaptateur moteur", () => {
     expect(mocks.loaded).toHaveBeenLastCalledWith("modules/diaspora/mentoring:searchMentors", { networkId: "network-diasporale", country: "FR", domain: "housing", paginationOpts: { cursor: "suite", numItems: 12 } })
   })
 
+  it("ET-04 : une langue et une ville saisie partent quand elles restreignent ; vides, rien n'est envoyé", () => {
+    mocks.results.set("modules/diaspora/mentoring:searchMentors", { page: [CARD], isDone: true, continueCursor: "" })
+    renderHook(() => capability().useSearch({ country: "FR", domain: null, language: "fan", city: " Lyon ", cursor: null }))
+    expect(mocks.loaded).toHaveBeenLastCalledWith("modules/diaspora/mentoring:searchMentors", { networkId: "network-diasporale", country: "FR", language: "fan", city: "Lyon", paginationOpts: { cursor: null, numItems: 12 } })
+    renderHook(() => capability().useSearch({ country: "FR", domain: null, language: null, city: "  ", cursor: null }))
+    expect(mocks.loaded).toHaveBeenLastCalledWith("modules/diaspora/mentoring:searchMentors", { networkId: "network-diasporale", country: "FR", paginationOpts: { cursor: null, numItems: 12 } })
+  })
+
   it("rend la même projection tant que le moteur ne répond pas autre chose ; une fin de liste n'a pas de curseur", () => {
     mocks.results.set("modules/diaspora/mentoring:menteeMentoringRequests", { page: [SUMMARY], isDone: true, continueCursor: "fin" })
     const data = capability()

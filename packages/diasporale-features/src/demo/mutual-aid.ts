@@ -19,6 +19,8 @@
  */
 import { isProfilePublished } from "@antsia/social-domain/content"
 import {
+  aidQuestionSearchText,
+  aidSearchWordsMatch,
   aidSignupBlocker,
   aidStatusWithoutAcceptedAnswer,
   checkAidAcceptedAnswer,
@@ -32,10 +34,12 @@ import {
   checkAidSignupWithdrawal,
   DAY_MS,
   HOUR_MS,
+  matchesAidQuestionSearch,
   parseAidAnswer,
   parseAidMission,
   parseAidPlaceFilter,
   parseAidQuestion,
+  parseAidQuestionSearch,
   parseAidReason,
   type AidAnswerStatus,
   type AidMissionStatus,
@@ -529,19 +533,25 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
 
   return {
     // ── Lectures des questions ───────────────────────────────────
-    useQuestions({ country, city, status, cursor }) {
+    useQuestions({ country, city, status, theme, query, unanswered, cursor }) {
       const revisionKey = useRevision()
       return useMemo(() => read(revisionKey, (state, viewerId, now): Loadable<AidListPage<AidQuestionCardView>> => {
         const filter = parseAidPlaceFilter({ country, city })
         if (!filter.ok) return { status: "error", code: filter.code }
+        // ET-04 : thème, mots et « sans réponse », jugés par la règle du domaine, comme le moteur.
+        const search = parseAidQuestionSearch({ query, theme, unanswered })
+        if (!search.ok) return { status: "error", code: search.code }
         const items = current().questions
           .filter((question) => question.country === filter.value.country && question.status === status
             && (filter.value.cityKey === null || question.cityKey === filter.value.cityKey)
+            && matchesAidQuestionSearch(question, search.value)
+            && aidSearchWordsMatch(aidQuestionSearchText(question), search.value.query)
             && !blockedBetween(state, viewerId, question.authorId))
           .sort((left, right) => right.createdAt - left.createdAt || (left.id < right.id ? 1 : -1))
           .map((question) => questionCard(state, question, viewerId, now))
-        return windowOf(items, cursor, `questions:${filter.value.country}:${filter.value.cityKey ?? ""}:${status}`)
-      }), [revisionKey, country, city, status, cursor])
+        const scope = [filter.value.country, filter.value.cityKey ?? "", status, search.value.theme ?? "", search.value.query ?? "", search.value.unanswered ? "u" : ""].join(":")
+        return windowOf(items, cursor, `questions:${scope}`)
+      }), [revisionKey, country, city, status, theme, query, unanswered, cursor])
     },
 
     useMyQuestions({ cursor }) {

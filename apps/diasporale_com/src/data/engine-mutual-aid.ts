@@ -16,7 +16,7 @@
  */
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
-import type { CountryCode } from "@diasporale/domain"
+import type { AidTheme, CountryCode } from "@diasporale/domain"
 import {
   MUTUAL_AID_PAGE_SIZE,
   type AidAnswerView,
@@ -177,6 +177,12 @@ function cityArgs(city: string | undefined): { city?: string } {
   return typed ? { city: typed } : {}
 }
 
+/** ET-04 — les filtres d'une recherche de questions : seul ce qui restreint est envoyé (un thème, des mots, « sans réponse »). */
+function searchArgs(theme: AidTheme | null | undefined, query: string | undefined, unanswered: boolean | undefined): { theme?: AidTheme; query?: string; unanswered?: true } {
+  const typed = query?.trim()
+  return { ...(theme ? { theme } : {}), ...(typed ? { query: typed } : {}), ...(unanswered ? { unanswered: true } : {}) }
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Lectures
 // ═══════════════════════════════════════════════════════════════
@@ -214,12 +220,14 @@ export function createEngineMutualAid(deps: EngineSourceDeps): MutualAidCapabili
     })
 
   return {
-    useQuestions({ country, city, status, cursor }) {
+    useQuestions({ country, city, status, theme, query, unanswered, cursor }) {
       const member = useEngineMember()
       const networkId = readableNetwork(member)
       const loaded = useLoaded(
         AID.listQuestions,
-        networkId ? { networkId, country, ...cityArgs(city), status, paginationOpts: { cursor, numItems: MUTUAL_AID_PAGE_SIZE } } : "skip",
+        networkId
+          ? { networkId, country, ...cityArgs(city), status, ...searchArgs(theme, query, unanswered), paginationOpts: { cursor, numItems: MUTUAL_AID_PAGE_SIZE } }
+          : "skip",
       )
       const value = loaded.state === "ready" ? loaded.value : undefined
       const view = useMemo(() => (value ? windowOf(value, toAidQuestionCard) : undefined), [value])

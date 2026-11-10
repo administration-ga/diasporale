@@ -121,6 +121,9 @@ describe("kit d'arrivée — lectures du moteur", () => {
     expect(listArgsOf({ ...REQUEST, nationalOnly: true })).toEqual({ country: "FR", nationalOnly: true })
     expect(listArgsOf({ ...REQUEST, city: "Paris", nationalOnly: true })).toEqual({ country: "FR", city: "Paris" })
     expect(listArgsOf({ ...REQUEST, city: "   ", category: "health" })).toEqual({ country: "FR", category: "health" })
+    // ET-04 : des mots ne partent que s'ils restreignent.
+    expect(listArgsOf({ ...REQUEST, query: " banque " })).toEqual({ country: "FR", query: "banque" })
+    expect(listArgsOf({ ...REQUEST, query: "   " })).toEqual({ country: "FR" })
   })
 
   it("n'interroge rien tant que l'adhésion du lecteur n'est pas connue, ni sans identifiant de ressource", () => {

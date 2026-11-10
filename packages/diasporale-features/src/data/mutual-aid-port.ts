@@ -41,8 +41,11 @@ export const MUTUAL_AID_ERROR_CODES = [...MUTUAL_AID_REFUSALS] as const
 /** Taille d'une fenêtre de liste demandée au fournisseur (le moteur plafonne à cinquante). */
 export const MUTUAL_AID_PAGE_SIZE = 20
 
-/** Les vues de l'onglet « Questions » : par état dans un pays, ou les miennes. */
-export const MUTUAL_AID_QUESTION_VIEWS = ["open", "resolved", "closed", "mine"] as const
+/**
+ * Les vues de l'onglet « Questions » : par état dans un pays, celles qui attendent
+ * encore une réponse (ET-04 : ouvertes, aucune réponse publiée), ou les miennes.
+ */
+export const MUTUAL_AID_QUESTION_VIEWS = ["open", "unanswered", "resolved", "closed", "mine"] as const
 export type MutualAidQuestionView = (typeof MUTUAL_AID_QUESTION_VIEWS)[number]
 
 /** Les vues de l'onglet « Missions bénévoles » : à venir dans un pays, mes inscriptions, celles de mes associations. */
@@ -184,6 +187,12 @@ export interface AidQuestionsRequest {
   /** Ville saisie, facultative ; la liste se borne alors à cette ville. */
   readonly city?: string
   readonly status: AidQuestionListStatus
+  /** ET-04 — un thème : la liste se borne à ce thème ; absent ou `null`, tous les thèmes. */
+  readonly theme?: AidTheme | null
+  /** ET-04 — des mots cherchés dans le titre et le détail (deux caractères au moins pour chercher). */
+  readonly query?: string
+  /** ET-04 — seulement les questions sans aucune réponse publiée. */
+  readonly unanswered?: boolean
   readonly cursor: string | null
 }
 
@@ -221,7 +230,7 @@ export interface AidMissionInputView {
 
 export interface MutualAidCapability {
   // Les questions.
-  /** Les questions d'un pays (et d'une ville saisie) dans un état, les plus récentes d'abord. */
+  /** Les questions d'un pays (et d'une ville saisie) dans un état, les plus récentes d'abord ; d'un thème, sans réponse, ou cherchées par mots (ET-04). */
   useQuestions(request: AidQuestionsRequest): Loadable<AidListPage<AidQuestionCardView>>
   /** Mes questions, les plus récentes d'abord (jamais une question retirée). */
   useMyQuestions(args: { readonly cursor: string | null }): Loadable<AidListPage<AidQuestionCardView>>

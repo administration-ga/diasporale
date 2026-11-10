@@ -135,10 +135,13 @@ function pageOf<Dto, Row>(result: { readonly page: readonly Dto[]; readonly cont
 /** Les arguments d'une lecture du kit : une ville vide n'est pas envoyée ; « national » seulement sans ville. */
 export function listArgsOf(request: ArrivalKitListRequest) {
   const city = request.city?.trim() ?? ""
+  // ET-04 : des mots cherchés ne s'envoient que s'ils restreignent.
+  const query = request.query?.trim() ?? ""
   return {
     country: request.country,
     ...(city.length > 0 ? { city } : request.nationalOnly ? { nationalOnly: true } : {}),
     ...(request.category !== null ? { category: request.category } : {}),
+    ...(query.length > 0 ? { query } : {}),
   }
 }
 

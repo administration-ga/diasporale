@@ -246,3 +246,19 @@ describe("démonstration — missions et inscriptions", () => {
     expect(await started.aid.withdrawSignup("aid-m-1")).toEqual({ ok: false, code: "aid_mission_started" })
   })
 })
+
+describe("démonstration — retrouver une question (ET-04)", () => {
+  it("thème, mots repliés et « sans réponse » restreignent comme le moteur ; un thème inconnu est refusé", () => {
+    const { aid } = setup()
+    const ids = (request: Parameters<MutualAidCapability["useQuestions"]>[0]) => ready(renderHook(() => aid.useQuestions(request)).result.current).items.map((row) => row.id)
+    expect(ids({ country: "FR", status: "open", theme: "procedures", cursor: null })).toEqual(["aid-q-2"])
+    expect(ids({ country: "FR", status: "open", theme: "housing", cursor: null })).toEqual([])
+    expect(ids({ country: "FR", status: "resolved", query: "Colocation étudiante", cursor: null })).toEqual(["aid-q-1"])
+    expect(ids({ country: "FR", status: "open", query: "sejour", cursor: null })).toEqual(["aid-q-2"])
+    expect(ids({ country: "FR", status: "open", query: "medecin", cursor: null })).toEqual([])
+    // La question ouverte de Paris a une réponse ; celle de Montréal n'en a aucune.
+    expect(ids({ country: "FR", status: "open", unanswered: true, cursor: null })).toEqual([])
+    expect(ids({ country: "CA", status: "open", unanswered: true, cursor: null })).toEqual(["aid-q-3"])
+    expect(renderHook(() => aid.useQuestions({ country: "FR", status: "open", theme: "sports" as never, cursor: null })).result.current).toEqual({ status: "error", code: "aid_theme_invalid" })
+  })
+})
