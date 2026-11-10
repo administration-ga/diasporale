@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { EngineAuthClient } from "@antsia/api/auth-client"
-import { APPEAL_REASON_MAX, type ModerationDecisionView } from "@diasporale/features/data"
+import { APPEAL_REASON_MAX, AUTHOR_DECISIONS_WINDOW, type ModerationDecisionView } from "@diasporale/features/data"
 import { act, cleanup, renderHook } from "@testing-library/react"
 import type { ConvexReactClient } from "convex/react"
 import { getFunctionName } from "convex/server"
@@ -320,7 +320,7 @@ describe("Droits personnels — décisions et recours", () => {
       },
     })
     expect(JSON.stringify(result.current)).not.toMatch(/post-secret|team-france|network-diasporale/)
-    expect(mocks.read).toHaveBeenCalledWith("modules/moderation/cases:myDecisions", { paginationOpts: { cursor: null, numItems: 10 } })
+    expect(mocks.read).toHaveBeenCalledWith("modules/moderation/cases:myDecisions", { paginationOpts: { cursor: null, numItems: AUTHOR_DECISIONS_WINDOW } })
     expect(readNames()).not.toContain("modules/diaspora/membership:myMembership")
   })
 
@@ -329,7 +329,39 @@ describe("Droits personnels — décisions et recours", () => {
     const { rights } = setup()
     const { result } = renderHook(() => rights.useDecisions({ personId: PERSON._id, cursor: "suite" }))
     expect(result.current).toEqual({ status: "ready", data: { items: [], continueCursor: null, isDone: true } })
-    expect(mocks.read).toHaveBeenCalledWith("modules/moderation/cases:myDecisions", { paginationOpts: { cursor: "suite", numItems: 10 } })
+    expect(mocks.read).toHaveBeenCalledWith("modules/moderation/cases:myDecisions", { paginationOpts: { cursor: "suite", numItems: AUTHOR_DECISIONS_WINDOW } })
+  })
+
+  it("MD-07 : ni dossier ouvert, ni dossier en examen, ni classement ne se montrent à l'auteur ; une mesure prise, oui, avec son recours", () => {
+    const row = (reportId: string, overrides: Record<string, unknown>) => ({ ...DECISION_ROW, reportId, sanctions: [], appeals: [], decisionReason: null, ...overrides })
+    respondWith({
+      "modules/moderation/cases:myDecisions": {
+        page: [
+          row("dossier-ouvert", { status: "open" }),
+          row("dossier-en-examen", { status: "reviewing" }),
+          row("classement", { status: "dismissed", decisionReason: "Rien à reprocher." }),
+          row("relecture-approuvee", { status: "dismissed", reason: "pre_review", decisionReason: "Publiable." }),
+          row("mesure", { status: "actioned", decisionReason: "Propos insultants répétés.", sanctions: DECISION_ROW.sanctions }),
+          row("mesure-annulee", { status: "dismissed", decisionReason: "Propos jugés insultants.", appeals: [{ appealId: "appeal-1", level: "network", status: "overturned", decisionReason: "Le contexte a été mal lu." }] }),
+        ],
+        isDone: false,
+        continueCursor: "suite",
+      },
+    })
+    const { rights } = setup()
+    const { result } = renderHook(() => rights.useDecisions({ personId: PERSON._id, cursor: null }))
+    const query = result.current
+    expect(query.status).toBe("ready")
+    if (query.status !== "ready") return
+    expect(query.data.items.map((item) => item.reportId)).toEqual(["mesure", "mesure-annulee"])
+    // La mesure prise garde sa décision motivée, sa sanction et son recours possible.
+    expect(query.data.items[0]).toMatchObject({ status: "actioned", decisionReason: "Propos insultants répétés.", appealLevel: "network" })
+    expect(query.data.items[0]!.sanctions).toHaveLength(1)
+    // Annulée sur recours : la réponse du recours reste lisible, aucun nouveau recours.
+    expect(query.data.items[1]).toMatchObject({ appeals: [{ level: "network", status: "overturned", decisionReason: "Le contexte a été mal lu." }], appealLevel: null })
+    // La continuation du moteur est gardée : la suite peut porter d'autres mesures.
+    expect(query.data).toMatchObject({ continueCursor: "suite", isDone: false })
+    expect(JSON.stringify(query)).not.toMatch(/dossier-ouvert|dossier-en-examen|classement|relecture-approuvee|Rien à reprocher|Publiable/)
   })
 
   it("ferme les décisions d'une autre personne et sans session", () => {

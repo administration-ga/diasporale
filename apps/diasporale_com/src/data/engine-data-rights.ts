@@ -14,6 +14,11 @@
  *   · `moderation/cases` : `myDecisions` (sans déclarant ni contenu), `fileAppeal`, et
  *     `myReports` (SU01d : mes signalements, sans auteur, sanction ni motif de modération).
  *
+ * MD-07 (protéger le déclarant) : `myDecisions` rend aussi les dossiers ouverts et les
+ * classements sans suite ; l'adaptateur n'en montre que les mesures prises, et une mesure
+ * annulée sur recours (`authorDecisionsOnly`), en lisant la fenêtre la plus large admise par
+ * le moteur. Le correctif de fond est demandé au moteur (antsia#99).
+ *
  * Aucune lecture d'adhésion : un membre suspendu exerce ses droits sans
  * qu'aucune surface sociale lui soit rouverte. Chaque écriture relit d'abord la
  * personne de la session : un changement de personne ferme le geste
@@ -27,6 +32,8 @@ import type { Id } from "@convex/_generated/dataModel"
 import { ROOT_NETWORK_SLUG } from "@diasporale/domain"
 import {
   appealReasonRefusal,
+  AUTHOR_DECISIONS_WINDOW,
+  authorDecisionsOnly,
   decisionGround,
   DECISIONS_PAGE_SIZE,
   nextAppealLevel,
@@ -315,7 +322,7 @@ export function createEngineDataRights(deps: EngineSourceDeps): EngineDataRights
       const person = useLoaded(api.modules.people.persons.getMyPerson, signedIn ? {} : "skip")
       const diasporale = useNetworkId()
       const root = useLoaded(api.modules.networks.networks.getBySlug, { slug: ROOT_NETWORK_SLUG })
-      const page = useLoaded(api.modules.moderation.cases.myDecisions, signedIn ? { paginationOpts: { cursor, numItems: DECISIONS_PAGE_SIZE } } : "skip")
+      const page = useLoaded(api.modules.moderation.cases.myDecisions, signedIn ? { paginationOpts: { cursor, numItems: AUTHOR_DECISIONS_WINDOW } } : "skip")
       if (auth.isUnauthenticated) return failed("not_signed_in")
       if (!signedIn) return LOADING
       if (person.state === "error") return failed(person.code)
@@ -328,11 +335,12 @@ export function createEngineDataRights(deps: EngineSourceDeps): EngineDataRights
         diasporale: diasporale.state === "ready" ? diasporale.value : null,
         root: root.state === "ready" ? (root.value?._id ?? null) : null,
       }
-      return ready({
+      // MD-07 : l'auteur ne lit qu'une mesure prise, jamais un dossier ouvert ni un classement.
+      return ready(authorDecisionsOnly({
         items: page.value.page.map((row) => toDecisionView(row, networks)),
         continueCursor: page.value.isDone ? null : page.value.continueCursor,
         isDone: page.value.isDone,
-      })
+      }))
     },
 
     useReports({ personId, cursor }: ReportsRequest): ReportsQuery {
