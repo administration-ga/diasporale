@@ -54,8 +54,13 @@ export type DiasporaleDemoGroup = (typeof DIASPORALE_DEMO_GROUPS)[number]
 export const DIASPORALE_DEMO_ROLES = ["member", "network_moderator", "network_admin"] as const
 export type DiasporaleDemoRole = (typeof DIASPORALE_DEMO_ROLES)[number]
 
-/** Les gestes RÉELS que l'application joue pour l'acteur, une fois équipé. */
-export const DIASPORALE_DEMO_GESTURES = ["mentor", "talent", "service", "job", "mission"] as const
+/**
+ * Les gestes RÉELS que l'application joue pour l'acteur, une fois équipé. `associationEvent`
+ * (EV-01) : deux évènements fictifs de la page d'association, créés par la capacité du port
+ * sous une clé d'idempotence stable ; aucune politique de modération n'est posée, ils restent
+ * « en attente » jusqu'à la décision de la modératrice au bureau.
+ */
+export const DIASPORALE_DEMO_GESTURES = ["mentor", "talent", "service", "job", "mission", "associationEvent"] as const
 export type DiasporaleDemoGesture = (typeof DIASPORALE_DEMO_GESTURES)[number]
 
 /** Les pays que la démonstration ouvre (si personne n'en a encore décidé). */
@@ -184,7 +189,7 @@ export const DIASPORALE_DEMO_ACTOR_SPECS: Readonly<Record<DiasporaleDemoActor, D
     profile: { handle: "demo.association", givenNames: "Mireille", familyName: "ENGONE", headline: "Présidente d'association (démonstration)" },
     grounds: ATTESTED, expectedStatus: "verifiee",
     page: { kind: "association", handle: "demo-association-lyon", name: "Association des Gabonais de Lyon (démonstration)", city: "Lyon", trust: "verified", associationType: "cultural", sector: null },
-    gestures: ["mission"],
+    gestures: ["mission", "associationEvent"],
   }),
   entreprise: spec({
     actor: "entreprise", group: "pages", country: "FR",

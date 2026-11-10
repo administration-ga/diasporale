@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
+import { DataSourceProvider, REPORT_REASONS } from "@diasporale/features/data"
 import type {
   ActionResult,
+  ContentReportsCapability,
+  DiasporaleDataSource,
   JobOfferCardView,
   JobOfferDetailView,
   JobsCapability,
@@ -15,11 +18,13 @@ import type {
   SessionView,
   TalentHitView,
 } from "@diasporale/features/data"
+import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { JOB_FRAUD_REPORT_REASON } from "@/components/job-parts"
 import { JobRecruiterPanel } from "@/components/job-recruiter-panel"
 import { skillsOf } from "@/components/job-talent-profile"
 
@@ -55,6 +60,9 @@ const mocks = vi.hoisted(() => ({
   removeTalentProfile: vi.fn(),
   success: vi.fn(),
   error: vi.fn(),
+  // EM-01 : la source de données, pour la seule capacité de signalement (absente par défaut, comme hors fournisseur).
+  dataSource: null as unknown,
+  report: vi.fn(),
 }))
 
 vi.mock("next/navigation", () => ({
@@ -72,6 +80,7 @@ vi.mock("@diasporale/features/data", async (original) => ({
   // CC-6 : sans fournisseur de conversations, l'entrée « Écrire » ne s'affiche pas (testée à part).
   useConversations: () => null,
   useSession: () => mocks.session,
+  useOptionalDataSource: () => mocks.dataSource,
 }))
 vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error } }))
 
@@ -159,7 +168,11 @@ function signedIn(membership: MembershipView | null): Loadable<SessionView> {
 }
 
 function tree(ui: ReactNode, locale: "fr" | "en" = "fr") {
-  return <I18nProvider locale={locale}>{ui}</I18nProvider>
+  // Depuis MD-02, le geste « Signaler » vit dans le paquet de surfaces et lit la capacité dans le
+  // vrai contexte de la source de données : quand un test en pose une, elle est donc fournie ici.
+  const source = mocks.dataSource as DiasporaleDataSource | null
+  const content = source === null ? ui : <DataSourceProvider source={source}>{ui}</DataSourceProvider>
+  return <I18nProvider locale={locale}>{content}</I18nProvider>
 }
 
 beforeEach(() => {
@@ -175,6 +188,8 @@ beforeEach(() => {
   mocks.talentPages.clear()
   mocks.offer = LOADING
   mocks.talent = { status: "ready", data: null }
+  mocks.dataSource = null
+  mocks.report.mockResolvedValue({ ok: true, value: { created: true } })
   mocks.apply.mockResolvedValue({ ok: true, value: { applicationId: "app-1", created: true } } satisfies ActionResult<unknown>)
   mocks.withdraw.mockResolvedValue({ ok: true, value: { status: "withdrawn" } })
   mocks.createOffer.mockResolvedValue({ ok: true, value: { jobId: "job-new", version: 1, status: "draft" } })
@@ -536,5 +551,86 @@ describe("G9 — l'état de modération, dans les seules vues de gestion", () =>
     mocks.talentPages.set("first", ready<TalentHitView>([]))
     render(tree(<TalentsScreen />, "en"))
     expect(screen.getByText(/your profile appears neither in search nor in your applications/)).toBeTruthy()
+  })
+})
+
+describe("EM-01 — fiche et candidature protégées contre les fausses offres", () => {
+  const fr = (key: string, values?: Record<string, unknown>) => String(getFixedT("fr")(key, values))
+  const en = (key: string, values?: Record<string, unknown>) => String(getFixedT("en")(key, values))
+  const reportsCapability = (): ContentReportsCapability => ({ demonstration: false, report: mocks.report, useReported: () => false })
+  /** Les motifs cités entre guillemets dans un texte : chacun doit être un motif du moteur, que la feuille propose. */
+  const quotedReasons = (text: string) => [...text.matchAll(/«\s*([^»]+?)\s*»/g)].map((match) => match[1]!)
+  const NOTICE = "On ne paie jamais pour candidater"
+
+  it("la fiche dit qu'on ne paie jamais pour candidater, « Signaler » à côté ; le motif cité existe dans la feuille", () => {
+    mocks.dataSource = { contentReports: reportsCapability() }
+    mocks.offer = { status: "ready", data: detail("job-1") }
+    render(tree(<JobOfferScreen jobId="job-1" />))
+    const notice = screen.getByRole("complementary", { name: NOTICE })
+    expect(within(notice).getByText(/ni frais de dossier, ni formation payante, ni avance pour un visa/)).toBeTruthy()
+    // Aucune promesse d'un motif absent : le seul motif cité est l'un de ceux du moteur (MC-06 n'a pas encore ajouté « arnaque »).
+    expect(REPORT_REASONS).toContain(JOB_FRAUD_REPORT_REASON)
+    const cited = quotedReasons(within(notice).getByText(/Une offre vous semble fausse/).textContent ?? "")
+    expect(cited).toEqual([fr(`report.reason.${JOB_FRAUD_REPORT_REASON}`)])
+    expect(REPORT_REASONS.map((reason) => fr(`report.reason.${reason}`))).toEqual(expect.arrayContaining(cited))
+    // Un seul geste « Signaler » sur la fiche : celui de l'encart, à côté de la mention ; aucun bouton plein ajouté.
+    expect(screen.getAllByRole("button", { name: "Signaler l'offre" })).toHaveLength(1)
+    expect(within(notice).getAllByRole("button").filter((button) => /(^|\s)bg-[a-z-]+-fill(\s|$)/.test(button.className))).toEqual([])
+    fireEvent.click(within(notice).getByRole("button", { name: "Signaler l'offre" }))
+    const sheet = screen.getByRole("dialog", { name: "Signaler cette offre d'emploi" })
+    expect(quotedReasons(within(sheet).getByText(/Frais demandés, promesse de visa/).textContent ?? "")).toEqual(cited)
+    expect(within(sheet).getByRole("radio", { name: cited[0] })).toBeTruthy()
+  })
+
+  it("sans capacité de signalement, la mention reste et ne renvoie à aucun bouton absent ; le gestionnaire ne la lit pas", () => {
+    mocks.offer = { status: "ready", data: detail("job-1") }
+    const view = render(tree(<JobOfferScreen jobId="job-1" />))
+    const notice = screen.getByRole("complementary", { name: NOTICE })
+    expect(within(notice).getByText(/ne demande jamais d'argent/)).toBeTruthy()
+    expect(within(notice).queryByText(/Une offre vous semble fausse/)).toBeNull()
+    expect(within(notice).queryByRole("button")).toBeNull()
+    view.unmount()
+    mocks.dataSource = { contentReports: reportsCapability() }
+    mocks.offer = { status: "ready", data: detail("job-1", { viewerCanManage: true }) }
+    render(tree(<JobOfferScreen jobId="job-1" />))
+    expect(screen.queryByRole("complementary", { name: NOTICE })).toBeNull()
+  })
+
+  it("la feuille de candidature s'ouvre sur la mention, avant le message et hors du formulaire ; « Signaler » n'envoie pas la candidature", () => {
+    mocks.dataSource = { contentReports: reportsCapability() }
+    mocks.offer = { status: "ready", data: detail("job-1") }
+    render(tree(<JobOfferScreen jobId="job-1" />))
+    fireEvent.click(screen.getByRole("button", { name: "Candidater" }))
+    const dialog = screen.getByRole("dialog")
+    const notice = within(dialog).getByRole("complementary", { name: NOTICE })
+    const field = within(dialog).getByLabelText("Votre message de motivation")
+    expect(notice.compareDocumentPosition(field) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(notice.closest("form")).toBeNull()
+    fireEvent.click(within(notice).getByRole("button", { name: "Signaler l'offre" }))
+    expect(screen.getByRole("dialog", { name: "Signaler cette offre d'emploi" })).toBeTruthy()
+    expect(mocks.apply).not.toHaveBeenCalled()
+    expect(screen.queryByText("Votre message compte au moins 20 caractères.")).toBeNull()
+  })
+
+  it("le formulaire du recruteur rappelle de ne jamais demander d'argent aux candidats", () => {
+    mocks.pageOffers.set("first", ready<JobOfferDetailView>([]))
+    render(tree(<JobRecruiterPanel pageId="page-1" pageHandle="traiteur-paris" />))
+    fireEvent.click(screen.getByRole("button", { name: "Nouvelle offre" }))
+    expect(screen.getByText(/Ne demandez jamais d'argent aux candidats/)).toBeTruthy()
+  })
+
+  it("parle anglais, et aucune phrase ne dit que DIASPORALE vérifie ou garantit les offres", () => {
+    mocks.dataSource = { contentReports: reportsCapability() }
+    mocks.offer = { status: "ready", data: detail("job-1") }
+    render(tree(<JobOfferScreen jobId="job-1" />, "en"))
+    const notice = screen.getByRole("complementary", { name: "You never pay to apply" })
+    expect(within(notice).getByText(/Report it with the reason “Other reason”/)).toBeTruthy()
+    expect(within(notice).getByRole("button", { name: "Report the offer" })).toBeTruthy()
+    const keys = ["jobs.fraud.title", "jobs.fraud.body", "jobs.fraud.report", "jobs.fraud.reportHint", "jobs.form.noFees"]
+    for (const key of keys) {
+      for (const translate of [fr, en]) {
+        expect(translate(key, { reason: "x" })).not.toMatch(/v[ée]rifi|garanti|certifi|contr[ôo]l|examin|verif|guarant|vouch|screen|check/i)
+      }
+    }
   })
 })

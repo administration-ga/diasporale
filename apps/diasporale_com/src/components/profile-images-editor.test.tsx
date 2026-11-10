@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+import { isPreparedImage, type ImageRuntime } from "@antsia/social-features/media-upload"
+import { fakeImageRuntime, type FakeImageRuntimeOptions } from "@antsia/social-features/tests/image-runtime"
 import type { ActionResult, ProfileImageView, ProfileImagesActions } from "@diasporale/features/data"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
@@ -7,6 +9,32 @@ import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ProfileImagesEditor, type ProfileImagesEditorProps } from "./profile-images-editor"
+
+/**
+ * Le décodeur et le canvas SIMULÉS du moteur (`jsdom` n'en a pas), avec un
+ * relevé de chaque dessin : la préparation et le recadrage, eux, sont les vrais.
+ */
+function editorRuntime(options: FakeImageRuntimeOptions = {}) {
+  const base = fakeImageRuntime({ width: 4000, height: 3000, ...options })
+  const drawings: { dx: number; dy: number; dw: number; dh: number }[] = []
+  const runtime: ImageRuntime = {
+    decode: (file) => base.decode(file),
+    createCanvas(width, height) {
+      const canvas = base.createCanvas(width, height)
+      if (canvas === null) return null
+      return {
+        getContext: (contextId) => {
+          const context = canvas.getContext(contextId)
+          return context === null ? null : { imageSmoothingEnabled: true, imageSmoothingQuality: "high", drawImage: (_image, dx, dy, dw, dh) => { drawings.push({ dx, dy, dw, dh }) } }
+        },
+        toBlob: (callback, type, quality) => canvas.toBlob(callback, type, quality),
+      }
+    },
+  }
+  return { runtime, drawings, canvases: base.canvases }
+}
+
+let images = editorRuntime()
 
 const t = getFixedT("fr")
 const served: ProfileImageView = { url: "/photo-servie.png", withheld: null }
@@ -17,7 +45,14 @@ const mocks = {
 }
 
 function tree(overrides: Partial<ProfileImagesEditorProps> = {}, locale: "fr" | "en" = "fr") {
-  return <I18nProvider locale={locale}><ProfileImagesEditor avatar={null} cover={null} actions={mocks} {...overrides} /></I18nProvider>
+  return <I18nProvider locale={locale}><ProfileImagesEditor avatar={null} cover={null} actions={mocks} imageRuntime={images.runtime} {...overrides} /></I18nProvider>
+}
+
+/** Le fichier remis au port : préparé par le module du moteur, jamais l'original. */
+function sentFile(call = 0): File {
+  const sent = mocks.set.mock.calls[call]?.[1]
+  if (!(sent instanceof File)) throw new Error("aucun fichier remis au port")
+  return sent
 }
 
 function inputFor(usage: "avatar" | "cover") {
@@ -40,11 +75,15 @@ function imageFile(name = "photo.png", type = "image/png", size?: number) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  images = editorRuntime()
   mocks.set.mockResolvedValue({ ok: true, value: served })
   mocks.clear.mockResolvedValue({ ok: true, value: absent })
 })
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
 
 describe("ProfileImagesEditor — les deux images du profil", () => {
   it("annonce les formats et la limite pour deux champs distincts, sans commande globale", () => {
@@ -76,7 +115,7 @@ describe("ProfileImagesEditor — les deux images du profil", () => {
 
   it.each([
     { name: "GIF", file: () => imageFile("photo.gif", "image/gif"), expected: /Formats/ },
-    { name: "plus de cinq Mio", file: () => imageFile("trop-grande.png", "image/png", 5 * 1024 * 1024 + 1), expected: /5 Mo/ },
+    { name: "plus de vingt Mio (la borne d'une photo du moteur)", file: () => imageFile("trop-grande.png", "image/png", 20 * 1024 * 1024 + 1), expected: /20\sMo/ },
     { name: "fichier vide", file: () => imageFile("vide.png", "image/png", 0), expected: null },
   ])("refuse $name sans téléversement, avec le fichier conservé", async ({ file: makeFile, expected }) => {
     const user = userEvent.setup({ applyAccept: false })
@@ -102,21 +141,27 @@ describe("ProfileImagesEditor — les deux images du profil", () => {
     await user.upload(inputFor(usage), file)
     await user.click(saveFor(usage))
 
-    await waitFor(() => expect(mocks.set).toHaveBeenCalledExactlyOnceWith(usage, file))
+    await waitFor(() => expect(mocks.set).toHaveBeenCalledExactlyOnceWith(usage, expect.any(File)))
+    expect(sentFile()).not.toBe(file)
+    expect(isPreparedImage(sentFile())).toBe(true)
     expect(await screen.findByText(t("profile.images.updated"))).toBeInTheDocument()
     expect(inputFor(usage).files).toHaveLength(0)
     expect(inputFor(otherUsage).files?.[0]).toBe(otherFile)
     expect(mocks.clear).not.toHaveBeenCalled()
   })
 
-  it("accepte la limite annoncée de cinq Mio", async () => {
+  it("accepte une photo de téléphone de plus de cinq Mio : elle part recadrée et allégée, à la borne de la photo", async () => {
     const user = userEvent.setup()
     render(tree())
-    const file = imageFile("limite.jpg", "image/jpeg", 5 * 1024 * 1024)
+    const file = imageFile("telephone.jpg", "image/jpeg", 20 * 1024 * 1024)
     await user.upload(inputFor("avatar"), file)
     await user.click(saveFor("avatar"))
 
-    await waitFor(() => expect(mocks.set).toHaveBeenCalledExactlyOnceWith("avatar", file))
+    await waitFor(() => expect(mocks.set).toHaveBeenCalledExactlyOnceWith("avatar", expect.any(File)))
+    expect(sentFile()).not.toBe(file)
+    expect(sentFile().size).toBeLessThan(file.size)
+    // Sans aperçu chargé : le cadrage initial, le plus grand carré centré, 1 024 px au plus.
+    expect(images.canvases).toEqual([{ width: 1024, height: 1024 }])
   })
 
   it.each([
@@ -188,7 +233,8 @@ describe("ProfileImagesEditor — les deux images du profil", () => {
     await user.click(saveFor("avatar"))
 
     await waitFor(() => expect(mocks.set).toHaveBeenCalledTimes(2))
-    expect(mocks.set).toHaveBeenNthCalledWith(2, "avatar", file)
+    expect(mocks.set).toHaveBeenNthCalledWith(2, "avatar", expect.any(File))
+    expect(sentFile(1)).not.toBe(file)
     expect(await screen.findByText(t("profile.images.updated"))).toBeInTheDocument()
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
     expect(inputFor("avatar").files).toHaveLength(0)
@@ -268,5 +314,113 @@ describe("ProfileImagesEditor — les deux images du profil", () => {
     await waitFor(() => expect(mocks.clear).toHaveBeenCalledTimes(2))
     expect(await screen.findByText(t("profile.images.removed"))).toBeInTheDocument()
     expect(inputFor("avatar").files).toHaveLength(0)
+  })
+})
+
+describe("ProfileImagesEditor — recadrer avant l'envoi (RP-01)", () => {
+  /** L'aperçu d'une photo de 4 000 × 3 000 px, chargé. */
+  function loadPreview(usage: "avatar" | "cover") {
+    const frame = screen.getByRole("img", { name: t(usage === "avatar" ? "profile.images.crop.previewAvatar" : "profile.images.crop.previewCover") })
+    const picture = frame.querySelector("img")
+    if (!picture) throw new Error("aperçu absent")
+    Object.defineProperty(picture, "naturalWidth", { configurable: true, value: 4000 })
+    Object.defineProperty(picture, "naturalHeight", { configurable: true, value: 3000 })
+    fireEvent.load(picture)
+    return { frame, picture }
+  }
+
+  beforeEach(() => {
+    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:apercu-local")
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined)
+  })
+
+  it("montre le cadre dès qu'une image recevable est choisie ; les curseurs attendent l'aperçu", async () => {
+    const user = userEvent.setup()
+    render(tree())
+    expect(screen.queryByRole("slider")).not.toBeInTheDocument()
+
+    await user.upload(inputFor("avatar"), imageFile("portrait.jpg", "image/jpeg"))
+
+    const frame = screen.getByRole("img", { name: t("profile.images.crop.previewAvatar") })
+    expect(frame).toHaveAccessibleDescription(t("profile.images.crop.hintAvatar"))
+    expect(frame.querySelector("img")).toHaveAttribute("src", "blob:apercu-local")
+    expect(screen.getByRole("slider", { name: t("profile.images.crop.zoom") })).toBeDisabled()
+    loadPreview("avatar")
+    expect(screen.getByRole("slider", { name: t("profile.images.crop.zoom") })).toBeEnabled()
+    expect(screen.getByRole("slider", { name: t("profile.images.crop.horizontal") })).toBeEnabled()
+    // Le rond prend déjà toute la hauteur d'une photo en largeur : rien à régler verticalement.
+    expect(screen.getByRole("slider", { name: t("profile.images.crop.vertical") })).toBeDisabled()
+  })
+
+  it("au clavier, le zoom et la position règlent l'aperçu ET le fichier envoyé, à l'identique", async () => {
+    const user = userEvent.setup()
+    render(tree())
+    await user.upload(inputFor("avatar"), imageFile("portrait.jpg", "image/jpeg"))
+    const { picture } = loadPreview("avatar")
+
+    fireEvent.change(screen.getByRole("slider", { name: t("profile.images.crop.zoom") }), { target: { value: "200" } })
+    fireEvent.change(screen.getByRole("slider", { name: t("profile.images.crop.horizontal") }), { target: { value: "0" } })
+    expect(screen.getByRole("slider", { name: t("profile.images.crop.zoom") })).toHaveAttribute("aria-valuetext", t("profile.images.crop.percent", { value: 200 }))
+    // Le cadre montre le carré de 1 500 px collé au bord gauche, au milieu de la hauteur.
+    expect(picture.style.left).toBe("0%")
+    expect(picture.style.top).toBe("-50%")
+    expect(picture.style.width).toBe("266.6667%")
+    await user.click(saveFor("avatar"))
+
+    await waitFor(() => expect(mocks.set).toHaveBeenCalledOnce())
+    expect(images.canvases).toEqual([{ width: 1024, height: 1024 }])
+    const drawing = images.drawings[0]!
+    const scale = drawing.dw / 4000
+    // La même zone de l'image : x 0, y 750, côté 1 500 px.
+    expect(-drawing.dx / scale).toBeCloseTo(0, 3)
+    expect(-drawing.dy / scale).toBeCloseTo(750, 3)
+    expect(1024 / scale).toBeCloseTo(1500, 3)
+  })
+
+  it("à la souris, glisser l'image la déplace dans le cadre ; « Recentrer » rend le cadrage initial", async () => {
+    const user = userEvent.setup()
+    render(tree())
+    await user.upload(inputFor("avatar"), imageFile("portrait.jpg", "image/jpeg"))
+    const { frame } = loadPreview("avatar")
+    vi.spyOn(frame, "getBoundingClientRect").mockReturnValue({ x: 0, y: 0, top: 0, left: 0, right: 200, bottom: 200, width: 200, height: 200, toJSON: () => ({}) })
+    const horizontal = screen.getByRole("slider", { name: t("profile.images.crop.horizontal") })
+    expect(horizontal).toHaveValue("50")
+
+    fireEvent.pointerDown(frame, { pointerId: 1, clientX: 100, clientY: 100 })
+    fireEvent.pointerMove(frame, { pointerId: 1, clientX: 150, clientY: 100 })
+    fireEvent.pointerUp(frame, { pointerId: 1, clientX: 150, clientY: 100 })
+    // Un quart du cadre vers la droite : le cadre de 3 000 px recule de 750 px, jusqu'au bord gauche.
+    expect(horizontal).toHaveValue("0")
+
+    await user.click(screen.getByRole("button", { name: t("profile.images.crop.reset") }))
+    expect(horizontal).toHaveValue("50")
+  })
+
+  it("la couverture se recadre en bandeau, avec sa propre consigne", async () => {
+    const user = userEvent.setup()
+    render(tree())
+    await user.upload(inputFor("cover"), imageFile("paysage.png", "image/png"))
+    const { frame } = loadPreview("cover")
+    expect(frame).toHaveAccessibleDescription(t("profile.images.crop.hintCover"))
+    await user.click(saveFor("cover"))
+
+    await waitFor(() => expect(mocks.set).toHaveBeenCalledExactlyOnceWith("cover", expect.any(File)))
+    expect(images.canvases).toEqual([{ width: 2048, height: 512 }])
+  })
+
+  it.each([
+    { name: "canvas absent", options: { canvas: "absent" as const }, code: "media_preparation_unavailable" },
+    { name: "image illisible", options: { decodeFails: true }, code: "media_unreadable" },
+  ])("refuse l'envoi quand la préparation échoue ($name) : phrase traduite, fichier conservé, rien ne part", async ({ options, code }) => {
+    images = editorRuntime(options)
+    const user = userEvent.setup()
+    render(tree())
+    const file = imageFile("portrait.jpg", "image/jpeg")
+    await user.upload(inputFor("avatar"), file)
+    await user.click(saveFor("avatar"))
+
+    expect((await screen.findByRole("alert")).textContent).toBe(t(`errors.${code}`))
+    expect(mocks.set).not.toHaveBeenCalled()
+    expect(inputFor("avatar").files?.[0]).toBe(file)
   })
 })

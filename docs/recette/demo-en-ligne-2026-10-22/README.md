@@ -1,6 +1,6 @@
 # Recette en ligne du 22/10/2026 — DIASPORALE sur la démonstration (ADR-0038 du moteur)
 
-Site : https://diasporale-demo.vercel.app (projet Vercel `diasporale-demo`), branché sur le backend de démonstration du moteur (`vivid-hedgehog-655`) : front `fcde290`, moteur `4feeea0`. Publication faite avec l'accord écrit du propriétaire ; le détail des étapes est dans `docs/35` d'ANTSIA, le suivi dans `EXECUTION.md` de l'étude « sept univers ». Toutes les données sont fictives, et chaque compte de démonstration est partagé par tous les visiteurs.
+Site : le site de démonstration de DIASPORALE, branché sur le backend de démonstration du moteur : front `fcde290`, moteur `4feeea0` (adresse, projet d'hébergement et nom du backend retirés du dépôt public, lot LX-06). Publication faite avec l'accord écrit du propriétaire ; le détail des étapes est dans `docs/35` d'ANTSIA, le suivi dans `EXECUTION.md` de l'étude « sept univers ». Toutes les données sont fictives, et chaque compte de démonstration est partagé par tous les visiteurs.
 
 | Capture | Ce qu'elle montre |
 |---|---|

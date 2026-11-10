@@ -8,7 +8,8 @@
  * (`parseJobOffer`) juge l'ensemble — coordonnées interdites, pays, fourchette,
  * date limite — avant tout envoi. Le fournisseur la rejuge (moteur ou
  * démonstration). Aucun champ d'âge, de sexe, d'origine, de situation familiale
- * ni de photo : le rappel le dit à la personne qui publie.
+ * ni de photo : le rappel le dit à la personne qui publie ; un second rappel lui
+ * dit de ne jamais demander d'argent aux candidats (EM-01).
  */
 import {
   CURRENCY_CODES,
@@ -363,6 +364,8 @@ export function JobOfferForm(props: JobOfferFormProps) {
         </Field>
 
         <p className="rounded-lg bg-muted px-3 py-2 text-[13px]">{t("jobs.form.fairness")}</p>
+        {/* EM-01 : le rappel au recruteur — jamais d'argent demandé aux candidats. */}
+        <p className="rounded-lg bg-muted px-3 py-2 text-[13px]">{t("jobs.form.noFees")}</p>
 
         {formError !== null ? (
           <div role="alert" className="flex flex-col items-start gap-2 rounded-lg border border-destructive px-3 py-2 text-sm">
