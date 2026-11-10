@@ -316,6 +316,148 @@ describe("/mon-activite/demandes/<id> — côté page", () => {
   })
 })
 
+describe("SV-04 — proposition préremplie depuis l'offre et ses réglages", () => {
+  const requester = { displayName: "Awa OGOOUÉ", handle: "awa" }
+  const settings = { timeZone: "Europe/Paris", location: { mode: "onsite" as const, area: "Paris 11e" }, cancellationTerms: "Annulation libre jusqu'à la veille.", bookingCapacity: 1 }
+  const sentWith = (proposalPrefill: ServiceRequestDetailView["proposalPrefill"]) => detail({
+    viewerRole: "page", status: "sent", requester, currentProposal: null, proposals: [], deadlineAt: NOW + DAY + 4 * HOUR,
+    actions: ["propose", "refuse"], timeline: [{ status: "sent", at: NOW - HOUR, version: null }], proposalPrefill,
+  })
+  const value = (label: string) => (screen.getByLabelText(label) as HTMLInputElement).value
+
+  it("offre à prix fixe : tout est repris, rien n'est envoyé sans validation, puis la proposition part telle quelle", async () => {
+    const { capability } = fake({ request: { status: "ready", data: sentWith({ pricing: { mode: "fixed", amountMinor: 4500, currency: "EUR" }, durationMinutes: 90, delivery: "onsite", city: "Paris", settings }) } })
+    render(tree(<ActivityRequestScreen requestId="request-1" />))
+    fireEvent.click(screen.getByRole("button", { name: "Faire une proposition" }))
+    expect(screen.getByText(/Formulaire prérempli depuis l’offre/)).toBeTruthy()
+    expect(capability.propose).not.toHaveBeenCalled()
+    expect([value("Montant"), value("Devise"), value("Durée en minutes"), value("Fuseau horaire")]).toEqual(["45", "EUR", "90", "Europe/Paris"])
+    // La première disponibilité du demandeur (le 19 à 10 h UTC), lue à Paris ; l'échéance au plus tard au début.
+    expect([value("Date du rendez-vous"), value("Heure de début"), value("À accepter avant le (date)"), value("À accepter avant (heure)")]).toEqual(["2026-10-19", "12:00", "2026-10-19", "12:00"])
+    expect([value("Ville ou quartier"), value("Ce que comprend la prestation"), value("Conditions d’annulation")]).toEqual(["Paris 11e", "Tresses africaines", "Annulation libre jusqu'à la veille."])
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Envoyer la proposition" })) })
+    expect(capability.propose).toHaveBeenCalledWith({
+      requestId: "request-1", expectedVersion: 0, amountMinor: 4500, currency: "EUR", durationMinutes: 90, startAt: Date.UTC(2026, 9, 19, 10),
+      timeZone: "Europe/Paris", location: { mode: "onsite", area: "Paris 11e" }, details: "Tresses africaines",
+      cancellationTerms: "Annulation libre jusqu'à la veille.", expiresAt: Date.UTC(2026, 9, 19, 10),
+    })
+  })
+
+  it("offre sur devis : montant laissé vide et refusé à l'envoi ; la ville de l'offre sert de lieu approximatif", async () => {
+    const { capability } = fake({ request: { status: "ready", data: sentWith({ pricing: { mode: "quote" }, durationMinutes: null, delivery: "both", city: "Paris", settings: { timeZone: null, location: null, cancellationTerms: null, bookingCapacity: 1 } }) } })
+    render(tree(<ActivityRequestScreen requestId="request-1" />))
+    fireEvent.click(screen.getByRole("button", { name: "Faire une proposition" }))
+    expect([value("Montant"), value("Durée en minutes"), value("Ville ou quartier"), value("Conditions d’annulation")]).toEqual(["", "60", "Paris", ""])
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Envoyer la proposition" })) })
+    expect(screen.getByText(/Indiquez un montant valide/)).toBeTruthy()
+    expect(capability.propose).not.toHaveBeenCalled()
+  })
+
+  it("une offre à distance seulement se propose à distance", () => {
+    fake({ request: { status: "ready", data: sentWith({ pricing: { mode: "from", amountMinor: 3000, currency: "XAF" }, durationMinutes: 45, delivery: "remote", city: "Paris", settings: { timeZone: null, location: null, cancellationTerms: null, bookingCapacity: 1 } }) } })
+    render(tree(<ActivityRequestScreen requestId="request-1" />))
+    fireEvent.click(screen.getByRole("button", { name: "Faire une proposition" }))
+    expect((screen.getByLabelText("À distance") as HTMLInputElement).checked).toBe(true)
+    expect(screen.queryByLabelText("Ville ou quartier")).toBeNull()
+    expect([value("Montant"), value("Devise"), value("Durée en minutes")]).toEqual(["3000", "XAF", "45"])
+  })
+
+  it("« Reprendre la version précédente » recopie la dernière version, sans rien envoyer", () => {
+    const proposed = detail({ viewerRole: "page", requester, actions: ["propose", "refuse"], proposalPrefill: { pricing: { mode: "fixed", amountMinor: 9900, currency: "EUR" }, durationMinutes: 120, delivery: "onsite", city: "Lyon", settings } })
+    const { capability } = fake({ request: { status: "ready", data: proposed } })
+    render(tree(<ActivityRequestScreen requestId="request-1" />))
+    fireEvent.click(screen.getByRole("button", { name: "Modifier la proposition" }))
+    expect(value("Montant")).toBe("99")
+    fireEvent.click(screen.getByRole("button", { name: "Reprendre la version précédente (version 1)" }))
+    expect([value("Montant"), value("Durée en minutes"), value("Ce que comprend la prestation"), value("Heure de début")]).toEqual(["45", "60", "Mèches fournies.", "13:00"])
+    expect(capability.propose).not.toHaveBeenCalled()
+  })
+})
+
+describe("SV-03 — déplacer un rendez-vous confirmé", () => {
+  const requester = { displayName: "Awa OGOOUÉ", handle: "awa" }
+  const booking = { startAt: NOW + DAY + HOUR, endAt: NOW + DAY + 2 * HOUR, timeZone: "Europe/Paris", status: "confirmed" as const }
+  const NEW_START = Date.UTC(2026, 9, 20, 12)
+  const pending = { startAt: NEW_START, endAt: NEW_START + HOUR, timeZone: "Europe/Paris", proposedBy: "page" as const, proposedAt: NOW - HOUR, expiresAt: NOW + 6 * HOUR }
+  const confirmed = (overrides: Partial<ServiceRequestDetailView> = {}) => detail({ status: "confirmed", booking, deadlineAt: null, actions: ["cancel"], rescheduleActions: [], reschedule: null, ...overrides })
+  const zoneName = getFixedT("fr")("serviceReschedule.title")
+
+  it("côté demandeur : l'ancien et le nouvel horaire se lisent, l'accord cite l'horaire lu", async () => {
+    const acceptReschedule = vi.fn(() => done({ version: 2 }))
+    fake({ request: { status: "ready", data: confirmed({ reschedule: pending, rescheduleActions: ["accept_reschedule", "decline_reschedule"] }) }, acceptReschedule, proposeReschedule: vi.fn(), declineReschedule: vi.fn() })
+    render(tree(<MyServiceRequestScreen requestId="request-1" />))
+    const zone = screen.getByRole("region", { name: zoneName })
+    expect(within(zone).getByText("La page propose un nouvel horaire")).toBeTruthy()
+    expect(within(zone).getByText("Horaire actuel")).toBeTruthy()
+    expect(within(zone).getByText(/mardi 20 octobre 2026/)).toBeTruthy()
+    expect(within(zone).getByText(/Sans accord, le rendez-vous reste tel quel/)).toBeTruthy()
+    const accept = within(zone).getByRole("button", { name: "Accepter le nouvel horaire" })
+    expect(filledButtons(zone)).toEqual([accept])
+    fireEvent.click(accept)
+    const dialog = screen.getByRole("dialog")
+    expect(within(dialog).getByText("Nouvel horaire")).toBeTruthy()
+    await act(async () => { fireEvent.click(within(dialog).getByRole("button", { name: "J’accepte le nouvel horaire" })) })
+    expect(acceptReschedule).toHaveBeenCalledWith({ requestId: "request-1", expectedProposalVersion: 1, expectedStartAt: NEW_START })
+    expect(mocks.success).toHaveBeenCalledWith("Rendez-vous déplacé")
+  })
+
+  it("garder l'horaire actuel le dit à la page ; le proposant retire le sien", async () => {
+    const declineReschedule = vi.fn(() => done(null))
+    fake({ request: { status: "ready", data: confirmed({ reschedule: pending, rescheduleActions: ["accept_reschedule", "decline_reschedule"] }) }, declineReschedule, proposeReschedule: vi.fn(), acceptReschedule: vi.fn() })
+    const view = render(tree(<MyServiceRequestScreen requestId="request-1" />))
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Garder l’horaire actuel" })) })
+    expect(declineReschedule).toHaveBeenCalledWith({ requestId: "request-1" })
+    expect(mocks.success).toHaveBeenCalledWith("Horaire actuel conservé")
+    view.unmount()
+    fake({ request: { status: "ready", data: confirmed({ viewerRole: "page", requester, reschedule: pending, rescheduleActions: ["decline_reschedule"] }) }, declineReschedule, proposeReschedule: vi.fn(), acceptReschedule: vi.fn() })
+    render(tree(<ActivityRequestScreen requestId="request-1" />))
+    expect(screen.getByText("Vous avez proposé un nouvel horaire")).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Accepter le nouvel horaire" })).toBeNull()
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Retirer ma proposition" })) })
+    expect(mocks.success).toHaveBeenCalledWith("Proposition retirée")
+  })
+
+  it("côté page : propose un autre horaire, même durée, lu dans le fuseau choisi ; le même horaire est refusé au champ", async () => {
+    const proposeReschedule = vi.fn(() => done(null))
+    fake({ request: { status: "ready", data: confirmed({ viewerRole: "page", requester, rescheduleActions: ["propose_reschedule"] }) }, proposeReschedule, acceptReschedule: vi.fn(), declineReschedule: vi.fn() })
+    render(tree(<ActivityRequestScreen requestId="request-1" />))
+    fireEvent.click(screen.getByRole("button", { name: "Proposer un autre horaire" }))
+    const zone = screen.getByRole("region", { name: zoneName })
+    expect(within(zone).getByText(/Même durée \(60 minutes\)/)).toBeTruthy()
+    // Le formulaire part de l'horaire actuel, lu à Paris : le renvoyer tel quel est refusé sans aller-retour.
+    expect((screen.getByLabelText("Nouvelle heure de début") as HTMLInputElement).value).toBe("13:00")
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Envoyer le nouvel horaire" })) })
+    expect(screen.getByText(/C’est déjà l’horaire du rendez-vous/)).toBeTruthy()
+    expect(proposeReschedule).not.toHaveBeenCalled()
+    fireEvent.change(screen.getByLabelText("Nouvelle date"), { target: { value: "2026-10-20" } })
+    fireEvent.change(screen.getByLabelText("Nouvelle heure de début"), { target: { value: "14:00" } })
+    fireEvent.change(screen.getByLabelText("Fuseau du nouvel horaire"), { target: { value: "Europe/Paris" } })
+    fireEvent.change(screen.getByLabelText("Réponse attendue avant le (date)"), { target: { value: "2026-10-18" } })
+    fireEvent.change(screen.getByLabelText("Réponse attendue avant (heure)"), { target: { value: "20:00" } })
+    expect(filledButtons(zone)).toEqual([within(zone).getByRole("button", { name: "Envoyer le nouvel horaire" })])
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Envoyer le nouvel horaire" })) })
+    expect(proposeReschedule).toHaveBeenCalledWith({ requestId: "request-1", expectedProposalVersion: 1, startAt: NEW_START, timeZone: "Europe/Paris", expiresAt: Date.UTC(2026, 9, 18, 18) })
+    expect(mocks.success).toHaveBeenCalledWith("Nouvel horaire proposé")
+  })
+
+  it("rien à déplacer sans fournisseur du geste, ni après le début du rendez-vous", () => {
+    fake({ request: { status: "ready", data: confirmed({ rescheduleActions: ["propose_reschedule"] }) } })
+    const view = render(tree(<MyServiceRequestScreen requestId="request-1" />))
+    expect(screen.queryByRole("region", { name: zoneName })).toBeNull()
+    view.unmount()
+    vi.setSystemTime(NOW + DAY + HOUR)
+    fake({ request: { status: "ready", data: confirmed({ rescheduleActions: ["propose_reschedule"] }) }, proposeReschedule: vi.fn(), acceptReschedule: vi.fn(), declineReschedule: vi.fn() })
+    render(tree(<MyServiceRequestScreen requestId="request-1" />))
+    expect(screen.queryByRole("button", { name: "Proposer un autre horaire" })).toBeNull()
+  })
+
+  it("la liste dit le nouvel horaire en attente de réponse", () => {
+    fake({ pages: { null: page([{ ...SUMMARY, status: "confirmed", currentProposal: SUMMARY.currentProposal, booking, deadlineAt: null, reschedule: pending }]) } })
+    render(tree(<MyServiceRequestsScreen />))
+    expect(screen.getByText(/Nouvel horaire proposé, réponse attendue avant le/)).toBeTruthy()
+  })
+})
+
 describe("DS-02 — « Faire une proposition » en famille commerce, un seul bouton plein par zone", () => {
   const requester = { displayName: "Awa OGOOUÉ", handle: "awa" }
   const actionsZone = getFixedT("fr")("serviceRequests.detail.actions")

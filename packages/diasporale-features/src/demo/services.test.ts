@@ -65,6 +65,11 @@ describe("démonstration des services — offres fictives", () => {
       pageId: "page-saveurs",
       pageHandle: "saveurs-okoume-demo",
       pageName: "Saveurs d'Okoumé (démo)",
+      // SV-04 : la démonstration montre une proposition préremplie depuis l'offre et ses réglages fictifs.
+      proposalPrefill: {
+        pricing: { mode: "from", amountMinor: 6000, currency: "EUR" }, durationMinutes: 180, delivery: "onsite", city: "Paris",
+        settings: { timeZone: "Europe/Paris", location: { mode: "onsite", area: "Paris 18e (démo)" }, cancellationTerms: "Annulation libre jusqu'à la veille, 18 h (démo).", bookingCapacity: 2 },
+      },
     })
     expect(services.findOffer("offer-demo-photo")?.status).toBe("paused")
     expect(services.findOffer("inconnue")).toBeNull()
@@ -236,6 +241,27 @@ describe("démonstration des services — gérer une offre", () => {
     expect(await capability.updateOffer({ ...INPUT, offerId, expectedVersion: 5 })).toEqual({ ok: false, code: "service_offer_withdrawn" })
     // Le lien conservé vers une offre retirée ne mène plus à rien pour un lecteur.
     expect(services.findOffer(offerId)?.status).toBe("withdrawn")
+  })
+
+  it("SV-04 : réglages de prestation écrits avec l'offre, lus par l'équipe seulement, sous les refus de la proposition", async () => {
+    const { capability, services } = setup("p-mireille")
+    const providerSettings = { timeZone: " Europe/Paris ", location: { mode: "onsite" as const, area: " Paris  18e " }, cancellationTerms: "Libre jusqu'à la veille.", bookingCapacity: 1 }
+    expect(await capability.createOffer({ ...INPUT, pageId: "page-saveurs", publish: true, providerSettings })).toMatchObject({ ok: true })
+    const written = { timeZone: "Europe/Paris", location: { mode: "onsite", area: "Paris 18e" }, cancellationTerms: "Libre jusqu'à la veille.", bookingCapacity: 1 }
+    expect(data(renderHook(() => capability.useOffer("offer-demo-1")).result.current)?.providerSettings).toEqual(written)
+    expect(services.findOffer("offer-demo-1")?.proposalPrefill).toMatchObject({ pricing: INPUT.pricing, durationMinutes: 60, settings: written })
+    // Une modification sans réglages les garde ; d'autres réglages les remplacent.
+    expect(await capability.updateOffer({ ...INPUT, offerId: "offer-demo-1", expectedVersion: 1 })).toEqual({ ok: true, value: { version: 2 } })
+    expect(services.findOffer("offer-demo-1")?.proposalPrefill?.settings).toEqual(written)
+    expect(await capability.updateOffer({ ...INPUT, offerId: "offer-demo-1", expectedVersion: 2, providerSettings: { timeZone: null, location: { mode: "remote" }, cancellationTerms: null, bookingCapacity: 3 } })).toEqual({ ok: true, value: { version: 3 } })
+    expect(services.findOffer("offer-demo-1")?.proposalPrefill?.settings).toEqual({ timeZone: null, location: { mode: "remote" }, cancellationTerms: null, bookingCapacity: 3 })
+    expect(await capability.updateOffer({ ...INPUT, offerId: "offer-demo-1", expectedVersion: 3, providerSettings: { timeZone: null, location: { mode: "onsite", area: "8 rue Oberkampf" }, cancellationTerms: null, bookingCapacity: 1 } })).toEqual({ ok: false, code: "request_address_forbidden" })
+    expect(await capability.createOffer({ ...INPUT, pageId: "page-saveurs", publish: false, providerSettings: { timeZone: null, location: null, cancellationTerms: "Appeler le 07 12 34 56 78", bookingCapacity: 1 } })).toEqual({ ok: false, code: "request_contact_forbidden" })
+    // SV-09 : de un à dix rendez-vous simultanés.
+    expect(await capability.updateOffer({ ...INPUT, offerId: "offer-demo-1", expectedVersion: 3, providerSettings: { timeZone: null, location: null, cancellationTerms: null, bookingCapacity: 0 } })).toEqual({ ok: false, code: "booking_capacity_invalid" })
+    // Le lecteur ne voit pas les réglages internes de l'équipe.
+    const reader = setup("p-prisca").capability
+    expect(data(renderHook(() => reader.useOffer("offer-demo-coiffure")).result.current)?.providerSettings).toBeNull()
   })
 
   it("refuse hors équipe, sous le statut requis, pour une nature non admise et contre les règles du domaine", async () => {
