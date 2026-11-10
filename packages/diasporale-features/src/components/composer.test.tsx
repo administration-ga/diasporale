@@ -174,6 +174,70 @@ describe("Composeur — les fichiers choisis rejoignent réellement la publicati
   })
 })
 
+function CountryComposer(props: { readonly memberCountry: "FR" | "ES"; readonly openCountries: readonly ("FR" | "ES")[] | null; readonly pageCountry?: "FR" | "ES" }) {
+  const [open, setOpen] = useState(true)
+  return <I18nProvider locale="fr"><DataSourceProvider source={source}>
+    <PostComposerSheet
+      open={open}
+      onOpenChange={(next) => { setOpen(next); if (!next) onClose() }}
+      memberCountry={props.memberCountry}
+      openCountries={props.openCountries}
+      {...(props.pageCountry ? { page: { id: "page-es", name: "Association de recette", country: props.pageCountry, publish: pagePublish } } : {})}
+    />
+  </DataSourceProvider></I18nProvider>
+}
+
+describe("Composeur — pays pas encore ouvert (HB-01)", () => {
+  beforeEach(() => {
+    pagePublish.mockReset().mockResolvedValue({ ok: true, value: { postId: "post-page", created: true } })
+  })
+
+  it("le hub local est inactif et expliqué, la portée part pour toute la diaspora, aucune relecture n'est promise", async () => {
+    const user = userEvent.setup()
+    render(<CountryComposer memberCountry="ES" openCountries={["FR"]} />)
+    const local = screen.getByRole("radio", { name: /Dans le hub Espagne/ })
+    expect(local).toBeDisabled()
+    expect(local).not.toBeChecked()
+    expect(local).toHaveAccessibleDescription(t("composer.reviewNotice", { country: "Espagne" }))
+    expect(screen.getByRole("radio", { name: /Pour toute la diaspora/ })).toBeChecked()
+    expect(screen.getByRole("dialog")).not.toHaveTextContent(/relue|relecture/i)
+    await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Bonjour depuis Madrid")
+    await user.click(screen.getByRole("button", { name: t("composer.publish") }))
+    await waitFor(() => expect(publish).toHaveBeenCalledOnce())
+    // La diaspora garde le pays d'ORIGINE de l'auteur (pastille dans les autres hubs).
+    expect(publish.mock.calls[0]?.[0]).toMatchObject({ body: "Bonjour depuis Madrid", reach: "diaspora", country: "ES" })
+  })
+
+  it("une page d'un pays fermé publie pour toute la diaspora", async () => {
+    const user = userEvent.setup()
+    render(<CountryComposer memberCountry="FR" openCountries={["FR"]} pageCountry="ES" />)
+    expect(screen.getByRole("radio", { name: /Dans le hub Espagne/ })).toBeDisabled()
+    await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Annonce de la page")
+    await user.click(screen.getByRole("button", { name: t("composer.publish") }))
+    await waitFor(() => expect(pagePublish).toHaveBeenCalledOnce())
+    expect(pagePublish.mock.calls[0]?.[0]).toMatchObject({ pageId: "page-es", reach: "diaspora" })
+  })
+
+  it("en France, rien ne change : le hub local reste offert et choisi par défaut", async () => {
+    const user = userEvent.setup()
+    render(<CountryComposer memberCountry="FR" openCountries={["FR"]} />)
+    const local = screen.getByRole("radio", { name: /Dans le hub France/ })
+    expect(local).toBeEnabled()
+    expect(local).toBeChecked()
+    expect(screen.queryByText(t("composer.reviewNotice", { country: "France" }))).not.toBeInTheDocument()
+    await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Bonjour Lyon")
+    await user.click(screen.getByRole("button", { name: t("composer.publish") }))
+    await waitFor(() => expect(publish).toHaveBeenCalledOnce())
+    expect(publish.mock.calls[0]?.[0]).toMatchObject({ reach: "local", country: "FR" })
+  })
+
+  it("pays ouverts encore inconnus : aucun pays n'est dit fermé, le choix local reste offert", () => {
+    render(<CountryComposer memberCountry="ES" openCountries={null} />)
+    expect(screen.getByRole("radio", { name: /Dans le hub Espagne/ })).toBeEnabled()
+    expect(screen.queryByText(t("composer.reviewNotice", { country: "Espagne" }))).not.toBeInTheDocument()
+  })
+})
+
 describe("Composeur — portée fixe de galerie, sans changer les pages ordinaires", () => {
   beforeEach(() => {
     window.localStorage.clear()

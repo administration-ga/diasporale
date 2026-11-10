@@ -117,6 +117,10 @@ function keepEnterInField(event: KeyboardEvent<HTMLInputElement>): void {
  * `network` par défaut : « Publier aussi sur ANTSIA » est un GESTE, désactivé
  * hors audience publique, expliqué en une ligne. La case naît décochée.
  *
+ * Pays pas encore ouvert (HB-01) : la publication locale n'y est pas reçue
+ * (aucune relecture par pays n'existe encore, HB-11). L'option locale reste
+ * visible, inactive et expliquée, et la portée part pour toute la diaspora.
+ *
  * Médias : quatre photos, ou une vidéo seule (règles du moteur, jugées AVANT
  * tout envoi). Chaque fichier part dès qu'il est choisi ; la publication attend
  * la fin des envois. Le texte alternatif se donne photo par photo.
@@ -125,7 +129,11 @@ export function PostComposerSheet(props: {
   open: boolean
   onOpenChange: (open: boolean) => void
   memberCountry: CountryCode
-  openCountries: readonly CountryCode[]
+  /**
+   * Les pays ouverts du réseau ; `null` tant qu'ils ne sont pas connus
+   * (chargement, panne) : rien n'est alors affirmé, et l'adaptateur juge à l'envoi.
+   */
+  openCountries: readonly CountryCode[] | null
   /**
    * Brouillon durable (EXF-DG-10) : gardé dans CE navigateur sous cette clé (une
    * par personne), rétabli à l'ouverture, effacé à la publication. Jamais envoyé.
@@ -174,6 +182,11 @@ export function PostComposerSheet(props: {
   const reach = useWatch({ control: form.control, name: "reach" })
   const body = useWatch({ control: form.control, name: "body" })
   const rootAllowed = !page && canAlsoPublishOnRoot(audience === "followers" ? "connections" : audience)
+  const localCountry = page?.country ?? props.memberCountry
+  // Un pays connu pour fermé ne reçoit pas de publication locale : la portée effective est la diaspora,
+  // sans réécrire le choix gardé (il revient si le pays ouvre pendant que la feuille vit).
+  const localClosed = !hasFixedScope && (!page || page.country !== null)
+    && props.openCountries !== null && !isCountryOpen(localCountry, props.openCountries)
 
   // Une audience restreinte ferme la case ANTSIA : la valeur suit, jamais l'inverse.
   useEffect(() => {
@@ -295,14 +308,14 @@ export function PostComposerSheet(props: {
     if (fixedScope?.requireMedia && media.length === 0) { setMediaError("association_event_gallery_media_required"); return }
     const pageInput: Omit<PagePublicationInput, "pageId"> = {
       body: values.body,
-      reach: fixedScope || (page && !page.country) ? "diaspora" : values.reach,
+      reach: fixedScope || (page && !page.country) || localClosed ? "diaspora" : values.reach,
       audience: !fixedScope && values.audience === "followers" ? "followers" : "public",
       ...(media.length > 0 ? { media } : {}),
       idempotencyKey: publishKey,
     }
     const result = page ? await page.publish({ pageId: page.id, ...pageInput }) : await actions.publish({
       body: values.body,
-      reach: values.reach,
+      reach: localClosed ? "diaspora" : values.reach,
       audience: values.audience === "connections" ? "connections" : "public",
       alsoOnRoot: values.alsoOnRoot,
       // Local : le pays du hub. Diaspora : le pays d'ORIGINE, en pastille dans les autres hubs (EXF-DG-16).
@@ -338,9 +351,8 @@ export function PostComposerSheet(props: {
     }
   }
 
-  const localCountry = page?.country ?? props.memberCountry
   const countryLabel = countryName(localCountry, locale)
-  const reviewNotice = reach === "local" && !isCountryOpen(localCountry, props.openCountries)
+  const localNoticeId = `${ids}-local-ferme`
   const bodyError = form.formState.errors.body?.message
   const mediaFieldError = form.formState.errors.media?.root?.message ?? form.formState.errors.media?.message
   const mediaNotice = mediaError ?? mediaFieldError
@@ -482,8 +494,13 @@ export function PostComposerSheet(props: {
               control={form.control}
               name="reach"
               render={({ field }) => (
-                <RadioGroup value={field.value} onValueChange={field.onChange} aria-label={t("composer.reachLegend")}>
-                  {!page || page.country ? <RadioCard value="local">
+                <RadioGroup value={localClosed ? "diaspora" : field.value} onValueChange={field.onChange} aria-label={t("composer.reachLegend")}>
+                  {!page || page.country ? <RadioCard
+                    value="local"
+                    disabled={localClosed}
+                    aria-describedby={localClosed ? localNoticeId : undefined}
+                    className="data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60"
+                  >
                     <span className="flex flex-wrap items-center gap-2">
                       <CountryTag country={localCountry} />
                       <span className="text-sm">{t("composer.reachLocal", { country: countryLabel })}</span>
@@ -499,7 +516,7 @@ export function PostComposerSheet(props: {
               )}
             />
             {page && !page.country ? <p className="text-[13px] text-muted-foreground">{t("pagePublications.noCountry")}</p> : null}
-            {reviewNotice ? <p className="text-[13px] text-pending-foreground">{t("composer.reviewNotice")}</p> : null}
+            {localClosed ? <p id={localNoticeId} className="text-[13px] text-pending-foreground">{t("composer.reviewNotice", { country: countryLabel })}</p> : null}
           </fieldset>
 
           <fieldset className="flex flex-col gap-2">

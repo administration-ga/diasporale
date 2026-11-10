@@ -181,7 +181,7 @@ describe("R2 — vérifier une inscription consulaire", () => {
 })
 
 describe("R3 — un compte léger se fait parrainer", () => {
-  it("en attente puis lecture seule ; parrainé par un membre vérifié depuis plus de 30 jours, il publie (relu, pays fermé)", async () => {
+  it("en attente puis lecture seule ; parrainé par un membre vérifié depuis plus de 30 jours, il publie pour toute la diaspora (pays fermé)", async () => {
     const { store, me } = demo()
     const sent = await store.requestCode({ kind: "email", value: "nouvelle@example.com" })
     if (!sent.ok || !sent.value.demoCode) throw new Error("code non émis")
@@ -202,7 +202,12 @@ describe("R3 — un compte léger se fait parrainer", () => {
     await store.switchTo(newcomer)
     expect(store.statusOf(newcomer)).toBe("declaree")
     expect(membershipView(store.getState(), newcomer, T0)?.sponsoredBy).toEqual({ handle: "mireille.ivindo", displayName: "Mireille IVINDO" })
-    expect(await store.publish(post)).toEqual({ ok: true, value: { moderation: "pending_review" } })
+    // HB-01 : le Canada n'est pas ouvert ici ; le hub local refuse, comme l'adaptateur du moteur, sans rien écrire.
+    const before = store.getState().posts.length
+    expect(await store.publish(post)).toEqual({ ok: false, code: "feature_unavailable" })
+    expect(store.getState().posts).toHaveLength(before)
+    expect(await store.publish({ ...post, reach: "diaspora" })).toEqual({ ok: true, value: { moderation: "published" } })
+    expect(store.getState().posts[0]).toMatchObject({ body: "Bonjour Montréal", scope: { reach: "diaspora", country: "CA" } })
   })
 
   it("un pays ouvert avec deux modérateurs publie directement", async () => {
