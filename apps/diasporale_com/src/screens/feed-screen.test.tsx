@@ -1,14 +1,14 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
 import type { FeedDiscoveryProps } from "@diasporale/features"
-import type { MembershipView } from "@diasporale/features/data"
+import type { CountryHubView, Loadable, MembershipView } from "@diasporale/features/data"
 import { I18nProvider } from "@diasporale/features/i18n/client"
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import type { ComponentProps, ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { FeedPagesProps } from "@/components/feed-pages"
-import { FeedScreen } from "./feed-screen"
+import { FeedRail, FeedScreen } from "./feed-screen"
 
 const mocks = vi.hoisted(() => ({
   search: "",
@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   gate: vi.fn(),
   push: vi.fn(),
   membership: null as MembershipView | null,
+  hub: { status: "loading" } as Loadable<CountryHubView>,
 }))
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(mocks.search), useRouter: () => ({ push: mocks.push }) }))
 // Un lien ordinaire : l'adresse rendue est celle de la table des routes, sans navigation réelle dans jsdom.
@@ -63,8 +64,15 @@ vi.mock("@diasporale/features", async (importOriginal) => {
       mocks.discovery(props)
       return <section aria-label="Découverte autorisée">{props.toolbarStart}{mocks.showEmpty ? props.emptyFallback : null}</section>
     },
+    // Le rail isole sa carte du hub : les suggestions ont leurs propres scénarios.
+    MemberSuggestions: () => null,
   }
 })
+// Seul le rail lit le hub de son pays ; le fil n'en dépend pas.
+vi.mock("@diasporale/features/data", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@diasporale/features/data")>()),
+  useCountryHub: () => mocks.hub,
+}))
 
 const MEMBER: MembershipView = {
   personId: "person-recette", handle: "recette", displayName: "Recette", status: "en_attente", badges: ["community"],
@@ -81,6 +89,7 @@ beforeEach(() => {
   mocks.showEmpty = false
   mocks.listPost = null
   mocks.membership = { ...MEMBER }
+  mocks.hub = { status: "loading" }
   vi.clearAllMocks()
 })
 afterEach(() => {
@@ -240,5 +249,49 @@ describe("/fil — bascule Liste / Découverte (DG-017)", () => {
     view.rerender(tree())
     act(() => { vi.advanceTimersByTime(2_100) })
     expect(document.activeElement).toBe(screen.getByRole("link", { name: "Liste" }))
+  })
+})
+
+describe("/fil — le rail du hub ne dit aucun nombre d'évènements non mesuré (EV-02)", () => {
+  const HUB: CountryHubView = {
+    country: "FR",
+    open: true,
+    counters: {
+      dormant: false,
+      members: { kind: "below_threshold", threshold: 20 },
+      associations: { kind: "value", value: 3 },
+      companies: { kind: "value", value: 1 },
+      upcomingEvents: { kind: "value", value: 0 },
+    },
+    countersSource: "materialized",
+    officialPages: [],
+    associations: [],
+    companies: [],
+    events: [],
+    eventsSource: "unmeasured",
+  }
+  const rail = () => render(<I18nProvider locale="fr"><FeedRail membership={MEMBER} /></I18nProvider>)
+
+  it("moteur : le compteur d'associations reste ; ni nombre ni « aucun évènement », un renvoi vers l'agenda", () => {
+    mocks.hub = { status: "ready", data: HUB }
+    rail()
+    expect(screen.getByText("Associations")).toBeTruthy()
+    expect(screen.queryByText("Évènements à venir")).toBeNull()
+    expect(screen.queryByText("Aucun évènement prévu pour l'instant.")).toBeNull()
+    expect(screen.getByText("Les évènements se publient sur la page de chaque association. Ceux auxquels vous êtes inscrit sont dans votre agenda.")).toBeTruthy()
+    expect(screen.getByRole("link", { name: "Mon agenda" })).toHaveAttribute("href", "/agenda")
+  })
+
+  it("avant la lecture du hub, rien n'est affirmé", () => {
+    rail()
+    expect(screen.queryByText("Aucun évènement prévu pour l'instant.")).toBeNull()
+    expect(screen.queryByText("Évènements à venir")).toBeNull()
+  })
+
+  it("démonstration : les évènements comptés gardent leur compteur", () => {
+    mocks.hub = { status: "ready", data: { ...HUB, countersSource: "demo", eventsSource: "demo" } }
+    rail()
+    expect(screen.getByText("Évènements à venir")).toBeTruthy()
+    expect(screen.getByText("Aucun évènement prévu pour l'instant.")).toBeTruthy()
   })
 })

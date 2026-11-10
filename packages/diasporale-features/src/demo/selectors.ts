@@ -588,6 +588,7 @@ export function countryHubView(state: DemoState, country: CountryCode, now: numb
       .filter((event) => event.startsAt > now && event.moderation === "published" && isShownInHub(event.scope, country))
       .sort((a, b) => a.startsAt - b.startsAt)
       .map((event) => eventView(state, event, now)),
+    eventsSource: "demo",
   }
 }
 

@@ -7,6 +7,7 @@ import {
   NOTIFICATIONS_PAGE,
   bookmarksView,
   commentsView,
+  countryHubView,
   feedView,
   hubCounters,
   memberSearchView,
@@ -306,6 +307,14 @@ describe("compteurs de hub et persistance", () => {
   it("les membres visibles sous le seuil de 20 ne sont jamais chiffrés", () => {
     const { store } = demo()
     expect(hubCounters(store.getState(), "FR", T0).members).toEqual({ kind: "below_threshold", threshold: 20 })
+  })
+
+  it("les évènements fictifs sont comptés et listés, et le hub le dit (source « demo », EV-02)", () => {
+    const { store } = demo()
+    const hub = countryHubView(store.getState(), "FR", T0)
+    expect(hub.eventsSource).toBe("demo")
+    expect(hub.counters.upcomingEvents).toEqual({ kind: "value", value: hub.events.length })
+    expect(hub.events.length).toBeGreaterThan(0)
   })
 
   it("persiste dans le stockage local, recharge, et se remet à zéro", async () => {

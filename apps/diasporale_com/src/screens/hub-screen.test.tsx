@@ -89,6 +89,7 @@ const hub: CountryHubView = {
   associations: [],
   companies: [],
   events: [],
+  eventsSource: "unmeasured",
 }
 
 function tree(iso = "CA") {
