@@ -10,18 +10,20 @@
  * montre par son nom court et ses compétences DÉCLARÉES, jamais par une adresse.
  * Un profil de talent trouvé se signale (G9, chantier « confiance des surfaces ») ;
  * l'état de modération d'un contenu géré se dit dans les seules vues de gestion.
+ * EM-01 : l'encart « On ne paie jamais pour candidater » sur la fiche et dans la
+ * feuille de candidature, avec « Signaler » à côté.
  */
 import { utcToZonedWallTime, zonedWallTimeToUtc, type CountryCode, type JobPayRangeLike } from "@diasporale/domain"
 import { Card, EmptyState, TrustBadge, countryName, formatDate } from "@diasporale/features"
-import type { ActionErrorCode, ContentReportTarget, JobOfferCardView, ManagedModerationState, TalentHitView } from "@diasporale/features/data"
+import type { ActionErrorCode, ContentReportTarget, JobOfferCardView, ManagedModerationState, ReportReason, TalentHitView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { BriefcaseBusinessIcon, CircleAlertIcon, ClockIcon, MapPinIcon, type LucideIcon } from "lucide-react"
+import { BriefcaseBusinessIcon, CircleAlertIcon, ClockIcon, MapPinIcon, ShieldAlertIcon, type LucideIcon } from "lucide-react"
 import NextLink from "next/link"
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react"
+import { useId, useLayoutEffect, useRef, useState, type ReactNode } from "react"
 
 import { routes } from "@/lib/routes"
 
-import { ReportContentAction, ReportedContent } from "./report-content-sheet"
+import { ReportContentAction, ReportedContent, useOptionalContentReports } from "./report-content-sheet"
 import { formatMoney, languageList } from "./service-format"
 
 type Translate = (key: string, options?: Record<string, unknown>) => string
@@ -140,6 +142,44 @@ export function JobModerationNote(props: { readonly subject: keyof typeof MODERA
       </span>
       <span className="min-w-0 break-words">{t(MODERATION_NOTES[props.subject][state])}</span>
     </p>
+  )
+}
+
+/**
+ * EM-01 — le motif sous lequel signaler une fausse offre. Le motif dédié (« arnaque, frais
+ * demandés ») appartient au moteur (lot MC-06) et n'existe pas encore : d'ici là, « Autre
+ * motif ». Typé par les motifs du moteur : un motif qui n'y figure pas ne compile pas, et
+ * l'écran ne promet jamais un motif absent de la feuille.
+ */
+export const JOB_FRAUD_REPORT_REASON: ReportReason = "other"
+
+/**
+ * EM-01 — l'encart « On ne paie jamais pour candidater », sur la fiche d'une offre et en tête
+ * de la feuille de candidature : ce qu'une vraie offre ne demande jamais, puis comment signaler
+ * une fausse offre, « Signaler » à côté (bouton discret, jamais plein). Il ne dit jamais que
+ * DIASPORALE examine les offres avant leur publication. Sans capacité de signalement chez le
+ * fournisseur, la phrase qui y renvoie se tait avec le bouton. Monté HORS de tout formulaire :
+ * le bouton « Signaler » ne soumet rien d'autre que sa propre feuille.
+ */
+export function JobFraudNotice(props: { readonly offerId: string }) {
+  const { t } = useDiasporaleT()
+  const id = useId()
+  const reports = useOptionalContentReports()
+  const reason = t(`report.reason.${JOB_FRAUD_REPORT_REASON}`)
+  return (
+    <aside aria-labelledby={`${id}-titre`} className="flex min-w-0 flex-col gap-1.5 rounded-lg border border-border bg-muted px-3 py-3 text-[13px] leading-relaxed">
+      <p id={`${id}-titre`} className="flex items-center gap-2 text-sm font-semibold">
+        <ShieldAlertIcon aria-hidden className="size-4 shrink-0" />
+        {t("jobs.fraud.title")}
+      </p>
+      <p className="break-words">{t("jobs.fraud.body")}</p>
+      {reports !== null ? (
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+          <p className="min-w-0 flex-1 basis-56 break-words">{t("jobs.fraud.report", { reason })}</p>
+          <ReportContentAction target={{ kind: "diasporaJobOffer", id: props.offerId }} hint={t("jobs.fraud.reportHint", { reason })} />
+        </div>
+      ) : null}
+    </aside>
   )
 }
 

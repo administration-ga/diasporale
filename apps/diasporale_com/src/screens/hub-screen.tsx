@@ -41,6 +41,7 @@ import { type ReactNode, useLayoutEffect, useRef, useState } from "react"
 import { AppShell, useComposer } from "@/components/app-shell"
 import { FeedPages } from "@/components/feed-pages"
 import { Gate } from "@/components/gate"
+import { countryEventsReader, HubEventsTab } from "@/components/hub-events"
 import { HubJobsTab } from "@/components/job-hub-tab"
 import { StatusBanner } from "@/components/status-banner"
 import { routes } from "@/lib/routes"
@@ -237,8 +238,11 @@ function HubSections(props: {
   const { t } = useDiasporaleT()
   const { hub, pages, composer } = props
   const name = props.countryLabel
+  const source = useOptionalDataSource()
   // L'onglet « Emploi » n'apparaît que si le fournisseur sert la capacité (DG-025).
-  const jobs = useOptionalDataSource()?.jobs ?? null
+  const jobs = source?.jobs ?? null
+  // HB-02 : les évènements du pays se lisent par la capacité des évènements d'association, quand le fournisseur la sert.
+  const countryEvents = countryEventsReader(source?.associationEvents ?? null)
   return (
     <>
       {pages.status === "ready" && pages.data.officialPages.length > 0 ? (
@@ -277,14 +281,19 @@ function HubSections(props: {
           />
         </FolderTabsContent>
         <FolderTabsContent value="evenements" className="flex flex-col gap-3">
-          {hub.eventsSource === "unmeasured" ? (
-            <HubEventsUnlisted country={props.country} />
-          ) : hub.events.length === 0 ? (
-            <EmptyState icon={<CalendarDaysIcon />} title={t("hub.emptyEvents", { country: name })} description={t("hub.emptyEventsBody")} />
+          {/* La démonstration joint au hub ses évènements fictifs, d'un autre modèle (catégorie, ville, portée) que EV-05 réunira. */}
+          {hub.eventsSource === "demo" ? (
+            hub.events.length === 0 ? (
+              <EmptyState icon={<CalendarDaysIcon />} title={t("hub.emptyEvents", { country: name })} description={t("hub.emptyEventsBody")} />
+            ) : (
+              hub.events.map((event, index) => (
+                <EventCard key={event.id} event={event} now={props.now} hubCountry={props.country} variant={index === 0 ? "wide" : "compact"} />
+              ))
+            )
+          ) : countryEvents ? (
+            <HubEventsTab read={countryEvents} country={props.country} countryLabel={name} />
           ) : (
-            hub.events.map((event, index) => (
-              <EventCard key={event.id} event={event} now={props.now} hubCountry={props.country} variant={index === 0 ? "wide" : "compact"} />
-            ))
+            <HubEventsUnlisted country={props.country} />
           )}
         </FolderTabsContent>
         <FolderTabsContent value="associations" className="grid gap-3 sm:grid-cols-2">
@@ -330,9 +339,9 @@ function HubSections(props: {
 }
 
 /**
- * Les évènements d'un pays ne se lisent pas encore (HB-02, puis EV-05) : l'onglet
- * ne prétend pas qu'il n'y en a aucun. Il dit où ils se trouvent : sur la page de
- * chaque association du pays, et dans l'agenda de qui s'y est inscrit (EV-02).
+ * Un fournisseur qui ne lit pas les évènements d'un pays : l'onglet ne prétend
+ * pas qu'il n'y en a aucun. Il dit où ils se trouvent : sur la page de chaque
+ * association du pays, et dans l'agenda de qui s'y est inscrit (EV-02).
  */
 function HubEventsUnlisted(props: { country: CountryCode }) {
   const { t } = useDiasporaleT()
