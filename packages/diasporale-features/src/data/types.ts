@@ -203,8 +203,41 @@ export interface CommentThreadView extends CommentView {
 export const COMMENT_MAX_LENGTH = 1000
 /** Réponses montrées sous une racine avant « voir les réponses », comme le moteur. */
 export const COMMENT_REPLIES_PREVIEW = 3
-/** Racines lues par ouverture des commentaires. */
+/** Racines lues par page ; « Voir les commentaires suivants » lit la page d'après (FD-03). */
 export const COMMENTS_PAGE = 20
+/** Réponses d'une racine lues par page, à la demande ; la suite se lit de même (FD-03). */
+export const COMMENT_REPLIES_PAGE = 50
+
+/** Une page des commentaires racines d'une publication (FD-03) : curseur opaque du fournisseur. */
+export interface CommentsPageRequest {
+  readonly postId: string
+  readonly cursor?: string | null
+}
+
+/** Une page des réponses d'une racine (FD-03) : curseur opaque du fournisseur. */
+export interface RepliesPageRequest {
+  readonly postId: string
+  readonly commentId: string
+  readonly cursor?: string | null
+}
+
+/**
+ * Une page native de commentaires : ses lignes gardées pour ce lecteur, sa suite et sa fin.
+ * Une page filtrée (auteur bloqué, contenu retiré) peut être courte sans être la dernière.
+ */
+export interface CommentPageView<Row> {
+  readonly items: readonly Row[]
+  readonly continueCursor: string
+  readonly isDone: boolean
+}
+
+/** Une page réactive de commentaires : une panne après données conserve celles-ci pendant la reprise. */
+export interface CommentPageQuery<Row> {
+  readonly data: CommentPageView<Row> | undefined
+  readonly isLoading: boolean
+  readonly error: ActionErrorCode | null
+  readonly retry: () => void
+}
 
 export const EVENT_CATEGORIES = ["celebration", "culture", "sport", "charity", "diplomacy"] as const
 export type EventCategory = (typeof EVENT_CATEGORIES)[number]
@@ -260,6 +293,13 @@ export interface CountryHubView {
   /** `materialized` : compteurs du moteur ; `demo` : jeu de démonstration (toujours signalé). */
   readonly countersSource: "materialized" | "demo"
   /**
+   * Date du dernier passage qui a compté les compteurs du hub (HB-05) ; `null` tant
+   * qu'aucun passage n'a compté. Sans elle, un compteur « matérialisé » n'est pas
+   * mesuré : l'écran ne l'affiche pas, et ne dit aucune date. La démonstration ne
+   * passe jamais (elle compte ses données fictives à la lecture, et le dit) : `null`.
+   */
+  readonly countersComputedAt: number | null
+  /**
    * Les pages du pays, quand le fournisseur les joint au hub (démonstration).
    * Avec le moteur, elles se lisent par la capacité « pages » (`useHubPages`,
    * bornées par nature) : ces listes restent vides plutôt qu'inventées.
@@ -269,12 +309,14 @@ export interface CountryHubView {
   readonly companies: readonly PageView[]
   readonly events: readonly EventView[]
   /**
-   * D'où viennent la liste et le compteur des évènements du hub : `demo` (jeu de
-   * démonstration, compté sur les données fictives) ; `unmeasured` quand le
-   * fournisseur ne lit encore aucun évènement par pays (moteur, jusqu'à HB-02 puis
-   * EV-05). Non mesurés, ni liste ni nombre ne s'affichent : jamais un zéro de façade.
+   * D'où vient le compteur des évènements du hub : `demo` (jeu de démonstration,
+   * liste et compteur sur les données fictives jointes au hub) ; `materialized`
+   * (moteur : compté par le passage nocturne, comptage exact daté) ; `unmeasured`
+   * (aucun comptage exact : le nombre ne s'affiche pas, jamais un zéro de façade).
+   * Hors démonstration, la LISTE se lit par `associationEvents.useCountryEvents`
+   * (HB-02) quand le fournisseur la sert.
    */
-  readonly eventsSource: "demo" | "unmeasured"
+  readonly eventsSource: "demo" | "materialized" | "unmeasured"
 }
 
 export interface AccountView {

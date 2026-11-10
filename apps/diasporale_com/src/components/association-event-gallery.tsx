@@ -1,6 +1,11 @@
 "use client"
 
-/** DG-023 : médias de page attachés à l'événement dès leur publication. */
+/**
+ * DG-023 : médias de page attachés à l'événement dès leur publication.
+ * EV-04 : chaque ajout se signale (c'est une publication de la page, nature « post »),
+ * jamais par l'équipe de la page ni sur son propre ajout ; signalé, il se masque
+ * aussitôt pour qui l'a signalé.
+ */
 import { isAssociationEventGalleryOpen } from "@diasporale/domain"
 import { Button, Card, PostComposerSheet, PostMediaGrid, Sheet, SheetContent, Skeleton } from "@diasporale/features"
 import { useSession, type AssociationEventGalleryCapability, type AssociationEventGalleryItem, type AssociationEventView, type MembershipView, type PagePublicationsCapability } from "@diasporale/features/data"
@@ -9,6 +14,7 @@ import { ImagePlus, RefreshCw } from "lucide-react"
 import { useId, useLayoutEffect, useState } from "react"
 import { toast } from "sonner"
 
+import { ReportContentAction, ReportedContent } from "./report-content-sheet"
 import { ServicePager } from "./service-pager"
 import { formatServiceInstant, useNow } from "./service-request-ui"
 import { useReviewTask as useGalleryTask } from "./service-review-editor"
@@ -87,15 +93,20 @@ function GalleryItems(props: GalleryProps & { readonly items: readonly Associati
     void task.run(() => props.capability.remove({ eventId: props.event.eventId, postId }), () => { setRemovingId(null); toast.success(t("eventGallery.removed")) })
   }
   return <>
-    <ul className="flex min-w-0 flex-col gap-3">{items.map(({ post, canRemove }) => <li key={post.id}>
-      <Card className="flex min-w-0 flex-col gap-3 p-4">
-        <p className="font-semibold">{post.author.displayName}</p>
-        <time dateTime={new Date(post.createdAt).toISOString()} className="text-sm text-muted-foreground">{formatServiceInstant(post.createdAt, props.event.timeZone, locale)}</time>
-        {post.body ? <p className="whitespace-pre-line break-words">{post.body}</p> : null}
-        <PostMediaGrid media={post.media} />
-        {canRemove && props.canManage ? <Button variant="outline" className="self-start" disabled={task.busy} onClick={() => setRemovingId(post.id)}>{t("eventGallery.remove")}</Button> : null}
-      </Card>
-    </li>)}</ul>
+    <ul className="flex min-w-0 flex-col gap-3">{items.map(({ post, canRemove }) => {
+      const card = (
+        <Card className="flex min-w-0 flex-col gap-3 p-4">
+          <p className="font-semibold">{post.author.displayName}</p>
+          <time dateTime={new Date(post.createdAt).toISOString()} className="text-sm text-muted-foreground">{formatServiceInstant(post.createdAt, props.event.timeZone, locale)}</time>
+          {post.body ? <p className="whitespace-pre-line break-words">{post.body}</p> : null}
+          <PostMediaGrid media={post.media} />
+          {canRemove && props.canManage ? <Button variant="outline" className="self-start" disabled={task.busy} onClick={() => setRemovingId(post.id)}>{t("eventGallery.remove")}</Button> : null}
+          {/* EV-04 : jamais offert à l'équipe de la page, ni sur son propre ajout. */}
+          {!props.event.canManage && !post.isMine ? <ReportContentAction target={{ kind: "post", id: post.id }} className="self-start" /> : null}
+        </Card>
+      )
+      return <li key={post.id}>{props.event.canManage ? card : <ReportedContent target={{ kind: "post", id: post.id }}>{card}</ReportedContent>}</li>
+    })}</ul>
     {task.error && !current ? <p role="alert" className="text-sm text-destructive">{t(`errors.${task.error}`)}</p> : null}
     {current ? <Sheet open onOpenChange={(open) => { if (!open && !task.busy) setRemovingId(null) }}><SheetContent title={t("eventGallery.removeTitle")} description={t("eventGallery.removeHint")} closeLabel={t("eventGallery.close")}>
       <div className="flex min-w-0 flex-col gap-3"><p className="whitespace-pre-line break-words">{current.post.body || t("eventGallery.noCaption")}</p>

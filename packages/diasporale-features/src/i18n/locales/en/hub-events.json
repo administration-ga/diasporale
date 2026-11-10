@@ -1,0 +1,12 @@
+{
+  "hubEvents": {
+    "lead": "Upcoming events open to the network, from associations — {{country}}.",
+    "listLabel": "Upcoming events — {{country}}",
+    "emptyTitle": "No upcoming event open to the network — {{country}}.",
+    "emptyBody": "Members-only events stay on each association's page. The ones you've registered for are in your agenda.",
+    "partial": "This country has many pages: some associations' events may be missing here. Each one publishes its own on its page.",
+    "railEmpty": "No upcoming event open to the network in your country.",
+    "railError": "Your country's events can't be read right now.",
+    "railAll": "See this country's events"
+  }
+}

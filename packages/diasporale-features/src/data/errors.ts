@@ -25,6 +25,8 @@ import { MENTORING_ERROR_CODES } from "./mentoring-port"
 import { JOB_ERROR_CODES } from "./jobs-port"
 import { MODERATION_DESK_ERROR_CODES } from "./moderation-desk-port"
 import { PILOT_METRICS_ERROR_CODES } from "./pilot-metrics-port"
+import { ENTRY_DOORS_ERROR_CODES } from "./entry-doors-port"
+import { CALL_SETTINGS_ERROR_CODES } from "./call-settings-port"
 
 /**
  * Les codes de refus FERMÉS que l'écran traduit par `errors.<code>`.
@@ -52,6 +54,10 @@ export const DATA_ERROR_CODES = [
   "display_name_invalid",
   "headline_too_long",
   "handle_taken",
+  // Rendu aussi par l'entrée dans le réseau (EA-04) quand aucun identifiant n'est fourni : refus d'action, pas seulement de formulaire.
+  "handle_required",
+  // Un profil commun retiré se republie par le geste de la personne avant d'entrer (EA-04).
+  "profile_republish_required",
   "consent_social_profile_required",
   "consent_directory_required",
   "publish_not_allowed",
@@ -76,6 +82,8 @@ export const DATA_ERROR_CODES = [
   // Partage cité : seule une publication publique et publiée se partage ; un partage ne joint pas de média.
   "share_not_allowed",
   "share_with_media",
+  // Pays pas encore ouvert (FD-04, HB-01) : la publication dans son hub attend son ouverture.
+  "hub_not_open",
   "attestation_not_needed",
   "attestation_too_soon",
   "attestation_unavailable",
@@ -93,7 +101,6 @@ export const FORM_ERROR_CODES = [
   "idn_identity_required",
   "idn_consent_required",
   "code_format",
-  "handle_required",
   "attestation_consent_required",
   "clipboard_unavailable",
 ] as const
@@ -125,6 +132,9 @@ export const ACTION_ERROR_CODES = [
   ...MODERATION_DESK_ERROR_CODES,
   ...PILOT_METRICS_ERROR_CODES,
   ...CONVERSATION_ERROR_CODES,
+  // Entrée par IDN (EA-02) : départ refusé, retour d'un refus ou d'un échec chez IDN.
+  ...ENTRY_DOORS_ERROR_CODES,
+  ...CALL_SETTINGS_ERROR_CODES,
 ] as const
 
 export type ActionErrorCode = (typeof ACTION_ERROR_CODES)[number]

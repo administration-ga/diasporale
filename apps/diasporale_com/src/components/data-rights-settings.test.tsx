@@ -19,6 +19,8 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { useSyncExternalStore } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { routes } from "@/lib/routes"
+
 import { DataRightsSettings, type DataRightsPerson } from "./data-rights-settings"
 
 const mocks = vi.hoisted(() => ({ rights: null as unknown }))
@@ -133,7 +135,8 @@ describe("Mes données — section et accès", () => {
     expect(screen.getByRole("button", { name: raw("settings.export") })).toBeEnabled()
     expect(screen.getByRole("button", { name: raw("settings.delete") })).toBeEnabled()
     expect(screen.getByRole("button", { name: raw("settings.dataRights.decisions.appeal") })).toBeEnabled()
-    expect(within(section()).queryAllByRole("link")).toEqual([])
+    // Aucune surface sociale : le seul lien mène à la règle visée, sur la page publique des règles (MD-05).
+    expect(within(section()).queryAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([routes.communityRule("respect")])
     expect(new Set(reads)).toEqual(new Set(["last:person_lecture", "erasure:person_lecture", "decisions:person_lecture:"]))
   })
 
@@ -339,7 +342,10 @@ describe("Mes données — décisions et recours", () => {
     expect(item).toHaveTextContent(t("settings.dataRights.decisions.decisionReason", { reason: DECISION.decisionReason! }))
     expect(item).toHaveTextContent(t("settings.dataRights.decisions.sanction.suspension"))
     expect(item).toHaveTextContent(t("settings.dataRights.decisions.sanctionUntil", { date: formatDate(NOW + 5 * DAY, "fr") }))
-    expect(within(item).queryAllByRole("link")).toEqual([])
+    // Aucun lien vers le contenu : seulement la règle que vise le motif, sur la page publique des règles (MD-05).
+    expect(within(item).getAllByRole("link").map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
+      [raw("communityRules.readRule", { rule: raw("legal.community.respect.title") }), routes.communityRule("respect")],
+    ])
   })
 
   it("borne le motif du recours avant tout envoi, puis l'envoie rogné", async () => {

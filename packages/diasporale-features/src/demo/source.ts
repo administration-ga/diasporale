@@ -4,12 +4,15 @@ import { extractHashtags } from "@antsia/social-domain/richText"
 import { hasCapability, type CountryCode, type FeedScope } from "@diasporale/domain"
 import { useMemo, useSyncExternalStore } from "react"
 
+import type { EntryDoorsView } from "../data/entry-doors-port"
 import { describeMediaFile, downscaleImage } from "../data/media"
-import type { ContentPreferencesQuery, ContentPreferencesRequest, DemoAccountView, DiasporaleDataSource } from "../data/port"
+import type { ActionResult, ContentPreferencesQuery, ContentPreferencesRequest, DemoAccountView, DiasporaleDataSource } from "../data/port"
 import type {
   BookmarkView,
   BookmarksPageQuery,
   BookmarksPageRequest,
+  CommentPageQuery,
+  CommentsPageRequest,
   CommentThreadView,
   CommentView,
   FeedCursorView,
@@ -22,6 +25,7 @@ import type {
   PostView,
   ProfilePostsPageRequest,
   RelationView,
+  RepliesPageRequest,
   SuggestionView,
   UnreadCountView,
 } from "../data/types"
@@ -36,10 +40,11 @@ import { createDemoPages } from "./pages"
 import { createDemoPagePublications } from "./page-publications"
 import {
   bookmarksView,
-  commentsView,
+  commentsPageView,
   consentsView,
   countryHubView,
   demoAccountsView,
+  demoRepliesList,
   feedView,
   memberSearchView,
   openCountriesView,
@@ -47,8 +52,9 @@ import {
   postDetailView,
   notificationsView,
   profileView,
+  readDemoCommentCursor,
   relationView,
-  repliesView,
+  repliesPageView,
   sessionView,
   sponsorDashboardView,
   statusOf,
@@ -66,6 +72,7 @@ import { createDemoJobs } from "./jobs"
 import { createDemoModerationDesk } from "./moderation-desk"
 import { createDemoPilotMetrics } from "./pilot-metrics"
 import { createDemoPageDecisions } from "./page-decisions"
+import { createDemoCallSettings } from "./call-settings"
 import type { DemoStore } from "./store"
 
 const LOADING = { status: "loading" } as const
@@ -75,6 +82,9 @@ const retryLocalFeed = () => undefined
 
 /** Côté le plus long d'une photo gardée par la démonstration (stockage du navigateur : quelques Mo). */
 const DEMO_IMAGE_MAX_SIDE = 1280
+
+/** EA-02 : la démonstration sert toutes ses portes, en simulation (IDN par l'écran `/entrer/idn`). */
+const DEMO_ENTRY_DOORS: Loadable<EntryDoorsView> = { status: "ready", data: { idn: true, emailCode: true } }
 
 function ready<T>(data: T): Loadable<T> {
   return { status: "ready", data }
@@ -162,11 +172,15 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
     pilotMetrics: createDemoPilotMetrics(store),
     // P16 · G9 : décisions qui ont retiré un contenu porté par une page, relues pour un signataire vivant.
     pageDecisions: createDemoPageDecisions(store, demoPageTeams),
+    // IM-02 : réglages d'appel et de présence, fictifs, le temps de la page.
+    callSettings: createDemoCallSettings(store),
 
     useSession() {
       const version = useVersion()
       return useMemo(() => (version < 0 ? LOADING : ready(sessionView(store.getState(), store.now()))), [version])
     },
+
+    useEntryDoors: () => DEMO_ENTRY_DOORS,
 
     useOpenCountries() {
       const version = useVersion()
@@ -363,30 +377,35 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       }, [version])
     },
 
-    useComments(postId: string) {
+    // FD-03 : les commentaires et les réponses se lisent page après page, comme le moteur les pagine.
+    useCommentsPage({ postId, cursor = null }: CommentsPageRequest): CommentPageQuery<CommentThreadView> {
       const version = useVersion()
-      return useMemo<Loadable<readonly CommentThreadView[]>>(() => {
-        if (version < 0) return LOADING
+      return useMemo<CommentPageQuery<CommentThreadView>>(() => {
+        if (version < 0) return { data: undefined, isLoading: true, error: null, retry: retryLocalFeed }
+        const unavailable = (error: CommentPageQuery<CommentThreadView>["error"]) => ({ data: undefined, isLoading: false, error, retry: retryLocalFeed })
         const state = store.getState()
         const viewerId = state.session.personId
-        if (!viewerId) return { status: "error", code: "not_signed_in" }
-        const threads = commentsView(state, postId, viewerId, store.now())
-        return threads ? ready(threads) : { status: "error", code: "not_found" }
-      }, [version, postId])
+        if (!viewerId) return unavailable("not_signed_in")
+        const after = readDemoCommentCursor(postId, cursor)
+        if (after === undefined) return unavailable("unknown")
+        const page = commentsPageView(state, postId, viewerId, store.now(), after)
+        return page ? { data: page, isLoading: false, error: null, retry: retryLocalFeed } : unavailable("not_found")
+      }, [version, postId, cursor])
     },
 
-    useReplies(args: { postId: string; commentId: string | null }) {
+    useRepliesPage({ postId, commentId, cursor = null }: RepliesPageRequest): CommentPageQuery<CommentView> {
       const version = useVersion()
-      const { postId, commentId } = args
-      return useMemo<Loadable<readonly CommentView[]>>(() => {
-        if (version < 0) return LOADING
-        if (commentId === null) return ready([])
+      return useMemo<CommentPageQuery<CommentView>>(() => {
+        if (version < 0) return { data: undefined, isLoading: true, error: null, retry: retryLocalFeed }
+        const unavailable = (error: CommentPageQuery<CommentView>["error"]) => ({ data: undefined, isLoading: false, error, retry: retryLocalFeed })
         const state = store.getState()
         const viewerId = state.session.personId
-        if (!viewerId) return { status: "error", code: "not_signed_in" }
-        const replies = repliesView(state, postId, commentId, viewerId, store.now())
-        return replies ? ready(replies) : { status: "error", code: "not_found" }
-      }, [version, postId, commentId])
+        if (!viewerId) return unavailable("not_signed_in")
+        const after = readDemoCommentCursor(demoRepliesList(postId, commentId), cursor)
+        if (after === undefined) return unavailable("unknown")
+        const page = repliesPageView(state, postId, commentId, viewerId, store.now(), after)
+        return page ? { data: page, isLoading: false, error: null, retry: retryLocalFeed } : unavailable("not_found")
+      }, [version, postId, commentId, cursor])
     },
 
     useNotifications() {
@@ -445,7 +464,8 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
     },
 
     actions: {
-      signInWithIdn: (input) => store.signInWithIdn(input),
+      // Sans l'identité simulée de `/entrer/idn`, rien ne s'ouvre : la démonstration ne part pas chez IDN.
+      signInWithIdn: (input) => (input === undefined ? Promise.resolve<ActionResult>({ ok: false, code: "idn_invalid" }) : store.signInWithIdn(input)),
       requestCode: (destination) => store.requestCode(destination),
       verifyCode: (code) => store.verifyCode(code),
       signOutEverywhere: () => store.signOutEverywhere(),
