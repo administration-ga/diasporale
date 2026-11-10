@@ -44,7 +44,7 @@ import type { ActionErrorCode } from "../data/errors"
 import { postMediaRefusal } from "../data/media"
 import type { ManagedPageDetailView } from "../data/page-admin-port"
 import type { PagePublicationInput } from "../data/page-publications-port"
-import type { ActionResult, CodeDestination, CommentInput, ContentPreferenceKind, IdnSignInInput, JoinInput, PublishInput, PublishMediaInput, ReportInput, UploadedMedia } from "../data/port"
+import type { ActionResult, CodeDestination, CommentInput, ContentPreferenceKind, IdnSignInInput, JoinInput, PublishInput, PublishMediaInput, PublishOutcome, ReportInput, UploadedMedia } from "../data/port"
 import { COMMENT_MAX_LENGTH, REPORT_NOTE_MAX, type ReactionKind } from "../data/types"
 import { handleRefusal, handleToken, normalizeHandle } from "../lib/handle"
 import { emailHash, fakeConsularAttestation } from "./attestation-provider"
@@ -577,7 +577,8 @@ export class DemoStore {
     return OK
   }
 
-  async publish(input: PublishInput): Promise<ActionResult<{ moderation: ContentModerationState }>> {
+  // La démonstration dit toujours l'état réel de la publication : publiée, ou retenue en relecture (FD-04).
+  async publish(input: PublishInput): Promise<ActionResult<PublishOutcome>> {
     await this.pause()
     const viewer = this.viewer()
     if (!viewer?.membership) return fail("not_member")
@@ -623,7 +624,8 @@ export class DemoStore {
     if (!scope.ok) return fail(scope.code)
     // Même règle que l'adaptateur du moteur (HB-01) : un pays pas encore ouvert ne reçoit pas de
     // publication locale tant qu'aucune relecture par pays n'existe (HB-11) ; la diaspora reste ouverte.
-    if (scope.value.reach === "local" && !this.state.openCountries.includes(scope.value.country)) return fail("feature_unavailable")
+    // Le refus dit ce que dit le composeur (FD-04).
+    if (scope.value.reach === "local" && !this.state.openCountries.includes(scope.value.country)) return fail("hub_not_open")
     const policy = publicationPolicy({
       scope: scope.value,
       openCountries: this.state.openCountries,
@@ -682,7 +684,7 @@ export class DemoStore {
   }
 
   // ── Commentaires (EXF-DG-12) ───────────────────────────────────────────
-  async comment(input: CommentInput): Promise<ActionResult> {
+  async comment(input: CommentInput): Promise<ActionResult<{ readonly commentId: string }>> {
     await this.pause()
     const viewer = this.viewer()
     if (!viewer?.membership) return fail("not_member")
@@ -715,7 +717,8 @@ export class DemoStore {
       next = this.notified(next, { recipientId: answeredId, kind: "post_comment", actorId: viewer.person.id, postId: post.id })
     }
     this.commit(next)
-    return OK
+    // Comme le moteur : l'identifiant du commentaire créé, que l'écran montre aussitôt (FD-03).
+    return { ok: true, value: { commentId: id } }
   }
 
   /** Seul l'auteur modifie un commentaire vivant ; la publication reste gardée à l'acte. */

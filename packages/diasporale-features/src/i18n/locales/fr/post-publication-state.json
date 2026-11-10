@@ -1,0 +1,9 @@
+{
+  "composer": {
+    "sent": "Publication envoyée.",
+    "shareSent": "Partage envoyé."
+  },
+  "errors": {
+    "hub_not_open": "Ce pays n'est pas encore ouvert : la publication dans son hub attend son ouverture. Publiez pour toute la diaspora."
+  }
+}
