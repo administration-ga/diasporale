@@ -52,6 +52,8 @@ export const DATA_ERROR_CODES = [
   "display_name_invalid",
   "headline_too_long",
   "handle_taken",
+  // Un profil commun retiré se republie par le geste de la personne avant d'entrer (EA-04).
+  "profile_republish_required",
   "consent_social_profile_required",
   "consent_directory_required",
   "publish_not_allowed",

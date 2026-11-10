@@ -82,7 +82,7 @@ describe("R1 — une personne inscrite entre par IDN", () => {
     expect(store.getState().memberships[id]).toBeUndefined()
     expect(sessionView(store.getState(), T0)).toMatchObject({ status: "signed_in", membership: null })
 
-    expect(await store.join(joinInput())).toEqual({ ok: true, value: { country: "FR" } })
+    expect(await store.join(joinInput())).toEqual({ ok: true, value: { country: "FR", status: "declaree" } })
     const view = membershipView(store.getState(), id, T0)
     expect(view).toMatchObject({
       handle: "awa.ogooue",

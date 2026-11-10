@@ -739,7 +739,21 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         const country = parseResidenceCountry(input.facet.countryOfResidence)
         if (!country.ok) throw new Refusal(country.code)
         const id = await diasporale()
-        await deps.convex.mutation(api.modules.people.profile.publishMyProfile, { handle: input.handle, displayName: input.displayName })
+        // EA-04 : le profil commun est relu à chaque essai. Publié (membre d'ANTSIA, retour après
+        // un départ), il n'est ni réécrit ni renommé ; retiré, il attend le geste de la personne ;
+        // absent, il naît de l'accueil. Une entrée interrompue reprend ainsi sans double écriture.
+        const person = await deps.convex.query(api.modules.people.persons.getMyPerson, {})
+        if (!person) throw new Refusal("not_signed_in")
+        if (!person.handle || !person.displayName) {
+          const handle = input.handle ?? ""
+          const displayName = input.displayName ?? ""
+          if (!handle.trim()) throw new Refusal("handle_required")
+          if (!displayName.trim()) throw new Refusal("display_name_invalid")
+          await deps.convex.mutation(api.modules.people.profile.publishMyProfile, { handle, displayName })
+        } else if (!person.published) {
+          throw new Refusal("profile_republish_required")
+        }
+        // Idempotent côté moteur : un accord déjà en vigueur n'est pas réécrit.
         await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "social_profile", origin: "onboarding", ...consentScopeArgs("social_profile", id) })
         // L'annuaire et les notifications valent pour le réseau : le moteur ne relit que l'accord
         // du réseau exact avant tout envoi (`notificationConsent`).
@@ -749,12 +763,12 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         if (input.consents.notifications) {
           await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "notifications", origin: "onboarding", ...consentScopeArgs("notifications", id) })
         }
-        await deps.convex.mutation(api.modules.diaspora.membership.joinDiasporale, {
+        const joined = await deps.convex.mutation(api.modules.diaspora.membership.joinDiasporale, {
           networkId: id,
           facet: toFacetArgs(input.facet),
           directoryVisibility: input.consents.directory ? input.directoryVisibility : "hidden",
         })
-        return { country: country.value }
+        return { country: country.value, status: joined.status }
       }),
 
     // Dépôt en deux temps (garde des fichiers du moteur) : URL de dépôt pour l'usage

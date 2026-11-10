@@ -20,6 +20,7 @@ import type {
   DirectoryVisibility,
   FacetInput,
   FeedScope,
+  MembershipStatus,
   OnboardingConsentChoices,
   Reach,
 } from "@diasporale/domain"
@@ -151,13 +152,28 @@ export interface CodeDestination {
   readonly value: string
 }
 
-/** Les trois écrans de l'onboarding (EXF-DG-02), en une seule écriture. */
+/**
+ * Les trois écrans de l'onboarding (EXF-DG-02).
+ *
+ * L'identité commune (EA-04) : `handle` et `displayName` ne servent qu'à une personne qui n'a
+ * encore aucun profil. Un profil déjà publié (membre d'ANTSIA, retour après un départ) n'est ni
+ * redemandé ni réécrit : ces champs sont alors ignorés. Un profil retiré se republie d'abord, par
+ * le geste de la personne (`profilePublication.republish`) ; sinon l'entrée est refusée
+ * (`profile_republish_required`). Le fournisseur relit le profil à chaque essai : une entrée
+ * interrompue se reprend sans rien publier deux fois.
+ */
 export interface JoinInput {
   readonly facet: FacetInput
-  readonly handle: string
-  readonly displayName: string
+  readonly handle?: string
+  readonly displayName?: string
   readonly consents: OnboardingConsentChoices
   readonly directoryVisibility: DirectoryVisibility
+}
+
+/** Ce que rend une entrée : le pays du hub, et le statut que les faits donnent à l'adhésion. */
+export interface JoinedView {
+  readonly country: CountryCode
+  readonly status: MembershipStatus
 }
 
 /**
@@ -224,7 +240,7 @@ export interface DiasporaleActions {
   /** Révocation de toutes les sessions côté serveur, puis purge locale (EXT-DG-01). */
   signOutEverywhere(): Promise<void>
   checkHandle(handle: string): Promise<ActionResult<{ available: boolean }>>
-  join(input: JoinInput): Promise<ActionResult<{ country: CountryCode }>>
+  join(input: JoinInput): Promise<ActionResult<JoinedView>>
   /** Déposer une photo ou une vidéo avant de publier ; les règles du moteur jugent le fichier d'abord. */
   uploadMedia(file: File): Promise<ActionResult<UploadedMedia>>
   publish(input: PublishInput): Promise<ActionResult<{ moderation: ContentModerationState }>>

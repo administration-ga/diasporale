@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
+import { DAY_MS } from "@diasporale/domain"
 import { RoutingProvider, type FeatureRoutes, type LinkComponent } from "@diasporale/features"
 import { DataSourceProvider, type DiasporaleActions } from "@diasporale/features/data"
-import { DemoStore, createDemoDataSource } from "@diasporale/features/demo"
+import { DEMO_STORAGE_KEY, DemoStore, createDemoDataSource, createDemoSeed, type DemoState } from "@diasporale/features/demo"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
 import { cleanup, render, screen, within } from "@testing-library/react"
@@ -47,6 +48,10 @@ const PlainLink: LinkComponent = ({ href, children, ...rest }) => (
 async function signedInAwa(actions: Partial<DiasporaleActions> = {}) {
   const store = new DemoStore(null, () => Date.UTC(2026, 9, 14, 12), 0)
   await store.signInWithIdn({ firstName: "Awa", lastName: "Ogooué", loa: 2, gaboneseNationality: true })
+  return renderWelcome(store, actions)
+}
+
+function renderWelcome(store: DemoStore, actions: Partial<DiasporaleActions> = {}) {
   const source = createDemoDataSource(store)
   render(
     <I18nProvider locale="fr">
@@ -58,6 +63,35 @@ async function signedInAwa(actions: Partial<DiasporaleActions> = {}) {
     </I18nProvider>,
   )
   return { store, user: userEvent.setup() }
+}
+
+const NOW = Date.UTC(2026, 10, 10, 12)
+/** L'acteur `exterieur` (fictif) : un compte ANTSIA à profil publié, sans adhésion à DIASPORALE. */
+const OUTSIDER = { handle: "demo.exterieur", displayName: "Brice MOUNDOUNGA", headline: "Membre d'ANTSIA, hors de DIASPORALE (démonstration)" }
+
+/** Une démonstration dont la session est déjà ouverte : sur `personId`, ou sur l'acteur `exterieur`. */
+function demoSignedIn(options: { personId?: string; withdrawn?: boolean } = {}) {
+  const seed = createDemoSeed(NOW)
+  const outsider: DemoState["persons"][string] = {
+    id: "p-exterieur",
+    idn: null,
+    local: { kind: "email", value: "exterieur@example.com" },
+    profile: { ...OUTSIDER },
+    administrationLink: false,
+    createdAt: NOW - 30 * DAY_MS,
+    demoAccountKey: null,
+    ...(options.withdrawn ? { withdrawnAt: NOW - DAY_MS } : {}),
+  }
+  const state: DemoState = { ...seed, persons: { ...seed.persons, [outsider.id]: outsider }, session: { personId: options.personId ?? outsider.id } }
+  const items = new Map<string, string>([[DEMO_STORAGE_KEY, JSON.stringify(state)]])
+  const storage = { getItem: (key: string) => items.get(key) ?? null, setItem: (key: string, value: string) => void items.set(key, value), removeItem: (key: string) => void items.delete(key) }
+  return new DemoStore(storage, () => NOW, 0)
+}
+
+async function chooseFrance(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole("combobox", { name: "Pays de résidence" }))
+  await user.type(screen.getByRole("searchbox"), "France")
+  await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: /France/ }))
 }
 
 /** La navigation de page (`window.location.assign`), que jsdom n'exécute pas. */
@@ -121,6 +155,74 @@ describe("/bienvenue — l'onboarding en trois écrans", () => {
     const notice = await screen.findByText(t("welcome.countryNotOpen").replace(/\s+/g, " "))
     expect(notice).toHaveTextContent(/publiez pour toute la diaspora/)
     expect(notice).not.toHaveTextContent(/relue|relecture/i)
+  })
+})
+
+describe("/bienvenue — un profil commun déjà là (EA-04)", () => {
+  it("l'acteur `exterieur` entre : son identité est montrée, jamais redemandée ni réécrite", async () => {
+    const store = demoSignedIn()
+    const before = store.getState().persons["p-exterieur"]?.profile
+    const { user } = renderWelcome(store)
+
+    await chooseFrance(user)
+    await user.click(screen.getByRole("button", { name: /Continuer/ }))
+
+    expect(await screen.findByRole("heading", { name: t("welcomeProfile.keptTitle") })).toBeInTheDocument()
+    const identity = screen.getByRole("region", { name: t("welcomeProfile.identityLabel") })
+    expect(identity).toHaveTextContent(OUTSIDER.displayName)
+    expect(identity).toHaveTextContent(`@${OUTSIDER.handle}`)
+    expect(identity).toHaveTextContent(OUTSIDER.headline)
+    // Ni nom à saisir, ni identifiant à choisir.
+    expect(screen.queryByRole("textbox", { name: "Nom affiché" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("radio")).not.toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: /Continuer/ }))
+
+    expect(await screen.findByRole("heading", { name: "Vos choix" })).toBeInTheDocument()
+    await user.click(screen.getByRole("checkbox", { name: /Créer mon profil social/ }))
+    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORALE/ }))
+    await vi.waitFor(() => expect(navigation.push).toHaveBeenCalledWith(`${routes.hub("FR")}?bienvenue=1`))
+
+    expect(store.getState().persons["p-exterieur"]?.profile).toEqual(before)
+    expect(store.statusOf("p-exterieur")).toBe("en_attente")
+  })
+
+  it("un profil retiré se republie d'un geste, accroche conservée, avant d'aller plus loin", async () => {
+    const store = demoSignedIn({ withdrawn: true })
+    const { user } = renderWelcome(store)
+    await chooseFrance(user)
+    await user.click(screen.getByRole("button", { name: /Continuer/ }))
+
+    expect(await screen.findByRole("heading", { name: t("welcomeProfile.withdrawnTitle") })).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: /Continuer/ }))
+    expect(await screen.findByRole("alert")).toHaveTextContent(t("errors.profile_republish_required").replace(/\s+/g, " "))
+    expect(screen.getByRole("heading", { name: t("welcomeProfile.withdrawnTitle") })).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: t("settings.profilePublication.republish") }))
+    expect(await screen.findByRole("heading", { name: t("welcomeProfile.keptTitle") })).toBeInTheDocument()
+    expect(store.getState().persons["p-exterieur"]?.profile).toEqual(OUTSIDER)
+    expect(store.getState().persons["p-exterieur"]?.withdrawnAt).toBeUndefined()
+    await user.click(screen.getByRole("button", { name: /Continuer/ }))
+    expect(await screen.findByRole("heading", { name: "Vos choix" })).toBeInTheDocument()
+  })
+
+  it("retour après un départ : pays et ville d'avant sont repris, le profil reste le sien", async () => {
+    const store = demoSignedIn({ personId: "p-mireille" })
+    expect(await store.leaveDiasporale()).toEqual({ ok: true, value: null })
+    const before = store.getState().persons["p-mireille"]?.profile
+    const { user } = renderWelcome(store)
+
+    expect(await screen.findByText(t("welcomeProfile.returningNote").replace(/\s+/g, " "))).toBeInTheDocument()
+    expect(screen.getByRole("combobox", { name: "Pays de résidence" })).toHaveTextContent(/France/)
+    expect(screen.getByRole("textbox", { name: "Ville" })).toHaveValue("Paris")
+    await user.click(screen.getByRole("button", { name: /Continuer/ }))
+    expect(await screen.findByRole("heading", { name: t("welcomeProfile.keptTitle") })).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: /Continuer/ }))
+    await user.click(await screen.findByRole("checkbox", { name: /Créer mon profil social/ }))
+    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORALE/ }))
+
+    await vi.waitFor(() => expect(navigation.push).toHaveBeenCalledWith(`${routes.hub("FR")}?bienvenue=1`))
+    expect(store.getState().persons["p-mireille"]?.profile).toEqual(before)
+    expect(store.getState().memberships["p-mireille"]?.facet).toMatchObject({ countryOfResidence: "FR", city: "Paris" })
   })
 })
 

@@ -15,34 +15,49 @@ import {
   handleRefusal,
   normalizeHandle,
 } from "@diasporale/features"
-import { useActions, useHandleSuggestions, useOpenCountries } from "@diasporale/features/data"
+import {
+  useActions,
+  useDataSource,
+  useHandleSuggestions,
+  useOpenCountries,
+  type ActionErrorCode,
+  type DiasporaleDataSource,
+  type MembershipView,
+  type OwnProfileView,
+} from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon, ShieldCheckIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter } from "next/navigation"
-import { useId, useState, type ReactNode } from "react"
-import { Controller, useForm, useWatch, type Control, type FieldPath } from "react-hook-form"
+import { useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { Controller, useForm, useWatch, type Control, type FieldPath, type Resolver } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
-import { Gate } from "@/components/gate"
+import { Gate, GateSkeleton } from "@/components/gate"
 import { useSignOutEverywhere } from "@/components/sign-out-settings"
 import { PublicShell } from "@/components/site-chrome"
 import { routes } from "@/lib/routes"
 
 const OTHER_HANDLE = "__autre__"
 
-const schema = z.object({
+const choicesShape = {
   country: z.string().refine((value) => isResidenceCountry(value), "country_required"),
   city: z.string().trim().max(80, "city_too_long"),
-  displayName: z.string().trim().min(2, "display_name_invalid").max(60, "display_name_invalid"),
-  handleChoice: z.string().min(1, "handle_required"),
   handleOther: z.string(),
   socialProfile: z.boolean().refine((value) => value, "consent_social_profile_required"),
   directory: z.boolean(),
   directoryLevel: z.enum(["country", "network"]),
   notifications: z.boolean(),
+}
+/** Un compte neuf : il choisit son nom affiché et son identifiant. */
+const schema = z.object({
+  ...choicesShape,
+  displayName: z.string().trim().min(2, "display_name_invalid").max(60, "display_name_invalid"),
+  handleChoice: z.string().min(1, "handle_required"),
 })
+/** Un profil commun déjà là (EA-04) : ni nom ni identifiant à saisir, rien à réécrire. */
+const keptIdentitySchema = z.object({ ...choicesShape, displayName: z.string(), handleChoice: z.string() })
 // Le pays est une chaîne en saisie et un `CountryCode` en sortie (garde de type du domaine).
 type FormInput = z.input<typeof schema>
 type Values = z.output<typeof schema>
@@ -53,29 +68,87 @@ const STEP_FIELDS: readonly (readonly FieldPath<FormInput>[])[] = [
   ["socialProfile", "directory", "notifications"],
 ]
 
+type ProfilePublication = NonNullable<DiasporaleDataSource["profilePublication"]>
+
+/**
+ * L'identité commune déjà là (EA-04) : aucune (compte neuf), publiée (membre d'ANTSIA, retour
+ * après un départ) ou retirée. Seul un compte neuf saisit un nom et un identifiant ; les autres
+ * gardent les leurs, accroche comprise.
+ */
+type ExistingIdentity =
+  | { readonly kind: "none" }
+  | {
+      readonly kind: "published" | "withdrawn"
+      readonly personId: string
+      readonly handle: string
+      readonly displayName: string
+      readonly headline: string | null
+    }
+
+const NO_IDENTITY: ExistingIdentity = { kind: "none" }
+
+function existingIdentityOf(profile: OwnProfileView | null): ExistingIdentity {
+  const handle = profile?.handle ?? ""
+  const displayName = profile?.displayName ?? ""
+  if (profile === null || !handle.trim() || !displayName.trim()) return NO_IDENTITY
+  return { kind: profile.published ? "published" : "withdrawn", personId: profile.personId, handle, displayName, headline: profile.headline }
+}
+
 /** `/bienvenue` — onboarding en trois écrans (EXF-DG-02, E12). */
 export function WelcomeScreen() {
   return (
     <PublicShell hideEnter>
-      <Gate require="account">{() => <Onboarding />}</Gate>
+      <Gate require="account">{(session) => <WelcomeOnboarding membership={session.membership} />}</Gate>
     </PublicShell>
   )
 }
 
-function Onboarding() {
+/** Le profil commun se lit avant l'accueil ; un fournisseur sans cette capacité n'a que des comptes neufs. */
+function WelcomeOnboarding(props: { membership: MembershipView | null }) {
+  const source = useDataSource()
+  return source.profilePublication
+    ? <OnboardingWithProfile publication={source.profilePublication} membership={props.membership} />
+    : <Onboarding identity={NO_IDENTITY} membership={props.membership} />
+}
+
+function OnboardingWithProfile(props: { publication: ProfilePublication; membership: MembershipView | null }) {
+  const profile = props.publication.useMyProfile()
+  if (profile.status === "loading") return <GateSkeleton />
+  // Profil illisible : l'accueil d'un compte neuf ; le fournisseur relit le profil et ne réécrit rien.
+  const identity = profile.status === "ready" ? existingIdentityOf(profile.data) : NO_IDENTITY
+  return <Onboarding identity={identity} publication={props.publication} membership={props.membership} />
+}
+
+function Onboarding(props: { identity: ExistingIdentity; publication?: ProfilePublication; membership: MembershipView | null }) {
+  const { identity } = props
   const { t } = useDiasporaleT()
   const actions = useActions()
   const router = useRouter()
   const ids = useId()
   const openCountries = useOpenCountries()
   const [step, setStep] = useState(0)
+  const [identityError, setIdentityError] = useState<ActionErrorCode | null>(null)
+  const [republishing, setRepublishing] = useState(false)
   const consents = initialConsentChoices()
+  // Retour après un départ : l'adhésion partie garde sa facette, pays et ville sont repris.
+  const departed = props.membership?.status === "partie" ? props.membership : null
+  // Le nom et l'identifiant ne se valident que pour un compte neuf (le profil peut naître en cours de route).
+  const asksIdentity = identity.kind === "none"
+  const asksIdentityRef = useRef(asksIdentity)
+  useLayoutEffect(() => {
+    asksIdentityRef.current = asksIdentity
+  }, [asksIdentity])
+  const resolver = useMemo<Resolver<FormInput, unknown, Values>>(() => {
+    const chooseIdentity = zodResolver(schema)
+    const keepIdentity = zodResolver(keptIdentitySchema)
+    return (values, context, options) => (asksIdentityRef.current ? chooseIdentity : keepIdentity)(values, context, options)
+  }, [])
   const form = useForm<FormInput, unknown, Values>({
-    resolver: zodResolver(schema),
+    resolver,
     mode: "onTouched",
     defaultValues: {
-      country: "",
-      city: "",
+      country: departed?.facet.countryOfResidence ?? "",
+      city: departed?.facet.city ?? "",
       displayName: "",
       handleChoice: "",
       handleOther: "",
@@ -95,7 +168,32 @@ function Onboarding() {
 
   const chosenHandle = (values: Pick<FormInput, "handleChoice" | "handleOther">) => normalizeHandle(values.handleChoice === OTHER_HANDLE ? values.handleOther : values.handleChoice)
 
+  const republish = async () => {
+    if (identity.kind !== "withdrawn" || !props.publication || republishing) return
+    setRepublishing(true)
+    setIdentityError(null)
+    try {
+      // Le geste explicite de la personne : le profil revient tel qu'il était, accroche comprise.
+      const result = await props.publication.republish(identity.personId)
+      if (result.ok) toast.success(t("settings.profilePublication.saved.republish"))
+      else setIdentityError(result.code)
+    } catch {
+      setIdentityError("unknown")
+    } finally {
+      setRepublishing(false)
+    }
+  }
+
   const next = async () => {
+    if (step === 1 && !asksIdentity) {
+      // L'identité commune n'est ni redemandée ni réécrite ; retirée, elle se republie d'abord.
+      if (identity.kind === "withdrawn") {
+        setIdentityError("profile_republish_required")
+        return
+      }
+      setStep(2)
+      return
+    }
     const valid = await form.trigger([...(STEP_FIELDS[step] ?? [])], { shouldFocus: true })
     if (!valid) return
     if (step === 1) {
@@ -117,8 +215,8 @@ function Onboarding() {
   const submit = form.handleSubmit(async (values) => {
     const result = await actions.join({
       facet: { countryOfResidence: values.country, city: values.city },
-      handle: chosenHandle(values),
-      displayName: values.displayName,
+      // Un profil déjà là n'envoie rien : le fournisseur le garde tel quel (EA-04).
+      ...(asksIdentity ? { handle: chosenHandle(values), displayName: values.displayName } : {}),
       consents: { social_profile: values.socialProfile, directory: values.directory, notifications: values.notifications },
       directoryVisibility: values.directory ? values.directoryLevel : "hidden",
     })
@@ -135,6 +233,14 @@ function Onboarding() {
     return message ? t(`errors.${message}`) : undefined
   }
 
+  const shownIdentityError = identity.kind === "withdrawn" ? identityError : null
+  const title = step === 1 && identity.kind === "published"
+    ? t("welcomeProfile.keptTitle")
+    : step === 1 && identity.kind === "withdrawn" ? t("welcomeProfile.withdrawnTitle") : t(`welcome.step${step + 1}Title`)
+  const lead = step === 1 && identity.kind === "published"
+    ? t("welcomeProfile.keptLead")
+    : step === 1 && identity.kind === "withdrawn" ? t("welcomeProfile.withdrawnLead") : t(`welcome.step${step + 1}Lead`)
+
   return (
     <div className="mx-auto w-full max-w-[640px] px-4 pb-10 pt-6 md:pt-10">
       <p className="font-mono text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
@@ -145,8 +251,8 @@ function Onboarding() {
           <span key={index} className={cn("h-1.5 rounded-full", index <= step ? "bg-primary" : "bg-[var(--ink-200)]")} />
         ))}
       </div>
-      <h1 className="mt-6 font-display text-4xl font-bold leading-tight">{t(`welcome.step${step + 1}Title`)}</h1>
-      <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{t(`welcome.step${step + 1}Lead`)}</p>
+      <h1 className="mt-6 font-display text-4xl font-bold leading-tight">{title}</h1>
+      <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{lead}</p>
 
       <form
         noValidate
@@ -199,10 +305,34 @@ function Onboarding() {
             {isResidenceCountry(country) && !open.includes(country) ? (
               <p className="rounded-lg bg-pending px-3 py-2 text-[13px] text-pending-foreground">{t("welcome.countryNotOpen")}</p>
             ) : null}
+            {departed ? <p className="rounded-lg bg-muted px-3 py-2 text-[13px] text-muted-foreground">{t("welcomeProfile.returningNote")}</p> : null}
           </>
         ) : null}
 
-        {step === 1 ? (
+        {step === 1 && identity.kind !== "none" ? (
+          <>
+            <section aria-label={t("welcomeProfile.identityLabel")} className="rounded-xl bg-card p-4 shadow-card">
+              <p className="break-words text-[15px] font-semibold">{identity.displayName}</p>
+              <p className="break-words font-mono text-sm text-muted-foreground">@{identity.handle}</p>
+              {identity.headline ? <p className="mt-2 break-words text-sm leading-snug">{identity.headline}</p> : null}
+            </section>
+            {identity.kind === "withdrawn" ? (
+              <div className="flex flex-col items-start gap-3" aria-busy={republishing || undefined}>
+                <p className="text-[13px] text-muted-foreground">{t("settings.profilePublication.republishLead")}</p>
+                <Button variant="outline" disabled={republishing} onClick={() => void republish()}>
+                  {t(republishing ? "settings.profilePublication.working" : "settings.profilePublication.republish")}
+                </Button>
+              </div>
+            ) : null}
+            {shownIdentityError ? (
+              <p role="alert" className="text-[13px] font-medium text-destructive">
+                {t(`errors.${shownIdentityError}`)}
+              </p>
+            ) : null}
+          </>
+        ) : null}
+
+        {step === 1 && identity.kind === "none" ? (
           <>
             <Field id={`${ids}-nom`} label={t("welcome.displayNameLabel")} hint={t("welcome.displayNameHint")} error={errorOf("displayName")}>
               {(control) => (
