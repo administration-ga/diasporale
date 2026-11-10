@@ -6,7 +6,9 @@
  *  · chacun voit ses équipes (nom, nature de contenu traitée). Le moteur ne
  *    rattache pas encore une équipe à un pays : le nom peut le dire, il ne
  *    délimite rien, et l'écran l'annonce ;
- *  · l'administration du réseau compose les équipes : responsables identifiés
+ *  · l'administration du réseau nomme ses responsables (MD-01 : bloc
+ *    « Responsables du réseau », `moderation-desk-responsibles.tsx`) ;
+ *  · elle compose les équipes : responsables identifiés
  *    par leur profil PUBLIÉ, ajout par identifiant public, retrait motivé et
  *    confirmé, création motivée. Chaque geste passe par les mutations du moteur
  *    (`cases.createTeam`, `cases.setTeamMember`), qui le journalisent ;
@@ -14,7 +16,7 @@
  *    coéquipier n'est révélé.
  * PROPRIÉTAIRE : chantier « modération par pays ».
  */
-import { Avatar, Button, Card, Field, Input, Sheet, SheetContent, Skeleton, HANDLE_MAX_LENGTH, handleRefusal, normalizeHandle } from "@diasporale/features"
+import { Avatar, Button, Card, Field, Input, Sheet, SheetContent, Skeleton, HANDLE_MAX_LENGTH, normalizeHandle } from "@diasporale/features"
 import {
   DESK_SURFACES,
   DESK_TEAM_NAME_MAX,
@@ -33,26 +35,13 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
-import { DESK_ERROR_VALUES, DeskErrorLine, DeskReasonField, deskSelectClass, useDeskLabels, useMounted } from "./moderation-desk-parts"
-
-const reasonSchema = z.string().trim().min(DESK_ERROR_VALUES.min, "moderation_desk_reason_length").max(DESK_ERROR_VALUES.max, "moderation_desk_reason_length")
-
-const lookupSchema = z.object({
-  handle: z.string().superRefine((raw, context) => {
-    const handle = normalizeHandle(raw)
-    const refusal = handle.length === 0 ? "moderation_desk_handle_required" : handleRefusal(handle)
-    if (refusal) context.addIssue({ code: z.ZodIssueCode.custom, message: refusal })
-  }),
-})
-type LookupValues = z.infer<typeof lookupSchema>
-
-const reasonOnlySchema = z.object({ reason: reasonSchema })
-type ReasonValues = z.infer<typeof reasonOnlySchema>
+import { DESK_ERROR_VALUES, DeskErrorLine, DeskReasonField, DeskReasonForm, deskHandleLookupSchema, deskReasonSchema, deskSelectClass, useDeskLabels, useMounted, type DeskHandleLookupValues } from "./moderation-desk-parts"
+import { NetworkResponsibles } from "./moderation-desk-responsibles"
 
 const createSchema = z.object({
   name: z.string().trim().min(DESK_ERROR_VALUES.nameMin, "moderation_desk_team_name_length").max(DESK_ERROR_VALUES.nameMax, "moderation_desk_team_name_length"),
   scope: z.string(),
-  reason: reasonSchema,
+  reason: deskReasonSchema,
 })
 type CreateValues = z.infer<typeof createSchema>
 
@@ -86,6 +75,7 @@ export function ModerationDeskTeam(props: { readonly desk: ModerationDeskCapabil
         <p className="text-sm text-muted-foreground">{t("moderationDesk.team.readOnly")}</p>
       ) : (
         <>
+          <NetworkResponsibles desk={props.desk} personId={props.personId} />
           {managed !== null ? (
             <Card className="flex min-w-0 flex-col gap-4 p-4">
               <div className="flex min-w-0 flex-col gap-1.5">
@@ -193,7 +183,7 @@ function RemoveMemberSheet(props: {
           description={t("moderationDesk.team.removeBody", { team: props.team.name })}
           closeLabel={t("common.close")}
         >
-          <ReasonForm
+          <DeskReasonForm
             key={member.personId}
             submitLabel={t("moderationDesk.team.removeConfirm")}
             destructive
@@ -215,70 +205,17 @@ function RemoveMemberSheet(props: {
   )
 }
 
-/** Un motif seul, puis le geste : la confirmation d'un retrait ou d'un ajout. */
-function ReasonForm(props: {
-  readonly submitLabel: string
-  readonly destructive?: boolean
-  readonly onBusyChange?: (busy: boolean) => void
-  readonly onSubmit: (reason: string) => Promise<ActionErrorCode | null>
-  readonly onCancel: () => void
-}) {
-  const { t } = useDiasporaleT()
-  const id = useId()
-  const mounted = useMounted()
-  const locked = useRef(false)
-  const [error, setError] = useState<ActionErrorCode | null>(null)
-  const form = useForm<ReasonValues>({ resolver: zodResolver(reasonOnlySchema), defaultValues: { reason: "" } })
-  const busy = form.formState.isSubmitting
-
-  const send = async (values: ReasonValues) => {
-    if (locked.current) return
-    locked.current = true
-    props.onBusyChange?.(true)
-    setError(null)
-    try {
-      const code = await props.onSubmit(values.reason)
-      if (mounted.current && code !== null) setError(code)
-    } catch {
-      if (mounted.current) setError("unknown")
-    } finally {
-      locked.current = false
-      props.onBusyChange?.(false)
-    }
-  }
-
-  return (
-    <form noValidate onSubmit={(event) => void form.handleSubmit(send)(event)} className="flex min-w-0 flex-col gap-3">
-      <DeskReasonField
-        id={`${id}-motif`}
-        label={t("moderationDesk.decision.reason")}
-        hint={t("moderationDesk.decision.reasonHint", DESK_ERROR_VALUES)}
-        error={form.formState.errors.reason?.message}
-        disabled={busy}
-        registration={form.register("reason")}
-      />
-      <DeskErrorLine code={error} />
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" variant={props.destructive ? "destructive" : "primary"} disabled={busy}>
-          {busy ? t("common.pleaseWait") : props.submitLabel}
-        </Button>
-        <Button type="button" variant="ghost" disabled={busy} onClick={props.onCancel}>{t("common.cancel")}</Button>
-      </div>
-    </form>
-  )
-}
-
 function AddMember(props: { readonly desk: ModerationDeskCapability; readonly personId: string; readonly team: DeskTeamView }) {
   const { t } = useDiasporaleT()
   const id = useId()
   const mounted = useMounted()
   const [candidate, setCandidate] = useState<DeskCandidateView | null>(null)
   const [error, setError] = useState<ActionErrorCode | null>(null)
-  const form = useForm<LookupValues>({ resolver: zodResolver(lookupSchema), defaultValues: { handle: "" } })
+  const form = useForm<DeskHandleLookupValues>({ resolver: zodResolver(deskHandleLookupSchema), defaultValues: { handle: "" } })
   const busy = form.formState.isSubmitting
   const invalid = form.formState.errors.handle?.message
 
-  const lookup = async (values: LookupValues) => {
+  const lookup = async (values: DeskHandleLookupValues) => {
     setError(null)
     const result = await props.desk.findMember({ personId: props.personId, handle: normalizeHandle(values.handle) })
     if (!mounted.current) return
@@ -333,7 +270,7 @@ function AddMember(props: { readonly desk: ModerationDeskCapability; readonly pe
               <p className="break-words text-sm text-muted-foreground">{`@${candidate.handle}`}</p>
             </div>
           </div>
-          <ReasonForm
+          <DeskReasonForm
             key={candidate.personId}
             submitLabel={t("moderationDesk.team.addConfirm")}
             onSubmit={async (reason) => {

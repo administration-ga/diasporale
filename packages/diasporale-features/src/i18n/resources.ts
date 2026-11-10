@@ -77,6 +77,7 @@ import enCommunityRules from "./locales/en/community-rules.json"
 import enReportEmergency from "./locales/en/report-emergency.json"
 import enMessagesUnread from "./locales/en/messages-unread.json"
 import enIdnEntry from "./locales/en/idn-entry.json"
+import enNetworkResponsibles from "./locales/en/network-responsibles.json"
 import enAidFinding from "./locales/en/aid-finding.json"
 import enAidOnTheWay from "./locales/en/aid-on-the-way.json"
 import enAidUsefulness from "./locales/en/aid-usefulness.json"
@@ -147,6 +148,7 @@ import frCommunityRules from "./locales/fr/community-rules.json"
 import frReportEmergency from "./locales/fr/report-emergency.json"
 import frMessagesUnread from "./locales/fr/messages-unread.json"
 import frIdnEntry from "./locales/fr/idn-entry.json"
+import frNetworkResponsibles from "./locales/fr/network-responsibles.json"
 import frAidFinding from "./locales/fr/aid-finding.json"
 import frAidOnTheWay from "./locales/fr/aid-on-the-way.json"
 import frAidUsefulness from "./locales/fr/aid-usefulness.json"
@@ -225,6 +227,7 @@ export const LOCALE_PARTS = {
     "report-emergency": frReportEmergency,
     "messages-unread": frMessagesUnread,
     "idn-entry": frIdnEntry,
+    "network-responsibles": frNetworkResponsibles,
     "aid-finding": frAidFinding,
     "aid-on-the-way": frAidOnTheWay,
     "aid-usefulness": frAidUsefulness,
@@ -297,6 +300,7 @@ export const LOCALE_PARTS = {
     "report-emergency": enReportEmergency,
     "messages-unread": enMessagesUnread,
     "idn-entry": enIdnEntry,
+    "network-responsibles": enNetworkResponsibles,
     "aid-finding": enAidFinding,
     "aid-on-the-way": enAidOnTheWay,
     "aid-usefulness": enAidUsefulness,
