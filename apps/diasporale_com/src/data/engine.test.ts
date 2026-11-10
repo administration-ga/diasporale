@@ -662,8 +662,9 @@ describe("commentaires par le moteur (PD4, lot 8 d'ANTSIA)", () => {
       "modules/engagement/engagement:removeComment": () => ({ removed: true }),
     })
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
-    expect(await actions.comment({ postId: "post-1", body: "Bonjour" })).toEqual({ ok: true, value: null })
-    expect(await actions.comment({ postId: "post-1", body: "Merci", parentCommentId: "c1" })).toEqual({ ok: true, value: null })
+    // L'identifiant rendu par le moteur : l'écran montre aussitôt le commentaire envoyé (FD-03).
+    expect(await actions.comment({ postId: "post-1", body: "Bonjour" })).toEqual({ ok: true, value: { commentId: "c9" } })
+    expect(await actions.comment({ postId: "post-1", body: "Merci", parentCommentId: "c1" })).toEqual({ ok: true, value: { commentId: "c9" } })
     expect(await actions.removeComment("c9")).toEqual({ ok: true, value: null })
     expect(await actions.comment({ postId: "post-1", body: "x".repeat(1001) })).toEqual({ ok: false, code: "comment_too_long" })
     expect(calls.slice(1, 4)).toEqual([

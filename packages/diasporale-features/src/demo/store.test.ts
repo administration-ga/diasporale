@@ -6,7 +6,7 @@ import type { JoinInput } from "../data/port"
 import {
   NOTIFICATIONS_PAGE,
   bookmarksView,
-  commentsView,
+  commentsPageView,
   countryHubView,
   feedView,
   hubCounters,
@@ -16,7 +16,7 @@ import {
   postDetailView,
   profileView,
   relationView,
-  repliesView,
+  repliesPageView,
   sessionView,
   suggestionsView,
   unreadCountView,
@@ -600,7 +600,7 @@ describe("annuaire opt-in (EXF-DG-19, EXF-DG-46)", () => {
 })
 
 describe("commentaires (EXF-DG-12)", () => {
-  const bodies = (threads: readonly { body: string }[] | null) => (threads ?? []).map((item) => item.body)
+  const bodies = (threads: readonly { body: string }[] | null | undefined) => (threads ?? []).map((item) => item.body)
   const countOf = (store: DemoStore, viewerId: string, postId: string) =>
     feedView(store.getState(), viewerId, "recents", T0).find((post) => post.id === postId)?.commentCount
 
@@ -608,16 +608,16 @@ describe("commentaires (EXF-DG-12)", () => {
     const { store } = demo()
     await store.switchTo("p-steeve")
     expect(countOf(store, "p-steeve", "post-7")).toBe(1)
-    expect(await store.comment({ postId: "post-7", body: "  Je connais une adresse à Bordeaux.  " })).toEqual({ ok: true, value: null })
-    const [root, mine] = commentsView(store.getState(), "post-7", "p-steeve", T0) ?? []
+    expect(await store.comment({ postId: "post-7", body: "  Je connais une adresse à Bordeaux.  " })).toMatchObject({ ok: true, value: { commentId: expect.any(String) } })
+    const [root, mine] = commentsPageView(store.getState(), "post-7", "p-steeve", T0)?.items ?? []
     expect(mine).toMatchObject({ body: "Je connais une adresse à Bordeaux.", isMine: true, replyCount: 0 })
     // Une réponse à une réponse rejoint la racine.
     await store.comment({ postId: "post-7", body: "Merci Mireille !", parentCommentId: root?.id ?? "" })
-    const [reply] = repliesView(store.getState(), "post-7", root?.id ?? "", "p-steeve", T0) ?? []
+    const [reply] = repliesPageView(store.getState(), "post-7", root?.id ?? "", "p-steeve", T0)?.items ?? []
     await store.switchTo("p-mireille")
     await store.comment({ postId: "post-7", body: "Avec plaisir.", parentCommentId: reply?.id ?? "" })
-    expect(bodies(repliesView(store.getState(), "post-7", root?.id ?? "", "p-mireille", T0))).toEqual(["Merci Mireille !", "Avec plaisir."])
-    expect(commentsView(store.getState(), "post-7", "p-mireille", T0)?.[0]).toMatchObject({ replyCount: 2 })
+    expect(bodies(repliesPageView(store.getState(), "post-7", root?.id ?? "", "p-mireille", T0)?.items)).toEqual(["Merci Mireille !", "Avec plaisir."])
+    expect(commentsPageView(store.getState(), "post-7", "p-mireille", T0)?.items?.[0]).toMatchObject({ replyCount: 2 })
     expect(countOf(store, "p-mireille", "post-7")).toBe(4)
     // L'autrice de la publication et la personne à qui l'on répond sont avisées ; personne pour soi.
     const prisca = notificationsView(store.getState(), "p-prisca")
@@ -649,7 +649,7 @@ describe("commentaires (EXF-DG-12)", () => {
     await store.switchTo("p-mireille")
     expect(countOf(store, "p-mireille", "post-2")).toBe(2)
     expect(await store.removeComment("c-1")).toEqual({ ok: true, value: null })
-    expect(commentsView(store.getState(), "post-2", "p-mireille", T0)).toEqual([])
+    expect(commentsPageView(store.getState(), "post-2", "p-mireille", T0)?.items).toEqual([])
     expect(countOf(store, "p-mireille", "post-2")).toBe(0)
   })
 
@@ -657,7 +657,7 @@ describe("commentaires (EXF-DG-12)", () => {
     const { store } = demo()
     await store.switchTo("p-prisca")
     await store.block("p-mireille")
-    expect(commentsView(store.getState(), "post-7", "p-prisca", T0)).toEqual([])
+    expect(commentsPageView(store.getState(), "post-7", "p-prisca", T0)?.items).toEqual([])
     await store.switchTo("p-mireille")
     await store.deleteMyAccount()
     const left = store.getState().comments

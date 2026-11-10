@@ -30,6 +30,8 @@ import type {
   BookmarkView,
   BookmarksPageQuery,
   BookmarksPageRequest,
+  CommentPageQuery,
+  CommentsPageRequest,
   CommentThreadView,
   CommentView,
   CountryHubView,
@@ -48,6 +50,7 @@ import type {
   ProfilePostsPageRequest,
   ReactionKind,
   RelationView,
+  RepliesPageRequest,
   ReportReason,
   SessionView,
   SponsorDashboardView,
@@ -238,8 +241,12 @@ export interface DiasporaleActions {
   uploadMedia(file: File): Promise<ActionResult<UploadedMedia>>
   publish(input: PublishInput): Promise<ActionResult<PublishOutcome>>
   react(postId: string, kind: ReactionKind | null): Promise<ActionResult>
-  /** Commenter ou répondre (EXF-DG-12) ; l'auteur de la publication et la personne à qui l'on répond sont avisés. */
-  comment(input: CommentInput): Promise<ActionResult>
+  /**
+   * Commenter ou répondre (EXF-DG-12) ; l'auteur de la publication et la personne à qui l'on
+   * répond sont avisés. Rend l'identifiant du commentaire créé : l'écran le montre aussitôt,
+   * même hors des pages déjà lues (FD-03).
+   */
+  comment(input: CommentInput): Promise<ActionResult<{ readonly commentId: string }>>
   /** Modifier son commentaire publié, si la publication reste lisible. Capacité facultative du fournisseur. */
   editComment?(commentId: string, body: string): Promise<ActionResult>
   /** Retirer un commentaire — le sien, ou n'importe lequel sous sa propre publication. */
@@ -369,10 +376,13 @@ export interface DiasporaleDataSource {
   useBookmarksPage(args: BookmarksPageRequest): BookmarksPageQuery
   /** Des membres à rencontrer (EXF-DG-18) : six au plus, réservées aux membres actifs. */
   useSuggestions(): Loadable<readonly SuggestionView[]>
-  /** Les commentaires d'une publication, des plus anciens aux plus récents, avec leurs premières réponses. */
-  useComments(postId: string): Loadable<readonly CommentThreadView[]>
-  /** Toutes les réponses d'une racine (`commentId` à `null` : rien à lire). */
-  useReplies(args: { postId: string; commentId: string | null }): Loadable<readonly CommentView[]>
+  /**
+   * Une page des commentaires d'une publication (FD-03), des plus anciens aux plus récents,
+   * chacun avec l'aperçu de ses réponses ; la page suivante se lit par son curseur.
+   */
+  useCommentsPage(args: CommentsPageRequest): CommentPageQuery<CommentThreadView>
+  /** Une page des réponses d'une racine (FD-03), dans l'ordre ; la suite se lit par son curseur. */
+  useRepliesPage(args: RepliesPageRequest): CommentPageQuery<CommentView>
   /** La cloche : les avis les plus récents, et le compte des non-lus. */
   useNotifications(): Loadable<readonly NotificationView[]>
   useUnreadCount(): Loadable<UnreadCountView>

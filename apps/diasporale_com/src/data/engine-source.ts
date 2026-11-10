@@ -38,6 +38,8 @@ import type {
   BookmarksPageQuery,
   BookmarksPageRequest,
   BookmarksPageView,
+  CommentPageQuery,
+  CommentsPageRequest,
   CommentThreadView,
   CommentView,
   ConsentView,
@@ -59,12 +61,13 @@ import type {
   ProfilePostsPageRequest,
   ReactionKind,
   RelationView,
+  RepliesPageRequest,
   SessionView,
   SponsorDashboardView,
   SuggestionView,
   UnreadCountView,
 } from "@diasporale/features/data"
-import { BOOKMARKS_PAGE_SIZE, COMMENTS_PAGE, describeMediaFile, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
+import { BOOKMARKS_PAGE_SIZE, COMMENT_REPLIES_PAGE, COMMENTS_PAGE, describeMediaFile, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
 import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
@@ -79,6 +82,7 @@ import {
   failed,
   LOADING,
   type Loaded,
+  memberReadError,
   PAGE_ACCESS_ERRORS,
   ready,
   Refusal,
@@ -153,8 +157,6 @@ export function feedRequest(scope: FeedScope, country: CountryCode) {
 }
 /** La première page de la cloche. */
 const BELL_PAGE = 30
-/** Les réponses d'une racine, lues d'un coup à la demande. */
-const REPLIES_PAGE = 50
 /** Les signets lus d'un coup (première page). */
 const BOOKMARKS_PAGE = BOOKMARKS_PAGE_SIZE
 
@@ -572,34 +574,50 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       return list.state === "ready" ? ready(list.value.map(toSuggestionView)) : LOADING
     },
 
-    useComments(postId: string): Loadable<readonly CommentThreadView[]> {
-      const { networkId } = useMember()
-      const id = networkId.state === "ready" ? networkId.value : null
-      const page = useLoaded(
+    // FD-03 : les commentaires se lisent page après page, sur le curseur du moteur (`paginateComments`).
+    // Une panne garde la page déjà lue pendant la reprise ; un refus d'accès ne sert aucun cache.
+    useCommentsPage(args: CommentsPageRequest): CommentPageQuery<CommentThreadView> {
+      const member = useMember()
+      const id = member.networkId.state === "ready" ? member.networkId.value : null
+      const row = member.membership.state === "ready" ? member.membership.value : null
+      const canRead = member.auth.isAuthenticated && id !== null && row?.capabilities.includes("read_network") === true
+      const query = useAuthenticatedConvexQuery(
         api.modules.engagement.engagement.paginateComments,
-        id ? { networkId: id, postId: postId as Id<"posts">, paginationOpts: { numItems: COMMENTS_PAGE, cursor: null } } : "skip",
+        canRead && id ? { networkId: id, postId: args.postId as Id<"posts">, paginationOpts: { numItems: COMMENTS_PAGE, cursor: args.cursor ?? null } } : "skip",
       )
-      for (const loaded of [networkId, page]) if (loaded.state === "error") return failed(loaded.code)
-      return page.state === "ready" ? ready(page.value.page.map(toCommentThreadView)) : LOADING
+      const error = memberReadError(member) ?? (query.isError ? engineActionErrorCode(query.error) : null)
+      const page = useReadablePostsQuery(query, JSON.stringify(["comments", id, args.postId, args.cursor ?? null]), canRead, error)
+      const data = useMemo(() => page.data === undefined ? undefined : {
+        items: page.data.page.map(toCommentThreadView),
+        continueCursor: page.data.continueCursor,
+        isDone: page.data.isDone,
+      }, [page.data])
+      return { data, isLoading: page.isLoading, error: page.error, retry: page.retry }
     },
 
-    useReplies(args: { postId: string; commentId: string | null }): Loadable<readonly CommentView[]> {
-      const { networkId } = useMember()
-      const id = networkId.state === "ready" ? networkId.value : null
-      const page = useLoaded(
+    // FD-03 : les réponses d'une racine, page après page (`paginateReplies`), mêmes règles de reprise.
+    useRepliesPage(args: RepliesPageRequest): CommentPageQuery<CommentView> {
+      const member = useMember()
+      const id = member.networkId.state === "ready" ? member.networkId.value : null
+      const row = member.membership.state === "ready" ? member.membership.value : null
+      const canRead = member.auth.isAuthenticated && id !== null && row?.capabilities.includes("read_network") === true
+      const query = useAuthenticatedConvexQuery(
         api.modules.engagement.engagement.paginateReplies,
-        id && args.commentId
-          ? {
-              networkId: id,
-              postId: args.postId as Id<"posts">,
-              commentId: args.commentId as Id<"postComments">,
-              paginationOpts: { numItems: REPLIES_PAGE, cursor: null },
-            }
-          : "skip",
+        canRead && id ? {
+          networkId: id,
+          postId: args.postId as Id<"posts">,
+          commentId: args.commentId as Id<"postComments">,
+          paginationOpts: { numItems: COMMENT_REPLIES_PAGE, cursor: args.cursor ?? null },
+        } : "skip",
       )
-      if (args.commentId === null) return ready([])
-      for (const loaded of [networkId, page]) if (loaded.state === "error") return failed(loaded.code)
-      return page.state === "ready" ? ready(page.value.page.map(toCommentView)) : LOADING
+      const error = memberReadError(member) ?? (query.isError ? engineActionErrorCode(query.error) : null)
+      const page = useReadablePostsQuery(query, JSON.stringify(["replies", id, args.postId, args.commentId, args.cursor ?? null]), canRead, error)
+      const data = useMemo(() => page.data === undefined ? undefined : {
+        items: page.data.page.map(toCommentView),
+        continueCursor: page.data.continueCursor,
+        isDone: page.data.isDone,
+      }, [page.data])
+      return { data, isLoading: page.isLoading, error: page.error, retry: page.retry }
     },
 
     useNotifications(): Loadable<readonly NotificationView[]> {
@@ -795,13 +813,14 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
 
     comment: (input) =>
       attempt(async () => {
-        await deps.convex.mutation(api.modules.engagement.engagement.comment, {
+        const created = await deps.convex.mutation(api.modules.engagement.engagement.comment, {
           networkId: await diasporale(),
           postId: input.postId as Id<"posts">,
           body: input.body,
           ...(input.parentCommentId !== undefined ? { parentCommentId: input.parentCommentId as Id<"postComments"> } : {}),
         })
-        return null
+        // L'identifiant du commentaire créé : l'écran le montre aussitôt, même hors des pages lues (FD-03).
+        return { commentId: created.commentId }
       }),
 
     editComment: (commentId, body) =>

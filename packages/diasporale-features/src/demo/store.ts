@@ -684,7 +684,7 @@ export class DemoStore {
   }
 
   // ── Commentaires (EXF-DG-12) ───────────────────────────────────────────
-  async comment(input: CommentInput): Promise<ActionResult> {
+  async comment(input: CommentInput): Promise<ActionResult<{ readonly commentId: string }>> {
     await this.pause()
     const viewer = this.viewer()
     if (!viewer?.membership) return fail("not_member")
@@ -717,7 +717,8 @@ export class DemoStore {
       next = this.notified(next, { recipientId: answeredId, kind: "post_comment", actorId: viewer.person.id, postId: post.id })
     }
     this.commit(next)
-    return OK
+    // Comme le moteur : l'identifiant du commentaire créé, que l'écran montre aussitôt (FD-03).
+    return { ok: true, value: { commentId: id } }
   }
 
   /** Seul l'auteur modifie un commentaire vivant ; la publication reste gardée à l'acte. */
