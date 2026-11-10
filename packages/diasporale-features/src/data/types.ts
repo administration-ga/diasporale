@@ -293,6 +293,13 @@ export interface CountryHubView {
   /** `materialized` : compteurs du moteur ; `demo` : jeu de démonstration (toujours signalé). */
   readonly countersSource: "materialized" | "demo"
   /**
+   * Date du dernier passage qui a compté les compteurs du hub (HB-05) ; `null` tant
+   * qu'aucun passage n'a compté. Sans elle, un compteur « matérialisé » n'est pas
+   * mesuré : l'écran ne l'affiche pas, et ne dit aucune date. La démonstration ne
+   * passe jamais (elle compte ses données fictives à la lecture, et le dit) : `null`.
+   */
+  readonly countersComputedAt: number | null
+  /**
    * Les pages du pays, quand le fournisseur les joint au hub (démonstration).
    * Avec le moteur, elles se lisent par la capacité « pages » (`useHubPages`,
    * bornées par nature) : ces listes restent vides plutôt qu'inventées.

@@ -39,21 +39,27 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { type ReactNode, useLayoutEffect, useRef, useState } from "react"
 
 import { AppShell, useComposer } from "@/components/app-shell"
+import { CommunityShortcuts } from "@/components/community-shortcuts"
 import { FeedPages } from "@/components/feed-pages"
 import { Gate } from "@/components/gate"
+import { HubAbout, HubCountersNote, hubCountersMeasured } from "@/components/hub-about"
 import { countryEventsReader, HubEventsTab } from "@/components/hub-events"
 import { HubJobsTab } from "@/components/job-hub-tab"
 import { StatusBanner } from "@/components/status-banner"
 import { routes } from "@/lib/routes"
 
-/** `/pays/[iso]` — le hub d'un pays (EXF-DG-15/16, E02, l'écran le plus important du projet). */
-export function HubScreen(props: { iso: string; entryAction?: ReactNode }) {
+/**
+ * `/pays/[iso]` — le hub d'un pays (EXF-DG-15/16, E02, l'écran le plus important du projet).
+ * Sur tout hub, celui de la résidence comme celui d'un pays consulté, les rubriques
+ * de la vie communautaire s'ouvrent sur le pays du hub (HB-04).
+ */
+export function HubScreen(props: { iso: string }) {
   return (
     <Gate require="member">
       {(session) =>
         session.membership ? (
           <AppShell membership={session.membership}>
-            <Hub iso={props.iso} membership={session.membership} entryAction={props.entryAction} />
+            <Hub iso={props.iso} membership={session.membership} />
           </AppShell>
         ) : null
       }
@@ -61,7 +67,7 @@ export function HubScreen(props: { iso: string; entryAction?: ReactNode }) {
   )
 }
 
-function Hub(props: { iso: string; membership: MembershipView; entryAction?: ReactNode }) {
+function Hub(props: { iso: string; membership: MembershipView }) {
   const { t, locale } = useDiasporaleT()
   const parsed = parseResidenceCountry(props.iso)
   if (!parsed.ok) {
@@ -75,7 +81,7 @@ function Hub(props: { iso: string; membership: MembershipView; entryAction?: Rea
       />
     )
   }
-  return <HubContent country={parsed.value} membership={props.membership} locale={locale} entryAction={props.entryAction} />
+  return <HubContent country={parsed.value} membership={props.membership} locale={locale} />
 }
 
 function CountryJump(props: { membership: MembershipView; label: string; current?: CountryCode }) {
@@ -105,7 +111,6 @@ interface HubContentProps {
   readonly country: CountryCode
   readonly membership: MembershipView
   readonly locale: string
-  readonly entryAction?: ReactNode
 }
 
 /**
@@ -161,11 +166,11 @@ function HubBody(props: HubContentProps & { readonly pages: HubPagesQuery | null
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            {props.entryAction}
             <CountryJump membership={props.membership} label={t("hub.switch")} current={props.country} />
           </div>
         </div>
-        {hub.status === "ready" && !hub.data.counters.dormant ? (
+        {/* HB-05 : un compteur du moteur sans date de passage n'est pas mesuré ; il ne s'affiche pas. */}
+        {hub.status === "ready" && !hub.data.counters.dormant && hubCountersMeasured(hub.data) ? (
           <div className={cn("grid grid-cols-2 gap-4 border-t border-border bg-[var(--ink-50)] px-5 py-4 md:px-6", hub.data.eventsSource === "unmeasured" ? "sm:grid-cols-3" : "sm:grid-cols-4")}>
             <StatCounter value={hub.data.counters.members} label={t("hub.counters.members")} />
             <StatCounter value={hub.data.counters.associations} label={t("hub.counters.associations")} />
@@ -175,9 +180,16 @@ function HubBody(props: HubContentProps & { readonly pages: HubPagesQuery | null
             {hub.data.countersSource === "demo" ? (
               <p className="col-span-full text-[11px] text-muted-foreground">{t("hub.countersDemo")}</p>
             ) : null}
+            <HubCountersNote computedAt={hub.data.countersComputedAt} />
           </div>
         ) : null}
+        {/* HB-04 : les rubriques du pays du hub, le pays consulté compris ; la résidence ne change pas. */}
+        <div className="border-t border-border px-2 py-1 md:px-3">
+          <CommunityShortcuts country={props.country} />
+        </div>
       </header>
+
+      {hub.status === "ready" ? <HubAbout open={hub.data.open} countryLabel={name} /> : null}
 
       {searchParams.get("bienvenue") === "1" && isHome ? (
         <FloatingNotice
