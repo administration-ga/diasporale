@@ -283,12 +283,21 @@ function DirectorySection(props: { membership: MembershipView }) {
   )
 }
 
-const CONSENT_ROWS: readonly { purpose: ConsentPurpose; locked?: boolean; disabled?: boolean }[] = [
+/**
+ * Les finalités du registre. `elsewhere` : l'accord ne se donne pas ici mais dans l'objet qui le
+ * porte (le profil de talent se publie, se masque ou se supprime lui-même) ; la ligne y renvoie,
+ * sans interrupteur qui ferait croire à un réglage sans effet.
+ */
+const CONSENT_ROWS: readonly {
+  purpose: ConsentPurpose
+  locked?: boolean
+  elsewhere?: { readonly href: () => string; readonly label: string }
+}[] = [
   { purpose: "social_profile", locked: true },
   { purpose: "directory" },
   { purpose: "notifications" },
   { purpose: "consular_attestation" },
-  { purpose: "talents", disabled: true },
+  { purpose: "talents", elsewhere: { href: () => routes.talents(), label: "consentPurpose.talents.link" } },
 ]
 
 function ConsentsSection() {
@@ -313,27 +322,40 @@ function ConsentsSection() {
           return (
             <li key={row.purpose} className="flex items-start gap-4 py-3">
               <div className="min-w-0 flex-1">
-                <Label htmlFor={switchId} className="text-[15px] font-semibold">
-                  {t(`consentPurpose.${row.purpose}.title`)}
-                </Label>
+                {row.elsewhere ? (
+                  <p className="text-[15px] font-semibold">{t(`consentPurpose.${row.purpose}.title`)}</p>
+                ) : (
+                  <Label htmlFor={switchId} className="text-[15px] font-semibold">
+                    {t(`consentPurpose.${row.purpose}.title`)}
+                  </Label>
+                )}
                 <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">{t(`consentPurpose.${row.purpose}.body`)}</p>
-                {view?.recordedAt ? (
+                {!row.elsewhere && view?.recordedAt ? (
                   <p className="mt-1 font-mono text-[11px] text-muted-foreground">
                     {t("settings.consentRecorded", { date: formatDate(view.recordedAt, locale), version: view.textVersion })}
                   </p>
                 ) : null}
               </div>
-              <Switch
-                id={switchId}
-                checked={granted}
-                disabled={row.locked || row.disabled || (row.purpose === "consular_attestation" && !granted)}
-                onCheckedChange={async (checked) => {
-                  const result = await actions.setConsent(row.purpose, checked)
-                  if (!active.current) return
-                  if (!result.ok) toast.error(t(`errors.${result.code}`))
-                  else toast.success(checked ? t("settings.consentGranted") : t("settings.consentRevoked"))
-                }}
-              />
+              {row.elsewhere ? (
+                <NextLink
+                  href={row.elsewhere.href()}
+                  className="inline-flex min-h-11 shrink-0 items-center rounded-sm text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:shadow-focus"
+                >
+                  {t(row.elsewhere.label)}
+                </NextLink>
+              ) : (
+                <Switch
+                  id={switchId}
+                  checked={granted}
+                  disabled={row.locked || (row.purpose === "consular_attestation" && !granted)}
+                  onCheckedChange={async (checked) => {
+                    const result = await actions.setConsent(row.purpose, checked)
+                    if (!active.current) return
+                    if (!result.ok) toast.error(t(`errors.${result.code}`))
+                    else toast.success(checked ? t("settings.consentGranted") : t("settings.consentRevoked"))
+                  }}
+                />
+              )}
             </li>
           )
         })}

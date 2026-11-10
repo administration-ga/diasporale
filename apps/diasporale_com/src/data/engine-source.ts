@@ -25,6 +25,8 @@ import { useAuthenticatedConvexQuery, useStableConvexAuth } from "@antsia/api/ho
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
 import {
+  type ConsentPurpose,
+  consentScope,
   type CountryCode,
   DIASPORALE_NETWORK_SLUG,
   type FeedScope,
@@ -650,6 +652,16 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
   }
 }
 
+/**
+ * La portée d'un consentement, telle que le moteur la relit (NP-01) : le réseau DIASPORALE
+ * pour une finalité de réseau (annuaire, notifications, attestation consulaire), rien pour
+ * une finalité de la personne (profil social). Un accord posé sans réseau ne compte pas pour
+ * les envois ; un retrait sans réseau ne retire pas l'accord du réseau.
+ */
+function consentScopeArgs(purpose: ConsentPurpose, networkId: Id<"networks">): { networkId?: Id<"networks"> } {
+  return consentScope(purpose) === "network" ? { networkId } : {}
+}
+
 /** Les écritures : un résultat à code fermé, jamais une exception jusqu'à l'écran. */
 export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<string, ReactionKind | null> = new Map()): DiasporaleActions {
   let networkId: Id<"networks"> | null = null
@@ -728,12 +740,14 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         if (!country.ok) throw new Refusal(country.code)
         const id = await diasporale()
         await deps.convex.mutation(api.modules.people.profile.publishMyProfile, { handle: input.handle, displayName: input.displayName })
-        await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "social_profile", origin: "onboarding" })
+        await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "social_profile", origin: "onboarding", ...consentScopeArgs("social_profile", id) })
+        // L'annuaire et les notifications valent pour le réseau : le moteur ne relit que l'accord
+        // du réseau exact avant tout envoi (`notificationConsent`).
         if (input.consents.directory) {
-          await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "directory", origin: "onboarding", networkId: id })
+          await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "directory", origin: "onboarding", ...consentScopeArgs("directory", id) })
         }
         if (input.consents.notifications) {
-          await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "notifications", origin: "onboarding" })
+          await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "notifications", origin: "onboarding", ...consentScopeArgs("notifications", id) })
         }
         await deps.convex.mutation(api.modules.diaspora.membership.joinDiasporale, {
           networkId: id,
@@ -995,13 +1009,16 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     setConsent: (purpose, granted) =>
       attempt(async () => {
         const id = await diasporale()
-        // L'annuaire est propre au réseau ; les autres finalités valent pour la personne.
-        const scope = purpose === "directory" ? { networkId: id } : {}
+        // Même portée à l'accord et au retrait : celle que le moteur relit (NP-01).
+        const scope = consentScopeArgs(purpose, id)
         if (granted) {
           await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose, origin: "settings", ...scope })
           return null
         }
         await deps.convex.mutation(api.modules.people.consents.revokeConsent, { purpose, ...scope })
+        // Une finalité de réseau a pu être posée sans réseau avant NP-01 (les notifications de
+        // l'accueil) : cette ancienne ligne se retire aussi, sinon le registre la compterait encore.
+        if (scope.networkId !== undefined) await deps.convex.mutation(api.modules.people.consents.revokeConsent, { purpose })
         // Sans consentement, l'annuaire se referme aussi dans les réglages (il ne compte déjà plus).
         if (purpose === "directory") {
           await deps.convex.mutation(api.modules.diaspora.facet.setDirectoryVisibility, { networkId: id, level: "hidden" })

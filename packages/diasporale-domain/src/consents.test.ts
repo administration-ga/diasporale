@@ -1,10 +1,12 @@
 import { describe, expect, test } from "bun:test"
 import {
   CONSENT_PURPOSES,
+  CONSENT_SCOPES,
   CONSENT_TEXT_VERSIONS,
   ONBOARDING_CONSENT_PURPOSES,
   canCompleteOnboarding,
   consentRecord,
+  consentScope,
   initialConsentChoices,
   isConsentActive,
   missingRequiredConsents,
@@ -22,6 +24,17 @@ describe("contrat « aucune case précochée »", () => {
 
   test("chaque appel rend un objet neuf (aucun état partagé entre deux personnes)", () => {
     expect(initialConsentChoices()).not.toBe(initialConsentChoices())
+  })
+})
+
+describe("portée des finalités (NP-01)", () => {
+  test("chaque finalité a une portée ; seul le profil social vaut pour la personne entière", () => {
+    expect(Object.keys(CONSENT_SCOPES).sort()).toEqual([...CONSENT_PURPOSES].sort())
+    expect(CONSENT_PURPOSES.filter((purpose) => consentScope(purpose) === "person")).toEqual(["social_profile"])
+  })
+
+  test("notifications, annuaire et attestation consulaire se posent et se retirent pour le réseau", () => {
+    for (const purpose of ["notifications", "directory", "consular_attestation"] as const) expect(consentScope(purpose)).toBe("network")
   })
 })
 
