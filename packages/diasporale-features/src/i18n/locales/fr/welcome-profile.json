@@ -1,0 +1,13 @@
+{
+  "welcomeProfile": {
+    "keptTitle": "Vous entrez avec votre profil",
+    "keptLead": "Votre nom, votre identifiant et votre accroche sont ceux de votre compte ANTSIA. Rien n'est redemandé ni réécrit : vous les modifierez dans vos réglages, si vous le voulez.",
+    "withdrawnTitle": "Votre profil est retiré",
+    "withdrawnLead": "Vous l'aviez retiré. Pour entrer dans DIASPORALE, republiez-le tel qu'il était : même nom, même identifiant, même accroche.",
+    "identityLabel": "Votre profil commun",
+    "returningNote": "Bon retour. Votre pays et votre ville d'avant sont repris : changez-les si vous avez déménagé."
+  },
+  "errors": {
+    "profile_republish_required": "Republiez d'abord votre profil : on n'entre pas dans DIASPORALE sans profil publié."
+  }
+}

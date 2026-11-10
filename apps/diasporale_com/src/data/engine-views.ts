@@ -7,6 +7,7 @@
 import type { api } from "@convex/_generated/api"
 import {
   admitsInFeedScope,
+  type ContentModerationState,
   type ContentScope,
   type CountryCode,
   type DiasporaFacet,
@@ -35,6 +36,7 @@ import {
   type PostMediaView,
   type PostView,
   type PublishMediaInput,
+  type PublishOutcome,
   type SharedPostView,
   COMMUNITY_NOTIFICATION_KINDS,
   CONTEXTUAL_NOTIFICATION_KINDS,
@@ -55,6 +57,8 @@ type MyPerson = NonNullable<FunctionReturnType<typeof api.modules.people.persons
 type MyIdentity = NonNullable<FunctionReturnType<typeof api.modules.diaspora.membership.myIdentity>>
 type MyMembership = NonNullable<FunctionReturnType<typeof api.modules.diaspora.membership.myMembership>>
 type HubView = FunctionReturnType<typeof api.modules.diaspora.hubs.getCountryHub>
+/** La vitrine publique des pays ouverts : sa projection stricte, sans la date du comptage des évènements. */
+type OpenHubView = FunctionReturnType<typeof api.modules.diaspora.hubs.listOpenCountries>[number]
 type FeedItem = FunctionReturnType<typeof api.modules.posts.posts.myFeed>["items"][number]
 type EngineMedia = FeedItem["media"][number]
 type DeclaredMedia = NonNullable<FunctionArgs<typeof api.modules.posts.posts.publish>["media"]>[number]
@@ -126,7 +130,7 @@ export function toMembershipView(person: MyPerson, membership: MyMembership): Me
   }
 }
 
-export function toOpenCountries(hubs: readonly HubView[]): OpenCountryView[] {
+export function toOpenCountries(hubs: readonly OpenHubView[]): OpenCountryView[] {
   return hubs.flatMap((hub) =>
     isResidenceCountry(hub.country) ? [{ country: hub.country, counters: hub.counters, countersSource: "materialized" as const }] : [],
   )
@@ -138,9 +142,12 @@ export function toOpenCountries(hubs: readonly HubView[]): OpenCountryView[] {
  * comptés à la lecture. Ses pages se lisent par la capacité « pages »
  * (`diaspora.hubPages.listCountryPages`, bornée par nature, `toHubPagesView`) :
  * les listes du hub restent vides ici plutôt que recopiées. Les évènements d'un
- * pays ne se lisent pas encore (HB-02, puis EV-05) : le compteur `upcomingEvents`
- * du moteur vaut toujours zéro sans rien mesurer, la source le dit « non mesurée »
- * et l'écran ne montre ni liste ni nombre (EV-02).
+ * pays se lisent par `associationEvents.useCountryEvents` (HB-02,
+ * `diaspora.hubEvents.listCountryEvents`) : la liste jointe reste vide. Leur
+ * compteur n'est « matérialisé » que si le passage nocturne l'a compté exactement
+ * (`upcomingEventsComputedAt`) ; sinon il est « non mesuré » et l'écran ne montre
+ * aucun nombre (EV-02). La date du dernier passage (`countersComputedAt`) est
+ * reprise telle quelle (HB-05) : sans elle, aucun compteur ne se dit mesuré.
  */
 export function toCountryHubView(hub: HubView, country: CountryCode): CountryHubView {
   return {
@@ -148,11 +155,13 @@ export function toCountryHubView(hub: HubView, country: CountryCode): CountryHub
     open: hub.open,
     counters: hub.counters,
     countersSource: "materialized",
+    countersComputedAt: typeof hub.countersComputedAt === "number" ? hub.countersComputedAt : null,
     officialPages: [],
     associations: [],
     companies: [],
     events: [],
-    eventsSource: "unmeasured",
+    // Un moteur antérieur à HB-02 ne rend pas la date : sans elle, rien n'est mesuré.
+    eventsSource: typeof hub.upcomingEventsComputedAt === "number" ? "materialized" : "unmeasured",
   }
 }
 
@@ -255,6 +264,33 @@ export function toSharedPostView(share: NonNullable<FeedItem["share"]>): SharedP
   }
 }
 
+/**
+ * Les états de modération que le moteur rend à l'AUTEUR de sa publication (FD-04) : ceux
+ * de `moderationContentStates` qu'il peut encore lire. Un contenu retiré n'est servi à
+ * personne, son auteur compris.
+ */
+export type EngineOwnPostModeration = "published" | "pending_review"
+
+/**
+ * L'état de modération d'une publication telle que le moteur la sert à CE lecteur (FD-04).
+ * Le moteur ne sert à un autre lecteur que du publié (`canReadModeratedContent`) : l'état
+ * « en relecture » n'est jamais montré qu'à l'auteur. Pour l'auteur, l'état vient du champ
+ * `moderation` réservé à soi (issue [S1] de FD-04) ; tant que le moteur ne le rend pas,
+ * rien n'est affirmé et la carte n'affiche aucun avis.
+ */
+export function postModerationOf(item: { readonly isMine: boolean; readonly moderation?: EngineOwnPostModeration | undefined }): ContentModerationState {
+  return item.isMine && item.moderation === "pending_review" ? "pending_review" : "published"
+}
+
+/**
+ * Ce que la publication est devenue à l'envoi (FD-04), tel que le moteur le rend. Sans
+ * le champ `moderation` (issue [S1] de FD-04), l'état n'est pas connu : `null`, et le
+ * composeur n'annonce ni « Publié. » ni « en relecture ».
+ */
+export function toPublishOutcome(result: { readonly postId: string; readonly moderation?: EngineOwnPostModeration | undefined }): PublishOutcome {
+  return { moderation: result.moderation ?? null }
+}
+
 export function toPostView(item: FeedItem): PostView {
   return {
     id: item._id,
@@ -267,8 +303,7 @@ export function toPostView(item: FeedItem): PostView {
     scope: scopeOf(item),
     audience: audienceOf(item.audience),
     visibility: item.visibility,
-    // Le moteur ne rend au lecteur que du publié ; la relecture avant publication viendra avec PD6.
-    moderation: "published",
+    moderation: postModerationOf(item),
     createdAt: item.publishedAt,
     reactionCount: item.reactions.total,
     commentCount: item.commentCount,

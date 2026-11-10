@@ -44,6 +44,7 @@ import { useId, useLayoutEffect, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
+import { CommunityRuleLink } from "./community-rule-link"
 import { DeskCaseDeadline } from "./moderation-desk-deadlines"
 import {
   DESK_ERROR_VALUES,
@@ -219,7 +220,11 @@ function CaseFacts(props: { readonly view: DeskCaseView }) {
       <dt className="text-muted-foreground">{t("moderationDesk.case.fact.country")}</dt>
       <dd className="min-w-0"><DeskCountry country={view.country} /></dd>
       <dt className="text-muted-foreground">{t("moderationDesk.case.fact.ground")}</dt>
-      <dd className="min-w-0 break-words">{labels.ground(view.ground)}</dd>
+      <dd className="flex min-w-0 flex-col items-start break-words">
+        {labels.ground(view.ground)}
+        {/* MD-05 : la décision se motive par la règle que vise le motif. */}
+        <CommunityRuleLink ground={view.ground} />
+      </dd>
       <dt className="text-muted-foreground">{t("moderationDesk.case.fact.opened")}</dt>
       <dd className="min-w-0">{deskDateTime(view.createdAt, locale)}</dd>
       <dt className="text-muted-foreground">{t("moderationDesk.case.fact.level")}</dt>

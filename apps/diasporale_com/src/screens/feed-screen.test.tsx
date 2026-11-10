@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
 import type { FeedDiscoveryProps } from "@diasporale/features"
-import type { CountryHubView, Loadable, MembershipView } from "@diasporale/features/data"
+import type { AssociationEventsCapability, CountryEventsPage, CountryEventsRequest, CountryHubView, Loadable, MembershipView } from "@diasporale/features/data"
 import { I18nProvider } from "@diasporale/features/i18n/client"
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import type { ComponentProps, ReactNode } from "react"
@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   membership: null as MembershipView | null,
   hub: { status: "loading" } as Loadable<CountryHubView>,
+  associationEvents: null as Pick<AssociationEventsCapability, "useCountryEvents"> | null,
 }))
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(mocks.search), useRouter: () => ({ push: mocks.push }) }))
 // Un lien ordinaire : l'adresse rendue est celle de la table des routes, sans navigation réelle dans jsdom.
@@ -72,6 +73,8 @@ vi.mock("@diasporale/features", async (importOriginal) => {
 vi.mock("@diasporale/features/data", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@diasporale/features/data")>()),
   useCountryHub: () => mocks.hub,
+  // HB-02 : la capacité des évènements du pays, absente par défaut (fournisseur qui ne la sert pas).
+  useOptionalDataSource: () => (mocks.associationEvents ? { associationEvents: mocks.associationEvents } : null),
 }))
 
 const MEMBER: MembershipView = {
@@ -88,6 +91,7 @@ beforeEach(() => {
   mocks.search = ""
   mocks.showEmpty = false
   mocks.listPost = null
+  mocks.associationEvents = null
   mocks.membership = { ...MEMBER }
   mocks.hub = { status: "loading" }
   vi.clearAllMocks()
@@ -264,6 +268,7 @@ describe("/fil — le rail du hub ne dit aucun nombre d'évènements non mesuré
       upcomingEvents: { kind: "value", value: 0 },
     },
     countersSource: "materialized",
+    countersComputedAt: Date.UTC(2026, 10, 9, 2, 30),
     officialPages: [],
     associations: [],
     companies: [],
@@ -293,5 +298,78 @@ describe("/fil — le rail du hub ne dit aucun nombre d'évènements non mesuré
     rail()
     expect(screen.getByText("Évènements à venir")).toBeTruthy()
     expect(screen.getByText("Aucun évènement prévu pour l'instant.")).toBeTruthy()
+  })
+})
+
+describe("/fil — le rail lit les prochains évènements du pays par la capacité des évènements (HB-02)", () => {
+  const HUB: CountryHubView = {
+    country: "FR",
+    open: true,
+    counters: {
+      dormant: false,
+      members: { kind: "below_threshold", threshold: 20 },
+      associations: { kind: "value", value: 3 },
+      companies: { kind: "value", value: 1 },
+      upcomingEvents: { kind: "value", value: 0 },
+    },
+    countersSource: "materialized",
+    countersComputedAt: Date.UTC(2026, 10, 9, 2, 30),
+    officialPages: [],
+    associations: [],
+    companies: [],
+    events: [],
+    eventsSource: "unmeasured",
+  }
+  const START = Date.UTC(2030, 5, 12, 17)
+  const event = (id: string, title: string) => ({
+    eventId: id, pageId: "page-lyon", title, location: "Lyon", startAt: START, endAt: START + 3_600_000, timeZone: "Europe/Paris",
+    organizer: { name: "Association de Lyon", handle: "association-lyon" },
+  })
+  function serve(result: Loadable<CountryEventsPage>) {
+    const requests: CountryEventsRequest[] = []
+    mocks.associationEvents = { useCountryEvents: (request) => { requests.push(request); return result } }
+    return requests
+  }
+  const rail = () => render(<I18nProvider locale="fr"><FeedRail membership={MEMBER} /></I18nProvider>)
+
+  it("montre au plus trois évènements du pays de résidence, chacun vers sa fiche, puis le hub", () => {
+    const requests = serve({ status: "ready", data: { items: [event("evt-1", "Pique-nique de rentrée"), event("evt-2", "Assemblée générale")], continueCursor: null, isDone: true, partial: false } })
+    mocks.hub = { status: "ready", data: HUB }
+    rail()
+    expect(requests[0]).toMatchObject({ country: "FR", cursor: null, limit: 3 })
+    expect(screen.getByRole("link", { name: "Pique-nique de rentrée" })).toHaveAttribute("href", "/pages/association-lyon/evenements/evt-1")
+    expect(screen.getByRole("link", { name: "Assemblée générale" })).toHaveAttribute("href", "/pages/association-lyon/evenements/evt-2")
+    expect(screen.getByRole("link", { name: "Voir les évènements du pays" })).toHaveAttribute("href", "/pays/fr")
+    // Non mesuré, aucun nombre ; plus de renvoi « se publient sur la page de chaque association ».
+    expect(screen.queryByText("Évènements à venir")).toBeNull()
+    expect(screen.queryByText(/Les évènements se publient sur la page de chaque association/)).toBeNull()
+  })
+
+  it("compteur mesuré par le passage nocturne : il s'affiche dans la carte du hub", () => {
+    serve({ status: "ready", data: { items: [], continueCursor: null, isDone: true, partial: false } })
+    mocks.hub = { status: "ready", data: { ...HUB, eventsSource: "materialized", counters: { ...HUB.counters, upcomingEvents: { kind: "value", value: 2 } } } }
+    rail()
+    expect(screen.getByText("Évènements à venir")).toBeTruthy()
+  })
+
+  it("aucun évènement à venir : le rail le dit et renvoie à l'agenda", () => {
+    serve({ status: "ready", data: { items: [], continueCursor: null, isDone: true, partial: false } })
+    mocks.hub = { status: "ready", data: HUB }
+    rail()
+    expect(screen.getByText("Aucun évènement à venir ouvert au réseau dans votre pays.")).toBeTruthy()
+    expect(screen.getByRole("link", { name: "Mon agenda" })).toHaveAttribute("href", "/agenda")
+  })
+
+  it("une lecture refusée ne se dit pas « aucun évènement », et rien n'est affirmé pendant le chargement", () => {
+    serve({ status: "error", code: "network_unavailable" })
+    mocks.hub = { status: "ready", data: HUB }
+    rail()
+    expect(screen.getByText("Les évènements de votre pays ne se lisent pas pour l'instant.")).toBeTruthy()
+    expect(screen.queryByText("Aucun évènement à venir ouvert au réseau dans votre pays.")).toBeNull()
+    cleanup()
+    serve({ status: "loading" })
+    rail()
+    expect(screen.queryByText("Aucun évènement à venir ouvert au réseau dans votre pays.")).toBeNull()
+    expect(screen.queryByText("Les évènements de votre pays ne se lisent pas pour l'instant.")).toBeNull()
   })
 })

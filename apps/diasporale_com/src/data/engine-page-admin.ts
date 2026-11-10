@@ -16,7 +16,9 @@
  *
  * Garde des fichiers (pièces, logo, bannière) : URL de dépôt d'un usage nommé,
  * dépôt NEUF au moment de l'envoi, rattachement par la mutation qui admet le
- * fichier — jamais un identifiant de stockage réutilisé.
+ * fichier — jamais un identifiant de stockage réutilisé. Une PHOTO part préparée
+ * par le module du moteur (FD-01 : ré-encodée, 2 048 px au plus, sans
+ * métadonnées) ; un document (PDF) part tel quel.
  *
  * Les lectures sont réactives : un rôle retiré disparaît de `getPage`
  * (`viewer.role`) et `listPageSignatories` est aussitôt refusée (`pageRoleRequired`).
@@ -57,6 +59,7 @@ import {
   type PageRefView,
   type PageSignatoryView,
 } from "@diasporale/features/data"
+import { fileForDeposit } from "@diasporale/features/data"
 import { useQueries, type RequestForQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
@@ -324,6 +327,13 @@ export function createEnginePageAdmin(deps: EngineSourceDeps, options: { fetch?:
     return uploaded.storageId as Id<"_storage">
   }
 
+  /** Une photo PRÉPARÉE (jamais l'original), un document tel quel ; refusée avant toute URL de dépôt. */
+  async function readyForDeposit(file: File): Promise<File> {
+    const ready = await fileForDeposit(file, deps.prepareImage)
+    if (!ready.ok) throw new Refusal(ready.code)
+    return ready.value
+  }
+
   const management: PageManagement = {
     supportsPresentation: true,
     useManagedPage(handle: string): Loadable<ManagedPageDetailView | null> {
@@ -459,19 +469,23 @@ export function createEnginePageAdmin(deps: EngineSourceDeps, options: { fetch?:
       // Une image refusée ne quitte pas le navigateur.
       const refusal = file === null ? null : pageImageRefusal(slot, file)
       if (refusal) throw new Refusal(refusal)
+      // La règle de l'emplacement relue sur le fichier PRÉPARÉ : c'est lui que le moteur admettra.
+      const upload = file === null ? null : await readyForDeposit(file)
+      const preparedRefusal = upload === null ? null : pageImageRefusal(slot, upload)
+      if (preparedRefusal) throw new Refusal(preparedRefusal)
       const network = await diasporale()
       let image: { url: string | null; withheld: PageImageView["withheld"] }
-      if (file === null) {
+      if (upload === null) {
         image = await deps.convex.mutation(api.modules.pages.identity.setPageImage, { networkId: network, pageId: pageId as Id<"pages">, slot, storageId: null })
       } else {
         const uploadUrl = await deps.convex.mutation(api.modules.pages.identity.generatePageImageUploadUrl, { networkId: network, slot })
-        const storageId = await deposit(uploadUrl, file)
+        const storageId = await deposit(uploadUrl, upload)
         image = await deps.convex.mutation(api.modules.pages.identity.setPageImage, {
           networkId: network,
           pageId: pageId as Id<"pages">,
           slot,
           storageId,
-          ...(file.type ? { mimeType: file.type } : {}),
+          ...(upload.type ? { mimeType: upload.type } : {}),
         })
       }
       // Une retenue gagne même si un fournisseur incohérent rend aussi une adresse.
@@ -508,10 +522,15 @@ export function createEnginePageAdmin(deps: EngineSourceDeps, options: { fetch?:
       // Les pièces sont jugées AVANT tout dépôt : un fichier refusé ne quitte pas le navigateur.
       const refusal = pageEvidenceSetRefusal(input.evidence) ?? (input.note ? pageClaimNoteRefusal(input.note) : null)
       if (refusal) throw new Refusal(refusal)
+      // Chaque photo préparée AVANT le premier dépôt ; l'ensemble relu tel qu'il partira.
+      const pieces: File[] = []
+      for (const file of input.evidence) pieces.push(await readyForDeposit(file))
+      const preparedRefusal = pageEvidenceSetRefusal(pieces)
+      if (preparedRefusal) throw new Refusal(preparedRefusal)
       const network = await diasporale()
       const evidence: { storageId: Id<"_storage">; mimeType?: string }[] = []
       // Temps 1 de la garde des fichiers, pièce par pièce : une URL neuve, un dépôt neuf.
-      for (const file of input.evidence) {
+      for (const file of pieces) {
         const uploadUrl = await deps.convex.mutation(api.modules.pages.claims.generateClaimEvidenceUploadUrl, { networkId: network })
         const storageId = await deposit(uploadUrl, file)
         evidence.push({ storageId, ...(file.type ? { mimeType: file.type } : {}) })

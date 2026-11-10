@@ -11,7 +11,9 @@
  * entrant comprise). Le jour où les appels sont prouvés, on l'ouvre ici, en une valeur, sans
  * rien réécrire : `CALLS_SWITCH = "open"`.
  *
- * Écrans de DIASPORALE qui lisent l'interrupteur : le profil d'une relation (« Appeler »).
+ * Écrans de DIASPORALE qui lisent l'interrupteur : le profil d'une relation (« Appeler ») ; la
+ * rubrique « Messages et appels » des réglages (IM-02), qui dit, fermé, qu'aucun appel n'est
+ * encore proposé depuis un profil.
  *
  * Tant que le moteur ne lit pas de déclaration « appels ouverts » (issue [S1] d'IM-01, à côté
  * de `liveAvailable`), les surfaces d'iCom montées telles quelles gardent leurs propres gestes :

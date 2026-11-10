@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { canAlsoPublishOnRoot, isCountryOpen, type CountryCode } from "@diasporale/domain"
+import { canAlsoPublishOnRoot, isCountryOpen, type ContentModerationState, type CountryCode } from "@diasporale/domain"
 import { GlobeIcon, ImagePlusIcon, LoaderCircleIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react"
 import { type ChangeEvent, type FormEvent, type KeyboardEvent, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
@@ -104,6 +104,17 @@ function without<T>(record: Readonly<Record<string, T>>, key: string): Record<st
 /** Une clé d'idempotence neuve (EXF-DG-10) : une par série d'essais d'une même publication. */
 function newPublishKey(): string {
   return crypto.randomUUID()
+}
+
+/**
+ * L'avis d'envoi dit l'état que le fournisseur rend (FD-04) : « Publié. » seulement pour une
+ * publication publiée, « en relecture » pour une publication retenue ; un état non rendu
+ * (`null`) ne s'affirme pas, la publication est seulement « envoyée ».
+ */
+function publishNoticeKey(moderation: ContentModerationState | null, share: boolean): string {
+  if (moderation === "published") return share ? "composer.shared" : "composer.published"
+  if (moderation === "pending_review") return "composer.sentForReview"
+  return share ? "composer.shareSent" : "composer.sent"
 }
 
 /** Entrée dans un texte alternatif ne publie pas : on décrit, on n'envoie pas. */
@@ -331,7 +342,7 @@ export function PostComposerSheet(props: {
     }
     setPublishKey(newPublishKey())
     if (page) toast.success(t("pagePublications.sent", { name: page.name }))
-    else toast.success("moderation" in result.value && result.value.moderation === "published" ? t(share ? "composer.shared" : "composer.published") : t("composer.sentForReview"))
+    else toast.success(t(publishNoticeKey("moderation" in result.value ? result.value.moderation : null, share !== null)))
     if (draftKey) writeDraft(draftKey, { body: "", reach: hasFixedScope ? "diaspora" : DEFAULTS.reach, audience: DEFAULTS.audience, alsoOnRoot: DEFAULTS.alsoOnRoot })
     clearAttachments()
     form.reset(defaults)

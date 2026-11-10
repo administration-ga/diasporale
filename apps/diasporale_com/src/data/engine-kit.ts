@@ -16,6 +16,7 @@
  */
 import type { EngineAuthClient } from "@antsia/api/auth-client"
 import { useStableConvexAuth } from "@antsia/api/hooks"
+import type { PrepareImage } from "@antsia/social-features/media-upload"
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
 import { DIASPORALE_NETWORK_SLUG } from "@diasporale/domain"
@@ -133,6 +134,12 @@ export interface EngineSourceDeps {
   readonly locale?: () => Locale
   /** Attente entre deux lectures de l'issue d'une attestation (remplaçable dans les tests). */
   readonly sleep?: (ms: number) => Promise<void>
+  /**
+   * La préparation des photos avant tout dépôt (FD-01) : `prepareImageForUpload`
+   * du moteur par défaut. Remplaçable dans les tests — `jsdom` n'a ni décodeur
+   * d'image ni canvas.
+   */
+  readonly prepareImage?: PrepareImage
 }
 
 export class Refusal extends Error {

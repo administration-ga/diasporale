@@ -1,0 +1,78 @@
+{
+  "legal": {
+    "edition": "Version {{version}} du {{date}}",
+    "terms": {
+      "title": "Conditions d'utilisation",
+      "purpose": {
+        "title": "Objet",
+        "body": "À fournir : ce que le service offre et ce que couvrent ces conditions."
+      },
+      "access": {
+        "title": "Accès au réseau",
+        "body": "À fournir : qui peut entrer dans le réseau, et à quelles conditions."
+      },
+      "conduct": {
+        "title": "Règles d'usage",
+        "body": "À fournir : ce qui est permis et ce qui est interdit."
+      },
+      "content": {
+        "title": "Contenus publiés",
+        "body": "À fournir : les droits sur les contenus publiés par les membres et leur diffusion."
+      },
+      "moderation": {
+        "title": "Modération",
+        "body": "À fournir : comment un contenu est examiné, retiré ou rétabli, et comment contester une décision."
+      },
+      "liability": {
+        "title": "Responsabilités",
+        "body": "À fournir : les responsabilités de l'éditeur et celles des membres."
+      },
+      "termination": {
+        "title": "Suspension et fin du compte",
+        "body": "À fournir : quand un compte peut être suspendu ou fermé, et comment le quitter."
+      },
+      "changes": {
+        "title": "Modification des conditions",
+        "body": "À fournir : comment les membres sont prévenus d'un changement de ces conditions."
+      },
+      "law": {
+        "title": "Droit applicable",
+        "body": "À fournir : le droit applicable et le règlement des litiges."
+      }
+    },
+    "contact": {
+      "title": "Contact",
+      "report": {
+        "title": "Signaler un contenu",
+        "body": "Le menu d'une publication propose « Signaler… », comme les contenus de l'entraide, du mentorat et de l'emploi. L'équipe de modération du réseau examine le signalement ; son auteur ne sait pas qui l'a signalé."
+      },
+      "messages": {
+        "title": "Écrire à un membre",
+        "body": "Le contact entre membres passe par la messagerie, ouverte entre relations. Aucune adresse ni aucun numéro de membre n'est publié."
+      },
+      "data": {
+        "title": "Vos données et vos signalements",
+        "body": "Exporter vos données, effacer votre compte, suivre une décision qui vous concerne ou l'issue de vos signalements : tout se fait depuis « Mes données », même sans adhésion."
+      },
+      "publisher": {
+        "title": "Écrire à l'éditeur",
+        "body": "À fournir : l'adresse de contact de l'éditeur."
+      },
+      "dataProtection": {
+        "title": "Données personnelles",
+        "body": "À fournir : à qui adresser une demande sur vos données personnelles."
+      }
+    }
+  },
+  "footer": {
+    "terms": "Conditions d'utilisation",
+    "community": "Règles de la communauté",
+    "contact": "Contact"
+  },
+  "settings": {
+    "texts": {
+      "lead": "Les textes du site, avec leur version et leur date. Ceux qui ne sont pas encore fournis, ou pas encore relus, le disent.",
+      "pending": "Texte à fournir"
+    }
+  }
+}

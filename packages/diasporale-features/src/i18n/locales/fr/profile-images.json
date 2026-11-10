@@ -1,0 +1,22 @@
+{
+  "profile": {
+    "images": {
+      "requirements": "{{profileImageFormats}}, jusqu’à {{postImageMaxMegabytes}} Mo. Vous recadrez l’image avant l’envoi ; elle part allégée, sans ses informations cachées (lieu, appareil).",
+      "format": "Formats acceptés : {{profileImageFormats}}.",
+      "inputTooLarge": "Image trop lourde : {{postImageMaxMegabytes}} Mo au plus.",
+      "tooLargeAvatar": "Même recadrée et allégée, cette photo dépasse {{profileAvatarMaxMegabytes}} Mo : choisissez-en une autre.",
+      "tooLargeCover": "Même recadrée et allégée, cette couverture dépasse {{profileCoverMaxMegabytes}} Mo : choisissez-en une autre.",
+      "crop": {
+        "previewAvatar": "Aperçu de la photo recadrée",
+        "previewCover": "Aperçu de la couverture recadrée",
+        "hintAvatar": "Faites glisser l’image ou réglez les curseurs : ce qui est dans le rond est exactement ce qui sera envoyé.",
+        "hintCover": "Faites glisser l’image ou réglez les curseurs : ce qui est dans le bandeau est exactement ce qui sera envoyé. Selon la largeur de l’écran, la fiche peut en rogner un peu le haut et le bas.",
+        "zoom": "Zoom",
+        "horizontal": "Position horizontale",
+        "vertical": "Position verticale",
+        "percent": "{{value}} %",
+        "reset": "Recentrer"
+      }
+    }
+  }
+}

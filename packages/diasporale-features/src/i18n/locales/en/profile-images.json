@@ -1,0 +1,22 @@
+{
+  "profile": {
+    "images": {
+      "requirements": "{{profileImageFormats}}, up to {{postImageMaxMegabytes}} MB. You crop the image before it is sent; it leaves lighter, without its hidden information (location, device).",
+      "format": "Accepted formats: {{profileImageFormats}}.",
+      "inputTooLarge": "Image too large: {{postImageMaxMegabytes}} MB at most.",
+      "tooLargeAvatar": "Even cropped and lightened, this photo is larger than {{profileAvatarMaxMegabytes}} MB: choose another one.",
+      "tooLargeCover": "Even cropped and lightened, this cover is larger than {{profileCoverMaxMegabytes}} MB: choose another one.",
+      "crop": {
+        "previewAvatar": "Preview of the cropped photo",
+        "previewCover": "Preview of the cropped cover",
+        "hintAvatar": "Drag the image or use the sliders: what is inside the circle is exactly what will be sent.",
+        "hintCover": "Drag the image or use the sliders: what is inside the banner is exactly what will be sent. Depending on the screen width, the profile may trim a little of its top and bottom.",
+        "zoom": "Zoom",
+        "horizontal": "Horizontal position",
+        "vertical": "Vertical position",
+        "percent": "{{value}}%",
+        "reset": "Recenter"
+      }
+    }
+  }
+}

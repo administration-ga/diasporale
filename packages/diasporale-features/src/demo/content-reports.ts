@@ -7,7 +7,8 @@
  * Les signalements vivent dans un stockage séparé, remis à zéro avec la démonstration
  * (graine du jeu fictif). La démonstration ne relit pas l'auteur de la cible (il vit
  * dans le fournisseur de chaque chantier) : l'écran n'offre jamais le geste sur son
- * propre contenu, et le moteur, lui, le refuse.
+ * propre contenu, et le moteur, lui, le refuse. Seule exception, lisible sans autre
+ * fournisseur : son propre profil (MD-02), refusé comme le moteur le refuse (`not_found`).
  */
 import { hasCapability } from "@diasporale/domain"
 import { useSyncExternalStore } from "react"
@@ -160,6 +161,8 @@ export function createDemoContentReports(store: DemoStore, deps: DemoContentRepo
       if (refusal !== null) return fail(refusal)
       const access = viewer()
       if (!access.ok) return fail(access.code)
+      // Son propre profil : le refus indistinct du moteur, rien n'est gardé.
+      if (input.kind === "person" && input.id === access.personId) return fail("not_found")
       // Rejoué : le signalement existant, rien de plus n'est créé.
       if (reportedBy(access.personId, input)) return { ok: true, value: { created: false } }
       const data = current()
