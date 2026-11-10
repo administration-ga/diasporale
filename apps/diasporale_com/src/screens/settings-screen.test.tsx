@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { DEFAULT_FACET_VISIBILITY, LEGAL_TEXT_KINDS, LEGAL_TEXTS } from "@diasporale/domain"
+import { DEFAULT_FACET_VISIBILITY, LEGAL_TEXT_KINDS, LEGAL_TEXTS, pendingLegalTexts } from "@diasporale/domain"
 import type { ActionResult, ConsentView, MembershipView } from "@diasporale/features/data"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
@@ -204,7 +204,7 @@ describe("Réglages — « Mes données » (DG-026)", () => {
 })
 
 describe("Réglages — les textes du site depuis l'espace membre (LX-05)", () => {
-  it("liste les cinq textes avec leur version, leur date et le repère d'un texte à fournir", () => {
+  it("liste les cinq textes avec leur version, leur date et le repère d'un texte à fournir ou provisoire", () => {
     render(tree())
     const region = within(screen.getByRole("region", { name: t("nav.account.info") }))
     expect(region.getAllByRole("link").map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
@@ -218,8 +218,11 @@ describe("Réglages — les textes du site depuis l'espace membre (LX-05)", () =
       const edition = LEGAL_TEXTS[kind]
       expect(region.getAllByText(t("legal.edition", { version: edition.version, date: formatLegalTextDate(edition.date, "fr") }), { exact: false }).length).toBeGreaterThan(0)
     }
-    // Aucun texte n'est fourni : chaque ligne le dit.
-    expect(region.getAllByText(t("settings.texts.pending"))).toHaveLength(LEGAL_TEXT_KINDS.length)
+    // Aucun texte n'est définitif : quatre restent à fournir, les règles de la communauté sont provisoires (MD-05).
+    expect(region.getAllByText(t("settings.texts.pending"))).toHaveLength(pendingLegalTexts().length)
+    const provisional = region.getAllByText(t("settings.texts.provisional"))
+    expect(provisional).toHaveLength(1)
+    expect(provisional[0]!.closest("li")).toHaveTextContent(t("footer.community"))
   })
 })
 
