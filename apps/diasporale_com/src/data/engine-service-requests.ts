@@ -16,6 +16,7 @@ import {
   SERVICE_REQUESTS_PAGE_SIZE,
   type ActionErrorCode,
   type Loadable,
+  type ServiceProposalPrefillView,
   type ServiceRequestDetailView,
   type ServiceRequestsCapability,
   type ServiceRequestsPageQuery,
@@ -99,6 +100,24 @@ export function serviceRequestDetailView(row: DetailDto): ServiceRequestDetailVi
     actions: [...row.actions],
     noShowContest: row.noShowContest ? { at: row.noShowContest.at, reason: row.noShowContest.reason } : null,
     canContestNoShow: row.canContestNoShow,
+    proposalPrefill: prefillView(row.proposalPrefill),
+  }
+}
+
+/** SV-04 : la proposition préremplie, recopiée champ par champ ; un moteur antérieur ne la sert pas. */
+function prefillView(prefill: DetailDto["proposalPrefill"] | undefined): ServiceProposalPrefillView | null {
+  if (prefill == null) return null
+  const { settings } = prefill
+  return {
+    pricing: prefill.pricing.mode === "quote" ? { mode: "quote" } : { mode: prefill.pricing.mode, amountMinor: prefill.pricing.amountMinor, currency: prefill.pricing.currency },
+    durationMinutes: prefill.durationMinutes,
+    delivery: prefill.delivery,
+    city: prefill.city,
+    settings: {
+      timeZone: settings.timeZone,
+      location: settings.location === null ? null : settings.location.mode === "onsite" ? { mode: "onsite", area: settings.location.area } : { mode: "remote" },
+      cancellationTerms: settings.cancellationTerms,
+    },
   }
 }
 

@@ -48,6 +48,8 @@ const DETAIL = {
   closedBy: null, closedReason: null, actions: ["cancel", "accept"],
   // DG-015 : le moteur sert toujours la contestation d'une absence (aucune ici) et le droit de la déposer.
   noShowContest: null, canContestNoShow: false,
+  // SV-04 : la proposition préremplie n'est servie qu'à l'équipe de la page.
+  proposalPrefill: null,
 }
 
 function client() {
@@ -147,6 +149,21 @@ describe("demandes de service — adaptateur moteur", () => {
     mocks.membership = null
     rerender()
     expect(result.current).toEqual({ status: "error", code: "not_member" })
+  })
+
+  it("SV-04 : recopie la proposition préremplie servie à l'équipe de la page, réglages compris", () => {
+    const prefill = {
+      pricing: { mode: "fixed", amountMinor: 4500, currency: "EUR" }, durationMinutes: 90, delivery: "onsite", city: "Paris",
+      settings: { timeZone: "Europe/Paris", location: { mode: "onsite", area: "Paris 11e" }, cancellationTerms: "Libre jusqu'à la veille." },
+    }
+    mocks.results.set("modules/diaspora/serviceRequests:getServiceRequest", { ...DETAIL, viewerRole: "page", proposalPrefill: prefill })
+    const data = capability()
+    const { result, rerender } = renderHook(() => data.useRequest("request-1"))
+    expect(result.current.status === "ready" && result.current.data?.proposalPrefill).toEqual(prefill)
+    const quote = { ...prefill, pricing: { mode: "quote" }, durationMinutes: null, settings: { timeZone: null, location: { mode: "remote" }, cancellationTerms: null } }
+    mocks.results.set("modules/diaspora/serviceRequests:getServiceRequest", { ...DETAIL, viewerRole: "page", proposalPrefill: quote })
+    rerender()
+    expect(result.current.status === "ready" && result.current.data?.proposalPrefill).toEqual(quote)
   })
 
   it("envoie la demande au réseau DIASPORALE et rend un code fermé en cas de refus", async () => {

@@ -292,6 +292,9 @@ function RequestView(props: { readonly capability: ServiceRequestsCapability; re
               expectedVersion={proposingFrom}
               windows={detail.windows}
               viewerTimeZone={viewerTimeZone}
+              prefill={detail.proposalPrefill ?? null}
+              offerTitle={detail.offerTitle}
+              previous={detail.proposals[0] ?? null}
               onDone={() => setProposingFrom(null)}
               onCancel={() => setProposingFrom(null)}
             />

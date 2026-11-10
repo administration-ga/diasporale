@@ -274,3 +274,19 @@ describe("démonstration — demandes de service", () => {
     expect(ready(renderHook(() => pending.capability.useMyRequests({ cursor: null })).result.current).items).toEqual([])
   })
 })
+
+describe("démonstration — proposition préremplie (SV-04)", () => {
+  it("l'équipe lit ce que l'offre et ses réglages préremplissent ; le demandeur n'en lit rien ; rien n'est proposé d'office", async () => {
+    const { store, capability, offers } = setup()
+    const proposalPrefill = {
+      pricing: { mode: "fixed" as const, amountMinor: 4500, currency: "EUR" }, durationMinutes: 90, delivery: "onsite" as const, city: "Paris",
+      settings: { timeZone: "Europe/Paris", location: { mode: "onsite" as const, area: "Paris 18e (démo)" }, cancellationTerms: "Annulation libre jusqu'à la veille (démo)." },
+    }
+    offers.set("offre-coiffure", offerRef("offre-coiffure", { proposalPrefill }))
+    const requestId = await sent(capability)
+    const detail = renderHook(() => capability.useRequest(requestId))
+    expect(ready(detail.result.current)?.proposalPrefill).toBeNull()
+    await as(store, "p-mireille")
+    expect(ready(detail.result.current)).toMatchObject({ viewerRole: "page", proposalPrefill, currentProposal: null, proposals: [] })
+  })
+})

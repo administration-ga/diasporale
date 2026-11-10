@@ -489,6 +489,59 @@ export function parseServiceProposal(input: ServiceProposalInput, now: number): 
   })
 }
 
+// ═══════════════════════════════════════════════════════════════
+// Réglages de prestation (SV-04)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Les réglages de prestation d'une offre, lus par l'équipe de sa page seulement :
+ * les conditions HABITUELLES reprises dans chaque nouvelle proposition (fuseau,
+ * lieu approximatif ou à distance, conditions d'annulation). Chaque prestation
+ * porte les siens : une offre a déjà sa ville et son mode, une coupe et un
+ * mariage n'ont pas les mêmes conditions. `null` : rien de réglé.
+ */
+export interface ServiceProviderSettings {
+  readonly timeZone: string | null
+  readonly location: ServiceLocation | null
+  readonly cancellationTerms: string | null
+}
+
+export const NO_PROVIDER_SETTINGS: ServiceProviderSettings = Object.freeze({ timeZone: null, location: null, cancellationTerms: null })
+
+export interface ServiceProviderSettingsInput {
+  readonly timeZone?: string | null
+  readonly location?: ServiceLocation | null
+  readonly cancellationTerms?: string | null
+}
+
+/**
+ * Des réglages de prestation valides : un fuseau IANA canonique, un lieu
+ * approximatif (mêmes bornes que la proposition) ou « à distance », des
+ * conditions bornées ; les mêmes refus de coordonnée et d'adresse exacte que
+ * la proposition. Un champ vide ou absent reste non réglé.
+ */
+export function parseServiceProviderSettings(input: ServiceProviderSettingsInput): Result<ServiceProviderSettings, ServiceRequestRefusal> {
+  const rawZone = input.timeZone?.trim() ?? ""
+  const timeZone = rawZone.length === 0 ? null : canonicalTimeZone(rawZone)
+  if (rawZone.length > 0 && timeZone === null) return refuse("request_time_zone_invalid")
+  let location: ServiceLocation | null = null
+  if (input.location) {
+    if (input.location.mode === "remote") location = { mode: "remote" }
+    else {
+      const area = singleLine(input.location.area)
+      if (area.length < SERVICE_LOCATION_AREA_MIN_LENGTH || area.length > SERVICE_LOCATION_AREA_MAX_LENGTH) return refuse("proposal_location_invalid")
+      location = { mode: "onsite", area }
+    }
+  }
+  const terms = normalizeServiceText(input.cancellationTerms ?? "")
+  if (terms.length > 0 && (terms.length < SERVICE_CANCELLATION_TERMS_MIN_LENGTH || terms.length > SERVICE_CANCELLATION_TERMS_MAX_LENGTH)) return refuse("proposal_terms_invalid")
+  for (const text of [location?.mode === "onsite" ? location.area : "", terms]) {
+    const textRefusal = serviceTextRefusal(text)
+    if (textRefusal !== null) return refuse(textRefusal)
+  }
+  return ok({ timeZone, location, cancellationTerms: terms.length > 0 ? terms : null })
+}
+
 /** La version citée par un geste doit être la version COURANTE (deux onglets, deux signataires). */
 export function checkProposalVersion(expected: number, current: number): Result<null, "proposal_version_changed"> {
   return expected === current ? ok(null) : refuse("proposal_version_changed")

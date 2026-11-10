@@ -21,7 +21,9 @@ import {
   isOfferPublic,
   isServiceProviderOwnerKind,
   matchesDeliveryFilter,
+  NO_PROVIDER_SETTINGS,
   parseServiceOffer,
+  parseServiceProviderSettings,
   parseServiceSearch,
   SERVICE_OFFERS_PER_PAGE_MAX,
   SERVICE_OFFER_STATUSES,
@@ -32,12 +34,15 @@ import {
   type ServiceOfferDraft,
   type ServiceOfferInput,
   type ServiceOfferStatus,
+  type ServiceProviderSettings,
+  type ServiceProviderSettingsInput,
   type ServiceSearchFilters,
 } from "@diasporale/domain"
 import { useMemo, useSyncExternalStore } from "react"
 
 import type { ActionErrorCode } from "../data/errors"
 import type { ActionResult } from "../data/port"
+import type { ServiceProposalPrefillView } from "../data/service-requests-port"
 import {
   MANAGED_OFFERS_PAGE_SIZE,
   SERVICE_RESULTS_PAGE_SIZE,
@@ -64,6 +69,8 @@ export interface DemoOfferRef {
   readonly pageId: string
   readonly pageHandle: string
   readonly pageName: string
+  /** SV-04 : ce qu'une proposition de l'équipe reprend de l'offre et de ses réglages (facultatif pour une offre de test). */
+  readonly proposalPrefill?: ServiceProposalPrefillView
 }
 
 export interface DemoServices {
@@ -94,6 +101,8 @@ export interface DemoServiceOffer extends ServiceOfferDraft {
   readonly version: number
   readonly createdAt: number
   readonly updatedAt: number
+  /** SV-04 : réglages de prestation, pour l'équipe seulement (absents d'un état local antérieur). */
+  readonly providerSettings?: ServiceProviderSettings
 }
 
 export interface DemoServicesState {
@@ -117,6 +126,8 @@ interface SeedOffer {
   readonly ageDays: number
   readonly status: ServiceOfferStatus
   readonly input: ServiceOfferInput
+  /** SV-04 : réglages de prestation fictifs, pour montrer la proposition préremplie. */
+  readonly settings?: ServiceProviderSettingsInput
 }
 
 /** Les offres fictives de départ, chacune signalée « (démo) ». */
@@ -137,6 +148,7 @@ const SEED_OFFERS: readonly SeedOffer[] = [
       durationMinutes: 180,
       pricing: { mode: "from", amountMinor: 6000, currency: "EUR" },
     },
+    settings: { timeZone: "Europe/Paris", location: { mode: "onsite", area: "Paris 18e (démo)" }, cancellationTerms: "Annulation libre jusqu'à la veille, 18 h (démo)." },
   },
   {
     id: "offer-demo-photo",
@@ -229,9 +241,13 @@ const SEED_OFFERS: readonly SeedOffer[] = [
 export function createDemoServicesSeed(seedCreatedAt: number): DemoServicesState {
   const offers = SEED_OFFERS.flatMap((seed): DemoServiceOffer[] => {
     const draft = parseServiceOffer(seed.input)
-    if (!draft.ok) return []
+    const settings = seed.settings ? parseServiceProviderSettings(seed.settings) : null
+    if (!draft.ok || (settings !== null && !settings.ok)) return []
     const at = seedCreatedAt - seed.ageDays * DAY
-    return [{ ...draft.value, id: seed.id, pageId: seed.pageId, status: seed.status, version: 1, createdAt: at, updatedAt: at }]
+    return [{
+      ...draft.value, id: seed.id, pageId: seed.pageId, status: seed.status, version: 1, createdAt: at, updatedAt: at,
+      ...(settings !== null && settings.ok ? { providerSettings: settings.value } : {}),
+    }]
   })
   return { version: 1, seedCreatedAt, sequence: 1, offers }
 }
@@ -298,7 +314,7 @@ function cardView(offer: DemoServiceOffer, page: DemoPage, budgetFit: ServiceBud
 }
 
 function detailView(offer: DemoServiceOffer, page: DemoPage, viewerCanManage: boolean): ServiceOfferDetailView {
-  return { ...cardView(offer, page, null), status: offer.status, viewerCanManage }
+  return { ...cardView(offer, page, null), status: offer.status, viewerCanManage, providerSettings: viewerCanManage ? (offer.providerSettings ?? NO_PROVIDER_SETTINGS) : null }
 }
 
 /** Chaque mot cherché commence un mot du texte indexé (recherche locale, sans moteur plein texte). */
@@ -615,6 +631,8 @@ export function createDemoServices(store: DemoStore, options: DemoServicesOption
       if ("refusal" in access) return fail(access.refusal)
       const draft = parseServiceOffer(inputOf(input))
       if (!draft.ok) return fail(draft.code)
+      const settings = input.providerSettings === undefined ? null : parseServiceProviderSettings(input.providerSettings)
+      if (settings !== null && !settings.ok) return fail(settings.code)
       const live = current()
       const count = live.offers.filter((candidate) => candidate.pageId === access.page.id && candidate.status !== "withdrawn").length
       if (count >= SERVICE_OFFERS_PER_PAGE_MAX) return fail("service_offer_limit_reached")
@@ -624,7 +642,10 @@ export function createDemoServices(store: DemoStore, options: DemoServicesOption
       commit({
         ...live,
         sequence: live.sequence + 1,
-        offers: [...live.offers, { ...draft.value, id: offerId, pageId: access.page.id, status, version: 1, createdAt: now, updatedAt: now }],
+        offers: [...live.offers, {
+          ...draft.value, id: offerId, pageId: access.page.id, status, version: 1, createdAt: now, updatedAt: now,
+          ...(settings !== null ? { providerSettings: settings.value } : {}),
+        }],
       })
       return { ok: true, value: { offerId, version: 1, status } }
     },
@@ -637,7 +658,10 @@ export function createDemoServices(store: DemoStore, options: DemoServicesOption
       if (!next.ok) return fail(next.code)
       const draft = parseServiceOffer(inputOf(input))
       if (!draft.ok) return fail(draft.code)
-      replaceOffer({ ...access.offer, ...draft.value, version: next.value, updatedAt: store.now() })
+      const settings = input.providerSettings === undefined ? null : parseServiceProviderSettings(input.providerSettings)
+      if (settings !== null && !settings.ok) return fail(settings.code)
+      // Des réglages envoyés remplacent les précédents ; absents, rien ne change (comme le moteur).
+      replaceOffer({ ...access.offer, ...draft.value, ...(settings !== null ? { providerSettings: settings.value } : {}), version: next.value, updatedAt: store.now() })
       return { ok: true, value: { version: next.value } }
     },
 
@@ -658,7 +682,10 @@ export function createDemoServices(store: DemoStore, options: DemoServicesOption
     const found = current().offers.find((candidate) => candidate.id === offerId)
     const page = found ? store.getState().pages[found.pageId] : undefined
     if (!found || !page) return null
-    return { id: found.id, title: found.title, version: found.version, status: found.status, pageId: page.id, pageHandle: page.handle, pageName: page.name }
+    return {
+      id: found.id, title: found.title, version: found.version, status: found.status, pageId: page.id, pageHandle: page.handle, pageName: page.name,
+      proposalPrefill: { pricing: found.pricing, durationMinutes: found.durationMinutes, delivery: found.delivery, city: found.city, settings: found.providerSettings ?? NO_PROVIDER_SETTINGS },
+    }
   }
 
   return { capability, findOffer }

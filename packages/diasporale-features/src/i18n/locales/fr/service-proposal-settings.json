@@ -1,0 +1,21 @@
+{
+  "serviceProposalSettings": {
+    "title": "Réglages de vos propositions",
+    "lead": "Repris dans chaque nouvelle proposition pour cette prestation. Seule l’équipe de la page les voit, et vous pouvez toujours les changer avant d’envoyer.",
+    "location": "Lieu habituel",
+    "locationNone": "Aucun : la ville de l’offre",
+    "locationOnsite": "Sur place, lieu approximatif",
+    "locationRemote": "À distance, en visio ou par écrit",
+    "area": "Ville ou quartier habituels",
+    "areaHint": "Jamais une adresse exacte ni une coordonnée : l’adresse se donne dans la conversation de la demande.",
+    "terms": "Conditions d’annulation habituelles",
+    "termsHint": "Facultatif. Par exemple : annulation libre jusqu’à la veille.",
+    "timeZone": "Fuseau horaire des rendez-vous",
+    "timeZoneDevice": "Celui de l’appareil qui propose",
+    "timeZoneHint": "La date et l’heure proposées sont lues dans ce fuseau.",
+    "form": {
+      "prefilled": "Formulaire prérempli depuis l’offre et ses réglages : vérifiez le créneau, le lieu et l’échéance avant d’envoyer.",
+      "reusePrevious": "Reprendre la version précédente (version {{version}})"
+    }
+  }
+}

@@ -22,6 +22,7 @@ import {
   type ServiceOfferCardView,
   type ServiceOfferDetailView,
   type ServiceOffersPage,
+  type ServiceProviderSettingsView,
   type ServiceProviderView,
   type ServicesCapability,
   type ServiceSearchRequest,
@@ -72,8 +73,33 @@ export function toServiceOfferCard(dto: CardDto): ServiceOfferCardView {
   }
 }
 
+/** SV-04 : les réglages de prestation, recopiés champ par champ (l'équipe seulement les reçoit). */
+function toProviderSettings(settings: DetailDto["providerSettings"]): ServiceProviderSettingsView | null {
+  // Un moteur antérieur ne sert pas le champ : rien de réglé à montrer.
+  if (settings == null) return null
+  const { location } = settings
+  return {
+    timeZone: settings.timeZone,
+    location: location === null ? null : location.mode === "onsite" ? { mode: "onsite", area: location.area } : { mode: "remote" },
+    cancellationTerms: settings.cancellationTerms,
+  }
+}
+
 export function toServiceOfferDetail(dto: DetailDto): ServiceOfferDetailView {
-  return { ...toServiceOfferCard(dto), status: dto.status, viewerCanManage: dto.viewerCanManage }
+  return { ...toServiceOfferCard(dto), status: dto.status, viewerCanManage: dto.viewerCanManage, providerSettings: toProviderSettings(dto.providerSettings) }
+}
+
+/** SV-04 : les réglages saisis, envoyés seulement quand le formulaire les porte. */
+function providerSettingsArgs(settings: ServiceProviderSettingsView | undefined) {
+  if (settings === undefined) return {}
+  const { location } = settings
+  return {
+    providerSettings: {
+      timeZone: settings.timeZone,
+      location: location === null ? null : location.mode === "onsite" ? { mode: "onsite" as const, area: location.area } : { mode: "remote" as const },
+      cancellationTerms: settings.cancellationTerms,
+    },
+  }
 }
 
 /** Les arguments de recherche du moteur : un filtre absent ou vide n'est pas envoyé. */
@@ -215,6 +241,7 @@ export function createEngineServices(deps: EngineSourceDeps): ServicesCapability
           languages: [...input.languages],
           durationMinutes: input.durationMinutes,
           pricing: input.pricing,
+          ...providerSettingsArgs(input.providerSettings),
           publish: input.publish,
         })
         return { offerId: created.offerId as string, version: created.version, status: created.status }
@@ -235,6 +262,7 @@ export function createEngineServices(deps: EngineSourceDeps): ServicesCapability
           languages: [...input.languages],
           durationMinutes: input.durationMinutes,
           pricing: input.pricing,
+          ...providerSettingsArgs(input.providerSettings),
         }),
       ),
 

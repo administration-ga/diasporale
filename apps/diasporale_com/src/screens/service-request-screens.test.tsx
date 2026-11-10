@@ -316,6 +316,64 @@ describe("/mon-activite/demandes/<id> — côté page", () => {
   })
 })
 
+describe("SV-04 — proposition préremplie depuis l'offre et ses réglages", () => {
+  const requester = { displayName: "Awa OGOOUÉ", handle: "awa" }
+  const settings = { timeZone: "Europe/Paris", location: { mode: "onsite" as const, area: "Paris 11e" }, cancellationTerms: "Annulation libre jusqu'à la veille." }
+  const sentWith = (proposalPrefill: ServiceRequestDetailView["proposalPrefill"]) => detail({
+    viewerRole: "page", status: "sent", requester, currentProposal: null, proposals: [], deadlineAt: NOW + DAY + 4 * HOUR,
+    actions: ["propose", "refuse"], timeline: [{ status: "sent", at: NOW - HOUR, version: null }], proposalPrefill,
+  })
+  const value = (label: string) => (screen.getByLabelText(label) as HTMLInputElement).value
+
+  it("offre à prix fixe : tout est repris, rien n'est envoyé sans validation, puis la proposition part telle quelle", async () => {
+    const { capability } = fake({ request: { status: "ready", data: sentWith({ pricing: { mode: "fixed", amountMinor: 4500, currency: "EUR" }, durationMinutes: 90, delivery: "onsite", city: "Paris", settings }) } })
+    render(tree(<ActivityRequestScreen requestId="request-1" />))
+    fireEvent.click(screen.getByRole("button", { name: "Faire une proposition" }))
+    expect(screen.getByText(/Formulaire prérempli depuis l’offre/)).toBeTruthy()
+    expect(capability.propose).not.toHaveBeenCalled()
+    expect([value("Montant"), value("Devise"), value("Durée en minutes"), value("Fuseau horaire")]).toEqual(["45", "EUR", "90", "Europe/Paris"])
+    // La première disponibilité du demandeur (le 19 à 10 h UTC), lue à Paris ; l'échéance au plus tard au début.
+    expect([value("Date du rendez-vous"), value("Heure de début"), value("À accepter avant le (date)"), value("À accepter avant (heure)")]).toEqual(["2026-10-19", "12:00", "2026-10-19", "12:00"])
+    expect([value("Ville ou quartier"), value("Ce que comprend la prestation"), value("Conditions d’annulation")]).toEqual(["Paris 11e", "Tresses africaines", "Annulation libre jusqu'à la veille."])
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Envoyer la proposition" })) })
+    expect(capability.propose).toHaveBeenCalledWith({
+      requestId: "request-1", expectedVersion: 0, amountMinor: 4500, currency: "EUR", durationMinutes: 90, startAt: Date.UTC(2026, 9, 19, 10),
+      timeZone: "Europe/Paris", location: { mode: "onsite", area: "Paris 11e" }, details: "Tresses africaines",
+      cancellationTerms: "Annulation libre jusqu'à la veille.", expiresAt: Date.UTC(2026, 9, 19, 10),
+    })
+  })
+
+  it("offre sur devis : montant laissé vide et refusé à l'envoi ; la ville de l'offre sert de lieu approximatif", async () => {
+    const { capability } = fake({ request: { status: "ready", data: sentWith({ pricing: { mode: "quote" }, durationMinutes: null, delivery: "both", city: "Paris", settings: { timeZone: null, location: null, cancellationTerms: null } }) } })
+    render(tree(<ActivityRequestScreen requestId="request-1" />))
+    fireEvent.click(screen.getByRole("button", { name: "Faire une proposition" }))
+    expect([value("Montant"), value("Durée en minutes"), value("Ville ou quartier"), value("Conditions d’annulation")]).toEqual(["", "60", "Paris", ""])
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Envoyer la proposition" })) })
+    expect(screen.getByText(/Indiquez un montant valide/)).toBeTruthy()
+    expect(capability.propose).not.toHaveBeenCalled()
+  })
+
+  it("une offre à distance seulement se propose à distance", () => {
+    fake({ request: { status: "ready", data: sentWith({ pricing: { mode: "from", amountMinor: 3000, currency: "XAF" }, durationMinutes: 45, delivery: "remote", city: "Paris", settings: { timeZone: null, location: null, cancellationTerms: null } }) } })
+    render(tree(<ActivityRequestScreen requestId="request-1" />))
+    fireEvent.click(screen.getByRole("button", { name: "Faire une proposition" }))
+    expect((screen.getByLabelText("À distance") as HTMLInputElement).checked).toBe(true)
+    expect(screen.queryByLabelText("Ville ou quartier")).toBeNull()
+    expect([value("Montant"), value("Devise"), value("Durée en minutes")]).toEqual(["3000", "XAF", "45"])
+  })
+
+  it("« Reprendre la version précédente » recopie la dernière version, sans rien envoyer", () => {
+    const proposed = detail({ viewerRole: "page", requester, actions: ["propose", "refuse"], proposalPrefill: { pricing: { mode: "fixed", amountMinor: 9900, currency: "EUR" }, durationMinutes: 120, delivery: "onsite", city: "Lyon", settings } })
+    const { capability } = fake({ request: { status: "ready", data: proposed } })
+    render(tree(<ActivityRequestScreen requestId="request-1" />))
+    fireEvent.click(screen.getByRole("button", { name: "Modifier la proposition" }))
+    expect(value("Montant")).toBe("99")
+    fireEvent.click(screen.getByRole("button", { name: "Reprendre la version précédente (version 1)" }))
+    expect([value("Montant"), value("Durée en minutes"), value("Ce que comprend la prestation"), value("Heure de début")]).toEqual(["45", "60", "Mèches fournies.", "13:00"])
+    expect(capability.propose).not.toHaveBeenCalled()
+  })
+})
+
 describe("DS-02 — « Faire une proposition » en famille commerce, un seul bouton plein par zone", () => {
   const requester = { displayName: "Awa OGOOUÉ", handle: "awa" }
   const actionsZone = getFixedT("fr")("serviceRequests.detail.actions")

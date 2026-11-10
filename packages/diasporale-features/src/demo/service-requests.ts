@@ -354,6 +354,8 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
       }),
       noShowContest: row.contestedAt != null && row.contestReason != null ? { at: row.contestedAt, reason: row.contestReason } : null,
       canContestNoShow: viewerRole === "requester" && canContestNoShow(contestInput(row, summary.status, now)),
+      // SV-04 : l'offre relue pour l'équipe seulement, comme le moteur.
+      proposalPrefill: viewerRole === "page" ? (deps.findOffer(row.offerId)?.proposalPrefill ?? null) : null,
     }
   }
 

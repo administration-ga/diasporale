@@ -1,0 +1,21 @@
+{
+  "serviceProposalSettings": {
+    "title": "Your proposal settings",
+    "lead": "Reused in every new proposal for this service. Only the page’s team sees them, and you can always change them before sending.",
+    "location": "Usual place",
+    "locationNone": "None: the offer’s city",
+    "locationOnsite": "In person, approximate place",
+    "locationRemote": "Remote, by video or in writing",
+    "area": "Usual city or neighbourhood",
+    "areaHint": "Never an exact address or contact details: the address is shared in the request’s conversation.",
+    "terms": "Usual cancellation terms",
+    "termsHint": "Optional. For example: free cancellation until the day before.",
+    "timeZone": "Appointment time zone",
+    "timeZoneDevice": "The one of the device making the proposal",
+    "timeZoneHint": "The proposed date and time are read in this time zone.",
+    "form": {
+      "prefilled": "Form prefilled from the offer and its settings: check the slot, the place and the deadline before sending.",
+      "reusePrevious": "Reuse the previous version (version {{version}})"
+    }
+  }
+}

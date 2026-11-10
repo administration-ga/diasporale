@@ -15,7 +15,9 @@
 import {
   SERVICE_REQUEST_REFUSALS,
   type ServiceBookingStatus,
+  type ServiceDeliveryMode,
   type ServiceLocation,
+  type ServicePricingLike,
   type ServiceProposalState,
   type ServiceRequestAction,
   type ServiceRequestActor,
@@ -25,6 +27,7 @@ import {
 } from "@diasporale/domain"
 
 import type { ActionResult } from "./port"
+import type { ServiceProviderSettingsView } from "./services-port"
 import type { Loadable } from "./types"
 
 /** Codes de refus propres aux demandes (fragment `service-requests.json`) : ceux du domaine. */
@@ -107,6 +110,19 @@ export interface ServiceRequestEventView {
   readonly version: number | null
 }
 
+/**
+ * SV-04 : ce qu'une nouvelle proposition reprend de l'offre (tarif annoncé, durée,
+ * mode, ville) et de ses réglages de prestation. Pour l'équipe de la page
+ * seulement : le formulaire s'ouvre prérempli, rien n'est envoyé sans validation.
+ */
+export interface ServiceProposalPrefillView {
+  readonly pricing: ServicePricingLike
+  readonly durationMinutes: number | null
+  readonly delivery: ServiceDeliveryMode
+  readonly city: string
+  readonly settings: ServiceProviderSettingsView
+}
+
 export interface ServiceRequestDetailView extends ServiceRequestSummaryView {
   readonly viewerRole: ServiceRequestActor
   readonly need: string
@@ -124,6 +140,8 @@ export interface ServiceRequestDetailView extends ServiceRequestSummaryView {
   readonly noShowContest?: { readonly at: number; readonly reason: string } | null
   /** La personne qui demande peut contester l'absence maintenant (quatorze jours après le constat). */
   readonly canContestNoShow?: boolean
+  /** SV-04 : la proposition préremplie, pour l'équipe de la page ; `null` (ou absente) pour le demandeur. */
+  readonly proposalPrefill?: ServiceProposalPrefillView | null
 }
 
 export interface ServiceRequestsPageView {

@@ -60,6 +60,7 @@ import enCommunityNotifications from "./locales/en/community-notifications.json"
 import enPostExplanation from "./locales/en/post-explanation.json"
 import enReporterNotices from "./locales/en/reporter-notices.json"
 import enFunctionalHealth from "./locales/en/functional-health.json"
+import enServiceProposalSettings from "./locales/en/service-proposal-settings.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -109,6 +110,7 @@ import frCommunityNotifications from "./locales/fr/community-notifications.json"
 import frPostExplanation from "./locales/fr/post-explanation.json"
 import frReporterNotices from "./locales/fr/reporter-notices.json"
 import frFunctionalHealth from "./locales/fr/functional-health.json"
+import frServiceProposalSettings from "./locales/fr/service-proposal-settings.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -166,6 +168,7 @@ export const LOCALE_PARTS = {
     "functional-health": frFunctionalHealth,
     "app-errors": frAppErrors,
     "account-menu": frAccountMenu,
+    "service-proposal-settings": frServiceProposalSettings,
   },
   en: {
     diasporale: enDiasporale,
@@ -217,6 +220,7 @@ export const LOCALE_PARTS = {
     "functional-health": enFunctionalHealth,
     "app-errors": enAppErrors,
     "account-menu": enAccountMenu,
+    "service-proposal-settings": enServiceProposalSettings,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

@@ -21,7 +21,9 @@ import {
   nextProposalVersion,
   normalizeServiceRequestDraft,
   normalizeServiceText,
+  NO_PROVIDER_SETTINGS,
   parseServiceProposal,
+  parseServiceProviderSettings,
   parseServiceReason,
   serviceRequestDeadline,
   serviceRequestFingerprint,
@@ -254,6 +256,33 @@ describe("la proposition", () => {
     expect(parseServiceReason(" Empêchement  familial ", true)).toEqual({ ok: true, value: "Empêchement familial" })
     expect(parseServiceReason("r".repeat(501), false)).toEqual({ ok: false, code: "request_reason_too_long" })
     expect(parseServiceReason("appelez le 06 12 34 56 78", false)).toEqual({ ok: false, code: "request_contact_forbidden" })
+  })
+})
+
+describe("réglages de prestation (SV-04)", () => {
+  it("rien de réglé : chaque champ reste vide", () => {
+    expect(parseServiceProviderSettings({})).toEqual({ ok: true, value: NO_PROVIDER_SETTINGS })
+    expect(parseServiceProviderSettings({ timeZone: "  ", location: null, cancellationTerms: " \n " })).toEqual({ ok: true, value: NO_PROVIDER_SETTINGS })
+  })
+
+  it("normalise un fuseau canonique, un lieu approximatif et des conditions bornées", () => {
+    expect(parseServiceProviderSettings({ timeZone: " Africa/Libreville ", location: { mode: "onsite", area: "  Paris   11e " }, cancellationTerms: " Annulation  libre jusqu'à la veille. " })).toEqual({
+      ok: true,
+      value: { timeZone: "Africa/Libreville", location: { mode: "onsite", area: "Paris 11e" }, cancellationTerms: "Annulation libre jusqu'à la veille." },
+    })
+    expect(parseServiceProviderSettings({ location: { mode: "remote" } })).toEqual({ ok: true, value: { ...NO_PROVIDER_SETTINGS, location: { mode: "remote" } } })
+  })
+
+  it.each([
+    [{ timeZone: "+02:00" }, "request_time_zone_invalid"],
+    [{ location: { mode: "onsite" as const, area: " x " } }, "proposal_location_invalid"],
+    [{ location: { mode: "onsite" as const, area: "y".repeat(81) } }, "proposal_location_invalid"],
+    [{ location: { mode: "onsite" as const, area: "8 rue Oberkampf" } }, "request_address_forbidden"],
+    [{ cancellationTerms: "t" }, "proposal_terms_invalid"],
+    [{ cancellationTerms: "t".repeat(501) }, "proposal_terms_invalid"],
+    [{ cancellationTerms: "Prévenir au 07 12 34 56 78" }, "request_contact_forbidden"],
+  ] as const)("refuse %o par %s, comme la proposition", (input, code) => {
+    expect(parseServiceProviderSettings(input)).toEqual({ ok: false, code })
   })
 })
 

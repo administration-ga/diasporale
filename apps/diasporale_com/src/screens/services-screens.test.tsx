@@ -305,10 +305,36 @@ describe("/mon-activite", () => {
     expect(mocks.create).toHaveBeenCalledWith({
       title: "Tresses enfants", description: "Tresses et nattes pour enfants, le samedi.", category: "beauty", country: "FR", city: "Paris",
       delivery: "onsite", languages: ["fr"], durationMinutes: null, pricing: { mode: "fixed", amountMinor: 4550, currency: "EUR" }, pageId: "page-1", publish: true,
+      // SV-04 : rien de réglé, rien d'inventé.
+      providerSettings: { timeZone: null, location: null, cancellationTerms: null },
     })
     expect(mocks.success).toHaveBeenCalledWith("Offre publiée.")
     // Le formulaire fermé, le focus revient au titre de la section.
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Offres de Coiffure Paris (fictif)" })))
+  })
+
+  it("SV-04 : règle le lieu, les conditions et le fuseau habituels de la prestation ; une adresse exacte est refusée au champ", async () => {
+    const providerSettings = { timeZone: "Europe/Paris", location: { mode: "onsite" as const, area: "Paris 11e" }, cancellationTerms: "Annulation libre jusqu'à la veille." }
+    mocks.myPages.set("first", ready([detail("a", { version: 3, viewerCanManage: true, providerSettings })]))
+    render(tree(<MyActivityScreen />))
+    fireEvent.click(screen.getByRole("button", { name: "Modifier" }))
+    expect(screen.getByRole("group", { name: "Réglages de vos propositions" })).toBeTruthy()
+    expect((screen.getByLabelText("Ville ou quartier habituels") as HTMLInputElement).value).toBe("Paris 11e")
+    expect((screen.getByLabelText("Conditions d’annulation habituelles") as HTMLTextAreaElement).value).toBe("Annulation libre jusqu'à la veille.")
+    expect((screen.getByLabelText("Fuseau horaire des rendez-vous") as HTMLSelectElement).value).toBe("Europe/Paris")
+
+    fireEvent.change(screen.getByLabelText("Ville ou quartier habituels"), { target: { value: "8 rue Oberkampf" } })
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Enregistrer les modifications" })) })
+    await waitFor(() => expect(screen.getByText(/Retirez l’adresse exacte/)).toBeTruthy())
+    expect(mocks.update).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByLabelText("À distance, en visio ou par écrit"))
+    fireEvent.change(screen.getByLabelText("Fuseau horaire des rendez-vous"), { target: { value: "" } })
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Enregistrer les modifications" })) })
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledOnce())
+    expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({
+      offerId: "a", expectedVersion: 3, providerSettings: { timeZone: null, location: { mode: "remote" }, cancellationTerms: "Annulation libre jusqu'à la veille." },
+    }))
   })
 
   it("une modification sur une version périmée dit le conflit et propose la dernière version", async () => {
