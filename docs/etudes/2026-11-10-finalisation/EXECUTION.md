@@ -479,8 +479,8 @@ Plan : [`17_LANCEMENT_PILOTE_EXPLOITATION_MODELE_ECONOMIQUE.md`](17_LANCEMENT_PI
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| DS-01 | Contrôle de départ, état réel et documents | P0 | S | S2 | accord pour les variables du backend local | plan 15 | à faire |
-| LX-01 | Sonde de santé vraie, version servie et garde de la source de données | P0 | S | S2 | publication de la démonstration sur accord | nouveau | à faire |
+| DS-01 | Contrôle de départ, état réel et documents | P0 | S | S2 | accord pour les variables du backend local | plan 15 | fusionné (#34, #35) |
+| LX-01 | Sonde de santé vraie, version servie et garde de la source de données | P0 | S | S2 | publication de la démonstration sur accord | nouveau | fusionné (#33) |
 | LX-04 | Banc de recette local : ouvrir la mise en relation sans opérateur | P0 | S | S2 | décision 2 | nouveau | à faire |
 | DS-05 | Campagne de recettes en mode moteur | P0 | L | S2 | aucune en local ; toute action sur la démonstration en ligne après accord | plan 15 | à faire |
 | LX-02 | Publication et retour arrière de DIASPORALE dans le dépôt | P0 | M | S2 | toute exécution réelle exige l'accord écrit du propriétaire | nouveau | à faire |
