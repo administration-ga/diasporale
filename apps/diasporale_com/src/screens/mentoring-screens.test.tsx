@@ -18,6 +18,8 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { filledButtons } from "@/test-utils"
+
 import { mentoringCountryOf, MentoringScreen, MentorProfileScreen, MyMentoringScreen } from "./mentoring-screens"
 
 const mocks = vi.hoisted(() => ({
@@ -263,6 +265,31 @@ describe("/mentorat/<id>", () => {
     render(tree(<MentorProfileScreen mentorId="mentor-1" />))
     expect(screen.getByText(text)).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Demander un mentorat" })).not.toBeInTheDocument()
+  })
+
+  it("DS-02 : « Demander un mentorat » et son envoi en famille commerce, un seul bouton plein par zone", async () => {
+    fake({ mentor: { status: "ready", data: DETAIL } })
+    render(tree(<MentorProfileScreen mentorId="mentor-1" />))
+    const article = screen.getByRole("article", { name: "Mireille IVINDO, mentor bénévole" })
+    const cta = screen.getByRole("button", { name: "Demander un mentorat" })
+    expect(cta).toHaveClass("bg-commerce-fill")
+    expect(filledButtons(article)).toEqual([cta])
+
+    await click(cta)
+    const dialog = screen.getByRole("dialog")
+    const submit = within(dialog).getByRole("button", { name: "Envoyer la demande" })
+    expect(submit).toHaveClass("bg-commerce-fill")
+    expect(filledButtons(dialog)).toEqual([submit])
+  })
+
+  it("DS-02 : fermé faute de statut, le geste garde sa famille", () => {
+    mocks.membership = { ...MEMBER, status: "en_attente", canPublish: false }
+    fake({ mentor: { status: "ready", data: DETAIL } })
+    render(tree(<MentorProfileScreen mentorId="mentor-1" />))
+    const cta = screen.getByRole("button", { name: "Demander un mentorat" })
+    expect(cta).toBeDisabled()
+    expect(cta).toHaveClass("bg-commerce-fill")
+    expect(filledButtons(screen.getByRole("article", { name: "Mireille IVINDO, mentor bénévole" }))).toEqual([cta])
   })
 
   it("dit le statut insuffisant, l'introuvable et l'erreur", () => {

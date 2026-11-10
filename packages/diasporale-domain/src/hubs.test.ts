@@ -36,6 +36,13 @@ describe("compteurs d'un hub", () => {
     expect(presentHubCounters({ members: 0, associations: 1, companies: 0, upcomingEvents: 0 }).dormant).toBe(false)
   })
 
+  test("le compteur d'évènements ne décide pas du sommeil : le moteur ne le mesure pas encore (EV-02)", () => {
+    // Le passage du moteur écrit zéro sans compter : ce zéro ne peut ni endormir ni réveiller un hub.
+    expect(presentHubCounters({ members: 0, associations: 0, companies: 0, upcomingEvents: 3 }).dormant).toBe(true)
+    expect(presentHubCounters({ members: 25, associations: 0, companies: 0, upcomingEvents: 0 }).dormant).toBe(false)
+    expect(presentHubCounters({ members: 0, associations: 0, companies: 2, upcomingEvents: 0 }).dormant).toBe(false)
+  })
+
   test("valeurs aberrantes ramenées à zéro, décimales tronquées", () => {
     const presented = presentHubCounters({ members: 42.7, associations: -3, companies: Number.NaN, upcomingEvents: 5 })
     expect(presented).toEqual({

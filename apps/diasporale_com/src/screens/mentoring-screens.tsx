@@ -277,7 +277,7 @@ function MentorArticle(props: { readonly capability: MentoringCapability; readon
   } else if (!canPublish) {
     action = (
       <div className="flex flex-col items-start gap-2">
-        <Button disabled>{t("mentoring.request.cta")}</Button>
+        <Button variant="commerce" disabled>{t("mentoring.request.cta")}</Button>
         <p className="text-sm text-muted-foreground">{t("mentoring.request.statusInsufficient")}</p>
       </div>
     )

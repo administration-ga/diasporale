@@ -1,6 +1,8 @@
 # Couleurs par famille dans DIASPORALE — 3 novembre 2026
 
-**La charte v4 se voit maintenant à l'écran : 29 boutons et l'icône de réaction portent la couleur de leur famille. Rien n'est publié.** La démonstration en ligne garde les boutons d'avant tant que le propriétaire n'a pas donné son accord.
+> **Note du 10/11/2026.** Ce rapport a été écrit avant la publication. La PR 31 (administration-ga/diasporale#31) a été fusionnée le 3/11/2026 à 7 h 33, puis mise en ligne sur la démonstration le 3/11 à 7 h 42 : les boutons décrits ici y sont servis depuis. Le reste du rapport est inchangé.
+
+**La charte v4 se voit maintenant à l'écran : 29 boutons et l'icône de réaction portent la couleur de leur famille.** Ils sont en ligne sur la démonstration depuis le 3/11 (note ci-dessus).
 
 Comparatifs avant/après, tous pris sur le serveur local avec le compte fictif Prisca (Mireille pour les suggestions) :
 
@@ -84,6 +86,8 @@ Chemins relatifs à `apps/diasporale_com/src/`, sauf ceux préfixés `features/`
 Hors boutons : `features/components/cards/post-card.tsx:113-118`, l'icône de la réaction donnée prend `text-react-ink`. La variante pleine `react` n'est employée nulle part : la réaction de DIASPORALE est une commande en encre, comme dans le fil d'ANTSIA.
 
 ## Laissés tels quels, famille pas claire : à trancher
+
+> **Tranché le 9/11/2026, appliqué le 10/11 (lot DS-02).** Demander un mentorat et son envoi, Faire (ou modifier) une proposition, Afficher (ou renouveler) mon billet QR : `commerce` ; « Envoyer » du formulaire de proposition : `send` ; Parrainer : `social` ; Appeler : `message` ; Retenir cette réponse reste `outline`, la réponse retenue portant une pastille en encre de succès. Les quatre autres lignes ne changent pas. L'inventaire a été refait le 10/11 avec ces variantes (lignes des fichiers remises à jour, aucun autre bouton changé). Non revu à l'écran par ce lot.
 
 Ces boutons gardent leur variante d'origine, aucune famille ne leur est attribuée.
 

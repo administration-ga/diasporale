@@ -1,0 +1,38 @@
+{
+  "health": {
+    "title": "Santé fonctionnelle",
+    "lead": "L’état du service au moment de la requête, tel que le dit la sonde de santé. Aucune donnée personnelle.",
+    "summary": {
+      "engineReachable": "diasporale.com répond et joint le moteur ANTSIA.",
+      "engineUnreachable": "Le moteur ANTSIA ne répond pas. diasporale.com ne peut pas servir ses données.",
+      "engineMissing": "L’adresse du moteur ANTSIA manque. diasporale.com ne peut pas servir ses données.",
+      "demo": "diasporale.com répond avec ses données de démonstration, fictives. Le moteur n’est pas interrogé."
+    },
+    "label": {
+      "application": "Application",
+      "status": "État",
+      "dataSource": "Source de données",
+      "engine": "Liaison avec le moteur",
+      "backend": "Adresse du moteur",
+      "version": "Version"
+    },
+    "status": {
+      "ok": "En service",
+      "degraded": "Dégradé"
+    },
+    "dataSource": {
+      "engine": "Moteur ANTSIA",
+      "demo": "Démonstration (données fictives)"
+    },
+    "engine": {
+      "reachable": "Établie",
+      "unreachable": "Sans réponse",
+      "not_checked": "Non vérifiée"
+    },
+    "backend": {
+      "configured": "Configurée",
+      "missing": "Absente"
+    },
+    "versionUndeclared": "version non déclarée à la construction"
+  }
+}

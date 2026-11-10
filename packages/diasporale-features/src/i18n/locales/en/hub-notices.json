@@ -1,0 +1,14 @@
+{
+  "hub": {
+    "eventsUnlistedTitle": "Events aren't gathered in the hub yet.",
+    "eventsUnlistedBody": "Each association publishes its own on its page. The ones you've registered for are in your agenda.",
+    "eventsUnlistedAssociations": "See this country's associations"
+  },
+  "page": {
+    "consularMatters": "Questions about a case are handled on consulat.ga.",
+    "consularLink": "Go to consulat.ga"
+  },
+  "rail": {
+    "eventsUnlisted": "Events are published on each association's page. The ones you've registered for are in your agenda."
+  }
+}

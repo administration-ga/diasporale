@@ -1,0 +1,38 @@
+{
+  "health": {
+    "title": "Functional health",
+    "lead": "The state of the service at the time of the request, as reported by the health probe. No personal data.",
+    "summary": {
+      "engineReachable": "diasporale.com is responding and reaches the ANTSIA engine.",
+      "engineUnreachable": "The ANTSIA engine is not responding. diasporale.com cannot serve its data.",
+      "engineMissing": "The ANTSIA engine address is missing. diasporale.com cannot serve its data.",
+      "demo": "diasporale.com is responding with its demonstration data, which is fictitious. The engine is not queried."
+    },
+    "label": {
+      "application": "Application",
+      "status": "Status",
+      "dataSource": "Data source",
+      "engine": "Engine connection",
+      "backend": "Engine address",
+      "version": "Version"
+    },
+    "status": {
+      "ok": "In service",
+      "degraded": "Degraded"
+    },
+    "dataSource": {
+      "engine": "ANTSIA engine",
+      "demo": "Demonstration (fictitious data)"
+    },
+    "engine": {
+      "reachable": "Established",
+      "unreachable": "No response",
+      "not_checked": "Not checked"
+    },
+    "backend": {
+      "configured": "Configured",
+      "missing": "Missing"
+    },
+    "versionUndeclared": "version not declared at build time"
+  }
+}

@@ -131,7 +131,7 @@
     "countryHint": "Le Gabon n'est pas proposé : DIASPORALE est le réseau des Gabonais de l'étranger.",
     "countrySheetTitle": "Votre pays de résidence",
     "countrySheetDescription": "Cherchez par nom ou par code.",
-    "countryNotOpen": "Ce pays n'est pas encore ouvert : vous lisez tout, et vos publications locales sont relues par l'équipe du réseau.",
+    "countryNotOpen": "Ce pays n'est pas encore ouvert : vous lisez tout et publiez pour toute la diaspora. La publication dans le hub du pays attend son ouverture.",
     "cityLabel": "Ville",
     "cityHint": "Facultative. Par défaut, seules vos relations la voient.",
     "displayNameLabel": "Nom affiché",
@@ -385,7 +385,7 @@
     "reachLegend": "Où publier",
     "reachLocal": "Dans le hub {{country}}",
     "reachDiaspora": "Pour toute la diaspora",
-    "reviewNotice": "Votre pays n'est pas encore ouvert : la publication sera relue avant d'apparaître.",
+    "reviewNotice": "{{country}} n'est pas encore ouvert : la publication dans son hub attend son ouverture. Votre publication part pour toute la diaspora.",
     "audienceLegend": "Qui peut lire",
     "audiencePublic": "Tous les membres de DIASPORALE",
     "audienceConnections": "Mes relations",
@@ -557,7 +557,7 @@
     "title": "La communauté — {{country}}",
     "open": "Pays ouvert",
     "notOpen": "Pas encore ouvert",
-    "notOpenNotice": "{{country}} n'est pas encore ouvert. Vous lisez tout ; les publications locales sont relues par l'équipe du réseau. Un pays s'ouvre avec deux associations relais et un modérateur.",
+    "notOpenNotice": "{{country}} n'est pas encore ouvert. Vous lisez tout et publiez pour toute la diaspora ; la publication dans le hub du pays attend son ouverture. Un pays s'ouvre avec deux associations relais et un modérateur.",
     "switch": "Changer de pays",
     "switchTitle": "Changer de pays",
     "switchDescription": "Vous pouvez lire le hub de n'importe quel pays.",
@@ -587,11 +587,11 @@
     "emptyPosts": "Aucune publication dans le hub {{country}} pour l'instant.",
     "emptyPostsBody": "Une information pratique, une question, un bon plan : la première publication lance le hub.",
     "emptyEvents": "Aucun évènement prévu — {{country}}.",
-    "emptyEventsBody": "Les évènements des associations et des postes apparaîtront ici.",
+    "emptyEventsBody": "Les associations publient leurs évènements sur leur page.",
     "emptyAssociations": "Aucune association inscrite — {{country}}.",
-    "emptyAssociationsBody": "Les associations de la communauté arrivent avec l'import public, puis se revendiquent.",
+    "emptyAssociationsBody": "Une association de la diaspora peut créer sa page.",
     "emptyCompanies": "Aucune entreprise inscrite — {{country}}.",
-    "emptyCompaniesBody": "Les entreprises de la diaspora pourront créer leur page.",
+    "emptyCompaniesBody": "Une entreprise de la diaspora peut créer sa page.",
     "dormantTitle": "Le hub {{country}} est bientôt disponible.",
     "dormantBody": "Personne n'y a encore rien publié. Vous pouvez être parmi les premiers.",
     "notFoundTitle": "Ce hub n'existe pas.",
@@ -876,10 +876,6 @@
         "body": "Vous téléchargez vos données et effacez votre compte depuis vos réglages. L'autorité compétente au Gabon est l'APDPVP."
       }
     }
-  },
-  "health": {
-    "title": "Santé fonctionnelle",
-    "ok": "diasporale.com répond."
   },
   "notFound": {
     "title": "Cette page n'existe pas.",

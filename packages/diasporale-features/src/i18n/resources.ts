@@ -25,6 +25,7 @@ import enDemoAccounts from "./locales/en/demo-accounts.json"
 import enDiasporale from "./locales/en/diasporale.json"
 import enDiscovery from "./locales/en/discovery.json"
 import enDoorVision from "./locales/en/door-vision.json"
+import enHubNotices from "./locales/en/hub-notices.json"
 import enNavigation from "./locales/en/navigation.json"
 import enPageAdmin from "./locales/en/page-admin.json"
 import enPageBrowsing from "./locales/en/page-browsing.json"
@@ -58,6 +59,7 @@ import enContextualConversations from "./locales/en/contextual-conversations.jso
 import enCommunityNotifications from "./locales/en/community-notifications.json"
 import enPostExplanation from "./locales/en/post-explanation.json"
 import enReporterNotices from "./locales/en/reporter-notices.json"
+import enFunctionalHealth from "./locales/en/functional-health.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -72,6 +74,7 @@ import frDemoAccounts from "./locales/fr/demo-accounts.json"
 import frDiasporale from "./locales/fr/diasporale.json"
 import frDiscovery from "./locales/fr/discovery.json"
 import frDoorVision from "./locales/fr/door-vision.json"
+import frHubNotices from "./locales/fr/hub-notices.json"
 import frNavigation from "./locales/fr/navigation.json"
 import frPageAdmin from "./locales/fr/page-admin.json"
 import frPageBrowsing from "./locales/fr/page-browsing.json"
@@ -105,6 +108,7 @@ import frContextualConversations from "./locales/fr/contextual-conversations.jso
 import frCommunityNotifications from "./locales/fr/community-notifications.json"
 import frPostExplanation from "./locales/fr/post-explanation.json"
 import frReporterNotices from "./locales/fr/reporter-notices.json"
+import frFunctionalHealth from "./locales/fr/functional-health.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -124,6 +128,7 @@ export const LOCALE_PARTS = {
     "demo-accounts": frDemoAccounts,
     discovery: frDiscovery,
     "door-vision": frDoorVision,
+    "hub-notices": frHubNotices,
     navigation: frNavigation,
     "page-admin": frPageAdmin,
     "page-browsing": frPageBrowsing,
@@ -158,6 +163,7 @@ export const LOCALE_PARTS = {
     "post-explanation": frPostExplanation,
     "reporter-notices": frReporterNotices,
     "appearance-themes": frAppearanceThemes,
+    "functional-health": frFunctionalHealth,
     "app-errors": frAppErrors,
     "account-menu": frAccountMenu,
   },
@@ -173,6 +179,7 @@ export const LOCALE_PARTS = {
     "demo-accounts": enDemoAccounts,
     discovery: enDiscovery,
     "door-vision": enDoorVision,
+    "hub-notices": enHubNotices,
     navigation: enNavigation,
     "page-admin": enPageAdmin,
     "page-browsing": enPageBrowsing,
@@ -207,6 +214,7 @@ export const LOCALE_PARTS = {
     "post-explanation": enPostExplanation,
     "reporter-notices": enReporterNotices,
     "appearance-themes": enAppearanceThemes,
+    "functional-health": enFunctionalHealth,
     "app-errors": enAppErrors,
     "account-menu": enAccountMenu,
   },

@@ -165,11 +165,12 @@ function HubBody(props: HubContentProps & { readonly pages: HubPagesQuery | null
           </div>
         </div>
         {hub.status === "ready" && !hub.data.counters.dormant ? (
-          <div className="grid grid-cols-2 gap-4 border-t border-border bg-[var(--ink-50)] px-5 py-4 sm:grid-cols-4 md:px-6">
+          <div className={cn("grid grid-cols-2 gap-4 border-t border-border bg-[var(--ink-50)] px-5 py-4 md:px-6", hub.data.eventsSource === "unmeasured" ? "sm:grid-cols-3" : "sm:grid-cols-4")}>
             <StatCounter value={hub.data.counters.members} label={t("hub.counters.members")} />
             <StatCounter value={hub.data.counters.associations} label={t("hub.counters.associations")} />
             <StatCounter value={hub.data.counters.companies} label={t("hub.counters.companies")} />
-            <StatCounter value={hub.data.counters.upcomingEvents} label={t("hub.counters.events")} />
+            {/* Non mesurés (EV-02), les évènements n'ont pas de nombre : jamais un zéro de façade. */}
+            {hub.data.eventsSource === "unmeasured" ? null : <StatCounter value={hub.data.counters.upcomingEvents} label={t("hub.counters.events")} />}
             {hub.data.countersSource === "demo" ? (
               <p className="col-span-full text-[11px] text-muted-foreground">{t("hub.countersDemo")}</p>
             ) : null}
@@ -276,7 +277,9 @@ function HubSections(props: {
           />
         </FolderTabsContent>
         <FolderTabsContent value="evenements" className="flex flex-col gap-3">
-          {hub.events.length === 0 ? (
+          {hub.eventsSource === "unmeasured" ? (
+            <HubEventsUnlisted country={props.country} />
+          ) : hub.events.length === 0 ? (
             <EmptyState icon={<CalendarDaysIcon />} title={t("hub.emptyEvents", { country: name })} description={t("hub.emptyEventsBody")} />
           ) : (
             hub.events.map((event, index) => (
@@ -323,6 +326,38 @@ function HubSections(props: {
         ) : null}
       </FolderTabs>
     </>
+  )
+}
+
+/**
+ * Les évènements d'un pays ne se lisent pas encore (HB-02, puis EV-05) : l'onglet
+ * ne prétend pas qu'il n'y en a aucun. Il dit où ils se trouvent : sur la page de
+ * chaque association du pays, et dans l'agenda de qui s'y est inscrit (EV-02).
+ */
+function HubEventsUnlisted(props: { country: CountryCode }) {
+  const { t } = useDiasporaleT()
+  return (
+    <EmptyState
+      icon={<CalendarDaysIcon />}
+      title={t("hub.eventsUnlistedTitle")}
+      description={t("hub.eventsUnlistedBody")}
+      action={
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button asChild variant="outline">
+            <NextLink href={routes.pages({ ownerKind: "association", country: props.country })}>
+              <UsersRoundIcon aria-hidden />
+              {t("hub.eventsUnlistedAssociations")}
+            </NextLink>
+          </Button>
+          <Button asChild variant="ghost">
+            <NextLink href={routes.agenda()}>
+              <CalendarDaysIcon aria-hidden />
+              {t("eventCalendar.agendaTitle")}
+            </NextLink>
+          </Button>
+        </div>
+      }
+    />
   )
 }
 

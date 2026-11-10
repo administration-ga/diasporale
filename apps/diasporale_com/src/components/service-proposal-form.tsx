@@ -239,7 +239,7 @@ export function ServiceProposalForm(props: {
       </div>
       {formError ? <p role="alert" className="text-sm font-medium text-destructive">{t(`errors.${formError}`)}</p> : null}
       <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={busy} aria-busy={busy}>{t(busy ? "serviceRequests.form.sending" : "serviceRequests.form.submit")}</Button>
+        <Button type="submit" variant="send" disabled={busy} aria-busy={busy}>{t(busy ? "serviceRequests.form.sending" : "serviceRequests.form.submit")}</Button>
         <Button type="button" variant="ghost" disabled={busy} onClick={props.onCancel}>{t("serviceRequests.sheet.back")}</Button>
       </div>
     </form>
