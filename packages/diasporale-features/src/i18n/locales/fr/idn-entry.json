@@ -1,0 +1,15 @@
+{
+  "entryDoors": {
+    "idnAntsia": "IDN affichera le nom d’ANTSIA : DIASPORALE est un réseau d’ANTSIA, qui assure la connexion. Vous revenez ensuite ici.",
+    "idnStarting": "Ouverture d’IDN…",
+    "checking": "Vérification des accès ouverts…",
+    "idnUnknown": "La connexion IDN ne peut pas être vérifiée pour l’instant. Réessayez dans un instant.",
+    "codeClosed": "L’entrée par code n’est pas encore ouverte sur ce site."
+  },
+  "errors": {
+    "idn_unavailable": "La connexion IDN n’est pas disponible pour le moment. Réessayez dans un instant.",
+    "idn_refused": "Vous avez refusé ou interrompu la connexion chez IDN. Vous pouvez réessayer quand vous le souhaitez.",
+    "idn_account_exists": "Un compte existe déjà avec l’adresse e-mail de cette identité IDN : entrez avec un code reçu à cette adresse.",
+    "idn_failed": "La connexion avec IDN n’a pas abouti. Réessayez dans un instant."
+  }
+}
