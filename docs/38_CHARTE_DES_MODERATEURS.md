@@ -9,7 +9,7 @@
 >
 > Elle accompagne les règles de la communauté (page publique `/regles-communaute`, texte
 > provisoire lui aussi) et la procédure de permanence et d'incident
-> (`docs/37_PERMANENCE_ET_INCIDENTS.md`, lot MD-06).
+> (`docs/39_PERMANENCE_ET_INCIDENTS.md`, lot MD-06).
 
 ## 1. Ce que fait un modérateur
 

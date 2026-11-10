@@ -10,7 +10,7 @@
 > fois à blanc avec un dossier fictif à délai de 24 h ») reste à tenir : il demande des comptes de
 > démonstration par acteur sur un backend local et l'accord du propriétaire (§ 8).
 >
-> À lire avec la charte des modérateurs (`docs/36_CHARTE_DES_MODERATEURS.md`) et les règles de la
+> À lire avec la charte des modérateurs (`docs/38_CHARTE_DES_MODERATEURS.md`) et les règles de la
 > communauté (page publique `/regles-communaute`). Le dossier de mise en production (lot DS-06,
 > plan 17) cite ce document.
 
