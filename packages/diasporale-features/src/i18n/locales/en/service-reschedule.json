@@ -1,0 +1,44 @@
+{
+  "serviceReschedule": {
+    "title": "Move the appointment",
+    "lead": "Suggest another time without cancelling: same length, same terms. The appointment only changes if the other party accepts before the deadline.",
+    "cta": "Suggest another time",
+    "pendingByPage": "The page suggests a new time",
+    "pendingByRequester": "The requester suggests a new time",
+    "pendingByMe": "You suggested a new time",
+    "current": "Current time",
+    "proposed": "New time",
+    "deadline": "Answer expected before {{date}}. Without agreement, the appointment stays as it is.",
+    "accept": "Accept the new time",
+    "decline": "Keep the current time",
+    "withdraw": "Withdraw my suggestion",
+    "acceptTitle": "Accept the new time",
+    "acceptDescription": "The appointment moves to the new time; the length and the accepted terms do not change.",
+    "acceptConfirm": "I accept the new time",
+    "accepted": "Appointment moved",
+    "declined": "Current time kept",
+    "withdrawn": "Suggestion withdrawn",
+    "timeline": "Appointment moved (version {{version}})",
+    "next": "New time suggested, answer expected before {{date}}",
+    "form": {
+      "duration_one": "Same length ({{count}} minute) and same terms: only the time changes.",
+      "duration_other": "Same length ({{count}} minutes) and same terms: only the time changes.",
+      "date": "New date",
+      "time": "New start time",
+      "timeZone": "Time zone of the new time",
+      "timeZoneHint": "The date and time are read in this time zone.",
+      "deadlineDate": "Answer expected before (date)",
+      "deadlineTime": "Answer expected before (time)",
+      "deadlineHint": "At most 14 days after sending, before the new time and before the current time.",
+      "submit": "Send the new time",
+      "sending": "Sending…",
+      "sent": "New time suggested"
+    }
+  },
+  "errors": {
+    "reschedule_already_open": "A new time is already waiting for an answer: accept, decline or withdraw it first.",
+    "reschedule_not_open": "No new time is waiting for an answer: it was withdrawn, declined, or its deadline has passed.",
+    "reschedule_same_slot": "This is already the appointment time: choose another time.",
+    "reschedule_changed": "The new time changed in the meantime: read it again before accepting."
+  }
+}

@@ -16,10 +16,12 @@ import {
   SERVICE_REQUESTS_PAGE_SIZE,
   type ActionErrorCode,
   type Loadable,
+  type ServiceProposalPrefillView,
   type ServiceRequestDetailView,
   type ServiceRequestsCapability,
   type ServiceRequestsPageQuery,
   type ServiceRequestSummaryView,
+  type ServiceRescheduleView,
 } from "@diasporale/features/data"
 import type { FunctionReturnType } from "convex/server"
 import { useMemo } from "react"
@@ -67,6 +69,7 @@ export function serviceRequestSummaryView(row: SummaryDto): ServiceRequestSummar
         }
       : null,
     booking: row.booking ? { startAt: row.booking.startAt, endAt: row.booking.endAt, timeZone: row.booking.timeZone, status: row.booking.status } : null,
+    reschedule: rescheduleView(row.reschedule),
     deadlineAt: row.deadlineAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
@@ -91,14 +94,44 @@ export function serviceRequestDetailView(row: DetailDto): ServiceRequestDetailVi
       cancellationTerms: proposal.cancellationTerms,
       expiresAt: proposal.expiresAt,
       state: proposal.state,
+      rescheduledFrom: proposal.rescheduledFrom ?? null,
       createdAt: proposal.createdAt,
     })),
     timeline: row.timeline.map((event) => ({ status: event.status, at: event.at, version: event.version })),
     closedBy: row.closedBy,
     closedReason: row.closedReason,
     actions: [...row.actions],
+    rescheduleActions: [...row.rescheduleActions],
     noShowContest: row.noShowContest ? { at: row.noShowContest.at, reason: row.noShowContest.reason } : null,
     canContestNoShow: row.canContestNoShow,
+    proposalPrefill: prefillView(row.proposalPrefill),
+  }
+}
+
+/** SV-03 : le nouvel horaire proposé, recopié champ par champ ; un moteur antérieur ne le sert pas. */
+function rescheduleView(reschedule: SummaryDto["reschedule"] | undefined): ServiceRescheduleView | null {
+  if (reschedule == null) return null
+  return {
+    startAt: reschedule.startAt, endAt: reschedule.endAt, timeZone: reschedule.timeZone,
+    proposedBy: reschedule.proposedBy, proposedAt: reschedule.proposedAt, expiresAt: reschedule.expiresAt,
+  }
+}
+
+/** SV-04 : la proposition préremplie, recopiée champ par champ ; un moteur antérieur ne la sert pas. */
+function prefillView(prefill: DetailDto["proposalPrefill"] | undefined): ServiceProposalPrefillView | null {
+  if (prefill == null) return null
+  const { settings } = prefill
+  return {
+    pricing: prefill.pricing.mode === "quote" ? { mode: "quote" } : { mode: prefill.pricing.mode, amountMinor: prefill.pricing.amountMinor, currency: prefill.pricing.currency },
+    durationMinutes: prefill.durationMinutes,
+    delivery: prefill.delivery,
+    city: prefill.city,
+    settings: {
+      timeZone: settings.timeZone,
+      location: settings.location === null ? null : settings.location.mode === "onsite" ? { mode: "onsite", area: settings.location.area } : { mode: "remote" },
+      cancellationTerms: settings.cancellationTerms,
+      bookingCapacity: settings.bookingCapacity,
+    },
   }
 }
 
@@ -234,6 +267,31 @@ export function createEngineServiceRequests(deps: EngineSourceDeps): ServiceRequ
       attemptAction(async () => {
         const result = await deps.convex.mutation(SR.contestServiceNoShow, { networkId: await networkOf(), requestId: requestId as Id<"serviceRequests">, reason })
         return { contestedAt: result.contestedAt, created: result.created }
+      }),
+
+    proposeReschedule: (input) =>
+      attemptAction(async () => {
+        await deps.convex.mutation(SR.proposeServiceReschedule, {
+          networkId: await networkOf(),
+          requestId: input.requestId as Id<"serviceRequests">,
+          expectedProposalVersion: input.expectedProposalVersion,
+          startAt: input.startAt,
+          timeZone: input.timeZone,
+          expiresAt: input.expiresAt,
+        })
+        return null
+      }),
+
+    acceptReschedule: ({ requestId, expectedProposalVersion, expectedStartAt }) =>
+      attemptAction(async () => {
+        const result = await deps.convex.mutation(SR.acceptServiceReschedule, { networkId: await networkOf(), requestId: requestId as Id<"serviceRequests">, expectedProposalVersion, expectedStartAt })
+        return { version: result.version }
+      }),
+
+    declineReschedule: ({ requestId }) =>
+      attemptAction(async () => {
+        await deps.convex.mutation(SR.declineServiceReschedule, { networkId: await networkOf(), requestId: requestId as Id<"serviceRequests"> })
+        return null
       }),
   }
 }

@@ -1,0 +1,44 @@
+{
+  "serviceReschedule": {
+    "title": "Déplacer le rendez-vous",
+    "lead": "Proposez un autre horaire sans annuler : même durée, mêmes conditions. Le rendez-vous ne change que si l’autre partie accepte avant l’échéance.",
+    "cta": "Proposer un autre horaire",
+    "pendingByPage": "La page propose un nouvel horaire",
+    "pendingByRequester": "La personne propose un nouvel horaire",
+    "pendingByMe": "Vous avez proposé un nouvel horaire",
+    "current": "Horaire actuel",
+    "proposed": "Nouvel horaire",
+    "deadline": "Réponse attendue avant le {{date}}. Sans accord, le rendez-vous reste tel quel.",
+    "accept": "Accepter le nouvel horaire",
+    "decline": "Garder l’horaire actuel",
+    "withdraw": "Retirer ma proposition",
+    "acceptTitle": "Accepter le nouvel horaire",
+    "acceptDescription": "Le rendez-vous passe au nouvel horaire ; la durée et les conditions acceptées ne changent pas.",
+    "acceptConfirm": "J’accepte le nouvel horaire",
+    "accepted": "Rendez-vous déplacé",
+    "declined": "Horaire actuel conservé",
+    "withdrawn": "Proposition retirée",
+    "timeline": "Rendez-vous déplacé (version {{version}})",
+    "next": "Nouvel horaire proposé, réponse attendue avant le {{date}}",
+    "form": {
+      "duration_one": "Même durée ({{count}} minute) et mêmes conditions : seul l’horaire change.",
+      "duration_other": "Même durée ({{count}} minutes) et mêmes conditions : seul l’horaire change.",
+      "date": "Nouvelle date",
+      "time": "Nouvelle heure de début",
+      "timeZone": "Fuseau du nouvel horaire",
+      "timeZoneHint": "La date et l’heure sont lues dans ce fuseau.",
+      "deadlineDate": "Réponse attendue avant le (date)",
+      "deadlineTime": "Réponse attendue avant (heure)",
+      "deadlineHint": "Au plus tard 14 jours après l’envoi, avant le nouvel horaire et avant l’horaire actuel.",
+      "submit": "Envoyer le nouvel horaire",
+      "sending": "Envoi…",
+      "sent": "Nouvel horaire proposé"
+    }
+  },
+  "errors": {
+    "reschedule_already_open": "Un nouvel horaire attend déjà une réponse : acceptez-le, déclinez-le ou retirez-le d’abord.",
+    "reschedule_not_open": "Aucun nouvel horaire n’attend de réponse : il a été retiré, décliné, ou son échéance est passée.",
+    "reschedule_same_slot": "C’est déjà l’horaire du rendez-vous : choisissez un autre horaire.",
+    "reschedule_changed": "Le nouvel horaire a changé entre-temps : relisez-le avant d’accepter."
+  }
+}

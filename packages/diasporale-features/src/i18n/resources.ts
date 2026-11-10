@@ -61,6 +61,8 @@ import enCommunityNotifications from "./locales/en/community-notifications.json"
 import enPostExplanation from "./locales/en/post-explanation.json"
 import enReporterNotices from "./locales/en/reporter-notices.json"
 import enFunctionalHealth from "./locales/en/functional-health.json"
+import enServiceProposalSettings from "./locales/en/service-proposal-settings.json"
+import enServiceReschedule from "./locales/en/service-reschedule.json"
 import enMediaPreparation from "./locales/en/media-preparation.json"
 import enProfileImages from "./locales/en/profile-images.json"
 import enLegalTexts from "./locales/en/legal-texts.json"
@@ -129,6 +131,8 @@ import frCommunityNotifications from "./locales/fr/community-notifications.json"
 import frPostExplanation from "./locales/fr/post-explanation.json"
 import frReporterNotices from "./locales/fr/reporter-notices.json"
 import frFunctionalHealth from "./locales/fr/functional-health.json"
+import frServiceProposalSettings from "./locales/fr/service-proposal-settings.json"
+import frServiceReschedule from "./locales/fr/service-reschedule.json"
 import frMediaPreparation from "./locales/fr/media-preparation.json"
 import frProfileImages from "./locales/fr/profile-images.json"
 import frLegalTexts from "./locales/fr/legal-texts.json"
@@ -207,6 +211,8 @@ export const LOCALE_PARTS = {
     "comment-pages": frCommentPages,
     "app-errors": frAppErrors,
     "account-menu": frAccountMenu,
+    "service-proposal-settings": frServiceProposalSettings,
+    "service-reschedule": frServiceReschedule,
     "media-preparation": frMediaPreparation,
     "profile-images": frProfileImages,
     "legal-texts": frLegalTexts,
@@ -277,6 +283,8 @@ export const LOCALE_PARTS = {
     "comment-pages": enCommentPages,
     "app-errors": enAppErrors,
     "account-menu": enAccountMenu,
+    "service-proposal-settings": enServiceProposalSettings,
+    "service-reschedule": enServiceReschedule,
     "media-preparation": enMediaPreparation,
     "profile-images": enProfileImages,
     "legal-texts": enLegalTexts,
