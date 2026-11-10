@@ -17,6 +17,7 @@ import { routes } from "@/lib/routes"
 import { AccountLocale } from "./account-locale"
 import { AccountTheme } from "./account-theme"
 import { DemoAccountBootstrap } from "./demo-account-bootstrap"
+import { MembershipStatusRefresh } from "./membership-refresh"
 import { DemoFloatingCard } from "./site-chrome"
 import { ToastRegion } from "./toast-region"
 
@@ -128,6 +129,8 @@ export function Providers(props: { locale: Locale; children: ReactNode }) {
                 <DemoFloatingCard />
                 {/* Développement local : prépare le compte de démonstration choisi à la porte. */}
                 <DemoAccountBootstrap />
+                {/* EA-03 : le statut relu quand l'identité a changé, seulement si le moteur signale un écart. */}
+                <MembershipStatusRefresh />
               </RoutingProvider>
             </AccountLocale>
           </AccountTheme>

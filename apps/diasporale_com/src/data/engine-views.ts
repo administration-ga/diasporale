@@ -123,6 +123,8 @@ export function toMembershipView(person: MyPerson, membership: MyMembership): Me
     canPublish: membership.capabilities.includes("publish"),
     rateTier: membership.rateTier,
     directoryVisibility: membership.directoryVisibility,
+    // EA-03 : l'écart que dit la tranche, seulement quand il existe (la relecture se déclenche alors).
+    ...(membership.statusOutdated === true ? { statusOutdated: true } : {}),
   }
 }
 

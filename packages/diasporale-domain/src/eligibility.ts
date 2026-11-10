@@ -133,6 +133,22 @@ export function effectiveMembershipStatus(
   return root.suspended ? "suspendue" : networkStatus
 }
 
+/**
+ * EA-03 — l'écart entre le statut ENREGISTRÉ et celui que les faits justifient :
+ * le statut attendu, ou `null` quand rien n'est à relire. Un départ et une
+ * sanction ne se relisent jamais ici : ils ont leurs propres chemins (le retour,
+ * la levée). Sert à dire « à relire » sans écrire, et à relire seulement alors.
+ */
+export function membershipStatusDrift(
+  recorded: MembershipStatus,
+  grounds: MembershipGrounds,
+  now: number,
+): MembershipStatus | null {
+  if (recorded === "partie" || recorded === "suspendue") return null
+  const expected = deriveMembershipStatus(grounds, now)
+  return expected === recorded ? null : expected
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Évènements — ils modifient les FAITS, puis la règle est relue
 // ═══════════════════════════════════════════════════════════════

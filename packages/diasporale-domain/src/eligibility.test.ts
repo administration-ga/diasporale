@@ -10,6 +10,7 @@ import {
   hasCapability,
   idnCountsAsGround,
   isSuspensionActive,
+  membershipStatusDrift,
   writeRateTier,
   type MemberCapability,
   type MembershipEvent,
@@ -328,6 +329,29 @@ describe("effectiveMembershipStatus — la racine suspend partout", () => {
   test("un départ reste un départ", () => {
     expect(effectiveMembershipStatus("partie", { suspended: true })).toBe("partie")
     expect(effectiveMembershipStatus("partie", { suspended: false })).toBe("partie")
+  })
+})
+
+describe("membershipStatusDrift — le statut enregistré relu contre les faits (EA-03)", () => {
+  test("un compte léger qui lie IDN est attendu « déclarée »", () => {
+    expect(membershipStatusDrift("en_attente", FIXTURES.declaree_idn, NOW)).toBe("declaree")
+  })
+
+  test("un lien révoqué fait retomber : déclarée sans IDN redevient en attente, vérifiée sans décision aussi", () => {
+    expect(membershipStatusDrift("declaree", LIGHT_ACCOUNT_GROUNDS, NOW)).toBe("en_attente")
+    expect(membershipStatusDrift("verifiee", { ...FIXTURES.verifiee_idn_sponsored, idn: IDN_GA(1) }, NOW)).toBe("declaree")
+    expect(membershipStatusDrift("verifiee", LIGHT_ACCOUNT_GROUNDS, NOW)).toBe("en_attente")
+  })
+
+  test("aucun écart quand les faits justifient le statut enregistré", () => {
+    expect(membershipStatusDrift("declaree", FIXTURES.declaree_idn, NOW)).toBeNull()
+    expect(membershipStatusDrift("verifiee", FIXTURES.verifiee_founding, NOW)).toBeNull()
+    expect(membershipStatusDrift("en_attente", LIGHT_ACCOUNT_GROUNDS, NOW)).toBeNull()
+  })
+
+  test("suspendue et partie ne se relisent jamais ici, quels que soient les faits", () => {
+    expect(membershipStatusDrift("suspendue", FIXTURES.verifiee_attested, NOW)).toBeNull()
+    expect(membershipStatusDrift("partie", FIXTURES.verifiee_attested, NOW)).toBeNull()
   })
 })
 
