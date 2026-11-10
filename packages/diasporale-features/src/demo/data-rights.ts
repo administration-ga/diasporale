@@ -13,8 +13,12 @@
  *     concernée est celle de la session — le magasin efface la session, jamais
  *     une autre personne ;
  *   · la démonstration ne prend aucune décision de modération : la liste est
- *     vide et un recours rend `not_found`, comme un dossier introuvable du moteur.
- * Aucune lecture d'adhésion : les mêmes gestes valent pour un membre suspendu.
+ *     vide et un recours rend `not_found`, comme un dossier introuvable du moteur ;
+ *   · « Mes signalements » (NP-02) : la démonstration ne transmet aucun
+ *     signalement à une modération (le geste masque la cible dans ce seul
+ *     navigateur), la liste est donc vide — « aucun signalement transmis » est vrai.
+ * Aucune lecture d'adhésion : les mêmes gestes valent pour un membre suspendu,
+ * pour qui a quitté DIASPORALE et pour qui n'y est jamais entré.
  */
 import { useEffect, useMemo, useSyncExternalStore } from "react"
 
@@ -25,6 +29,8 @@ import {
   type ErasureView,
   type LastExportView,
   type ModerationDecisionsPage,
+  type PersonalReportsPage,
+  type ReportsQuery,
 } from "../data/data-rights-port"
 import type { ActionErrorCode } from "../data/errors"
 import type { ActionResult } from "../data/port"
@@ -41,6 +47,7 @@ interface PendingErasure {
 const LOADING = { status: "loading" } as const
 const OK: ActionResult = { ok: true, value: null }
 const NO_DECISIONS: ModerationDecisionsPage = { items: [], continueCursor: null, isDone: true }
+const NO_REPORTS: PersonalReportsPage = { items: [], continueCursor: null, isDone: true }
 const fail = (code: ActionErrorCode): ActionResult<never> => ({ ok: false, code })
 
 export function createDemoDataRights(store: DemoStore): DataRightsCapability {
@@ -170,6 +177,15 @@ export function createDemoDataRights(store: DemoStore): DataRightsCapability {
 
     async fileAppeal({ personId }) {
       return fail(viewerRefusal(personId) ?? "not_found")
+    },
+
+    useReports({ personId }): ReportsQuery {
+      const version = useSnapshot()
+      return useMemo((): ReportsQuery => {
+        if (version === null) return LOADING
+        const refusal = viewerRefusal(personId)
+        return refusal !== null ? { status: "error", code: refusal } : { status: "ready", data: NO_REPORTS }
+      }, [version, personId])
     },
   }
 }

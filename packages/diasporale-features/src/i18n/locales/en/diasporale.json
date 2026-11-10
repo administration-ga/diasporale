@@ -180,11 +180,12 @@
     },
     "consular_attestation": {
       "title": "Consular attestation",
-      "body": "Given at the time of verification. Withdrawing it prevents any new request."
+      "body": "Given at the time of verification. Withdrawing it stops a request in progress; a status already obtained is kept. A new verification will ask for your consent again."
     },
     "talents": {
       "title": "Visible professional profile",
-      "body": "Coming soon: the talent directory arrives with jobs."
+      "body": "Your talent profile carries its own consent: you publish, hide or delete it from the Talents page.",
+      "link": "Manage my talent profile"
     }
   },
   "status": {

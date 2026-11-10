@@ -1,7 +1,7 @@
 {
   "settings": {
     "dataRights": {
-      "lead": "Exportez les données de votre compte ANTSIA, commun à tous ses réseaux, demandez son effacement et consultez les décisions de modération qui vous concernent. Ces gestes restent ouverts si votre adhésion est suspendue.",
+      "lead": "Exportez les données de votre compte ANTSIA, commun à tous ses réseaux, demandez son effacement et consultez les décisions de modération qui vous concernent. Ces gestes restent ouverts sans adhésion à DIASPORALE, après un départ ou si votre adhésion est suspendue.",
       "unavailable": "Ces gestes ne sont pas encore disponibles ici.",
       "loading": "Chargement…",
       "export": {
@@ -123,6 +123,17 @@
         }
       }
     }
+  },
+  "footer": {
+    "myData": "Mes données"
+  },
+  "welcome": {
+    "myDataLead": "Membre ou non :",
+    "myData": "exporter ou effacer mes données"
+  },
+  "myData": {
+    "backToSettings": "Retour aux réglages",
+    "backToWelcome": "Retour à l'accueil"
   },
   "errors": {
     "erasure_not_cancellable": "Le délai d'annulation est passé : l'effacement ne peut plus être annulé.",
