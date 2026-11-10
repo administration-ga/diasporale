@@ -7,6 +7,7 @@
 import type { api } from "@convex/_generated/api"
 import {
   admitsInFeedScope,
+  type ContentModerationState,
   type ContentScope,
   type CountryCode,
   type DiasporaFacet,
@@ -35,6 +36,7 @@ import {
   type PostMediaView,
   type PostView,
   type PublishMediaInput,
+  type PublishOutcome,
   type SharedPostView,
   COMMUNITY_NOTIFICATION_KINDS,
   CONTEXTUAL_NOTIFICATION_KINDS,
@@ -255,6 +257,33 @@ export function toSharedPostView(share: NonNullable<FeedItem["share"]>): SharedP
   }
 }
 
+/**
+ * Les états de modération que le moteur rend à l'AUTEUR de sa publication (FD-04) : ceux
+ * de `moderationContentStates` qu'il peut encore lire. Un contenu retiré n'est servi à
+ * personne, son auteur compris.
+ */
+export type EngineOwnPostModeration = "published" | "pending_review"
+
+/**
+ * L'état de modération d'une publication telle que le moteur la sert à CE lecteur (FD-04).
+ * Le moteur ne sert à un autre lecteur que du publié (`canReadModeratedContent`) : l'état
+ * « en relecture » n'est jamais montré qu'à l'auteur. Pour l'auteur, l'état vient du champ
+ * `moderation` réservé à soi (issue [S1] de FD-04) ; tant que le moteur ne le rend pas,
+ * rien n'est affirmé et la carte n'affiche aucun avis.
+ */
+export function postModerationOf(item: { readonly isMine: boolean; readonly moderation?: EngineOwnPostModeration | undefined }): ContentModerationState {
+  return item.isMine && item.moderation === "pending_review" ? "pending_review" : "published"
+}
+
+/**
+ * Ce que la publication est devenue à l'envoi (FD-04), tel que le moteur le rend. Sans
+ * le champ `moderation` (issue [S1] de FD-04), l'état n'est pas connu : `null`, et le
+ * composeur n'annonce ni « Publié. » ni « en relecture ».
+ */
+export function toPublishOutcome(result: { readonly postId: string; readonly moderation?: EngineOwnPostModeration | undefined }): PublishOutcome {
+  return { moderation: result.moderation ?? null }
+}
+
 export function toPostView(item: FeedItem): PostView {
   return {
     id: item._id,
@@ -267,8 +296,7 @@ export function toPostView(item: FeedItem): PostView {
     scope: scopeOf(item),
     audience: audienceOf(item.audience),
     visibility: item.visibility,
-    // Le moteur ne rend au lecteur que du publié ; la relecture avant publication viendra avec PD6.
-    moderation: "published",
+    moderation: postModerationOf(item),
     createdAt: item.publishedAt,
     reactionCount: item.reactions.total,
     commentCount: item.commentCount,

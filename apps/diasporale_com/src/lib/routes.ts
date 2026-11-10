@@ -116,6 +116,8 @@ export const routes = {
   welcome: () => "/bienvenue",
   feed: feedHref,
   hub: (country: CountryCode) => `/pays/${country.toLowerCase()}`,
+  /** Le hub d'un nouveau membre, avec l'avis de bienvenue : la fin de l'accueil. */
+  hubWelcome: (country: CountryCode) => `/pays/${country.toLowerCase()}?bienvenue=1`,
   /** Adresse publique `/@handle` (réécrite vers `/profil/handle` par next.config). */
   profile: (handle: string) => `/@${handle}`,
   /** Se voir comme les autres membres (EXF-DG-07, `?apercu=1`). */
@@ -239,6 +241,31 @@ export const routes = {
   health: () => "/sante-fonctionnelle",
   healthApi: () => "/api/sante-fonctionnelle",
 } as const
+
+/**
+ * Les paramètres de filtre que cette table compose (pays, ville, onglet…) : les seuls qu'une page
+ * demandée avant la connexion garde (UX-02, MO-03). Un jeton, un code ou un traceur n'y survivent
+ * pas. Un test vérifie qu'aucune adresse de la table n'en emploie un autre, hors de l'entrée.
+ */
+export const ROUTE_FILTER_KEYS = [
+  "scope",
+  "tag",
+  "country",
+  "vue",
+  "pays",
+  "ville",
+  "q",
+  "type",
+  "activite",
+  "secteur",
+  "categorie",
+  "mode",
+  "apercu",
+  "onglet",
+  "modifier",
+  "nouveau",
+  "auteur",
+] as const
 
 /** Ancres internes de la vitrine. */
 export const anchors = {

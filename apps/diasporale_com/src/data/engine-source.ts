@@ -40,6 +40,8 @@ import type {
   BookmarksPageQuery,
   BookmarksPageRequest,
   BookmarksPageView,
+  CommentPageQuery,
+  CommentsPageRequest,
   CommentThreadView,
   CommentView,
   ConsentView,
@@ -61,12 +63,13 @@ import type {
   ProfilePostsPageRequest,
   ReactionKind,
   RelationView,
+  RepliesPageRequest,
   SessionView,
   SponsorDashboardView,
   SuggestionView,
   UnreadCountView,
 } from "@diasporale/features/data"
-import { BOOKMARKS_PAGE_SIZE, COMMENTS_PAGE, describeMediaFile, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
+import { BOOKMARKS_PAGE_SIZE, COMMENT_REPLIES_PAGE, COMMENTS_PAGE, describeMediaFile, MEMBER_SEARCH_MIN_LENGTH } from "@diasporale/features/data"
 import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
@@ -81,6 +84,7 @@ import {
   failed,
   LOADING,
   type Loaded,
+  memberReadError,
   PAGE_ACCESS_ERRORS,
   ready,
   Refusal,
@@ -128,6 +132,7 @@ import {
   toOwnProfileView,
   toPostView,
   toProfileView,
+  toPublishOutcome,
   toRelationView,
   toSuggestionView,
   toSponsorDashboardView,
@@ -155,8 +160,6 @@ export function feedRequest(scope: FeedScope, country: CountryCode) {
 }
 /** La première page de la cloche. */
 const BELL_PAGE = 30
-/** Les réponses d'une racine, lues d'un coup à la demande. */
-const REPLIES_PAGE = 50
 /** Les signets lus d'un coup (première page). */
 const BOOKMARKS_PAGE = BOOKMARKS_PAGE_SIZE
 
@@ -576,34 +579,50 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       return list.state === "ready" ? ready(list.value.map(toSuggestionView)) : LOADING
     },
 
-    useComments(postId: string): Loadable<readonly CommentThreadView[]> {
-      const { networkId } = useMember()
-      const id = networkId.state === "ready" ? networkId.value : null
-      const page = useLoaded(
+    // FD-03 : les commentaires se lisent page après page, sur le curseur du moteur (`paginateComments`).
+    // Une panne garde la page déjà lue pendant la reprise ; un refus d'accès ne sert aucun cache.
+    useCommentsPage(args: CommentsPageRequest): CommentPageQuery<CommentThreadView> {
+      const member = useMember()
+      const id = member.networkId.state === "ready" ? member.networkId.value : null
+      const row = member.membership.state === "ready" ? member.membership.value : null
+      const canRead = member.auth.isAuthenticated && id !== null && row?.capabilities.includes("read_network") === true
+      const query = useAuthenticatedConvexQuery(
         api.modules.engagement.engagement.paginateComments,
-        id ? { networkId: id, postId: postId as Id<"posts">, paginationOpts: { numItems: COMMENTS_PAGE, cursor: null } } : "skip",
+        canRead && id ? { networkId: id, postId: args.postId as Id<"posts">, paginationOpts: { numItems: COMMENTS_PAGE, cursor: args.cursor ?? null } } : "skip",
       )
-      for (const loaded of [networkId, page]) if (loaded.state === "error") return failed(loaded.code)
-      return page.state === "ready" ? ready(page.value.page.map(toCommentThreadView)) : LOADING
+      const error = memberReadError(member) ?? (query.isError ? engineActionErrorCode(query.error) : null)
+      const page = useReadablePostsQuery(query, JSON.stringify(["comments", id, args.postId, args.cursor ?? null]), canRead, error)
+      const data = useMemo(() => page.data === undefined ? undefined : {
+        items: page.data.page.map(toCommentThreadView),
+        continueCursor: page.data.continueCursor,
+        isDone: page.data.isDone,
+      }, [page.data])
+      return { data, isLoading: page.isLoading, error: page.error, retry: page.retry }
     },
 
-    useReplies(args: { postId: string; commentId: string | null }): Loadable<readonly CommentView[]> {
-      const { networkId } = useMember()
-      const id = networkId.state === "ready" ? networkId.value : null
-      const page = useLoaded(
+    // FD-03 : les réponses d'une racine, page après page (`paginateReplies`), mêmes règles de reprise.
+    useRepliesPage(args: RepliesPageRequest): CommentPageQuery<CommentView> {
+      const member = useMember()
+      const id = member.networkId.state === "ready" ? member.networkId.value : null
+      const row = member.membership.state === "ready" ? member.membership.value : null
+      const canRead = member.auth.isAuthenticated && id !== null && row?.capabilities.includes("read_network") === true
+      const query = useAuthenticatedConvexQuery(
         api.modules.engagement.engagement.paginateReplies,
-        id && args.commentId
-          ? {
-              networkId: id,
-              postId: args.postId as Id<"posts">,
-              commentId: args.commentId as Id<"postComments">,
-              paginationOpts: { numItems: REPLIES_PAGE, cursor: null },
-            }
-          : "skip",
+        canRead && id ? {
+          networkId: id,
+          postId: args.postId as Id<"posts">,
+          commentId: args.commentId as Id<"postComments">,
+          paginationOpts: { numItems: COMMENT_REPLIES_PAGE, cursor: args.cursor ?? null },
+        } : "skip",
       )
-      if (args.commentId === null) return ready([])
-      for (const loaded of [networkId, page]) if (loaded.state === "error") return failed(loaded.code)
-      return page.state === "ready" ? ready(page.value.page.map(toCommentView)) : LOADING
+      const error = memberReadError(member) ?? (query.isError ? engineActionErrorCode(query.error) : null)
+      const page = useReadablePostsQuery(query, JSON.stringify(["replies", id, args.postId, args.commentId, args.cursor ?? null]), canRead, error)
+      const data = useMemo(() => page.data === undefined ? undefined : {
+        items: page.data.page.map(toCommentView),
+        continueCursor: page.data.continueCursor,
+        isDone: page.data.isDone,
+      }, [page.data])
+      return { data, isLoading: page.isLoading, error: page.error, retry: page.retry }
     },
 
     useNotifications(): Loadable<readonly NotificationView[]> {
@@ -742,7 +761,21 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         const country = parseResidenceCountry(input.facet.countryOfResidence)
         if (!country.ok) throw new Refusal(country.code)
         const id = await diasporale()
-        await deps.convex.mutation(api.modules.people.profile.publishMyProfile, { handle: input.handle, displayName: input.displayName })
+        // EA-04 : le profil commun est relu à chaque essai. Publié (membre d'ANTSIA, retour après
+        // un départ), il n'est ni réécrit ni renommé ; retiré, il attend le geste de la personne ;
+        // absent, il naît de l'accueil. Une entrée interrompue reprend ainsi sans double écriture.
+        const person = await deps.convex.query(api.modules.people.persons.getMyPerson, {})
+        if (!person) throw new Refusal("not_signed_in")
+        if (!person.handle || !person.displayName) {
+          const handle = input.handle ?? ""
+          const displayName = input.displayName ?? ""
+          if (!handle.trim()) throw new Refusal("handle_required")
+          if (!displayName.trim()) throw new Refusal("display_name_invalid")
+          await deps.convex.mutation(api.modules.people.profile.publishMyProfile, { handle, displayName })
+        } else if (!person.published) {
+          throw new Refusal("profile_republish_required")
+        }
+        // Idempotent côté moteur : un accord déjà en vigueur n'est pas réécrit.
         await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "social_profile", origin: "onboarding", ...consentScopeArgs("social_profile", id) })
         // L'annuaire et les notifications valent pour le réseau : le moteur ne relit que l'accord
         // du réseau exact avant tout envoi (`notificationConsent`).
@@ -752,12 +785,12 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         if (input.consents.notifications) {
           await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "notifications", origin: "onboarding", ...consentScopeArgs("notifications", id) })
         }
-        await deps.convex.mutation(api.modules.diaspora.membership.joinDiasporale, {
+        const joined = await deps.convex.mutation(api.modules.diaspora.membership.joinDiasporale, {
           networkId: id,
           facet: toFacetArgs(input.facet),
           directoryVisibility: input.consents.directory ? input.directoryVisibility : "hidden",
         })
-        return { country: country.value }
+        return { country: country.value, status: joined.status }
       }),
 
     // Dépôt en deux temps (garde des fichiers du moteur) : URL de dépôt pour l'usage
@@ -785,15 +818,16 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         const scope = parseContentScope({ reach: input.reach, country: input.country ?? null })
         if (!scope.ok) throw new Refusal(scope.code)
         const networkId = await diasporale()
-        // Relecture avant publication (invariant 10) : tant que le moteur ne retient pas un contenu
-        // (PA5), un pays qui n'est pas ouvert ne reçoit pas de publication locale. Garde d'écran
-        // seulement : la garde serveur viendra avec le crochet de politique de la tranche.
+        // Un pays qui n'est pas ouvert ne reçoit pas de publication locale tant qu'aucune relecture
+        // par pays n'existe (HB-11) : le refus dit ce que dit le composeur (FD-04). Garde d'écran
+        // seulement : la garde serveur est demandée au moteur (issue [S1] de FD-04).
         if (scope.value.reach === "local") {
           const local = scope.value.country
           const open = await deps.convex.query(api.modules.diaspora.hubs.listOpenCountries, { networkId })
-          if (!open.some((hub) => hub.country === local)) throw new Refusal("feature_unavailable")
+          if (!open.some((hub) => hub.country === local)) throw new Refusal("hub_not_open")
         }
-        await deps.convex.mutation(api.modules.posts.posts.publish, {
+        // L'état que le moteur rend (publiée, ou retenue en relecture) ; jamais « publiée » d'office.
+        const published = await deps.convex.mutation(api.modules.posts.posts.publish, {
           networkId,
           body: input.body,
           audience: input.audience,
@@ -805,18 +839,19 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           ...(input.sharedPostId ? { sharedPostId: input.sharedPostId as Id<"posts"> } : {}),
           ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
         })
-        return { moderation: "published" as const }
+        return toPublishOutcome(published)
       }),
 
     comment: (input) =>
       attempt(async () => {
-        await deps.convex.mutation(api.modules.engagement.engagement.comment, {
+        const created = await deps.convex.mutation(api.modules.engagement.engagement.comment, {
           networkId: await diasporale(),
           postId: input.postId as Id<"posts">,
           body: input.body,
           ...(input.parentCommentId !== undefined ? { parentCommentId: input.parentCommentId as Id<"postComments"> } : {}),
         })
-        return null
+        // L'identifiant du commentaire créé : l'écran le montre aussitôt, même hors des pages lues (FD-03).
+        return { commentId: created.commentId }
       }),
 
     editComment: (commentId, body) =>

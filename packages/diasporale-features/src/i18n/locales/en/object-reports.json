@@ -1,0 +1,31 @@
+{
+  "contentReports": {
+    "action": {
+      "post": "Report post",
+      "comment": "Report",
+      "page": "Report page",
+      "event": "Report event",
+      "person": "Report this profile"
+    },
+    "title": {
+      "post": "Report this post",
+      "comment": "Report this comment",
+      "page": "Report this page",
+      "event": "Report this event",
+      "person": "Report this profile"
+    },
+    "rootNotice": "A profile is shared by DIASPORALE and ANTSIA, the public network: reports about it are reviewed by ANTSIA's moderation, not by the DIASPORALE team.",
+    "back": {
+      "feed": "Back to the feed",
+      "page": "Back to the page"
+    }
+  },
+  "objectMenu": {
+    "open": "More actions for {{name}}"
+  },
+  "profileMenu": {
+    "copyLink": "Copy profile link",
+    "linkCopied": "Profile link copied.",
+    "copyFailed": "The link could not be copied. Try again."
+  }
+}

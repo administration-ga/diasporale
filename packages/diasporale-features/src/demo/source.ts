@@ -10,6 +10,8 @@ import type {
   BookmarkView,
   BookmarksPageQuery,
   BookmarksPageRequest,
+  CommentPageQuery,
+  CommentsPageRequest,
   CommentThreadView,
   CommentView,
   FeedCursorView,
@@ -22,6 +24,7 @@ import type {
   PostView,
   ProfilePostsPageRequest,
   RelationView,
+  RepliesPageRequest,
   SuggestionView,
   UnreadCountView,
 } from "../data/types"
@@ -36,10 +39,11 @@ import { createDemoPages } from "./pages"
 import { createDemoPagePublications } from "./page-publications"
 import {
   bookmarksView,
-  commentsView,
+  commentsPageView,
   consentsView,
   countryHubView,
   demoAccountsView,
+  demoRepliesList,
   feedView,
   memberSearchView,
   openCountriesView,
@@ -47,8 +51,9 @@ import {
   postDetailView,
   notificationsView,
   profileView,
+  readDemoCommentCursor,
   relationView,
-  repliesView,
+  repliesPageView,
   sessionView,
   sponsorDashboardView,
   statusOf,
@@ -366,30 +371,35 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       }, [version])
     },
 
-    useComments(postId: string) {
+    // FD-03 : les commentaires et les réponses se lisent page après page, comme le moteur les pagine.
+    useCommentsPage({ postId, cursor = null }: CommentsPageRequest): CommentPageQuery<CommentThreadView> {
       const version = useVersion()
-      return useMemo<Loadable<readonly CommentThreadView[]>>(() => {
-        if (version < 0) return LOADING
+      return useMemo<CommentPageQuery<CommentThreadView>>(() => {
+        if (version < 0) return { data: undefined, isLoading: true, error: null, retry: retryLocalFeed }
+        const unavailable = (error: CommentPageQuery<CommentThreadView>["error"]) => ({ data: undefined, isLoading: false, error, retry: retryLocalFeed })
         const state = store.getState()
         const viewerId = state.session.personId
-        if (!viewerId) return { status: "error", code: "not_signed_in" }
-        const threads = commentsView(state, postId, viewerId, store.now())
-        return threads ? ready(threads) : { status: "error", code: "not_found" }
-      }, [version, postId])
+        if (!viewerId) return unavailable("not_signed_in")
+        const after = readDemoCommentCursor(postId, cursor)
+        if (after === undefined) return unavailable("unknown")
+        const page = commentsPageView(state, postId, viewerId, store.now(), after)
+        return page ? { data: page, isLoading: false, error: null, retry: retryLocalFeed } : unavailable("not_found")
+      }, [version, postId, cursor])
     },
 
-    useReplies(args: { postId: string; commentId: string | null }) {
+    useRepliesPage({ postId, commentId, cursor = null }: RepliesPageRequest): CommentPageQuery<CommentView> {
       const version = useVersion()
-      const { postId, commentId } = args
-      return useMemo<Loadable<readonly CommentView[]>>(() => {
-        if (version < 0) return LOADING
-        if (commentId === null) return ready([])
+      return useMemo<CommentPageQuery<CommentView>>(() => {
+        if (version < 0) return { data: undefined, isLoading: true, error: null, retry: retryLocalFeed }
+        const unavailable = (error: CommentPageQuery<CommentView>["error"]) => ({ data: undefined, isLoading: false, error, retry: retryLocalFeed })
         const state = store.getState()
         const viewerId = state.session.personId
-        if (!viewerId) return { status: "error", code: "not_signed_in" }
-        const replies = repliesView(state, postId, commentId, viewerId, store.now())
-        return replies ? ready(replies) : { status: "error", code: "not_found" }
-      }, [version, postId, commentId])
+        if (!viewerId) return unavailable("not_signed_in")
+        const after = readDemoCommentCursor(demoRepliesList(postId, commentId), cursor)
+        if (after === undefined) return unavailable("unknown")
+        const page = repliesPageView(state, postId, commentId, viewerId, store.now(), after)
+        return page ? { data: page, isLoading: false, error: null, retry: retryLocalFeed } : unavailable("not_found")
+      }, [version, postId, commentId, cursor])
     },
 
     useNotifications() {

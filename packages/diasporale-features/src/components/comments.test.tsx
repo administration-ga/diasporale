@@ -5,7 +5,7 @@ import type { ComponentProps } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { ActionResult, DiasporaleActions } from "../data/port"
-import { COMMENT_MAX_LENGTH, type AccountView, type CommentThreadView, type CommentView, type Loadable, type MembershipView } from "../data/types"
+import { COMMENT_MAX_LENGTH, type AccountView, type CommentPageQuery, type CommentsPageRequest, type CommentThreadView, type CommentView, type Loadable, type MembershipView, type RepliesPageRequest } from "../data/types"
 import { getFixedT } from "../i18n"
 import { I18nProvider } from "../i18n/client"
 import { RoutingProvider, type FeatureRoutes } from "../routing"
@@ -22,19 +22,21 @@ const mocks = vi.hoisted(() => ({
 type SessionProbe = { status: "anonymous" } | {
   status: "signed_in"
   account: Pick<AccountView, "id">
-  membership: Pick<MembershipView, "personId" | "status" | "canPublish"> | null
+  membership: Pick<MembershipView, "personId" | "handle" | "displayName" | "status" | "canPublish"> | null
 }
 let source: { kind: "engine" | "demo"; actions: Pick<DiasporaleActions, "editComment" | "removeComment" | "comment"> }
 let session: Loadable<SessionProbe>
-let threads: Loadable<readonly CommentThreadView[]>
-let replies: Loadable<readonly CommentView[]>
+// FD-03 : les lectures sont paginées ; une page par curseur (`""` : la première).
+let commentPages: Record<string, CommentPageQuery<CommentThreadView>>
+let replyPages: Record<string, CommentPageQuery<CommentView>>
+const LOADING_PAGE = { data: undefined, isLoading: true, error: null, retry: () => undefined } as const
 
 vi.mock("../data/context", () => ({
   useDataSource: () => source,
   useSession: () => session,
   useActions: () => source.actions,
-  useComments: () => threads,
-  useReplies: () => replies,
+  useCommentsPage: (args: CommentsPageRequest) => commentPages[args.cursor ?? ""] ?? LOADING_PAGE,
+  useRepliesPage: (args: RepliesPageRequest) => replyPages[`${args.commentId}|${args.cursor ?? ""}`] ?? LOADING_PAGE,
 }))
 vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error } }))
 
@@ -48,8 +50,15 @@ const routes: FeatureRoutes = {
 }
 function Link({ children, ...props }: ComponentProps<"a">) { return <a {...props}>{children}</a> }
 function signedIn(id = "person-a", pending = false): Loadable<SessionProbe> {
-  return { status: "ready", data: { status: "signed_in", account: { id }, membership: { personId: id, status: pending ? "en_attente" : "declaree", canPublish: !pending } } }
+  const handle = id === "person-a" ? "membre.a" : "membre.b"
+  const displayName = id === "person-a" ? "Membre A" : "Membre B"
+  return { status: "ready", data: { status: "signed_in", account: { id }, membership: { personId: id, handle, displayName, status: pending ? "en_attente" : "declaree", canPublish: !pending } } }
 }
+/** Une page lue, stable d'un rendu à l'autre (le fournisseur rend la même référence tant que rien ne change). */
+function page<Row>(items: readonly Row[], more: { readonly continueCursor?: string; readonly isDone?: boolean } = {}): CommentPageQuery<Row> {
+  return { data: { items, continueCursor: more.continueCursor ?? "", isDone: more.isDone ?? true }, isLoading: false, error: null, retry: vi.fn() }
+}
+function setThreads(items: readonly CommentThreadView[]) { commentPages = { "": page(items) } }
 function comment(extra: Partial<CommentThreadView> = {}): CommentThreadView {
   return {
     id: "comment-root", author: { personId: "person-a", handle: "membre.a", displayName: "Membre A" },
@@ -78,17 +87,17 @@ beforeEach(() => {
   vi.clearAllMocks()
   mocks.edit.mockReset().mockResolvedValue({ ok: true, value: null })
   mocks.remove.mockReset().mockResolvedValue({ ok: true, value: null })
-  mocks.comment.mockReset().mockResolvedValue({ ok: true, value: null })
+  mocks.comment.mockReset().mockResolvedValue({ ok: true, value: { commentId: "comment-new" } })
   source = { kind: "engine", actions: { editComment: mocks.edit, removeComment: mocks.remove, comment: mocks.comment } }
   session = signedIn()
-  threads = { status: "ready", data: [comment()] }
-  replies = { status: "ready", data: [] }
+  setThreads([comment()])
+  replyPages = {}
 })
 
 describe("Commentaires — édition de l'auteur", () => {
   it.each(["commentaire", "réponse"])("enregistre le %s existant après trim, puis attend le DTO pour le texte et le marqueur", async (kind) => {
     const target = kind === "commentaire" ? comment() : comment({ id: "reply-a", body: "Réponse initiale" })
-    threads = { status: "ready", data: kind === "commentaire" ? [target] : [comment({ isMine: false, replyCount: 1, replies: [target] })] }
+    setThreads(kind === "commentaire" ? [target] : [comment({ isMine: false, replyCount: 1, replies: [target] })])
     const view = mount()
     const user = userEvent.setup()
     await waitFor(() => expect(screen.getByRole("button", { name: t("comments.close") })).toHaveFocus())
@@ -105,7 +114,7 @@ describe("Commentaires — édition de l'auteur", () => {
     expect(screen.queryByText("Texte corrigé")).toBeNull()
     expect(screen.queryByText(`· ${t("comments.edited")}`)).toBeNull()
     const updated = { ...target, body: "Texte corrigé", edited: true }
-    threads = { status: "ready", data: kind === "commentaire" ? [updated] : [comment({ isMine: false, replyCount: 1, replies: [updated] })] }
+    setThreads(kind === "commentaire" ? [updated] : [comment({ isMine: false, replyCount: 1, replies: [updated] })])
     view.update()
     expect(screen.getByText("Texte corrigé")).toBeInTheDocument()
     expect(screen.getByText(`· ${t("comments.edited")}`)).toBeInTheDocument()
@@ -117,7 +126,7 @@ describe("Commentaires — édition de l'auteur", () => {
     { label: "fournisseur sans édition", mine: true, postMine: false, allowed: true, capability: false, removable: true },
     { label: "auteur en attente", mine: true, postMine: false, allowed: false, capability: true, removable: true },
   ])("n'offre pas l'édition : $label", ({ mine, postMine, allowed, capability, removable }) => {
-    threads = { status: "ready", data: [comment({ isMine: mine })] }
+    setThreads([comment({ isMine: mine })])
     if (!capability) source = { ...source, actions: { comment: mocks.comment, removeComment: mocks.remove } }
     if (!allowed) session = signedIn("person-a", true)
     mount({ postIsMine: postMine, canComment: allowed })
@@ -195,7 +204,7 @@ describe("Commentaires — édition de l'auteur", () => {
     await waitFor(() => expect(mocks.edit).toHaveBeenCalledTimes(1))
     if (change === "lecteur") session = signedIn("person-b")
     if (change === "source") source = { ...source }
-    if (change === "commentaire") threads = { status: "ready", data: [comment({ body: "Texte réactif suivant" })] }
+    if (change === "commentaire") setThreads([comment({ body: "Texte réactif suivant" })])
     view.update(change === "post" ? { postId: "post-b" } : change === "droits" ? { canComment: false } : change === "fermeture" ? { open: false } : {})
     expect(screen.queryByDisplayValue("Ancien brouillon")).toBeNull()
     expect(screen.queryByRole("textbox", { name: t("comments.editLabel") })).toBeNull()
@@ -223,9 +232,10 @@ describe("Commentaires — édition de l'auteur", () => {
 
 describe("Commentaires — envoi, retrait et identité", () => {
   it.each(["envoi", "retrait"])("protège aussi %s des doubles gestes et de l'ancien lecteur", async (kind) => {
-    const pending = deferred<ActionResult>()
+    const pending = deferred<ActionResult<{ readonly commentId: string }> | ActionResult>()
+    if (kind === "envoi") mocks.comment.mockReturnValueOnce(pending.promise as Promise<ActionResult<{ readonly commentId: string }>>)
+    else mocks.remove.mockReturnValueOnce(pending.promise as Promise<ActionResult>)
     const action = kind === "envoi" ? mocks.comment : mocks.remove
-    action.mockReturnValueOnce(pending.promise)
     const view = mount()
     if (kind === "envoi") {
       const field = screen.getByRole("textbox", { name: t("comments.label") })
@@ -244,8 +254,9 @@ describe("Commentaires — envoi, retrait et identité", () => {
     view.update()
     const nextDraft = screen.getByRole("textbox", { name: t("comments.label") })
     fireEvent.change(nextDraft, { target: { value: "Nouveau brouillon" } })
-    await act(async () => { pending.resolve({ ok: true, value: null }); await pending.promise })
+    await act(async () => { pending.resolve(kind === "envoi" ? { ok: true, value: { commentId: "comment-tardif" } } : { ok: true, value: null }); await pending.promise })
     expect(nextDraft).toHaveValue("Nouveau brouillon")
+    expect(screen.queryByText("Ancien envoi")).toBeNull()
     expect(mocks.success).not.toHaveBeenCalled()
     expect(mocks.error).not.toHaveBeenCalled()
     expect(screen.queryByRole("button", { name: t("comments.confirmRemove") })).toBeNull()
@@ -271,7 +282,7 @@ describe("Commentaires — envoi, retrait et identité", () => {
   })
 
   it.each([null, "  "])("neutralise un nom incohérent lorsque le handle vaut %s", (handle) => {
-    threads = { status: "ready", data: [comment({ author: { personId: "private-id", handle, displayName: "Nom à ne pas révéler" }, isMine: false })] }
+    setThreads([comment({ author: { personId: "private-id", handle, displayName: "Nom à ne pas révéler" }, isMine: false })])
     mount()
     expect(screen.queryByText("Nom à ne pas révéler")).toBeNull()
     expect(screen.getByText(t("comments.someone"))).toBeInTheDocument()
@@ -286,7 +297,7 @@ describe("Commentaires — envoi, retrait et identité", () => {
     const view = mount()
     fireEvent.click(screen.getByRole("button", { name: t("comments.reply") }))
     expect(screen.getByText(t("comments.replyingTo", { name: "Membre A" }))).toBeInTheDocument()
-    threads = { status: "ready", data: [comment({ author: { personId: "person-a", handle: null, displayName: "Membre A" } })] }
+    setThreads([comment({ author: { personId: "person-a", handle: null, displayName: "Membre A" } })])
     view.update()
     expect(screen.queryByText("Membre A")).toBeNull()
     expect(screen.queryByText(t("comments.replyingTo", { name: "Membre A" }))).toBeNull()

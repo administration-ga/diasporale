@@ -17,7 +17,7 @@ import {
   useOptionalDataSource,
 } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { ArrowLeftIcon, BellOffIcon, BellPlusIcon, ExternalLinkIcon, NewspaperIcon, UserRoundXIcon } from "lucide-react"
+import { ArrowLeftIcon, BellOffIcon, BellPlusIcon, ExternalLinkIcon, FlagIcon, NewspaperIcon, UserRoundXIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useId, useLayoutEffect, useRef, useState } from "react"
 import { toast } from "sonner"
@@ -33,9 +33,11 @@ import { PageAbout } from "@/components/page-about"
 import { PageContentViews } from "@/components/page-content-views"
 import { PageServiceReviews } from "@/components/page-reviews-section"
 import { PageServiceContactEntry, PageServicesSection } from "@/components/page-services-section"
+import { ObjectMenu, ObjectMenuItem } from "@/components/object-menu"
 import { PagePublishButton } from "@/components/page-publications"
 import { PageShareButton } from "@/components/page-share-button"
 import { ProfileCover } from "@/components/profile-images"
+import { ReportContentSheet, ReportedContent, useOptionalContentReports } from "@/components/report-content-sheet"
 import { publicEnv } from "@/lib/env"
 import { routes } from "@/lib/routes"
 
@@ -159,9 +161,10 @@ function PageFiche(props: { view: PageDetailView; membership: MembershipView; ca
   const serviceProvider = isServiceProviderOwnerKind(page.ownerKind)
   const hasPageReviews = serviceProvider && !!source?.serviceReviews?.usePageReviews
   const now = Date.now()
-  return (
+  const directoryHref = routes.pages({ ...(page.ownerKind === "association" || page.ownerKind === "company" ? { ownerKind: page.ownerKind } : {}), ...(page.country ? { country: page.country } : {}) })
+  const fiche = (
     <>
-      <Button asChild variant="ghost" className="self-start"><NextLink href={routes.pages({ ...(page.ownerKind === "association" || page.ownerKind === "company" ? { ownerKind: page.ownerKind } : {}), ...(page.country ? { country: page.country } : {}) })}>
+      <Button asChild variant="ghost" className="self-start"><NextLink href={directoryHref}>
         <ArrowLeftIcon aria-hidden />{t("pageBrowsing.backToDirectory")}
       </NextLink></Button>
       <Card className="flex flex-col overflow-hidden">
@@ -202,6 +205,8 @@ function PageFiche(props: { view: PageDetailView; membership: MembershipView; ca
             <AssociationMembershipEntry pageId={page.id} handle={page.handle} ownerKind={page.ownerKind} />
             <PagePublishButton page={page} membership={props.membership} role={view.viewer.role} />
             <PageShareButton handle={page.handle} name={page.name} />
+            {/* AS-02 : jamais sur la page que l'on administre ou signe. */}
+            {view.viewer.role === null ? <PageReportMenu pageId={page.id} name={page.name} /> : null}
           </div>
           {page.trust === "official" ? <p className="text-[13px] text-muted-foreground">{t("page.officialNote")}</p> : null}
           {page.ownerKind === "institution" ? <InstitutionCaseNotice /> : null}
@@ -261,6 +266,35 @@ function PageFiche(props: { view: PageDetailView; membership: MembershipView; ca
           {!publications && view.morePosts ? <p className="text-[13px] text-muted-foreground">{t("page.morePosts")}</p> : null}
         </PageContentViews>
       </section>
+    </>
+  )
+  if (view.viewer.role !== null) return fiche
+  // AS-02 : signalée depuis son menu, la page se masque aussitôt pour la personne qui l'a signalée.
+  return (
+    <ReportedContent target={{ kind: "page", id: page.id }} back={{ href: directoryHref, label: t("pageBrowsing.backToDirectory") }}>
+      {fiche}
+    </ReportedContent>
+  )
+}
+
+/**
+ * Le menu « … » de la fiche d'une page (AS-02) : « Signaler la page », par la feuille
+ * commune, jamais en bouton plein. Capacité absente : aucun menu. L'écran ne le monte
+ * pas pour qui tient un rôle sur la page.
+ */
+function PageReportMenu(props: { pageId: string; name: string }) {
+  const { t } = useDiasporaleT()
+  const reports = useOptionalContentReports()
+  const [reporting, setReporting] = useState(false)
+  if (reports === null) return null
+  return (
+    <>
+      <ObjectMenu label={t("objectMenu.open", { name: props.name })}>
+        <ObjectMenuItem icon={FlagIcon} tone="danger" onSelect={() => setReporting(true)}>
+          {t("contentReports.action.page")}
+        </ObjectMenuItem>
+      </ObjectMenu>
+      <ReportContentSheet capability={reports} target={{ kind: "page", id: props.pageId }} open={reporting} onOpenChange={setReporting} />
     </>
   )
 }

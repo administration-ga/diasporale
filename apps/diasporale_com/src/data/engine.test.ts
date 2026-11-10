@@ -18,7 +18,9 @@ import {
   toMembershipView,
   toNotificationView,
   toOpenCountries,
+  postModerationOf,
   toPostMediaView,
+  toPublishOutcome,
   toSharedPostView,
   toProfileView,
   toRelationView,
@@ -195,6 +197,9 @@ function fakeConvex(handlers: Record<string, (args: Record<string, unknown>) => 
 }
 
 const NETWORK = { "modules/networks/networks:getBySlug": () => ({ _id: "n-diasporale", slug: "diasporale" }) }
+/** La personne de la session telle que le moteur la lit, avant tout profil (compte neuf). */
+const NEW_PERSON_VIEW: Record<string, unknown> = { _id: "p1", published: false, private: false, badges: [], consentsInForce: [] }
+const NEW_PERSON = { "modules/people/persons:getMyPerson": () => NEW_PERSON_VIEW }
 
 function fakeAuth(overrides: Partial<Record<"send" | "signIn" | "signOut", () => Promise<unknown>>> = {}) {
   const send = vi.fn(overrides.send ?? (async () => ({ data: { success: true }, error: null })))
@@ -244,6 +249,7 @@ describe("écritures de la source « moteur »", () => {
   it("entrer : profil, consentements accordés seulement, puis l'adhésion par la tranche", async () => {
     const { convex, calls } = fakeConvex({
       ...NETWORK,
+      ...NEW_PERSON,
       "modules/people/profile:publishMyProfile": () => ({ handle: "ada" }),
       "modules/people/consents:recordConsent": () => null,
       "modules/diaspora/membership:joinDiasporale": () => ({ status: "en_attente", rootStatus: "declaree" }),
@@ -256,25 +262,110 @@ describe("écritures de la source « moteur »", () => {
       consents: { social_profile: true, directory: false, notifications: true },
       directoryVisibility: "country",
     })
-    expect(result).toEqual({ ok: true, value: { country: "FR" } })
+    expect(result).toEqual({ ok: true, value: { country: "FR", status: "en_attente" } })
     expect(calls.map((call) => call.name)).toEqual([
       "modules/networks/networks:getBySlug",
+      "modules/people/persons:getMyPerson",
       "modules/people/profile:publishMyProfile",
       "modules/people/consents:recordConsent",
       "modules/people/consents:recordConsent",
       "modules/diaspora/membership:joinDiasporale",
     ])
+    // Un compte neuf : le profil naît de l'accueil, avec le nom et l'identifiant choisis.
+    expect(calls[2]?.args).toEqual({ handle: "ada", displayName: "Ada" })
     // Le profil social vaut pour la personne ; les notifications, pour le réseau EXACT que le
     // moteur relit avant tout envoi (`notificationConsent`).
-    expect(calls[2]?.args).toEqual({ purpose: "social_profile", origin: "onboarding" })
-    expect(calls[3]?.args).toEqual({ purpose: "notifications", origin: "onboarding", networkId: "n-diasporale" })
+    expect(calls[3]?.args).toEqual({ purpose: "social_profile", origin: "onboarding" })
+    expect(calls[4]?.args).toEqual({ purpose: "notifications", origin: "onboarding", networkId: "n-diasporale" })
     // Sans consentement à l'annuaire, aucun niveau visible n'est demandé.
-    expect(calls[4]?.args).toMatchObject({ networkId: "n-diasporale", directoryVisibility: "hidden", facet: { countryOfResidence: "fr", city: "Lyon" } })
+    expect(calls[5]?.args).toMatchObject({ networkId: "n-diasporale", directoryVisibility: "hidden", facet: { countryOfResidence: "fr", city: "Lyon" } })
+  })
+
+  it("entrer avec un profil ANTSIA publié (acteur `exterieur`) : identifiant, nom et accroche ne sont ni redemandés ni réécrits (EA-04)", async () => {
+    const outsider = { ...NEW_PERSON_VIEW, handle: "demo.exterieur", displayName: "Brice MOUNDOUNGA", headline: "Membre d'ANTSIA, hors de DIASPORALE (démonstration)", published: true }
+    const { convex, calls } = fakeConvex({
+      ...NETWORK,
+      "modules/people/persons:getMyPerson": () => outsider,
+      "modules/people/consents:recordConsent": () => null,
+      "modules/diaspora/membership:joinDiasporale": () => ({ status: "en_attente", rootStatus: "declaree" }),
+    })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    // Même si l'écran envoyait encore un nom et un identifiant, le profil publié l'emporte.
+    const result = await actions.join({
+      facet: { countryOfResidence: "FR", city: "Paris" },
+      handle: "autre.identifiant",
+      displayName: "Autre Nom",
+      consents: { social_profile: true, directory: false, notifications: false },
+      directoryVisibility: "hidden",
+    })
+    expect(result).toEqual({ ok: true, value: { country: "FR", status: "en_attente" } })
+    expect(calls.map((call) => call.name)).toEqual([
+      "modules/networks/networks:getBySlug",
+      "modules/people/persons:getMyPerson",
+      "modules/people/consents:recordConsent",
+      "modules/diaspora/membership:joinDiasporale",
+    ])
+    // Aucune écriture du profil commun : ni publication, ni nouvelle ligne d'historique d'identifiant.
+    expect(calls.some((call) => call.name.startsWith("modules/people/profile:"))).toBe(false)
+  })
+
+  it("entrer avec un profil retiré : refus tant que la personne ne l'a pas republié, sans aucune écriture (EA-04)", async () => {
+    const withdrawn = { ...NEW_PERSON_VIEW, handle: "ada", displayName: "Ada", headline: "Accroche gardée", published: false }
+    const { convex, calls } = fakeConvex({ ...NETWORK, "modules/people/persons:getMyPerson": () => withdrawn })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.join({
+      facet: { countryOfResidence: "FR" },
+      consents: { social_profile: true, directory: false, notifications: false },
+      directoryVisibility: "hidden",
+    })).toEqual({ ok: false, code: "profile_republish_required" })
+    expect(calls.map((call) => call.name)).toEqual(["modules/networks/networks:getBySlug", "modules/people/persons:getMyPerson"])
+  })
+
+  it("entrer : une entrée interrompue se reprend sans republier le profil déjà né (EA-04)", async () => {
+    let person: Record<string, unknown> = NEW_PERSON_VIEW
+    let joinFails = true
+    const { convex, calls } = fakeConvex({
+      ...NETWORK,
+      "modules/people/persons:getMyPerson": () => person,
+      "modules/people/profile:publishMyProfile": (args) => {
+        person = { ...NEW_PERSON_VIEW, handle: args.handle, displayName: args.displayName, published: true }
+        return { handle: args.handle }
+      },
+      "modules/people/consents:recordConsent": () => null,
+      "modules/diaspora/membership:joinDiasporale": () => {
+        if (joinFails) throw engineError({ code: "rateLimited", retryAfterMs: 1000 })
+        return { status: "declaree", rootStatus: "declaree" }
+      },
+    })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    const input = {
+      facet: { countryOfResidence: "FR" },
+      handle: "ada",
+      displayName: "Ada",
+      consents: { social_profile: true, directory: false, notifications: false },
+      directoryVisibility: "hidden" as const,
+    }
+    expect(await actions.join(input)).toEqual({ ok: false, code: "rate_limited" })
+    joinFails = false
+    expect(await actions.join(input)).toEqual({ ok: true, value: { country: "FR", status: "declaree" } })
+    expect(calls.filter((call) => call.name === "modules/people/profile:publishMyProfile")).toHaveLength(1)
+  })
+
+  it("entrer : un compte neuf sans identifiant choisi est refusé avant toute écriture", async () => {
+    const { convex, calls } = fakeConvex({ ...NETWORK, ...NEW_PERSON })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.join({
+      facet: { countryOfResidence: "FR" },
+      consents: { social_profile: true, directory: false, notifications: false },
+      directoryVisibility: "hidden",
+    })).toEqual({ ok: false, code: "handle_required" })
+    expect(calls.some((call) => call.name.startsWith("modules/people/profile:"))).toBe(false)
   })
 
   it("entrer : l'annuaire et les notifications acceptés sont tous deux posés pour le réseau (NP-01)", async () => {
     const { convex, calls } = fakeConvex({
       ...NETWORK,
+      ...NEW_PERSON,
       "modules/people/profile:publishMyProfile": () => ({ handle: "ada" }),
       "modules/people/consents:recordConsent": () => null,
       "modules/diaspora/membership:joinDiasporale": () => ({ status: "en_attente", rootStatus: "declaree" }),
@@ -297,6 +388,7 @@ describe("écritures de la source « moteur »", () => {
   it("entrer : refus avant toute écriture (consentement, pays), et un refus du moteur traduit", async () => {
     const { convex, calls } = fakeConvex({
       ...NETWORK,
+      ...NEW_PERSON,
       "modules/people/profile:publishMyProfile": () => {
         throw engineError({ code: "handleUnavailable" })
       },
@@ -640,13 +732,14 @@ describe("publications à portée et pays (PD4, lot 7 d'ANTSIA)", () => {
   it("local dans un pays ouvert : portée et pays partent au moteur ; diaspora garde son pays d'origine ; ANTSIA seulement en public", async () => {
     const { convex, calls } = fakeConvex({ ...NETWORK, ...OPEN_FR, "modules/posts/posts:publish": () => ({ postId: "post-1", created: true }) })
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    // Le moteur ne rend pas encore l'état (issue [S1] de FD-04) : rien n'est affirmé, ni « publiée » ni « en relecture ».
     expect(await actions.publish({ body: "Bonjour Lyon", reach: "local", country: "FR", audience: "public", alsoOnRoot: true })).toEqual({
       ok: true,
-      value: { moderation: "published" },
+      value: { moderation: null },
     })
     expect(await actions.publish({ body: "Pour tous", reach: "diaspora", country: "FR", audience: "connections", alsoOnRoot: true })).toEqual({
       ok: true,
-      value: { moderation: "published" },
+      value: { moderation: null },
     })
     expect(calls.filter((call) => call.name === "modules/posts/posts:publish").map((call) => call.args)).toEqual([
       { networkId: "n-diasporale", body: "Bonjour Lyon", audience: "public", reach: "local", country: "FR", alsoOnRoot: true },
@@ -654,12 +747,34 @@ describe("publications à portée et pays (PD4, lot 7 d'ANTSIA)", () => {
     ])
   })
 
-  it("local dans un pays non ouvert : refusé avant toute écriture, tant que le moteur ne retient rien en relecture", async () => {
+  it.each(["published", "pending_review"] as const)("FD-04 : l'état « %s » rendu par le moteur à l'envoi est celui que lit l'auteur", async (state) => {
+    const { convex } = fakeConvex({ ...NETWORK, "modules/posts/posts:publish": () => ({ postId: "post-1", created: true, moderation: state }) })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+    expect(await actions.publish({ body: "Pour tous", reach: "diaspora", country: "FR", audience: "public", alsoOnRoot: false })).toEqual({
+      ok: true,
+      value: { moderation: state },
+    })
+  })
+
+  it("FD-04 : une publication retenue en relecture se dit à son auteur, jamais aux autres lecteurs", () => {
+    const mine = { ...(item("retenue", "diaspora", "FR", "public", true) as object), moderation: "pending_review" } as never
+    const ofSomeoneElse = { ...(item("retenue", "diaspora", "FR") as object), moderation: "pending_review" } as never
+    expect(toFeed([mine], "recents", "FR")[0]).toMatchObject({ id: "retenue", isMine: true, moderation: "pending_review" })
+    expect(toFeed([ofSomeoneElse], "recents", "FR")[0]).toMatchObject({ id: "retenue", isMine: false, moderation: "published" })
+    expect(toWall({ items: [mine], pinned: null })[0]).toMatchObject({ moderation: "pending_review" })
+    // Publiée, ou sans état rendu par le moteur : aucune relecture n'est affirmée.
+    expect(postModerationOf({ isMine: true, moderation: "published" })).toBe("published")
+    expect(postModerationOf({ isMine: true })).toBe("published")
+    expect(toPublishOutcome({ postId: "post-1" })).toEqual({ moderation: null })
+    expect(toPublishOutcome({ postId: "post-1", moderation: "pending_review" })).toEqual({ moderation: "pending_review" })
+  })
+
+  it("local dans un pays non ouvert : refusé avant toute écriture, avec le message du composeur (FD-04)", async () => {
     const { convex, calls } = fakeConvex({ ...NETWORK, ...OPEN_FR })
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
     expect(await actions.publish({ body: "Bonjour Montréal", reach: "local", country: "CA", audience: "public", alsoOnRoot: false })).toEqual({
       ok: false,
-      code: "feature_unavailable",
+      code: "hub_not_open",
     })
     expect(calls.some((call) => call.name === "modules/posts/posts:publish")).toBe(false)
   })
@@ -718,8 +833,9 @@ describe("commentaires par le moteur (PD4, lot 8 d'ANTSIA)", () => {
       "modules/engagement/engagement:removeComment": () => ({ removed: true }),
     })
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
-    expect(await actions.comment({ postId: "post-1", body: "Bonjour" })).toEqual({ ok: true, value: null })
-    expect(await actions.comment({ postId: "post-1", body: "Merci", parentCommentId: "c1" })).toEqual({ ok: true, value: null })
+    // L'identifiant rendu par le moteur : l'écran montre aussitôt le commentaire envoyé (FD-03).
+    expect(await actions.comment({ postId: "post-1", body: "Bonjour" })).toEqual({ ok: true, value: { commentId: "c9" } })
+    expect(await actions.comment({ postId: "post-1", body: "Merci", parentCommentId: "c1" })).toEqual({ ok: true, value: { commentId: "c9" } })
     expect(await actions.removeComment("c9")).toEqual({ ok: true, value: null })
     expect(await actions.comment({ postId: "post-1", body: "x".repeat(1001) })).toEqual({ ok: false, code: "comment_too_long" })
     expect(calls.slice(1, 4)).toEqual([
@@ -860,7 +976,7 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
       if (!uploaded.ok) throw new Error("dépôt refusé")
       expect(
         await actions.publish({ body: "", reach: "local", country: "FR", audience: "public", alsoOnRoot: false, media: [{ upload: uploaded.value, altText: " Le fleuve " }] }),
-      ).toEqual({ ok: true, value: { moderation: "published" } })
+      ).toEqual({ ok: true, value: { moderation: null } })
       expect(calls.find((call) => call.name === "modules/media/media:generateUploadUrl")?.args).toEqual({ networkId: "n-diasporale", usage: "media_social" })
       expect(calls.find((call) => call.name === "modules/posts/posts:publish")?.args).toMatchObject({
         body: "",
@@ -904,7 +1020,7 @@ describe("partage cité par le moteur (EXF-DG-10)", () => {
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
     expect(await actions.publish({ body: "", reach: "local", country: "FR", audience: "public", alsoOnRoot: false, sharedPostId: "post-7" })).toEqual({
       ok: true,
-      value: { moderation: "published" },
+      value: { moderation: null },
     })
     expect(calls.find((call) => call.name === "modules/posts/posts:publish")?.args).toMatchObject({ body: "", sharedPostId: "post-7" })
     await actions.publish({ body: "Une seule fois", reach: "local", country: "FR", audience: "public", alsoOnRoot: false, idempotencyKey: "cle-1" })

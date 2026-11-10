@@ -4,7 +4,7 @@ import { act, cleanup, renderHook } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { COMMENT_MAX_LENGTH } from "../data/types"
-import { commentsView, repliesView } from "./selectors"
+import { commentsPageView, repliesPageView } from "./selectors"
 import { createDemoDataSource } from "./source"
 import { createDemoSeed, DEMO_STATE_VERSION, type DemoComment, type DemoPost, type DemoState } from "./state"
 import { DEMO_STORAGE_KEY, DemoStore } from "./store"
@@ -47,30 +47,30 @@ describe("commentaires de démonstration — édition auteur et lecture réactiv
     const { store, source, edit } = setup()
     const before = store.getState()
     const original = before.comments.find((item) => item.id === commentId)!
-    const { result } = renderHook(() => ({ comments: source.useComments(POST), replies: source.useReplies({ postId: POST, commentId: ROOT }) }))
+    const { result } = renderHook(() => ({ comments: source.useCommentsPage({ postId: POST }), replies: source.useRepliesPage({ postId: POST, commentId: ROOT }) }))
     expect(before.comments.find((item) => item.id === commentId)?.editedAt).toBeUndefined()
     await act(async () => { expect(await edit(commentId, "  Correction #Gabon @mireille.ivindo  ")).toEqual({ ok: true, value: null }) })
     const after = store.getState()
     expect(after).toEqual({ ...before, comments: before.comments.map((item) => item.id === commentId ? { ...item, body: "Correction #Gabon @mireille.ivindo", editedAt: NOW } : item) })
     const view = commentId === ROOT
-      ? result.current.comments.status === "ready" ? result.current.comments.data?.find((item) => item.id === ROOT) : null
-      : result.current.replies.status === "ready" ? result.current.replies.data?.find((item) => item.id === REPLY) : null
+      ? result.current.comments.data?.items.find((item) => item.id === ROOT)
+      : result.current.replies.data?.items.find((item) => item.id === REPLY)
     expect(view).toMatchObject({ id: commentId, body: "Correction #Gabon @mireille.ivindo", createdAt: original.createdAt, edited: true, isMine: true })
-    expect(commentsView(after, POST, PERSON, NOW)?.[0]?.replyCount).toBe(2)
+    expect(commentsPageView(after, POST, PERSON, NOW)?.items?.[0]?.replyCount).toBe(2)
     expect(after.notifications).toBe(before.notifications)
   })
 
   it("relit l'instantané v7 puis persiste la correction sans remise à zéro ni perte voisine", async () => {
     const { store, edit, storage } = setup()
     const before = store.getState()
-    expect(commentsView(before, POST, PERSON, NOW)?.[0]?.edited).toBe(false)
-    expect(repliesView(before, POST, ROOT, PERSON, NOW)?.[0]?.edited).toBe(false)
+    expect(commentsPageView(before, POST, PERSON, NOW)?.items?.[0]?.edited).toBe(false)
+    expect(repliesPageView(before, POST, ROOT, PERSON, NOW)?.items?.[0]?.edited).toBe(false)
     await edit(REPLY, "Réponse corrigée")
     const reloaded = new DemoStore(storage, () => NOW, 0)
     expect(reloaded.getState()).toEqual(store.getState())
     expect(reloaded.getState().version).toBe(DEMO_STATE_VERSION)
     expect(reloaded.getState().sequence).toBe(before.sequence)
-    expect(repliesView(reloaded.getState(), POST, ROOT, PERSON, NOW)?.find((item) => item.id === REPLY)).toMatchObject({ body: "Réponse corrigée", edited: true, createdAt: NOW - 40 })
+    expect(repliesPageView(reloaded.getState(), POST, ROOT, PERSON, NOW)?.items?.find((item) => item.id === REPLY)).toMatchObject({ body: "Réponse corrigée", edited: true, createdAt: NOW - 40 })
     expect(storage.removeItem).not.toHaveBeenCalled()
   })
 

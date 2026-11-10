@@ -1,0 +1,9 @@
+{
+  "composer": {
+    "sent": "Post sent.",
+    "shareSent": "Share sent."
+  },
+  "errors": {
+    "hub_not_open": "This country isn't open yet: posting in its hub waits until it opens. Post to the whole diaspora."
+  }
+}

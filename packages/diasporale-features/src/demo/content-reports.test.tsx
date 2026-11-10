@@ -7,6 +7,7 @@ import {
   CONTENT_REPORT_KINDS,
   CONTENT_REPORT_TARGET_ID_MAX,
   contentReportRefusal,
+  reportReachesRootNetwork,
   type ContentReportInput,
   type ContentReportTarget,
 } from "../data/content-reports-port"
@@ -125,7 +126,7 @@ describe("signalements — démonstration", () => {
 
   it("juge la cible et le motif avant tout : une nature hors contrat, un identifiant illisible, un motif inconnu", async () => {
     const { storage, reports } = setup()
-    expect(await reports.report(hostile({ kind: "post", id: "post-1", reason: "other" }))).toEqual({ ok: false, code: "content_report_target_invalid" })
+    expect(await reports.report(hostile({ kind: "story", id: "story-1", reason: "other" }))).toEqual({ ok: false, code: "content_report_target_invalid" })
     expect(await reports.report(hostile({ kind: "diasporaJobOffer", id: "", reason: "other" }))).toEqual({ ok: false, code: "content_report_target_invalid" })
     expect(await reports.report(hostile({ kind: "diasporaJobOffer", id: " job-1", reason: "other" }))).toEqual({ ok: false, code: "content_report_target_invalid" })
     expect(await reports.report(hostile({ kind: "diasporaJobOffer", id: "x".repeat(CONTENT_REPORT_TARGET_ID_MAX + 1), reason: "other" }))).toEqual({ ok: false, code: "content_report_target_invalid" })
@@ -133,12 +134,41 @@ describe("signalements — démonstration", () => {
     expect(storage.getItem(DEMO_CONTENT_REPORTS_STORAGE_KEY)).toBeNull()
   })
 
-  it("la garde commune admet les neuf natures du contrat et tous les motifs du moteur, dans son ordre (SU01d)", () => {
+  it("la garde commune admet les quatorze natures du contrat et tous les motifs du moteur, dans son ordre (SU01d)", () => {
     expect(REPORT_REASONS).toEqual(CONTENT_REPORT_REASONS)
     for (const kind of CONTENT_REPORT_KINDS) {
       for (const reason of REPORT_REASONS) expect(contentReportRefusal({ kind, id: "cible-1", reason })).toBeNull()
     }
-    expect(CONTENT_REPORT_KINDS).toHaveLength(9)
+    expect(CONTENT_REPORT_KINDS).toHaveLength(14)
+    // Seul le profil part au réseau racine : la feuille le dit.
+    expect(CONTENT_REPORT_KINDS.filter(reportReachesRootNetwork)).toEqual(["person"])
+  })
+
+  it("MD-02 : publication, commentaire, page, évènement et profil d'autrui se masquent ici seulement, rien n'est transmis", async () => {
+    const { storage, reports } = setup()
+    const targets: readonly ContentReportTarget[] = [
+      { kind: "post", id: "post-groupe-1" },
+      { kind: "comment", id: "comment-1" },
+      { kind: "page", id: "page-collectif" },
+      { kind: "event", id: "event-rencontre" },
+      { kind: "person", id: "p-mireille" },
+    ]
+    const hook = renderHook(() => targets.map((target) => reports.useReported(target)))
+    expect(hook.result.current).toEqual([false, false, false, false, false])
+    for (const target of targets) {
+      let result: Awaited<ReturnType<typeof reports.report>> | undefined
+      await act(async () => { result = await reports.report({ ...target, reason: "other" }) })
+      expect(result).toEqual({ ok: true, value: { created: true } })
+    }
+    expect(hook.result.current).toEqual([true, true, true, true, true])
+    expect(stored(storage)?.reports.map((row) => [row.kind, row.targetId])).toEqual(targets.map((target) => [target.kind, target.id]))
+  })
+
+  it("MD-02 : son propre profil est refusé comme le moteur le refuse, sans rien garder", async () => {
+    const { storage, reports } = setup()
+    expect(await reports.report({ kind: "person", id: "p-prisca", reason: "other" })).toEqual({ ok: false, code: "not_found" })
+    expect(storage.getItem(DEMO_CONTENT_REPORTS_STORAGE_KEY)).toBeNull()
+    expect(renderHook(() => reports.useReported({ kind: "person", id: "p-prisca" })).result.current).toBe(false)
   })
 
   it("un stockage illisible, ou celui d'une autre démonstration, n'est jamais relu", () => {

@@ -58,3 +58,14 @@ export { PostComposerSheet, POST_BODY_MAX } from "./components/composer"
 export { isShareable, PostShareProvider, SharedPostEmbed, usePostShare } from "./components/post-share"
 export { RoutingProvider, useRouting, type FeatureRoutes, type LinkComponent } from "./routing"
 export * from "./components/discovery"
+export {
+  ReportContentAction,
+  ReportContentButton,
+  ReportContentSheet,
+  ReportedContent,
+  ReportedContentMask,
+  useOptionalContentReports,
+  type ReportContentActionProps,
+  type ReportContentSheetProps,
+  type ReportedContentProps,
+} from "./components/report-content"

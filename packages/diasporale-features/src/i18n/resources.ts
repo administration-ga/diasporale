@@ -62,6 +62,10 @@ import enReporterNotices from "./locales/en/reporter-notices.json"
 import enFunctionalHealth from "./locales/en/functional-health.json"
 import enLegalTexts from "./locales/en/legal-texts.json"
 import enCallSettings from "./locales/en/call-settings.json"
+import enWelcomeProfile from "./locales/en/welcome-profile.json"
+import enPostPublicationState from "./locales/en/post-publication-state.json"
+import enCommentPages from "./locales/en/comment-pages.json"
+import enObjectReports from "./locales/en/object-reports.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -113,6 +117,10 @@ import frReporterNotices from "./locales/fr/reporter-notices.json"
 import frFunctionalHealth from "./locales/fr/functional-health.json"
 import frLegalTexts from "./locales/fr/legal-texts.json"
 import frCallSettings from "./locales/fr/call-settings.json"
+import frWelcomeProfile from "./locales/fr/welcome-profile.json"
+import frPostPublicationState from "./locales/fr/post-publication-state.json"
+import frCommentPages from "./locales/fr/comment-pages.json"
+import frObjectReports from "./locales/fr/object-reports.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -168,10 +176,14 @@ export const LOCALE_PARTS = {
     "reporter-notices": frReporterNotices,
     "appearance-themes": frAppearanceThemes,
     "functional-health": frFunctionalHealth,
+    "post-publication-state": frPostPublicationState,
+    "comment-pages": frCommentPages,
     "app-errors": frAppErrors,
     "account-menu": frAccountMenu,
     "legal-texts": frLegalTexts,
     "call-settings": frCallSettings,
+    "welcome-profile": frWelcomeProfile,
+    "object-reports": frObjectReports,
   },
   en: {
     diasporale: enDiasporale,
@@ -221,10 +233,14 @@ export const LOCALE_PARTS = {
     "reporter-notices": enReporterNotices,
     "appearance-themes": enAppearanceThemes,
     "functional-health": enFunctionalHealth,
+    "post-publication-state": enPostPublicationState,
+    "comment-pages": enCommentPages,
     "app-errors": enAppErrors,
     "account-menu": enAccountMenu,
     "legal-texts": enLegalTexts,
     "call-settings": enCallSettings,
+    "welcome-profile": enWelcomeProfile,
+    "object-reports": enObjectReports,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 
