@@ -1,6 +1,8 @@
 # Couleurs par famille dans DIASPORALE — 3 novembre 2026
 
-**La charte v4 se voit maintenant à l'écran : 29 boutons et l'icône de réaction portent la couleur de leur famille. Rien n'est publié.** La démonstration en ligne garde les boutons d'avant tant que le propriétaire n'a pas donné son accord.
+> **Note du 10/11/2026.** Ce rapport a été écrit avant la publication. La PR 31 (administration-ga/diasporale#31) a été fusionnée le 3/11/2026 à 7 h 33, puis mise en ligne sur la démonstration le 3/11 à 7 h 42 : les boutons décrits ici y sont servis depuis. Le reste du rapport est inchangé.
+
+**La charte v4 se voit maintenant à l'écran : 29 boutons et l'icône de réaction portent la couleur de leur famille.** Ils sont en ligne sur la démonstration depuis le 3/11 (note ci-dessus).
 
 Comparatifs avant/après, tous pris sur le serveur local avec le compte fictif Prisca (Mireille pour les suggestions) :
 
