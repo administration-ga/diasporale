@@ -68,6 +68,7 @@ import { DropdownMenu, Popover } from "radix-ui"
 import { createContext, Suspense, useContext, useEffect, useId, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
+import { navDestinationOf, type NavDestination } from "@/lib/nav-destinations"
 import { routes } from "@/lib/routes"
 
 import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
@@ -91,31 +92,11 @@ export function useComposer(): ComposerControl {
 // Arborescence (DG-005) — cinq destinations, un espace personnel, le compte
 // ═══════════════════════════════════════════════════════════════
 
-type EntryId =
-  | "feed"
-  | "explore"
-  | "services"
-  | "communities"
-  | "messages"
-  | "myRequests"
-  | "myActivity"
-  | "myAssociations"
-  | "myApplications"
-  | "myMentoring"
-  | "moderation"
-  | "pilot"
-  | "relations"
-  | "bookmarks"
-  | "sponsor"
-  | "profile"
-  | "settings"
-  | "myData"
-  | "legalNotice"
-  | "privacy"
-  | "terms"
-  | "communityRules"
-  | "contact"
-  | "charte"
+/**
+ * Les entrées : celles de la table des destinations (`lib/nav-destinations`), sous lesquelles
+ * chaque page de membre se range, puis l'ancre « Mes données » et les textes du site.
+ */
+type EntryId = NavDestination | "myData" | "legalNotice" | "privacy" | "terms" | "communityRules" | "contact" | "charte"
 
 /** Une entrée de navigation : une adresse de la table des routes, son icône, sa clé de libellé, son état courant. */
 interface NavEntry {
@@ -126,9 +107,6 @@ interface NavEntry {
   /** Le chemin courant relève de cette entrée : `aria-current="page"`. */
   readonly active: boolean
 }
-
-/** Un segment fictif : la table des routes donne la forme d'une adresse paramétrée, jamais la coque. */
-const SAMPLE_SEGMENT = "segment"
 
 /** Le chemin d'une adresse de la table, sans requête ni ancre. */
 function pathOf(href: string): string {
@@ -151,105 +129,40 @@ function withinAny(pathname: string, hrefs: readonly string[]): boolean {
   })
 }
 
-/** La gestion d'une page (`/pages/<page>/gerer…`) relève de « Mon activité », sa simple lecture non. */
-function managesPage(pathname: string): boolean {
-  const [head = "", tail = ""] = pathOf(routes.pageManage(SAMPLE_SEGMENT)).split(SAMPLE_SEGMENT)
-  if (head === "" || tail === "" || !pathname.startsWith(head)) return false
-  const rest = pathname.slice(head.length)
-  const cut = rest.indexOf("/")
-  if (cut <= 0) return false
-  const after = rest.slice(cut)
-  return after === tail || after.startsWith(`${tail}/`)
-}
-
 /**
  * Les cinq destinations, dans cet ordre : Fil, Explorer, Services, Communautés, Messages.
  * Messages n'existe qu'avec iCom (même règle qu'avant) : sans lui, la barre garde
- * quatre onglets, sans trou. Correspondances : une publication seule et les statuts
- * relèvent du fil ; l'annuaire des membres d'Explorer ; les hubs pays de Communautés.
+ * quatre onglets, sans trou. Ce qui relève de chacune ne s'écrit pas ici : la table des
+ * destinations le dit pour toute adresse de la table des routes (UX-05, décision 5).
  */
-function primaryEntries(membership: MembershipView, pathname: string, withMessages: boolean): NavEntry[] {
+function primaryEntries(current: NavDestination | null, withMessages: boolean): NavEntry[] {
   const entries: NavEntry[] = [
-    {
-      id: "feed",
-      href: routes.feed(),
-      icon: HouseIcon,
-      labelKey: "nav.feed",
-      active: withinAny(pathname, [routes.feed(), routes.post(SAMPLE_SEGMENT), routes.stories()]),
-    },
-    {
-      id: "explore",
-      href: routes.explore(),
-      icon: CompassIcon,
-      labelKey: "nav.explore",
-      active: withinAny(pathname, [routes.explore(), routes.members()]),
-    },
-    {
-      id: "services",
-      href: routes.services(),
-      icon: StoreIcon,
-      labelKey: "nav.services",
-      active: withinAny(pathname, [routes.services(), routes.serviceOffer(SAMPLE_SEGMENT)]),
-    },
-    {
-      id: "communities",
-      href: routes.communities(),
-      icon: UsersRoundIcon,
-      labelKey: "nav.communities",
-      active: withinAny(pathname, [routes.communities(), routes.hub(membership.facet.countryOfResidence)]),
-    },
+    { id: "feed", href: routes.feed(), icon: HouseIcon, labelKey: "nav.feed", active: current === "feed" },
+    { id: "explore", href: routes.explore(), icon: CompassIcon, labelKey: "nav.explore", active: current === "explore" },
+    { id: "services", href: routes.services(), icon: StoreIcon, labelKey: "nav.services", active: current === "services" },
+    { id: "communities", href: routes.communities(), icon: UsersRoundIcon, labelKey: "nav.communities", active: current === "communities" },
   ]
   if (withMessages) {
-    entries.push({ id: "messages", href: routes.messages(), icon: MessageCircleIcon, labelKey: "nav.messages", active: withinAny(pathname, [routes.messages()]) })
+    entries.push({ id: "messages", href: routes.messages(), icon: MessageCircleIcon, labelKey: "nav.messages", active: current === "messages" })
   }
   return entries
 }
 
 /** L'espace personnel : le rail du bureau le montre sous les destinations, le menu du compte le reprend. */
-function personalEntries(pathname: string, withRelations: boolean): NavEntry[] {
+function personalEntries(current: NavDestination | null, withRelations: boolean): NavEntry[] {
   const relations: NavEntry[] = withRelations
-    ? [{ id: "relations", href: routes.relations(), icon: UserRoundCheckIcon, labelKey: "nav.relations", active: withinAny(pathname, [routes.relations()]) }]
+    ? [{ id: "relations", href: routes.relations(), icon: UserRoundCheckIcon, labelKey: "nav.relations", active: current === "relations" }]
     : []
   return [
-    {
-      id: "myRequests",
-      href: routes.myServiceRequests(),
-      icon: ClipboardListIcon,
-      labelKey: "nav.myRequests",
-      active: withinAny(pathname, [routes.myServiceRequests(), routes.serviceRequest(SAMPLE_SEGMENT)]),
-    },
-    {
-      id: "myActivity",
-      href: routes.myActivity(),
-      icon: BriefcaseBusinessIcon,
-      labelKey: "nav.myActivity",
-      active: withinAny(pathname, [routes.myActivity(), routes.newPage()]) || managesPage(pathname),
-    },
-    {
-      id: "myAssociations",
-      href: routes.myAssociations(),
-      icon: HeartHandshakeIcon,
-      labelKey: "nav.myAssociations",
-      active: withinAny(pathname, [routes.myAssociations()]),
-    },
+    { id: "myRequests", href: routes.myServiceRequests(), icon: ClipboardListIcon, labelKey: "nav.myRequests", active: current === "myRequests" },
+    { id: "myActivity", href: routes.myActivity(), icon: BriefcaseBusinessIcon, labelKey: "nav.myActivity", active: current === "myActivity" },
+    { id: "myAssociations", href: routes.myAssociations(), icon: HeartHandshakeIcon, labelKey: "nav.myAssociations", active: current === "myAssociations" },
     // Vague H du plan global : candidatures (DG-025) et mentorat (DG-024).
-    {
-      id: "myApplications",
-      href: routes.myApplications(),
-      icon: FileTextIcon,
-      labelKey: "nav.myApplications",
-      active: withinAny(pathname, [routes.myApplications()]),
-    },
-    {
-      id: "myMentoring",
-      href: routes.myMentoring(),
-      icon: GraduationCapIcon,
-      labelKey: "nav.myMentoring",
-      active: withinAny(pathname, [routes.myMentoring()]),
-    },
+    { id: "myApplications", href: routes.myApplications(), icon: FileTextIcon, labelKey: "nav.myApplications", active: current === "myApplications" },
+    { id: "myMentoring", href: routes.myMentoring(), icon: GraduationCapIcon, labelKey: "nav.myMentoring", active: current === "myMentoring" },
     ...relations,
-    { id: "bookmarks", href: routes.bookmarks(), icon: BookmarkIcon, labelKey: "bookmarks.title", active: withinAny(pathname, [routes.bookmarks()]) },
-    { id: "sponsor", href: routes.sponsor(), icon: HandshakeIcon, labelKey: "nav.sponsor", active: withinAny(pathname, [routes.sponsor()]) },
+    { id: "bookmarks", href: routes.bookmarks(), icon: BookmarkIcon, labelKey: "bookmarks.title", active: current === "bookmarks" },
+    { id: "sponsor", href: routes.sponsor(), icon: HandshakeIcon, labelKey: "nav.sponsor", active: current === "sponsor" },
   ]
 }
 
@@ -264,34 +177,22 @@ const NO_PILOT_METRICS: Pick<PilotMetricsCapability, "useAccess"> = { useAccess:
  * Les entrées réservées aux responsables que le serveur reconnaît (modération par pays, mesure du
  * pilote) : absentes pour tout autre membre, et le serveur rejuge chaque lecture derrière elles.
  */
-function responsibleEntries(pathname: string, access: { readonly moderation: boolean; readonly pilot: boolean }): NavEntry[] {
+function responsibleEntries(current: NavDestination | null, access: { readonly moderation: boolean; readonly pilot: boolean }): NavEntry[] {
   const entries: NavEntry[] = []
   if (access.moderation) {
-    entries.push({ id: "moderation", href: routes.moderationDesk(), icon: ShieldCheckIcon, labelKey: "nav.moderation", active: withinAny(pathname, [routes.moderationDesk()]) })
+    entries.push({ id: "moderation", href: routes.moderationDesk(), icon: ShieldCheckIcon, labelKey: "nav.moderation", active: current === "moderation" })
   }
   if (access.pilot) {
-    entries.push({ id: "pilot", href: routes.pilotDashboard(), icon: ChartColumnIcon, labelKey: "pilotMetrics.nav", active: withinAny(pathname, [routes.pilotDashboard()]) })
+    entries.push({ id: "pilot", href: routes.pilotDashboard(), icon: ChartColumnIcon, labelKey: "pilotMetrics.nav", active: current === "pilot" })
   }
   return entries
 }
 
 /** Le menu du compte, ouvert depuis l'avatar : profil, réglages, l'espace personnel, mes données. */
-function accountEntries(membership: MembershipView, pathname: string, personal: readonly NavEntry[]): NavEntry[] {
+function accountEntries(membership: MembershipView, current: NavDestination | null, personal: readonly NavEntry[]): NavEntry[] {
   return [
-    {
-      id: "profile",
-      href: routes.profile(membership.handle),
-      icon: UserRoundIcon,
-      labelKey: "nav.profile",
-      active: withinAny(pathname, [routes.profile(membership.handle)]),
-    },
-    {
-      id: "settings",
-      href: routes.settings(),
-      icon: Settings2Icon,
-      labelKey: "nav.settings",
-      active: withinAny(pathname, [routes.settings(), routes.attestation()]),
-    },
+    { id: "profile", href: routes.profile(membership.handle), icon: UserRoundIcon, labelKey: "nav.profile", active: current === "profile" },
+    { id: "settings", href: routes.settings(), icon: Settings2Icon, labelKey: "nav.settings", active: current === "settings" },
     ...personal,
     // Une ancre des réglages : le chemin seul ne la distingue pas, elle n'est donc jamais « courante ».
     { id: "myData", href: routes.settingsData(), icon: DatabaseIcon, labelKey: "nav.myData", active: false },
@@ -397,17 +298,19 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   const canPublish = membership.canPublish
   // Inconnus tant qu'ils ne sont pas lus : le composeur n'affirme alors aucun pays fermé (HB-01).
   const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : null
-  const primary = primaryEntries(membership, pathname, icom !== null)
+  // Une seule entrée relève du chemin courant, rail et barre basse confondus (UX-05).
+  const current = navDestinationOf(pathname, membership.handle)
+  const primary = primaryEntries(current, icom !== null)
   const desk = (useModerationDesk() ?? NO_MODERATION_DESK).useDesk(membership.personId)
   const pilot = (usePilotMetrics() ?? NO_PILOT_METRICS).useAccess()
   const personal = [
-    ...personalEntries(pathname, network !== null),
-    ...responsibleEntries(pathname, {
+    ...personalEntries(current, network !== null),
+    ...responsibleEntries(current, {
       moderation: desk.status === "ready" && desk.data !== null,
       pilot: pilot.status === "ready" && pilot.data.allowed,
     }),
   ]
-  const account = accountEntries(membership, pathname, personal)
+  const account = accountEntries(membership, current, personal)
   const information = informationEntries(pathname)
   const openComposer = () => setComposerOpen(true)
 

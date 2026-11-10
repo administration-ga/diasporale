@@ -1,7 +1,15 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
 import { RoutingProvider, type FeatureRoutes, type LinkComponent } from "@diasporale/features"
-import { DataSourceProvider, type DiasporaleActions, type MembershipView } from "@diasporale/features/data"
+import {
+  DataSourceProvider,
+  type DiasporaleActions,
+  type DiasporaleDataSource,
+  type Loadable,
+  type MembershipView,
+  type ModerationDeskView,
+  type PilotMetricsAccessView,
+} from "@diasporale/features/data"
 import { DemoStore, createDemoDataSource } from "@diasporale/features/demo"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
@@ -12,6 +20,7 @@ import { toast } from "sonner"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { IcomNetwork } from "@/lib/icom-state"
+import { ACCOUNT_DESTINATIONS, PRIMARY_DESTINATIONS, ROUTE_DESTINATIONS, type NavDestination, type RouteKey } from "@/lib/nav-destinations"
 import { routes } from "@/lib/routes"
 
 import { AppShell, useComposer } from "./app-shell"
@@ -113,13 +122,35 @@ function ComposerProbe() {
   )
 }
 
+/** Un responsable reconnu par le serveur : modérateur du réseau et lecteur de la mesure du pilote (lectures stables). */
+const RESPONSIBLE_DESK: Loadable<ModerationDeskView | null> = {
+  status: "ready",
+  data: { role: "network_admin", networkWide: true, canReviewAppeals: true, canManageTeams: true, teams: [] },
+}
+const PILOT_ALLOWED: Loadable<PilotMetricsAccessView> = { status: "ready", data: { allowed: true } }
+
+function withResponsibleAccess(source: DiasporaleDataSource): DiasporaleDataSource {
+  const { moderationDesk, pilotMetrics } = source
+  if (!moderationDesk || !pilotMetrics) throw new Error("La démonstration sert la modération et la mesure du pilote.")
+  return { ...source, moderationDesk: { ...moderationDesk, useDesk: () => RESPONSIBLE_DESK }, pilotMetrics: { ...pilotMetrics, useAccess: () => PILOT_ALLOWED } }
+}
+
 function renderShell(
-  options: { pathname?: string; membership?: MembershipView; icom?: boolean; network?: boolean; locale?: "fr" | "en"; actions?: Partial<DiasporaleActions> } = {},
+  options: {
+    pathname?: string
+    membership?: MembershipView
+    icom?: boolean
+    network?: boolean
+    responsible?: boolean
+    locale?: "fr" | "en"
+    actions?: Partial<DiasporaleActions>
+  } = {},
 ) {
   mocks.pathname = options.pathname ?? "/fil"
   mocks.icom = options.icom ? NETWORK : null
   mocks.network = options.network ?? options.icom ? NETWORK : null
-  const source = createDemoDataSource(new DemoStore(null, () => NOW, 0))
+  const demo = createDemoDataSource(new DemoStore(null, () => NOW, 0))
+  const source = options.responsible ? withResponsibleAccess(demo) : demo
   return render(
     <I18nProvider locale={options.locale ?? "fr"}>
       <DataSourceProvider source={{ ...source, actions: { ...source.actions, ...options.actions } }}>
@@ -249,6 +280,21 @@ describe("coque — les cinq destinations (DG-005)", () => {
     ["/pays/ca", "Communautés"],
     ["/messages", "Messages"],
     ["/messages/conversation-7", "Messages"],
+    // Décision 5 du plan 02 (UX-05) : la vie communautaire sous Communautés, les pages et les autres membres sous Explorer.
+    ["/entraide", "Communautés"],
+    ["/entraide/question-1", "Communautés"],
+    ["/kit-arrivee", "Communautés"],
+    ["/mentorat/mentor-1", "Communautés"],
+    ["/emploi/offre-1", "Communautés"],
+    ["/talents", "Communautés"],
+    ["/agenda", "Communautés"],
+    ["/pages/asso-lyon/groupe", "Communautés"],
+    ["/pages/asso-lyon/evenements/evt-42", "Communautés"],
+    ["/pages", "Explorer"],
+    ["/pages/asso-lyon", "Explorer"],
+    ["/pages/asso-lyon/revendiquer", "Explorer"],
+    ["/@autre.membre", "Explorer"],
+    ["/@autre.membre/albums/album-1", "Explorer"],
   ])("sur %s, seule la destination « %s » est courante", (pathname, current) => {
     renderShell({ pathname, icom: true })
     const { rail, bar } = mainNavigations()
@@ -256,7 +302,7 @@ describe("coque — les cinq destinations (DG-005)", () => {
     expect(currentLinks(rail)).toEqual([current])
   })
 
-  it.each(["/servicesx", "/filtre", "/messagesx", "/parametres", "/@autre.membre", "/pages/asso-lyon"])(
+  it.each(["/servicesx", "/filtre", "/messagesx", "/parametres", "/@awa.demo", "/mes-demandes"])(
     "sur %s, aucune destination principale n'est courante",
     (pathname) => {
       renderShell({ pathname, icom: true })
@@ -312,6 +358,76 @@ describe("coque — l'espace personnel du rail", () => {
   it("lire une page ou la revendiquer ne relève pas de Mon activité", () => {
     renderShell({ pathname: "/pages/asso-lyon/revendiquer", network: true })
     expect(currentLinks(personal())).toEqual([])
+  })
+})
+
+describe("coque — une seule entrée courante pour chaque route de membre (UX-05)", () => {
+  const LABEL_KEYS: Readonly<Record<NavDestination, string>> = {
+    feed: "nav.feed",
+    explore: "nav.explore",
+    services: "nav.services",
+    communities: "nav.communities",
+    messages: "nav.messages",
+    myRequests: "nav.myRequests",
+    myActivity: "nav.myActivity",
+    myAssociations: "nav.myAssociations",
+    myApplications: "nav.myApplications",
+    myMentoring: "nav.myMentoring",
+    relations: "nav.relations",
+    bookmarks: "bookmarks.title",
+    sponsor: "nav.sponsor",
+    moderation: "nav.moderation",
+    pilot: "pilotMetrics.nav",
+    profile: "nav.profile",
+    settings: "nav.settings",
+  }
+  const PRIMARY = new Set<NavDestination>(PRIMARY_DESTINATIONS)
+  const ACCOUNT = new Set<NavDestination>(ACCOUNT_DESTINATIONS)
+
+  /** Une adresse de la table, composée en donnant la même valeur à chaque paramètre : la route dit elle-même son chemin. */
+  function compose(key: RouteKey, value: string): string {
+    const route = routes[key] as unknown as (...values: readonly string[]) => string
+    return route(value, value, value).split(/[?#]/)[0] ?? ""
+  }
+
+  /** Toutes les adresses de membre de la table ; un profil l'est deux fois : le sien, puis celui d'un autre membre. */
+  const CASES = (Object.keys(ROUTE_DESTINATIONS) as RouteKey[]).flatMap((key): [string, string, NavDestination][] => {
+    const home = ROUTE_DESTINATIONS[key]
+    if (home.kind === "outside") return []
+    if (home.kind === "person") return [[key, compose(key, MEMBER.handle), "profile"], [key, compose(key, "autre.membre"), "explore"]]
+    return [[key, compose(key, "valeur-1"), home.destination]]
+  })
+
+  it("parcourt toutes les adresses de membre de la table des routes", () => {
+    expect(CASES.length).toBeGreaterThan(60)
+  })
+
+  it.each(CASES)("%s (%s) : seule l'entrée de « %s » est courante, au rail comme à la barre basse", async (_key, pathname, destination) => {
+    renderShell({ pathname, icom: true, network: true, responsible: true })
+    const label = t(LABEL_KEYS[destination])
+    const { rail, bar } = mainNavigations()
+    const personal = screen.getByRole("navigation", { name: "Mon espace" })
+    const marked = () => Array.from(document.querySelectorAll("[aria-current]")).map((element) => element.textContent)
+    if (PRIMARY.has(destination)) {
+      expect(currentLinks(rail)).toEqual([label])
+      expect(currentLinks(bar)).toEqual([label])
+      expect(currentLinks(personal)).toEqual([])
+      expect(marked()).toEqual([label, label])
+      return
+    }
+    expect(currentLinks(rail)).toEqual([])
+    expect(currentLinks(bar)).toEqual([])
+    if (!ACCOUNT.has(destination)) {
+      expect(currentLinks(personal)).toEqual([label])
+      expect(marked()).toEqual([label])
+      return
+    }
+    // Sous l'avatar : ni le rail ni la barre ne marquent d'entrée, le menu du compte marque la sienne.
+    expect(marked()).toEqual([])
+    await userEvent.setup().click(accountTrigger("dialog"))
+    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
+    expect(currentLinks(sheet)).toEqual([label])
+    expect(marked()).toEqual([label])
   })
 })
 
