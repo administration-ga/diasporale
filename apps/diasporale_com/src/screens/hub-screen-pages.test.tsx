@@ -75,6 +75,7 @@ const HUB: CountryHubView = {
     upcomingEvents: { kind: "value", value: 0 },
   },
   countersSource: "materialized",
+  countersComputedAt: Date.UTC(2026, 10, 9, 2, 30),
   officialPages: [],
   associations: [],
   companies: [],

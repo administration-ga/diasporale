@@ -146,7 +146,8 @@ export function toOpenCountries(hubs: readonly OpenHubView[]): OpenCountryView[]
  * `diaspora.hubEvents.listCountryEvents`) : la liste jointe reste vide. Leur
  * compteur n'est « matérialisé » que si le passage nocturne l'a compté exactement
  * (`upcomingEventsComputedAt`) ; sinon il est « non mesuré » et l'écran ne montre
- * aucun nombre (EV-02).
+ * aucun nombre (EV-02). La date du dernier passage (`countersComputedAt`) est
+ * reprise telle quelle (HB-05) : sans elle, aucun compteur ne se dit mesuré.
  */
 export function toCountryHubView(hub: HubView, country: CountryCode): CountryHubView {
   return {
@@ -154,6 +155,7 @@ export function toCountryHubView(hub: HubView, country: CountryCode): CountryHub
     open: hub.open,
     counters: hub.counters,
     countersSource: "materialized",
+    countersComputedAt: typeof hub.countersComputedAt === "number" ? hub.countersComputedAt : null,
     officialPages: [],
     associations: [],
     companies: [],
