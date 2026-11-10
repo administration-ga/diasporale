@@ -608,3 +608,28 @@ describe("Guichet — responsables du réseau (MD-01)", () => {
     expect(mocks.success).toHaveBeenCalledWith(translate("moderationDesk.responsibles.changed", { name: "Ruth Fixture", role: translate("moderationDesk.responsibles.role.network_admin") }))
   })
 })
+
+describe("Guichet — rôle posé puis retiré, effet au rendu suivant (LX-03)", () => {
+  it("un administrateur nommé voit les recours et les responsables ; rétrogradé il les perd, retiré le guichet se dit indisponible", () => {
+    mocks.params = new URLSearchParams("onglet=equipe")
+    const fake = fakeDesk()
+    let current: Loadable<ModerationDeskView | null> = ready(ADMIN)
+    mocks.desk = { ...fake.desk, useDesk: () => current } satisfies ModerationDeskCapability
+    const { rerender } = render(tree())
+    const links = () => within(screen.getByRole("navigation", { name: text("moderationDesk.tabsLabel") })).getAllByRole("link").map((link) => link.getAttribute("href"))
+    expect(links()).toEqual(["/moderation?onglet=file", "/moderation?onglet=recours", "/moderation?onglet=equipe"])
+    expect(screen.getByRole("heading", { name: text("moderationDesk.responsibles.title") })).toBeInTheDocument()
+
+    // Rétrogradé à la modération du réseau : plus de recours, plus de nomination ; la file reste.
+    current = ready(MODERATOR)
+    rerender(tree())
+    expect(links()).toEqual(["/moderation?onglet=file", "/moderation?onglet=equipe"])
+    expect(screen.queryByRole("heading", { name: text("moderationDesk.responsibles.title") })).toBeNull()
+
+    // Retiré, sans équipe : le refus indistinct du guichet, rien n'est révélé.
+    current = ready(null)
+    rerender(tree())
+    expect(screen.getByText(text("moderationDesk.unavailable.title"))).toBeInTheDocument()
+    expect(screen.queryByRole("navigation", { name: text("moderationDesk.tabsLabel") })).toBeNull()
+  })
+})
