@@ -45,7 +45,12 @@ export type CounterPresentation =
   | { readonly kind: "below_threshold"; readonly threshold: number }
 
 export interface HubCountersPresentation {
-  /** Aucun contenu : le hub est annoncé « bientôt disponible », sans compteurs. */
+  /**
+   * Ni membre visible, ni association, ni entreprise : le hub est annoncé « bientôt
+   * disponible », sans compteurs. Les évènements n'en décident pas : le moteur ne
+   * les compte pas encore (son passage écrit zéro jusqu'à EV-05), et ce zéro non
+   * mesuré ne fonde aucun jugement (EV-02).
+   */
   readonly dormant: boolean
   readonly members: CounterPresentation
   readonly associations: CounterPresentation
@@ -75,7 +80,7 @@ export function presentHubCounters(
     companies: sanitize(counters.companies),
     upcomingEvents: sanitize(counters.upcomingEvents),
   }
-  const dormant = values.members + values.associations + values.companies + values.upcomingEvents === 0
+  const dormant = values.members + values.associations + values.companies === 0
   return {
     dormant,
     members: presentMemberCounter(values.members, threshold),

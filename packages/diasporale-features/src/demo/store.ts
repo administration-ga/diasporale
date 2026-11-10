@@ -621,6 +621,9 @@ export class DemoStore {
       country: input.country ?? viewer.membership.facet.countryOfResidence,
     })
     if (!scope.ok) return fail(scope.code)
+    // Même règle que l'adaptateur du moteur (HB-01) : un pays pas encore ouvert ne reçoit pas de
+    // publication locale tant qu'aucune relecture par pays n'existe (HB-11) ; la diaspora reste ouverte.
+    if (scope.value.reach === "local" && !this.state.openCountries.includes(scope.value.country)) return fail("feature_unavailable")
     const policy = publicationPolicy({
       scope: scope.value,
       openCountries: this.state.openCountries,

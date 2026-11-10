@@ -17,6 +17,7 @@ import { useMemo, type ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { routes } from "@/lib/routes"
+import { filledButtons } from "@/test-utils"
 
 import { aidFilterFromParams, MutualAidItemScreen, MutualAidScreen } from "./mutual-aid-screens"
 
@@ -216,6 +217,23 @@ describe("/entraide/<id> — une question", () => {
     expect(await screen.findByText("La réponse n'est plus retenue.")).toBeInTheDocument()
     await waitFor(() => expect(screen.queryByRole("region", { name: "Réponse retenue" })).not.toBeInTheDocument())
     expect(await screen.findAllByRole("button", { name: "Retenir cette réponse" })).toHaveLength(2)
+  })
+
+  it("DS-02 : « Retenir cette réponse » reste neutre ; la réponse retenue porte une pastille en encre de succès", async () => {
+    mount("p-prisca", <MutualAidItemScreen itemId="aid-q-1" />)
+    const accepted = await screen.findByRole("region", { name: "Réponse retenue" })
+    const mention = within(accepted).getByText("Réponse retenue")
+    expect(mention).toHaveClass("rounded-full", "bg-success-soft", "text-success-ink")
+    expect(mention).not.toHaveClass("text-primary")
+    expect(filledButtons(accepted)).toEqual([])
+
+    const keep = await screen.findAllByRole("button", { name: "Retenir cette réponse" })
+    for (const button of keep) {
+      expect(button).toHaveClass("bg-neutral")
+      const answer = button.closest("li")
+      if (answer === null) throw new Error("Réponse de fixture absente")
+      expect(filledButtons(answer)).toEqual([])
+    }
   })
 
   it("un autre membre répond ; il ne peut ni retenir, ni clore ; le contact privé exige d'abord une relation", async () => {

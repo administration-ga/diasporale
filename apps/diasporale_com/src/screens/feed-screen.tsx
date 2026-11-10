@@ -239,21 +239,26 @@ function ListReturn(props: { postId: string | null; fallback: RefObject<HTMLAnch
   return null
 }
 
-/** Rail droit (≥ 1 280 px) : le hub de mon pays et ses prochains évènements. */
-function FeedRail(props: { membership: MembershipView }) {
+/**
+ * Rail droit (≥ 1 280 px) : le hub de mon pays et ses prochains évènements. Tant
+ * que le fournisseur ne mesure pas les évènements d'un pays (EV-02), le rail ne
+ * montre ni leur nombre ni « aucun évènement » : il dit où ils se trouvent.
+ */
+export function FeedRail(props: { membership: MembershipView }) {
   const { t, locale } = useDiasporaleT()
   const country = props.membership.facet.countryOfResidence
   const hub = useCountryHub(country)
   const now = Date.now()
+  const eventsMeasured = hub.status === "ready" && hub.data.eventsSource !== "unmeasured"
   return (
     <>
       <Card className="p-4">
         <p className="font-mono text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">{t("rail.myHub")}</p>
         <p className="mt-1 font-display text-xl font-bold">{countryName(country, locale)}</p>
         {hub.status === "ready" && !hub.data.counters.dormant ? (
-          <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className={eventsMeasured ? "mt-3 grid grid-cols-2 gap-3" : "mt-3"}>
             <StatCounter value={hub.data.counters.associations} label={t("hub.counters.associations")} />
-            <StatCounter value={hub.data.counters.upcomingEvents} label={t("hub.counters.events")} />
+            {eventsMeasured ? <StatCounter value={hub.data.counters.upcomingEvents} label={t("hub.counters.events")} /> : null}
           </div>
         ) : null}
         <NextLink
@@ -269,7 +274,19 @@ function FeedRail(props: { membership: MembershipView }) {
         <h2 id="rail-evenements" className="font-display text-lg font-bold">
           {t("rail.upcoming")}
         </h2>
-        {hub.status === "ready" && hub.data.events.length > 0 ? (
+        {/* Rien n'est affirmé avant la lecture du hub : ni liste, ni « aucun évènement ». */}
+        {hub.status !== "ready" ? null : hub.data.eventsSource === "unmeasured" ? (
+          <>
+            <p className="text-[13px] text-muted-foreground">{t("rail.eventsUnlisted")}</p>
+            <NextLink
+              href={routes.agenda()}
+              className="inline-flex min-h-10 items-center gap-1 self-start text-sm font-semibold text-primary hover:underline focus-visible:shadow-focus"
+            >
+              {t("eventCalendar.agendaTitle")}
+              <ArrowRightIcon className="size-4" aria-hidden />
+            </NextLink>
+          </>
+        ) : hub.data.events.length > 0 ? (
           hub.data.events.slice(0, 3).map((event) => <EventCard key={event.id} event={event} now={now} hubCountry={country} />)
         ) : (
           <p className="text-[13px] text-muted-foreground">{t("rail.noEvents")}</p>

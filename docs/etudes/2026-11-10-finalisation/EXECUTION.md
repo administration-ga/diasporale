@@ -63,7 +63,7 @@ Plan : [`02_COQUE_NAVIGATION_CHARTE_ACCESSIBILITE.md`](02_COQUE_NAVIGATION_CHART
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| DS-02 | Six boutons à trancher | P1 | S | S2 | publication de la démonstration sur accord | plan 15 | à faire |
+| DS-02 | Six boutons à trancher | P1 | S | S2 | publication de la démonstration sur accord | plan 15 | fusionné (#36) |
 | DS-03 | Écrans jamais vus, refus en mode moteur, textes | P1 | S | S2 | aucune | plan 15 | à faire |
 | DS-08 | Accessibilité AA et budget 3G | P1 | M | S2 | aucune | plan 15 | à faire |
 | UX-01 | Pages d'erreur de l'application | P0 | S | S2 | aucune | nouveau | à faire |
@@ -122,7 +122,7 @@ Plan : [`04_ICOM_MESSAGES_APPELS_MISE_EN_RELATION.md`](04_ICOM_MESSAGES_APPELS_M
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
 | DS-04 (volet CC-V) | Recette CC-V et traitement au guichet | P0 | M | S2 | accord du propriétaire pour ouvrir la politique sur la démonstration (décision 1) ; publication éventuelle | plan 15 | à faire |
-| IM-01 | Appels : rien n'est proposé tant que le serveur d'appels n'est pas prouvé | P0 | S | S2 | aucune pour le code ; l'ouverture réelle attend les clés du propriétaire et IC-01 | nouveau | à faire |
+| IM-01 | Appels : rien n'est proposé tant que le serveur d'appels n'est pas prouvé | P0 | S | S2 | aucune pour le code ; l'ouverture réelle attend les clés du propriétaire et IC-01 | nouveau | fusionné (#36) ; gestes d'iCom en attente d'antsia#100 |
 | IM-02 | Réglages iCom dans les paramètres de DIASPORALE | P0 | S | S2 | aucune | nouveau | à faire |
 | IM-03 | Messagerie vocale, signaler et bloquer depuis le fil : raccord dans DIASPORALE | P0 | S | S2 | aucune | nouveau | à faire |
 | IM-04 | La cloche nomme les avis d'iCom et y mène | P1 | S | S2 | aucune | nouveau | à faire |
@@ -177,7 +177,7 @@ Plan : [`06_HUBS_PAYS_VILLES_CARTE.md`](06_HUBS_PAYS_VILLES_CARTE.md)
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| HB-01 | Dire vrai dans un pays non ouvert | P0 | S | S2 | aucune | nouveau | à faire |
+| HB-01 | Dire vrai dans un pays non ouvert | P0 | S | S2 | aucune | nouveau | fusionné (#37) |
 | HB-02 | Évènements du pays dans le hub | P0 | M | S2 | aucune en local | nouveau | à faire |
 | HB-03 | Gardes serveur de la portée locale | P0 | S | S1 et S2 | fichiers du moteur, donc S1 | nouveau | à faire |
 | HB-04 | Raccourcis et rubriques du pays consulté | P1 | S | S2 | aucune | nouveau | à faire |
@@ -233,7 +233,7 @@ Plan : [`08_EVENEMENTS_AGENDA.md`](08_EVENEMENTS_AGENDA.md)
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
 | EV-01 | Évènements de démonstration et parcours rejouables | P0 | S | S2 | accord pour les variables du backend local ; publication de la démonstration sur accord écrit | nouveau | à faire |
-| EV-02 | Le hub ne dit plus « zéro évènement » | P0 | S | S2 | aucune | nouveau | à faire |
+| EV-02 | Le hub ne dit plus « zéro évènement » | P0 | S | S2 | aucune | nouveau | fusionné (#37) |
 | EV-03 | Avis aux inscrits : annulation, place obtenue | P0 | M | S1 puis S2 | publication du backend par S1 | nouveau | à faire |
 | EV-04 | Signaler un évènement et un ajout de galerie | P0 | S | S2 | aucune | nouveau | à faire |
 | EV-05 | Évènements du pays dans le hub : liste, compteur, ville, catégorie, portée | P1 | L | S1 puis S2 | issue `[S1]` acceptée ; publication du backend par S1. Repli si S1 ne peut pas : une projection nocturne dans la tranche, avec son retard dit à l'écran | nouveau | à faire |
@@ -421,7 +421,7 @@ Plan : [`15_VIE_PUBLIQUE_CONSULAIRE.md`](15_VIE_PUBLIQUE_CONSULAIRE.md)
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| VC-01 | Dire vrai sur l'officiel à l'ouverture du pilote | P0 | S | S2 | aucune | nouveau | à faire |
+| VC-01 | Dire vrai sur l'officiel à l'ouverture du pilote | P0 | S | S2 | aucune | nouveau | fusionné (#37) |
 | VC-02 | Trancher la voie de l'Officiel et amender le contrat avant sa mise en service | P1 | S | S2 + propriétaire | décision du propriétaire ; équipe de gabon-diplomatie | nouveau | à faire |
 | VC-03 | Remettre à niveau les deux contrats côté consulat.ga | P1 | M | gabon-diplomatie | validation juridique (arbitrage A4) ; accord écrit du propriétaire ; gouvernance de publication de gabon-diplomatie | nouveau | à faire |
 | VC-04 | Page officielle du poste pilote par la console, et habilitation tracée | P1 | S | S2 (+ S1 : PG-01) | mandat écrit du poste ou du ministère ; accord pour toute action sur un déploiement en ligne | nouveau | à faire |

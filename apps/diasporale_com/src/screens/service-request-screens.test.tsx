@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
+import { DEFAULT_FACET_VISIBILITY, SERVICE_REQUEST_ACTORS, SERVICE_REQUEST_STATUSES } from "@diasporale/domain"
 import type {
   ActionResult,
   Loadable,
@@ -9,12 +9,14 @@ import type {
   ServiceRequestsPageQuery,
   ServiceRequestSummaryView,
 } from "@diasporale/features/data"
+import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ServiceInbox } from "@/components/service-inbox"
+import { filledButtons } from "@/test-utils"
 
 import { ActivityRequestScreen, MyServiceRequestScreen, MyServiceRequestsScreen } from "./service-request-screens"
 
@@ -311,6 +313,48 @@ describe("/mon-activite/demandes/<id> — côté page", () => {
     await act(async () => { fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Constater l’absence" })) })
     expect(capability.markNoShow).toHaveBeenCalledWith("request-1")
     expect(screen.getByRole("button", { name: "Prestation réalisée" })).toBeTruthy()
+  })
+})
+
+describe("DS-02 — « Faire une proposition » en famille commerce, un seul bouton plein par zone", () => {
+  const requester = { displayName: "Awa OGOOUÉ", handle: "awa" }
+  const actionsZone = getFixedT("fr")("serviceRequests.detail.actions")
+  const booking = { startAt: NOW + HOUR, endAt: NOW + 2 * HOUR, timeZone: "Europe/Paris", status: "confirmed" as const }
+
+  it("côté page : « Faire une proposition » en commerce, puis « Envoyer la proposition » en aplat des messages", () => {
+    const sent = detail({ viewerRole: "page", status: "sent", requester, currentProposal: null, proposals: [], deadlineAt: NOW + DAY, actions: ["propose", "refuse"] })
+    fake({ request: { status: "ready", data: sent } })
+    render(tree(<ActivityRequestScreen requestId="request-1" />))
+    const zone = screen.getByRole("region", { name: actionsZone })
+    const propose = within(zone).getByRole("button", { name: "Faire une proposition" })
+    expect(propose).toHaveClass("bg-commerce-fill")
+    expect(filledButtons(zone)).toEqual([propose])
+
+    fireEvent.click(propose)
+    const submit = within(zone).getByRole("button", { name: "Envoyer la proposition" })
+    expect(submit).toHaveClass("bg-message-fill")
+    expect(filledButtons(zone)).toEqual([submit])
+  })
+
+  it("côté page : « Modifier la proposition » garde la famille commerce", () => {
+    fake({ request: { status: "ready", data: detail({ viewerRole: "page", requester, actions: ["propose", "refuse"] }) } })
+    render(tree(<ActivityRequestScreen requestId="request-1" />))
+    const zone = screen.getByRole("region", { name: actionsZone })
+    const update = within(zone).getByRole("button", { name: "Modifier la proposition" })
+    expect(update).toHaveClass("bg-commerce-fill")
+    expect(filledButtons(zone)).toEqual([update])
+  })
+
+  // Tous les rôles, tous les états, avant et après le début du rendez-vous : jamais deux gestes pleins côte à côte.
+  const moments = [{ moment: "avant le rendez-vous", elapsed: 0 }, { moment: "après son début", elapsed: 2 * HOUR }] as const
+  const cases = SERVICE_REQUEST_ACTORS.flatMap((viewerRole) => SERVICE_REQUEST_STATUSES.flatMap((status) => moments.map((moment) => ({ viewerRole, status, ...moment }))))
+  it.each(cases)("$viewerRole · $status · $moment : au plus un bouton plein dans les gestes", ({ viewerRole, status, elapsed }) => {
+    vi.setSystemTime(NOW + elapsed)
+    const data = detail({ viewerRole, status, requester: viewerRole === "page" ? requester : null, booking: status === "confirmed" ? booking : null, actions: [] })
+    fake({ request: { status: "ready", data } })
+    render(tree(viewerRole === "page" ? <ActivityRequestScreen requestId="request-1" /> : <MyServiceRequestScreen requestId="request-1" />))
+    const zone = screen.queryByRole("region", { name: actionsZone })
+    expect(zone === null ? 0 : filledButtons(zone).length).toBeLessThanOrEqual(1)
   })
 })
 

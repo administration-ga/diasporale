@@ -75,6 +75,7 @@ const HUB: CountryHubView = {
   associations: [],
   companies: [],
   events: [],
+  eventsSource: "unmeasured",
 }
 
 function page(id: string, name: string, extra: Partial<PageView> = {}): PageView {
@@ -180,6 +181,52 @@ describe("HubScreen — pages réelles du pays", () => {
     const panel = screen.getByRole("tabpanel")
     expect(within(panel).getByText("D'autres pages de ce pays se trouvent dans l'annuaire des pages.")).toBeInTheDocument()
     expect(within(panel).queryByText(/Aucune entreprise inscrite/)).not.toBeInTheDocument()
+  })
+
+  it("évènements non mesurés (moteur) : aucun nombre, l'onglet renvoie aux associations du pays et à l'agenda (EV-02)", () => {
+    render(tree())
+    // Les trois compteurs mesurés restent ; celui des évènements, écrit à zéro sans rien compter, disparaît.
+    expect(screen.getByText("Membres visibles")).toBeInTheDocument()
+    expect(screen.queryByText("Évènements à venir")).not.toBeInTheDocument()
+    openTab("Évènements")
+    const panel = screen.getByRole("tabpanel")
+    expect(within(panel).getByText("Les évènements ne sont pas encore réunis dans le hub.")).toBeInTheDocument()
+    expect(panel).not.toHaveTextContent(/Aucun évènement/)
+    expect(panel).not.toHaveTextContent(/\b0\b/)
+    expect(within(panel).getByRole("link", { name: "Voir les associations du pays" })).toHaveAttribute("href", "/pages?type=association&pays=CA")
+    expect(within(panel).getByRole("link", { name: "Mon agenda" })).toHaveAttribute("href", "/agenda")
+  })
+
+  it("démonstration : les évènements comptés sur les données fictives gardent leur compteur et leur liste", () => {
+    mocks.hub = { status: "ready", data: { ...HUB, countersSource: "demo", eventsSource: "demo", counters: { ...HUB.counters, upcomingEvents: { kind: "value", value: 0 } } } }
+    render(tree())
+    expect(screen.getByText("Évènements à venir")).toBeInTheDocument()
+    openTab("Évènements")
+    expect(within(screen.getByRole("tabpanel")).getByText(/Aucun évènement prévu/)).toBeInTheDocument()
+    expect(screen.queryByText("Les évènements ne sont pas encore réunis dans le hub.")).not.toBeInTheDocument()
+  })
+
+  it("sans aucune page, le hub ne promet ni import public, ni évènement de poste, ni rien au futur (VC-01)", () => {
+    mocks.pages = { status: "ready", data: { country: "CA", officialPages: [], associations: [], companies: [], more: NOTHING_MORE } }
+    render(tree())
+    for (const tab of ["Évènements", "Associations", "Entreprises"]) {
+      openTab(tab)
+      const panel = screen.getByRole("tabpanel")
+      expect(panel).not.toHaveTextContent(/import|postes|apparaîtront|arrivent|pourront/i)
+    }
+    openTab("Associations")
+    expect(within(screen.getByRole("tabpanel")).getByText("Une association de la diaspora peut créer sa page.")).toBeInTheDocument()
+    openTab("Entreprises")
+    expect(within(screen.getByRole("tabpanel")).getByText("Une entreprise de la diaspora peut créer sa page.")).toBeInTheDocument()
+  })
+
+  it("démonstration sans évènement : le vide dit ce qui existe, sans promettre les évènements des postes", () => {
+    mocks.hub = { status: "ready", data: { ...HUB, countersSource: "demo", eventsSource: "demo" } }
+    render(tree())
+    openTab("Évènements")
+    const panel = screen.getByRole("tabpanel")
+    expect(within(panel).getByText("Les associations publient leurs évènements sur leur page.")).toBeInTheDocument()
+    expect(panel).not.toHaveTextContent(/postes|apparaîtront/)
   })
 
   it("sans capacité « pages », les listes jointes au hub restent la source", () => {

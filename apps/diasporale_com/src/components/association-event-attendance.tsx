@@ -119,7 +119,7 @@ function PersonalTicket(props: AttendanceProps & { readonly now: number }) {
   return (
     <div className="flex min-w-0 flex-col items-start gap-3">
       <p className="text-sm text-muted-foreground">{t("associationAttendance.ticketPrivacy")}</p>
-      <Button disabled={task.busy} aria-busy={task.busy} onClick={issue}><RefreshCw aria-hidden className="size-4" />{t(ticket ? "associationAttendance.renew" : "associationAttendance.issue")}</Button>
+      <Button variant="commerce" disabled={task.busy} aria-busy={task.busy} onClick={issue}><RefreshCw aria-hidden className="size-4" />{t(ticket ? "associationAttendance.renew" : "associationAttendance.issue")}</Button>
       {live && ticket ? <>
         <OpaqueQrCode value={ticket.code} title={t("associationAttendance.qrTitle")} />
         <p className="text-sm">{t("associationAttendance.expires", { date: formatServiceInstant(ticket.expiresAt, props.event.timeZone, locale) })}</p>

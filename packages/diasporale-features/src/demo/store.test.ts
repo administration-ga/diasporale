@@ -7,6 +7,7 @@ import {
   NOTIFICATIONS_PAGE,
   bookmarksView,
   commentsView,
+  countryHubView,
   feedView,
   hubCounters,
   memberSearchView,
@@ -181,7 +182,7 @@ describe("R2 — vérifier une inscription consulaire", () => {
 })
 
 describe("R3 — un compte léger se fait parrainer", () => {
-  it("en attente puis lecture seule ; parrainé par un membre vérifié depuis plus de 30 jours, il publie (relu, pays fermé)", async () => {
+  it("en attente puis lecture seule ; parrainé par un membre vérifié depuis plus de 30 jours, il publie pour toute la diaspora (pays fermé)", async () => {
     const { store, me } = demo()
     const sent = await store.requestCode({ kind: "email", value: "nouvelle@example.com" })
     if (!sent.ok || !sent.value.demoCode) throw new Error("code non émis")
@@ -202,7 +203,12 @@ describe("R3 — un compte léger se fait parrainer", () => {
     await store.switchTo(newcomer)
     expect(store.statusOf(newcomer)).toBe("declaree")
     expect(membershipView(store.getState(), newcomer, T0)?.sponsoredBy).toEqual({ handle: "mireille.ivindo", displayName: "Mireille IVINDO" })
-    expect(await store.publish(post)).toEqual({ ok: true, value: { moderation: "pending_review" } })
+    // HB-01 : le Canada n'est pas ouvert ici ; le hub local refuse, comme l'adaptateur du moteur, sans rien écrire.
+    const before = store.getState().posts.length
+    expect(await store.publish(post)).toEqual({ ok: false, code: "feature_unavailable" })
+    expect(store.getState().posts).toHaveLength(before)
+    expect(await store.publish({ ...post, reach: "diaspora" })).toEqual({ ok: true, value: { moderation: "published" } })
+    expect(store.getState().posts[0]).toMatchObject({ body: "Bonjour Montréal", scope: { reach: "diaspora", country: "CA" } })
   })
 
   it("un pays ouvert avec deux modérateurs publie directement", async () => {
@@ -301,6 +307,20 @@ describe("compteurs de hub et persistance", () => {
   it("les membres visibles sous le seuil de 20 ne sont jamais chiffrés", () => {
     const { store } = demo()
     expect(hubCounters(store.getState(), "FR", T0).members).toEqual({ kind: "below_threshold", threshold: 20 })
+  })
+
+  it("les évènements fictifs sont comptés et listés, et le hub le dit (source « demo », EV-02)", () => {
+    const { store } = demo()
+    const hub = countryHubView(store.getState(), "FR", T0)
+    expect(hub.eventsSource).toBe("demo")
+    expect(hub.counters.upcomingEvents).toEqual({ kind: "value", value: hub.events.length })
+    expect(hub.events.length).toBeGreaterThan(0)
+  })
+
+  it("aucun évènement de poste consulaire : la démonstration ne montre pas ce que le moteur ne sert pas (VC-01)", () => {
+    const state = demo().store.getState()
+    expect(state.events.length).toBeGreaterThan(0)
+    for (const event of state.events) expect(state.pages[event.organizerPageId]?.ownerKind).toBe("association")
   })
 
   it("persiste dans le stockage local, recharge, et se remet à zéro", async () => {
