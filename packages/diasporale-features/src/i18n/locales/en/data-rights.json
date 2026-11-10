@@ -88,7 +88,9 @@
           "professionalProfile": "Professional profile",
           "professionalCollaboration": "Collaboration request",
           "editorialVersion": "Article version",
-          "editorialMedia": "Media presentation"
+          "editorialMedia": "Media presentation",
+          "thematicGroup": "Group (profile and rules)",
+          "personalMessage": "Personal message"
         },
         "status": {
           "actioned": "Measure taken",
