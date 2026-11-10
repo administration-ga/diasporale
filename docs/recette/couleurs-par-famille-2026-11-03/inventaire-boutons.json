@@ -129,7 +129,7 @@
 "file": "apps/diasporale_com/src/components/association-event-attendance.tsx",
 "line": 122,
 "tag": "Button",
-"variant": "(défaut)",
+"variant": "commerce",
 "label": "{ticket ? \"associationAttendance.renew\" : \"associationAttenda}"
 },
 {
@@ -864,54 +864,54 @@
 "file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
 "line": 82,
 "tag": "Button",
-"variant": "(défaut)",
+"variant": "commerce",
 "label": "Demander un mentorat"
 },
 {
 "file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
-"line": 184,
+"line": 185,
 "tag": "Button",
 "variant": "(défaut)",
 "label": "Suivre mes demandes"
 },
 {
 "file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
-"line": 187,
+"line": 188,
 "tag": "Button",
 "variant": "ghost",
 "label": "Fermer"
 },
 {
 "file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
-"line": 244,
+"line": 245,
 "tag": "Button",
 "variant": "ghost",
 "label": "Retirer le créneau {{index}}"
 },
 {
 "file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
-"line": 254,
+"line": 255,
 "tag": "Button",
 "variant": "outline",
 "label": "Ajouter un créneau"
 },
 {
 "file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
-"line": 289,
+"line": 290,
 "tag": "Button",
 "variant": "outline",
 "label": "Suivre mes demandes"
 },
 {
 "file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
-"line": 296,
+"line": 297,
 "tag": "Button",
-"variant": "(défaut)",
+"variant": "commerce",
 "label": "{busy ? \"mentoring.request.sending\" : \"mentoring.request.subm}"
 },
 {
 "file": "apps/diasporale_com/src/components/mentoring-request-form.tsx",
-"line": 297,
+"line": 298,
 "tag": "Button",
 "variant": "ghost",
 "label": "Retour"
@@ -1226,28 +1226,28 @@
 },
 {
 "file": "apps/diasporale_com/src/components/mutual-aid-question-detail.tsx",
-"line": 125,
+"line": 126,
 "tag": "Button",
 "variant": "outline",
 "label": "Retenir cette réponse"
 },
 {
 "file": "apps/diasporale_com/src/components/mutual-aid-question-detail.tsx",
-"line": 135,
+"line": 136,
 "tag": "Button",
 "variant": "outline",
 "label": "Ne plus retenir"
 },
 {
 "file": "apps/diasporale_com/src/components/mutual-aid-question-detail.tsx",
-"line": 144,
+"line": 145,
 "tag": "Button",
 "variant": "ghost",
 "label": "Modifier"
 },
 {
 "file": "apps/diasporale_com/src/components/mutual-aid-question-detail.tsx",
-"line": 213,
+"line": 214,
 "tag": "Button",
 "variant": "outline",
 "label": "Modifier"
@@ -1949,7 +1949,7 @@
 "file": "apps/diasporale_com/src/components/service-proposal-form.tsx",
 "line": 242,
 "tag": "Button",
-"variant": "(défaut)",
+"variant": "send",
 "label": "{busy ? \"serviceRequests.form.sending\" : \"serviceRequests.for}"
 },
 {
@@ -2684,7 +2684,7 @@
 "file": "apps/diasporale_com/src/screens/mentoring-screens.tsx",
 "line": 280,
 "tag": "Button",
-"variant": "(défaut)",
+"variant": "commerce",
 "label": "Demander un mentorat"
 },
 {
@@ -2780,128 +2780,128 @@
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 63,
+"line": 64,
 "tag": "Button",
 "variant": "outline",
 "label": "Recharger le profil"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 74,
+"line": 75,
 "tag": "Button",
 "variant": "outline",
 "label": "Gérer la publication de mon profil"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 96,
+"line": 97,
 "tag": "Button",
 "variant": "ghost",
 "label": "Revenir à mon profil"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 101,
+"line": 102,
 "tag": "Button",
 "variant": "outline",
 "label": "Modifier"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 108,
+"line": 109,
 "tag": "Button",
 "variant": "outline",
 "label": "Modifier mes images"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 112,
+"line": 113,
 "tag": "Button",
 "variant": "ghost",
 "label": "Revenir à mon profil / Me voir comme les autres"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 118,
+"line": 119,
 "tag": "Button",
 "variant": "ghost",
 "label": "Mes enregistrements"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 125,
+"line": 126,
 "tag": "Button",
 "variant": "ghost",
 "label": "Mes relations"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 235,
+"line": 236,
 "tag": "Button",
 "variant": "outline",
 "label": "Débloquer"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 246,
+"line": 247,
 "tag": "Button",
 "variant": "destructive",
 "label": "Bloquer"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 258,
+"line": 259,
 "tag": "Button",
 "variant": "ghost",
 "label": "Annuler"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 271,
+"line": 272,
 "tag": "Button",
 "variant": "social",
 "label": "Se connecter"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 276,
+"line": 277,
 "tag": "Button",
 "variant": "outline",
 "label": "Demande envoyée"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 282,
+"line": 283,
 "tag": "Button",
 "variant": "social",
 "label": "Accepter"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 286,
+"line": 287,
 "tag": "Button",
 "variant": "ghost",
 "label": "Refuser"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 296,
+"line": 297,
 "tag": "Button",
 "variant": "{following || relationIsFilled ? outline : social}",
 "label": "Ne plus suivre / Suivre"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 305,
+"line": 306,
 "tag": "Button",
 "variant": "ghost",
 "label": "Bloquer"
 },
 {
 "file": "apps/diasporale_com/src/screens/profile-screens.tsx",
-"line": 349,
+"line": 363,
 "tag": "Button",
-"variant": "outline",
+"variant": "message",
 "label": "Appeler / Appeler {{name}}"
 },
 {
@@ -2943,7 +2943,7 @@
 "file": "apps/diasporale_com/src/screens/service-request-screens.tsx",
 "line": 302,
 "tag": "Button",
-"variant": "(défaut)",
+"variant": "commerce",
 "label": "{detail.currentProposal ? \"serviceRequests.propose.update\" : }"
 },
 {
@@ -3069,7 +3069,7 @@
 "file": "apps/diasporale_com/src/screens/sponsor-attestation-screens.tsx",
 "line": 95,
 "tag": "Button",
-"variant": "(défaut)",
+"variant": "social",
 "label": "Un instant… / Parrainer"
 },
 {
