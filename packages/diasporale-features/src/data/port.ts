@@ -257,7 +257,13 @@ export interface DiasporaleActions {
    */
   signInWithIdn(input?: IdnSignInInput): Promise<ActionResult>
   requestCode(destination: CodeDestination): Promise<ActionResult<{ demoCode: string | null }>>
-  verifyCode(code: string): Promise<ActionResult>
+  /**
+   * Vérifier le code reçu. `destination` : l'adresse à laquelle il est parti, que l'écran garde
+   * dans l'onglet (EA-08, MO-04) — la saisie reprend après un rechargement ou un aller-retour vers
+   * la messagerie, sans redemander de code. Sans elle, le fournisseur reprend l'adresse du
+   * dernier envoi de cette session ; sans envoi connu, `code_expired`.
+   */
+  verifyCode(code: string, destination?: CodeDestination): Promise<ActionResult>
   /** Révocation de toutes les sessions côté serveur, puis purge locale (EXT-DG-01). */
   signOutEverywhere(): Promise<void>
   checkHandle(handle: string): Promise<ActionResult<{ available: boolean }>>

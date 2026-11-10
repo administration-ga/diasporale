@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { initialConsentChoices, isResidenceCountry, type CountryCode } from "@diasporale/domain"
+import { ARRIVED_AT_MIN_YEAR, initialConsentChoices, isResidenceCountry, utcYear, type CountryCode } from "@diasporale/domain"
 import {
   Button,
   Checkbox,
@@ -21,6 +21,7 @@ import {
   useHandleSuggestions,
   useOpenCountries,
   type ActionErrorCode,
+  type DiasporaleActions,
   type DiasporaleDataSource,
   type MembershipView,
   type OwnProfileView,
@@ -29,7 +30,7 @@ import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LogOutIcon, ShieldCheckIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter } from "next/navigation"
-import { useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { Controller, useForm, useWatch, type Control, type FieldPath, type Resolver } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -42,9 +43,19 @@ import { routes } from "@/lib/routes"
 
 const OTHER_HANDLE = "__autre__"
 
+/** Une année d'arrivée saisie : quatre chiffres, de la borne du domaine à l'année en cours. Vide : rien n'est envoyé. */
+function isArrivalYear(value: string): boolean {
+  if (value === "") return true
+  if (!/^\d{4}$/.test(value)) return false
+  const year = Number(value)
+  return year >= ARRIVED_AT_MIN_YEAR && year <= utcYear(Date.now())
+}
+
 const choicesShape = {
   country: z.string().refine((value) => isResidenceCountry(value), "country_required"),
   city: z.string().trim().max(80, "city_too_long"),
+  // EA-08 : proposée dès l'entrée, facultative ; visible de la seule personne par défaut (facette).
+  arrivedAt: z.string().trim().refine(isArrivalYear, "arrived_at_out_of_range"),
   handleOther: z.string(),
   socialProfile: z.boolean().refine((value) => value, "consent_social_profile_required"),
   directory: z.boolean(),
@@ -64,7 +75,7 @@ type FormInput = z.input<typeof schema>
 type Values = z.output<typeof schema>
 
 const STEP_FIELDS: readonly (readonly FieldPath<FormInput>[])[] = [
-  ["country", "city"],
+  ["country", "city", "arrivedAt"],
   ["displayName", "handleChoice"],
   ["socialProfile", "directory", "notifications"],
 ]
@@ -87,6 +98,52 @@ type ExistingIdentity =
     }
 
 const NO_IDENTITY: ExistingIdentity = { kind: "none" }
+
+/** L'identifiant saisi, jugé pendant la saisie (EA-08) : rien à dire, en cours, libre, pris, ou refusé par le moteur. */
+type HandleAvailability =
+  | { readonly state: "idle" }
+  | { readonly state: "checking"; readonly handle: string }
+  | { readonly state: "available"; readonly handle: string }
+  | { readonly state: "taken"; readonly handle: string }
+  | { readonly state: "refused"; readonly handle: string; readonly code: ActionErrorCode }
+
+const HANDLE_IDLE: HandleAvailability = { state: "idle" }
+/** Le temps de finir un mot avant d'interroger le fournisseur : une question par pause, pas par touche. */
+const HANDLE_CHECK_DELAY_MS = 400
+
+/**
+ * La disponibilité d'un identifiant pendant sa saisie. Un identifiant hors charte n'est pas
+ * soumis (la règle le dit déjà sous le champ) ; une réponse arrivée après une nouvelle frappe est
+ * ignorée. Le bouton « Continuer » refait la vérification : c'est elle qui fait foi.
+ */
+function useHandleAvailability(handle: string, actions: Pick<DiasporaleActions, "checkHandle">): HandleAvailability {
+  const [availability, setAvailability] = useState<HandleAvailability>(HANDLE_IDLE)
+  useEffect(() => {
+    if (handle.length === 0 || handleRefusal(handle) !== null) {
+      setAvailability(HANDLE_IDLE)
+      return
+    }
+    let current = true
+    setAvailability({ state: "checking", handle })
+    const timer = window.setTimeout(() => {
+      actions.checkHandle(handle).then(
+        (result) => {
+          if (!current) return
+          if (!result.ok) setAvailability({ state: "refused", handle, code: result.code })
+          else setAvailability({ state: result.value.available ? "available" : "taken", handle })
+        },
+        () => {
+          if (current) setAvailability(HANDLE_IDLE)
+        },
+      )
+    }, HANDLE_CHECK_DELAY_MS)
+    return () => {
+      current = false
+      window.clearTimeout(timer)
+    }
+  }, [handle, actions])
+  return availability
+}
 
 function existingIdentityOf(profile: OwnProfileView | null): ExistingIdentity {
   const handle = profile?.handle ?? ""
@@ -160,6 +217,7 @@ function Onboarding(props: OnboardingContext & { identity: ExistingIdentity; pub
     defaultValues: {
       country: departed?.facet.countryOfResidence ?? "",
       city: departed?.facet.city ?? "",
+      arrivedAt: departed && departed.facet.arrivedAt !== undefined ? String(departed.facet.arrivedAt) : "",
       displayName: "",
       handleChoice: "",
       handleOther: "",
@@ -170,11 +228,13 @@ function Onboarding(props: OnboardingContext & { identity: ExistingIdentity; pub
       notifications: consents.notifications,
     },
   })
-  const [displayName, handleChoice, directory, country] = useWatch({
+  const [displayName, handleChoice, directory, country, handleOther] = useWatch({
     control: form.control,
-    name: ["displayName", "handleChoice", "directory", "country"],
+    name: ["displayName", "handleChoice", "directory", "country", "handleOther"],
   })
   const suggestions = useHandleSuggestions(displayName)
+  // L'identifiant « autre » se juge pendant la saisie ; les propositions sont déjà libres.
+  const handleAvailability = useHandleAvailability(asksIdentity && handleChoice === OTHER_HANDLE ? normalizeHandle(handleOther) : "", actions)
   const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : []
 
   const chosenHandle = (values: Pick<FormInput, "handleChoice" | "handleOther">) => normalizeHandle(values.handleChoice === OTHER_HANDLE ? values.handleOther : values.handleChoice)
@@ -229,7 +289,8 @@ function Onboarding(props: OnboardingContext & { identity: ExistingIdentity; pub
     let result: Awaited<ReturnType<typeof actions.join>>
     try {
       result = await actions.join({
-        facet: { countryOfResidence: values.country, city: values.city },
+        // L'année d'arrivée ne part que si la personne l'a donnée.
+        facet: { countryOfResidence: values.country, city: values.city, ...(values.arrivedAt ? { arrivedAt: Number(values.arrivedAt) } : {}) },
         // Un profil déjà là n'envoie rien : le fournisseur le garde tel quel (EA-04).
         ...(asksIdentity ? { handle: chosenHandle(values), displayName: values.displayName } : {}),
         consents: { social_profile: values.socialProfile, directory: values.directory, notifications: values.notifications },
@@ -322,6 +383,20 @@ function Onboarding(props: OnboardingContext & { identity: ExistingIdentity; pub
                 />
               )}
             </Field>
+            <Field id={`${ids}-arrivee`} label={t("welcomeArrival.label")} hint={t("welcomeArrival.hint")} error={errorOf("arrivedAt")}>
+              {(control) => (
+                <Input
+                  id={control.id}
+                  aria-describedby={control.describedBy}
+                  aria-invalid={control.invalid || undefined}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  maxLength={4}
+                  className="max-w-32 font-mono"
+                  {...form.register("arrivedAt")}
+                />
+              )}
+            </Field>
             {isResidenceCountry(country) && !open.includes(country) ? (
               <p className="rounded-lg bg-pending px-3 py-2 text-[13px] text-pending-foreground">{t("welcome.countryNotOpen")}</p>
             ) : null}
@@ -410,6 +485,7 @@ function Onboarding(props: OnboardingContext & { identity: ExistingIdentity; pub
                   )}
                 </Field>
               ) : null}
+              {handleChoice === OTHER_HANDLE ? <HandleAvailabilityStatus availability={handleAvailability} /> : null}
             </fieldset>
           </>
         ) : null}
@@ -526,6 +602,34 @@ function WelcomeSignOut() {
       </p>
       {failed ? <p role="alert" className="text-destructive">{t("errors.unknown")}</p> : null}
     </div>
+  )
+}
+
+/**
+ * Ce que la saisie de l'identifiant apprend, dit poliment aux lecteurs d'écran : la zone reste
+ * montée, seul son texte change (une zone vivante qui naît ne s'annonce pas partout).
+ */
+function HandleAvailabilityStatus(props: { availability: HandleAvailability }) {
+  const { t } = useDiasporaleT()
+  const { availability } = props
+  return (
+    <p
+      role="status"
+      className={cn(
+        "min-h-5 text-[13px]",
+        availability.state === "available" ? "font-medium text-success-ink" : availability.state === "checking" ? "text-muted-foreground" : "font-medium text-destructive",
+      )}
+    >
+      {availability.state === "checking"
+        ? t("welcomeHandle.checking")
+        : availability.state === "available"
+          ? t("welcomeHandle.available", { handle: availability.handle })
+          : availability.state === "taken"
+            ? t("welcomeHandle.taken", { handle: availability.handle })
+            : availability.state === "refused"
+              ? t(`errors.${availability.code}`)
+              : null}
+    </p>
   )
 }
 

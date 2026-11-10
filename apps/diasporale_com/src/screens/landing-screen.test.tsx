@@ -10,7 +10,9 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import EnterPage from "@/app/entrer/page"
 import HomePage from "@/app/page"
+import { PENDING_CODE_KEY, peekPendingCode } from "@/lib/pending-code"
 import { routes } from "@/lib/routes"
+import { filledButtons } from "@/test-utils"
 
 import { CodeForm, CodeScreen } from "./enter-screens"
 import { LandingScreen } from "./landing-screen"
@@ -46,6 +48,8 @@ function setup(kind: DiasporaleDataSource["kind"] = "demo") {
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+  // L'adresse en attente d'un code vit dans l'onglet (EA-08) : chaque essai part d'un onglet neuf.
+  window.sessionStorage.clear()
 })
 
 describe("Accueil — accès au réseau personnel", () => {
@@ -119,13 +123,16 @@ describe("Accueil — accès au réseau personnel", () => {
 
     expect(requestCode).toHaveBeenCalledExactlyOnceWith({ kind: "email", value: "nouveau@example.com" })
     expect(await screen.findByText("123456")).toBeInTheDocument()
-    expect(screen.getByText(t("code.sentTo", { destination: "nouveau@example.com" }))).toBeInTheDocument()
+    // L'adresse se montre masquée (MO-04).
+    expect(screen.getByText(t("code.sentTo", { destination: "n…@example.com" }))).toBeInTheDocument()
     expect(verifyCode).not.toHaveBeenCalled()
     await user.type(screen.getByRole("textbox", { name: t("code.codeLabel") }), "123456")
     await user.click(screen.getByRole("button", { name: t("code.verify") }))
 
-    await waitFor(() => expect(verifyCode).toHaveBeenCalledExactlyOnceWith("123456"))
+    await waitFor(() => expect(verifyCode).toHaveBeenCalledExactlyOnceWith("123456", { kind: "email", value: "nouveau@example.com" }))
     expect(navigation.push).toHaveBeenCalledExactlyOnceWith(routes.welcome())
+    // Connecté : l'adresse gardée pour la saisie est oubliée.
+    expect(peekPendingCode()).toBeNull()
     expect(join).not.toHaveBeenCalled()
     expect(store.getState().consents).toEqual(consents)
     expect(screen.queryByRole("checkbox")).not.toBeInTheDocument()
@@ -261,7 +268,7 @@ describe("CodeForm — formulaire réutilisable", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: t("code.verify") })).toBeEnabled())
     expect(code).toBeEnabled()
     expect(code).toHaveValue("123456")
-    expect(verifyCode).toHaveBeenCalledExactlyOnceWith("123456")
+    expect(verifyCode).toHaveBeenCalledExactlyOnceWith("123456", { kind: "email", value: "nouveau@example.com" })
     expect(navigation.push).not.toHaveBeenCalled()
     expect(navigation.replace).not.toHaveBeenCalled()
   })
@@ -296,7 +303,127 @@ describe("CodeForm — formulaire réutilisable", () => {
     await user.type(code, "654321")
     await user.click(screen.getByRole("button", { name: t("code.verify") }))
     expect(await screen.findByText(t("errors.code_invalid"))).toBeInTheDocument()
-    expect(verifyCode).toHaveBeenCalledExactlyOnceWith("654321")
+    expect(verifyCode).toHaveBeenCalledExactlyOnceWith("654321", { kind: "email", value: "nouveau@example.com" })
     expect(navigation.push).not.toHaveBeenCalled()
+  })
+})
+
+describe("Porte fiable — reprise après un rechargement, renvoi du code (EA-08, MO-04)", () => {
+  /** Un code parti il y a `ago` millisecondes, tel que l'onglet le garde. */
+  function pendingSince(ago: number, value = "nouveau@example.com") {
+    window.sessionStorage.setItem(PENDING_CODE_KEY, JSON.stringify({ kind: "email", value, sentAt: Date.now() - ago }))
+  }
+
+  it("rechargement entre l'envoi et la saisie : la saisie du code reprend, sans redemander de code", async () => {
+    const store = new DemoStore(null, () => Date.UTC(2026, 9, 17, 12), 0)
+    const source = createDemoDataSource(store)
+    const requestCode = vi.fn(source.actions.requestCode)
+    const verifyCode = vi.fn(source.actions.verifyCode)
+    const demo: DiasporaleDataSource = { ...source, actions: { ...source.actions, requestCode, verifyCode } }
+    const mount = () => render(<I18nProvider locale="fr"><DataSourceProvider source={demo}><CodeForm /></DataSourceProvider></I18nProvider>)
+    const user = userEvent.setup()
+    mount()
+    await user.type(screen.getByRole("textbox", { name: t("code.emailLabel") }), "nouveau@example.com")
+    await user.click(screen.getByRole("button", { name: t("code.send") }))
+    await screen.findByRole("textbox", { name: t("code.codeLabel") })
+    const code = store.getState().pendingCode?.code ?? ""
+    expect(code).toMatch(/^\d{6}$/)
+    // L'onglet ne garde jamais le code, seulement l'adresse et l'heure de l'envoi.
+    expect(window.sessionStorage.getItem(PENDING_CODE_KEY)).not.toContain(code)
+
+    // Rechargement (ou retour depuis la messagerie, l'onglet fermé par le système) : un nouveau montage.
+    cleanup()
+    mount()
+    const resumed = await screen.findByRole("textbox", { name: t("code.codeLabel") })
+    expect(screen.getByText(t("code.sentTo", { destination: "n…@example.com" }))).toBeInTheDocument()
+    expect(screen.queryByRole("textbox", { name: t("code.emailLabel") })).not.toBeInTheDocument()
+    await user.type(resumed, code)
+    await user.click(screen.getByRole("button", { name: t("code.verify") }))
+
+    await waitFor(() => expect(navigation.push).toHaveBeenCalledExactlyOnceWith(routes.welcome()))
+    expect(requestCode).toHaveBeenCalledTimes(1)
+    expect(verifyCode).toHaveBeenCalledExactlyOnceWith(code, { kind: "email", value: "nouveau@example.com" })
+    expect(store.getState().session.personId).not.toBeNull()
+    expect(peekPendingCode()).toBeNull()
+  })
+
+  it("renvoi refusé avant le délai, même après un rechargement ; le décompte se lit à côté du bouton", async () => {
+    const { mount, user, requestCode } = setup("engine")
+    requestCode.mockResolvedValue({ ok: true, value: { demoCode: null } })
+    mount(<CodeForm />)
+    await user.type(screen.getByRole("textbox", { name: t("code.emailLabel") }), "nouveau@example.com")
+    await user.click(screen.getByRole("button", { name: t("code.send") }))
+    await screen.findByRole("textbox", { name: t("code.codeLabel") })
+
+    const resend = screen.getByRole("button", { name: t("entryCode.resend") })
+    expect(resend).toBeDisabled()
+    expect(resend).toHaveAccessibleDescription(/\d+ s\.$/)
+    await user.click(resend)
+    cleanup()
+    mount(<CodeForm />)
+    const again = await screen.findByRole("button", { name: t("entryCode.resend") })
+    expect(again).toBeDisabled()
+    await user.click(again)
+    expect(requestCode).toHaveBeenCalledTimes(1)
+    // Un seul bouton plein dans la zone : « Valider le code ».
+    expect(filledButtons(document.body)).toEqual([screen.getByRole("button", { name: t("code.verify") })])
+  })
+
+  it("après le délai, le code repart à la même adresse et l'écran l'annonce", async () => {
+    pendingSince(61_000)
+    const { mount, user, requestCode } = setup("engine")
+    requestCode.mockResolvedValue({ ok: true, value: { demoCode: null } })
+    mount(<CodeForm />)
+    const resend = await screen.findByRole("button", { name: t("entryCode.resend") })
+    expect(resend).toBeEnabled()
+    expect(resend).toHaveAccessibleDescription(t("entryCode.resendReady"))
+    await user.click(resend)
+
+    await waitFor(() => expect(requestCode).toHaveBeenCalledExactlyOnceWith({ kind: "email", value: "nouveau@example.com" }))
+    expect(await screen.findByText(t("entryCode.resent"))).toBeInTheDocument()
+    // Le délai repart du nouvel envoi.
+    expect(screen.getByRole("button", { name: t("entryCode.resend") })).toBeDisabled()
+    expect(peekPendingCode()?.sentAt).toBeGreaterThan(Date.now() - 5_000)
+  })
+
+  it("un refus de débit au renvoi se dit tel quel, sans durée que le moteur ne donne pas", async () => {
+    pendingSince(61_000)
+    const { mount, user, requestCode } = setup("engine")
+    requestCode.mockResolvedValue({ ok: false, code: "rate_limited" })
+    mount(<CodeForm />)
+    await user.click(await screen.findByRole("button", { name: t("entryCode.resend") }))
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(t("errors.rate_limited").replace(/\s+/g, " "))
+    // La saisie du code reste ouverte : le code déjà reçu vaut peut-être encore.
+    expect(screen.getByRole("textbox", { name: t("code.codeLabel") })).toBeInTheDocument()
+  })
+
+  it("changer d'adresse oublie l'adresse en attente, et la reprend dans le champ pour la corriger", async () => {
+    pendingSince(10_000)
+    const { mount, user } = setup("engine")
+    mount(<CodeForm />)
+    await user.click(await screen.findByRole("button", { name: t("code.changeDestination") }))
+
+    expect(screen.getByRole("textbox", { name: t("code.emailLabel") })).toHaveValue("nouveau@example.com")
+    expect(peekPendingCode()).toBeNull()
+  })
+
+  it("passé l'échéance de l'onglet, la porte repart du début", async () => {
+    pendingSince(31 * 60 * 1000)
+    const { mount } = setup("engine")
+    mount(<CodeForm />)
+
+    expect(await screen.findByRole("textbox", { name: t("code.emailLabel") })).toHaveValue("")
+    expect(screen.queryByRole("textbox", { name: t("code.codeLabel") })).not.toBeInTheDocument()
+  })
+
+  it("une session déjà ouverte oublie l'adresse en attente en quittant la porte", async () => {
+    pendingSince(10_000)
+    const { mount, store } = setup()
+    await store.switchTo("p-steeve")
+    mount()
+
+    await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith(routes.feed()))
+    expect(peekPendingCode()).toBeNull()
   })
 })

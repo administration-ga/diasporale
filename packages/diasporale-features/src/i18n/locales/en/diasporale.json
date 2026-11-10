@@ -102,7 +102,7 @@
   },
   "code": {
     "title": "Get a code",
-    "lead": "A one-time code, valid for 10 minutes. It works only once.",
+    "lead": "A one-time code, valid for a short time. It works only once.",
     "kindLabel": "Receive the code by",
     "kind": {
       "email": "Email",

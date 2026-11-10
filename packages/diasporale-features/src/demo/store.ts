@@ -322,11 +322,15 @@ export class DemoStore {
     return { ok: true, value: { demoCode: code } }
   }
 
-  async verifyCode(code: string): Promise<ActionResult> {
+  async verifyCode(code: string, destination?: CodeDestination): Promise<ActionResult> {
     await this.pause()
     const pending = this.state.pendingCode
     const now = this.clock()
     if (!pending || pending.expiresAt < now) return fail("code_expired")
+    // L'adresse que l'écran a gardée (EA-08) doit être celle du dernier envoi : sinon, ce code n'est pas le sien.
+    if (destination && (destination.kind !== pending.kind || destination.value.trim().toLowerCase() !== pending.value.toLowerCase())) {
+      return fail("code_expired")
+    }
     if (code.replace(/\s/g, "") !== pending.code) return fail("code_invalid")
     const existing = Object.values(this.state.persons).find(
       (person) => person.local?.kind === pending.kind && person.local.value.toLowerCase() === pending.value.toLowerCase(),

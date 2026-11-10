@@ -237,7 +237,8 @@ export const RETURN_PATH_TTL_MS = 30 * 60 * 1000
 
 export type TabStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">
 
-function tabStorage(): TabStorage | null {
+/** Le stockage de l'onglet, ou `null` (rendu serveur, stockage refusé) : partagé avec l'adresse en attente d'un code. */
+export function tabStorage(): TabStorage | null {
   try {
     return typeof window === "undefined" ? null : window.sessionStorage
   } catch {

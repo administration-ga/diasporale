@@ -5,6 +5,7 @@ import { useSession, type MembershipView, type SessionView } from "@diasporale/f
 import { useRouter } from "next/navigation"
 import { useEffect, useState, type ReactNode } from "react"
 
+import { forgetPendingCode } from "@/lib/pending-code"
 import { entryExit, forgetReturnPath, liveMember, peekReturnPath, rememberReturnPath, type ReturnDestination } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 
@@ -72,6 +73,12 @@ export function Gate(props: {
   useEffect(() => {
     if (arrives) forgetReturnPath()
   }, [arrives])
+
+  // Une session ouverte n'attend plus de code : l'adresse gardée pour la saisie est oubliée (EA-08).
+  const signedIn = ready?.status === "signed_in"
+  useEffect(() => {
+    if (signedIn) forgetPendingCode()
+  }, [signedIn])
 
   if (ready === null || ready.status === "anonymous" || redirect !== null) return <GateSkeleton />
   return <>{props.children(ready)}</>

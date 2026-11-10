@@ -246,6 +246,18 @@ describe("écritures de la source « moteur »", () => {
     expect(auth.signIn).toHaveBeenCalledWith({ email: "ada@exemple.test", otp: "654321" })
   })
 
+  it("après un rechargement, la vérification reprend l'adresse gardée par l'écran, sans nouvel envoi (EA-08, MO-04)", async () => {
+    const { convex } = fakeConvex({})
+    const auth = fakeAuth()
+    // Une source neuve : la mémoire de la précédente est perdue avec la page.
+    const actions = createEngineActions({ convex, authClient: auth.client })
+    expect(await actions.verifyCode("654321", { kind: "email", value: " Ada@Exemple.test " })).toEqual({ ok: true, value: null })
+    expect(auth.signIn).toHaveBeenCalledExactlyOnceWith({ email: "ada@exemple.test", otp: "654321" })
+    expect(auth.send).not.toHaveBeenCalled()
+    // Le SMS n'a pas de porte moteur : sans envoi connu, le code a expiré.
+    expect(await createEngineActions({ convex, authClient: auth.client }).verifyCode("654321", { kind: "phone", value: "+33 6 00 00 00 00" })).toEqual({ ok: false, code: "code_expired" })
+  })
+
   it("la demande de code porte la langue affichée à ce moment-là : le moteur compose le code dans cette langue", async () => {
     const { convex } = fakeConvex({ "modules/platform/devTools:latestOtp": () => null })
     const auth = fakeAuth()

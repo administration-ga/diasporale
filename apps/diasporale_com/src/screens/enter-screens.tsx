@@ -16,30 +16,41 @@ import {
   normalizeFamilyName,
   normalizeGivenNames,
 } from "@diasporale/features"
-import { useActions, useDataSource, useEntryDoors, useSession } from "@diasporale/features/data"
+import {
+  maskDestination,
+  useActions,
+  useDataSource,
+  useEntryDoors,
+  useSession,
+  type ActionErrorCode,
+  type CodeDestination,
+} from "@diasporale/features/data"
 import { DEMO_IDN_IDENTITIES, isValidDestination } from "@diasporale/features/demo"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { ArrowLeftIcon, FlaskConicalIcon, MailIcon, PhoneIcon } from "lucide-react"
+import { ArrowLeftIcon, FlaskConicalIcon, MailIcon, PhoneIcon, RotateCwIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useId, useState, type FocusEvent } from "react"
+import { useEffect, useId, useRef, useState, type FocusEvent } from "react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
 import { EntryCard, EntryDoor } from "@/components/entry-door"
+import { forgetPendingCode, peekPendingCode, rememberPendingCode, resendWaitSeconds } from "@/lib/pending-code"
 import { entryExit, liveMember, peekReturnPath } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 
 /**
  * Une personne déjà connectée n'a rien à faire sur l'entrée : elle va à la page qu'elle avait
  * demandée (UX-02, MO-03), sinon à son fil, ou à l'onboarding si elle n'est pas membre.
+ * L'adresse en attente d'un code ne lui sert plus : elle est oubliée (EA-08).
  */
 export function useLeaveEntryWhenSignedIn(enabled = true) {
   const session = useSession()
   const router = useRouter()
   useEffect(() => {
     if (!enabled || session.status !== "ready" || session.data.status !== "signed_in") return
+    forgetPendingCode()
     router.replace(entryExit(liveMember(session.data.membership), peekReturnPath()))
   }, [enabled, session, router])
 }
@@ -248,6 +259,17 @@ export function CodeScreen() {
   )
 }
 
+/** Le code parti : l'adresse (gardée dans l'onglet), l'heure de l'envoi, et le code affiché par la démonstration. */
+interface SentCode {
+  readonly destination: CodeDestination
+  readonly sentAt: number
+  /** Jamais gardé dans l'onglet : après un rechargement, la démonstration ne le montre plus (le renvoi en donne un). */
+  readonly demoCode: string | null
+}
+
+/** Ce que la zone de renvoi annonce aux lecteurs d'écran : l'ouverture du renvoi, ou un nouvel envoi. */
+type ResendNotice = "ready" | "resent"
+
 /**
  * Même accès par code sur la porte et sur sa page dédiée : aucune seconde
  * authentification. L'écran qui le monte décide du départ d'une session déjà
@@ -256,6 +278,12 @@ export function CodeScreen() {
  * ou « Recevoir le code » quand la carte crée un compte. Un déploiement qui ne
  * sait pas envoyer le code le dit, et le bouton reste fermé (EA-02) ; tant que
  * les portes se lisent, ou si elles sont illisibles, l'envoi reste ouvert.
+ *
+ * Porte fiable (EA-08, MO-04) : l'adresse à laquelle le code est parti est gardée dans l'onglet
+ * (jamais le code) ; un rechargement ou un aller-retour vers la messagerie reprend la saisie du
+ * code. « Renvoyer le code » attend une minute après chaque envoi, décompte lisible et annoncé
+ * à son ouverture. L'adresse s'oublie à la connexion, au changement d'adresse et à la sortie.
+ * Aucun texte ne cite la durée de validité du code : le moteur ne la publie pas.
  */
 export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
   const { t } = useDiasporaleT()
@@ -266,43 +294,117 @@ export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
   const router = useRouter()
   const ids = useId()
   const [kind, setKind] = useState<"email" | "phone">("email")
-  const [sent, setSent] = useState<{ demoCode: string | null } | null>(null)
+  const [sent, setSent] = useState<SentCode | null>(null)
+  const [now, setNow] = useState(() => Date.now())
+  const [resending, setResending] = useState(false)
+  const [resendError, setResendError] = useState<ActionErrorCode | null>(null)
+  const [notice, setNotice] = useState<ResendNotice | null>(null)
   const destinationForm = useForm<{ destination: string }>({
     resolver: zodResolver(z.object({
       destination: z.string().refine((value) => isValidDestination({ kind, value }), kind === "email" ? "email_invalid" : "phone_invalid"),
     })),
     defaultValues: { destination: "" },
   })
-  const destination = useWatch({ control: destinationForm.control, name: "destination" })
   const sending = destinationForm.formState.isSubmitting
   const destinationError = destinationForm.formState.errors.destination?.message
   const codeForm = useForm<z.infer<typeof codeSchema>>({ resolver: zodResolver(codeSchema), defaultValues: { code: "" } })
+
+  // MO-04 : la saisie reprend après un rechargement ou un aller-retour vers la messagerie. Lue
+  // après le montage : le rendu serveur n'a pas d'onglet, et la porte s'hydrate telle quelle.
+  const setDestination = destinationForm.setValue
+  useEffect(() => {
+    const pending = peekPendingCode()
+    if (pending === null) return
+    setKind(pending.destination.kind)
+    setDestination("destination", pending.destination.value)
+    setNow(Date.now())
+    setSent({ ...pending, demoCode: null })
+  }, [setDestination])
 
   const focusCode = codeForm.setFocus
   useEffect(() => {
     if (sent !== null) focusCode("code")
   }, [sent, focusCode])
 
+  // Le décompte du renvoi : une horloge à la seconde, seulement tant qu'il faut attendre.
+  const wait = sent === null ? 0 : resendWaitSeconds(sent, now)
+  const waiting = wait > 0
+  useEffect(() => {
+    if (!waiting) return
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [waiting])
+  // L'ouverture du renvoi s'annonce une fois, quand le décompte s'achève.
+  const wasWaiting = useRef(false)
+  useEffect(() => {
+    if (wasWaiting.current && !waiting) setNotice("ready")
+    wasWaiting.current = waiting
+  }, [waiting])
+
+  /** Le code vient de partir : l'onglet garde l'adresse, l'écran passe à la saisie. */
+  const markSent = (destination: CodeDestination, demoCode: string | null) => {
+    const at = Date.now()
+    const pending = rememberPendingCode(destination, at)
+    setNow(at)
+    setSent({ ...pending, demoCode })
+  }
+
   const send = destinationForm.handleSubmit(async ({ destination: value }) => {
     try {
-      const result = await actions.requestCode({ kind, value })
+      const destination: CodeDestination = { kind, value }
+      const result = await actions.requestCode(destination)
       if (!result.ok) {
         destinationForm.setError("destination", { message: result.code }, { shouldFocus: true })
         return
       }
-      setSent(result.value)
+      setResendError(null)
+      setNotice(null)
+      markSent(destination, result.value.demoCode)
     } catch {
       destinationForm.setError("destination", { message: "network_unavailable" }, { shouldFocus: true })
     }
   })
 
-  const verify = codeForm.handleSubmit(async ({ code }) => {
+  const resend = async () => {
+    // Le délai se juge à l'instant du geste, rechargement compris : avant la minute, rien ne part.
+    if (sent === null || resending || resendWaitSeconds(sent, Date.now()) > 0) return
+    setResending(true)
+    setResendError(null)
+    setNotice(null)
     try {
-      const result = await actions.verifyCode(code)
+      const result = await actions.requestCode(sent.destination)
+      if (!result.ok) {
+        setResendError(result.code)
+        return
+      }
+      codeForm.reset()
+      markSent(sent.destination, result.value.demoCode)
+      setNotice("resent")
+    } catch {
+      setResendError("network_unavailable")
+    } finally {
+      setResending(false)
+    }
+  }
+
+  const changeDestination = () => {
+    // Changer d'adresse oublie celle qui attendait : un rechargement ne la ramène plus.
+    forgetPendingCode()
+    codeForm.reset()
+    setResendError(null)
+    setNotice(null)
+    setSent(null)
+  }
+
+  const verify = codeForm.handleSubmit(async ({ code }) => {
+    if (sent === null) return
+    try {
+      const result = await actions.verifyCode(code, sent.destination)
       if (!result.ok) {
         codeForm.setError("code", { message: result.code }, { shouldFocus: true })
         return
       }
+      forgetPendingCode()
       router.push(routes.welcome())
     } catch {
       codeForm.setError("code", { message: "network_unavailable" }, { shouldFocus: true })
@@ -310,6 +412,8 @@ export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
   })
 
   const codeError = codeForm.formState.errors.code?.message
+  const verifying = codeForm.formState.isSubmitting
+  const resendHintId = `${ids}-renvoi`
   return (
     <>
       {sent === null ? (
@@ -367,8 +471,11 @@ export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
           </Button>
         </form>
       ) : (
-        <form noValidate onSubmit={verify} aria-busy={codeForm.formState.isSubmitting || undefined} className="flex flex-col gap-5">
-          <p role="status" className="break-words text-[15px]">{t("code.sentTo", { destination })}</p>
+        <form noValidate onSubmit={verify} aria-busy={verifying || undefined} className="flex flex-col gap-5">
+          {/* L'adresse se montre masquée (MO-04) : elle reste sur l'appareil, et l'écran peut être vu par-dessus l'épaule. */}
+          <p role="status" className="break-words text-[15px]">
+            {t("code.sentTo", { destination: maskDestination(sent.destination.kind, sent.destination.value) })}
+          </p>
           {sent.demoCode ? (
             // Le code à recopier ne se ferme pas : la carte n'a pas de croix.
             <FloatingNotice role="note" tone="demo" icon={<FlaskConicalIcon />} heading={t("code.demoCode")}>
@@ -384,7 +491,7 @@ export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 spellCheck={false}
-                readOnly={codeForm.formState.isSubmitting}
+                readOnly={verifying}
                 maxLength={7}
                 className="font-mono text-lg tracking-[0.3em]"
                 {...codeForm.register("code")}
@@ -392,12 +499,30 @@ export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
             )}
           </Field>
           <div className="flex flex-wrap gap-3">
-            <Button type="submit" size="lg" disabled={codeForm.formState.isSubmitting}>
-              {codeForm.formState.isSubmitting ? t("common.pleaseWait") : t("code.verify")}
+            <Button type="submit" size="lg" disabled={verifying}>
+              {verifying ? t("common.pleaseWait") : t("code.verify")}
             </Button>
-            <Button variant="ghost" size="lg" disabled={codeForm.formState.isSubmitting} onClick={() => { codeForm.reset(); setSent(null) }}>
+            <Button variant="ghost" size="lg" disabled={verifying || resending} onClick={changeDestination}>
               {t("code.changeDestination")}
             </Button>
+          </div>
+          <div className="flex flex-col items-start gap-1" aria-busy={resending || undefined}>
+            <Button variant="ghost" disabled={waiting || resending || verifying} aria-describedby={resendHintId} onClick={() => void resend()}>
+              <RotateCwIcon aria-hidden />
+              {resending ? t("common.pleaseWait") : t("entryCode.resend")}
+            </Button>
+            {/* Le décompte se lit à côté du bouton ; il ne s'annonce pas à chaque seconde. */}
+            <p id={resendHintId} className="text-[13px] text-muted-foreground">
+              {waiting ? t("entryCode.resendIn", { seconds: wait }) : t("entryCode.resendReady")}
+            </p>
+            {resendError ? (
+              <p role="alert" className="text-[13px] font-medium text-destructive">
+                {t(`errors.${resendError}`)}
+              </p>
+            ) : null}
+            <p role="status" className="sr-only">
+              {notice === "resent" ? t("entryCode.resent") : notice === "ready" ? t("entryCode.resendReady") : null}
+            </p>
           </div>
         </form>
       )}
