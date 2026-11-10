@@ -11,15 +11,15 @@
  * entrant comprise). Le jour où les appels sont prouvés, on l'ouvre ici, en une valeur, sans
  * rien réécrire : `CALLS_SWITCH = "open"`.
  *
- * Écrans de DIASPORALE qui lisent l'interrupteur : le profil d'une relation (« Appeler ») ; la
- * rubrique « Messages et appels » des réglages (IM-02), qui dit, fermé, qu'aucun appel n'est
- * encore proposé depuis un profil.
- *
- * Tant que le moteur ne lit pas de déclaration « appels ouverts » (issue [S1] d'IM-01, à côté
- * de `liveAvailable`), les surfaces d'iCom montées telles quelles gardent leurs propres gestes :
- * l'en-tête d'une conversation (audio, vidéo, appel de groupe), le journal d'appels et son rappel,
- * le panneau d'appels d'une mise en relation. L'interrupteur leur sera transmis par l'îlot
- * (`IcomIsland`) dès que le moteur l'acceptera.
+ * Qui lit l'interrupteur :
+ *  · l'îlot des surfaces du moteur (`IcomIsland`), qui le déclare au moteur (`callsAvailable`,
+ *    IC-04, antsia#138) : fermé, iCom retire de lui-même tous ses gestes qui lancent un appel
+ *    (en-tête d'une conversation et fiche d'un groupe, rappel du journal, boutons des relations
+ *    et « Nouvel appel », panneau d'appels et accord d'une mise en relation) ;
+ *  · le profil d'une relation (« Appeler ») : ce bouton est écrit par DIASPORALE, la déclaration
+ *    du moteur ne l'atteint pas, il garde donc sa propre condition ;
+ *  · la rubrique « Messages et appels » des réglages (IM-02), qui dit, fermé, que DIASPORALE ne
+ *    propose pas encore d'appel.
  *
  * Pourquoi une valeur du dépôt et pas une variable publique de construction : toute variable
  * `NEXT_PUBLIC_*` lue par l'application doit être déclarée au catalogue de déploiement du moteur

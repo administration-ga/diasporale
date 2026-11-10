@@ -36,13 +36,16 @@ describe("Réglages iCom de démonstration", () => {
     const { settings } = setup()
     const { result, rerender } = renderHook(() => settings.useMine(PERSON))
     expect(result.current).toEqual({ status: "ready", data: DEFAULT_CALL_SETTINGS })
+    // IC-04 : mes relations seulement, accusés de lecture actifs — les défauts du contrat du moteur.
+    expect(result.current).toMatchObject({ data: { outsideRelationsCalls: "silent", readReceipts: true } })
     const first = result.current
     rerender()
     expect(result.current).toBe(first)
   })
 
   it.each([
-    ["qui peut m'appeler", { outsideRelationsCalls: "silent" }],
+    ["qui peut m'appeler", { outsideRelationsCalls: "ring" }],
+    ["accusés de lecture", { readReceipts: false }],
     ["messagerie vocale", { voicemailEnabled: false }],
     ["présence", { sharePresence: false }],
     ["double appel", { callWaiting: false }],
@@ -92,7 +95,7 @@ describe("Réglages iCom de démonstration", () => {
 
   it("chaque compte de démonstration garde ses propres réglages", async () => {
     const { store, settings } = setup()
-    await settings.update(PERSON, { outsideRelationsCalls: "silent" })
+    await settings.update(PERSON, { outsideRelationsCalls: "ring", readReceipts: false })
     await act(async () => { await store.switchTo(OTHER) })
     const { result } = renderHook(() => settings.useMine(OTHER))
     expect(result.current).toEqual({ status: "ready", data: DEFAULT_CALL_SETTINGS })

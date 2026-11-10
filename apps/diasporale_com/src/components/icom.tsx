@@ -12,7 +12,10 @@
  * - `IcomIsland` pose, autour de chaque surface du moteur (dock, messagerie,
  *   statuts, boutons d'appel), l'adaptateur de routage et le réseau courant
  *   (`NetworkProvider`, simple contexte) : l'arbre des pages n'est jamais
- *   remonté quand la session se résout.
+ *   remonté quand la session se résout. Il y déclare aussi si DIASPORALE propose
+ *   des appels (`callsAvailable`, interrupteur d'IM-01) : fermés, les surfaces du
+ *   moteur retirent tous leurs gestes qui LANCENT un appel ; la couche qui en
+ *   REÇOIT un reste montée.
  * - En démonstration, iCom est fermé (`useIcomState()` : `off`, raison `demo`).
  */
 import { NetworkProvider } from "@antsia/api/network"
@@ -29,6 +32,7 @@ import { useRouter } from "next/navigation"
 import { createContext, type ReactNode, useCallback, useContext, useMemo } from "react"
 
 import { DEFAULT_CHARTE } from "@/lib/appearance"
+import { callsAreOpen } from "@/lib/calls"
 import { engineRoutes } from "@/lib/engine-routes"
 import { ICOM_DEMO, resolveIcomState, type IcomNetwork, type IcomState } from "@/lib/icom-state"
 import { routes } from "@/lib/routes"
@@ -60,6 +64,12 @@ export function useIcomNetwork(): IcomNetwork | null {
  * Un îlot des surfaces du moteur : routage de Next et réseau courant, là où la surface est montée.
  * Les surfaces portalisées du moteur (carte iCom, appel, statuts) redéclarent la charte du
  * réseau : celle du thème choisi (Sable ou Gaboma), Sable hors du fournisseur d'apparence.
+ *
+ * `callsAvailable` (IM-01, déclaration du moteur livrée par IC-04, antsia#138) : l'interrupteur
+ * des appels de DIASPORALE, transmis à chaque îlot. Fermé, le moteur retire l'appel audio, vidéo
+ * et de groupe de l'en-tête d'une conversation et de la fiche d'un groupe, le rappel du journal,
+ * les boutons d'appel des relations et la vue « Nouvel appel », le panneau d'appels et l'accord
+ * d'une mise en relation. Une capacité de présentation, jamais un droit : le serveur garde ses gardes.
  */
 export function IcomIsland(props: { network: IcomNetwork; children: ReactNode }) {
   const appearance = useOptionalAppearance()
@@ -71,6 +81,7 @@ export function IcomIsland(props: { network: IcomNetwork; children: ReactNode })
         personId={props.network.personId}
         charte={appearance?.charte ?? DEFAULT_CHARTE}
         routes={engineRoutes}
+        callsAvailable={callsAreOpen()}
       >
         {props.children}
       </NetworkProvider>

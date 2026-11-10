@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import type { EngineAuthClient } from "@antsia/api/auth-client"
+import { DEFAULT_CALL_SETTINGS } from "@diasporale/features/data"
 import { cleanup, renderHook } from "@testing-library/react"
 import type { ConvexReactClient } from "convex/react"
 import { getFunctionName } from "convex/server"
@@ -41,7 +42,8 @@ const ENGINE_DEFAULTS = {
   autoMeetingDnd: null,
   sharePresence: true,
   pushIncoming: true,
-  outsideRelationsCalls: "ring" as const,
+  outsideRelationsCalls: "silent" as const,
+  readReceipts: true,
   journalSeenAt: null,
   saved: false,
 }
@@ -84,16 +86,19 @@ describe("Réglages iCom — lecture (calls/preferences:getMine)", () => {
     const { result } = renderHook(() => settings.useMine(PERSON._id))
     expect(result.current).toEqual({
       status: "ready",
-      data: { outsideRelationsCalls: "ring", dndUntil: null, voicemailEnabled: true, sharePresence: true, callWaiting: true },
+      data: { outsideRelationsCalls: "silent", dndUntil: null, readReceipts: true, voicemailEnabled: true, sharePresence: true, callWaiting: true },
     })
+    // Les défauts du port (démonstration, formulaire) sont ceux que le moteur rend (IC-04).
+    expect(result.current).toEqual({ status: "ready", data: DEFAULT_CALL_SETTINGS })
     const [, args] = mocks.read.mock.calls.find(([name]) => name === "modules/calls/preferences:getMine")!
     expect((args as { now: number }).now % MINUTE).toBe(0)
   })
 
   it("projette un silence en cours et les choix déjà faits", () => {
-    expect(toCallSettingsView({ ...ENGINE_DEFAULTS, dnd: { until: 5_000, startedAt: 1_000 }, outsideRelationsCalls: "silent", voicemailEnabled: false, sharePresence: false, callWaiting: false, saved: true })).toEqual({
-      outsideRelationsCalls: "silent",
+    expect(toCallSettingsView({ ...ENGINE_DEFAULTS, dnd: { until: 5_000, startedAt: 1_000 }, outsideRelationsCalls: "ring", readReceipts: false, voicemailEnabled: false, sharePresence: false, callWaiting: false, saved: true })).toEqual({
+      outsideRelationsCalls: "ring",
       dndUntil: 5_000,
+      readReceipts: false,
       voicemailEnabled: false,
       sharePresence: false,
       callWaiting: false,
@@ -120,7 +125,8 @@ describe("Réglages iCom — lecture (calls/preferences:getMine)", () => {
 
 describe("Réglages iCom — un interrupteur, un appel au moteur (calls/preferences:update)", () => {
   it.each([
-    ["qui peut m'appeler", { outsideRelationsCalls: "silent" }],
+    ["qui peut m'appeler", { outsideRelationsCalls: "ring" }],
+    ["accusés de lecture", { readReceipts: false }],
     ["messagerie vocale", { voicemailEnabled: false }],
     ["présence", { sharePresence: false }],
     ["double appel", { callWaiting: false }],
@@ -132,6 +138,7 @@ describe("Réglages iCom — un interrupteur, un appel au moteur (calls/preferen
 
   it("n'envoie jamais un champ absent : il reste inchangé dans le moteur", () => {
     expect(toUpdateArgs({ callWaiting: false, voicemailEnabled: undefined })).toEqual({ callWaiting: false })
+    expect(toUpdateArgs({ readReceipts: false, outsideRelationsCalls: undefined })).toEqual({ readReceipts: false })
     expect(Object.keys(toUpdateArgs({}))).toEqual([])
   })
 

@@ -72,6 +72,26 @@ describe("« Messages et appels » — ce que la rubrique dit (IM-02)", () => {
     expect(region().queryByText(text("settings.calls.demoNotice"))).toBeNull()
   })
 
+  it("dit le défaut du moteur, « Mes relations seulement », proposé en premier et coché pour qui n'a rien réglé (IC-04)", () => {
+    mount(fakeCapability().capability)
+    const radios = region().getAllByRole("radio")
+    expect(radios.map((radio) => radio.getAttribute("aria-label"))).toEqual([t("settings.calls.outside.silent"), t("settings.calls.outside.ring")])
+    expect(region().getByRole("radio", { name: t("settings.calls.outside.silent") })).toBeChecked()
+    expect(region().getByText(text("settings.calls.outside.silentHint"))).toBeInTheDocument()
+    expect(t("settings.calls.outside.silentHint")).toMatch(/par défaut/)
+    // L'appelant voit un appel sans réponse : la rubrique ne dit plus qu'il « l'apprend ».
+    expect(t("settings.calls.outside.silentHint")).not.toMatch(/apprend/)
+  })
+
+  it("les accusés de lecture disent qu'ils sont réciproques et valent aussi dans ANTSIA", () => {
+    mount(fakeCapability().capability)
+    const receipts = region().getByRole("switch", { name: t("settings.calls.readReceipts") })
+    expect(receipts).toBeChecked()
+    expect(receipts).toHaveAccessibleDescription(String(t("settings.calls.readReceiptsHint")))
+    expect(t("settings.calls.readReceiptsHint")).toMatch(/ANTSIA/)
+    expect(t("settings.calls.readReceiptsHint")).toMatch(/réciproques/)
+  })
+
   it("appels ouverts, la mise en garde disparaît ; aucun bouton d'appel n'est jamais proposé ici", () => {
     mocks.callsOpen = true
     mount(fakeCapability().capability)
@@ -90,9 +110,10 @@ describe("« Messages et appels » — ce que la rubrique dit (IM-02)", () => {
   })
 
   it("montre les réglages du serveur, et seul un choix modifié ouvre « Enregistrer »", () => {
-    const { capability } = fakeCapability({ status: "ready", data: { ...DEFAULT_CALL_SETTINGS, outsideRelationsCalls: "silent", sharePresence: false } })
+    const { capability } = fakeCapability({ status: "ready", data: { ...DEFAULT_CALL_SETTINGS, outsideRelationsCalls: "ring", readReceipts: false, sharePresence: false } })
     mount(capability)
-    expect(region().getByRole("radio", { name: t("settings.calls.outside.silent") })).toBeChecked()
+    expect(region().getByRole("radio", { name: t("settings.calls.outside.ring") })).toBeChecked()
+    expect(region().getByRole("switch", { name: t("settings.calls.readReceipts") })).not.toBeChecked()
     expect(region().getByRole("switch", { name: t("settings.calls.presence") })).not.toBeChecked()
     expect(region().getByRole("switch", { name: t("settings.calls.voicemail") })).toBeChecked()
     expect(save()).toBeDisabled()
@@ -117,6 +138,7 @@ describe("« Messages et appels » — ce que la rubrique dit (IM-02)", () => {
 
 describe("« Messages et appels » — un interrupteur, un appel à l'adaptateur", () => {
   it.each([
+    ["accusés de lecture", "settings.calls.readReceipts", { readReceipts: false }],
     ["messagerie vocale", "settings.calls.voicemail", { voicemailEnabled: false }],
     ["présence", "settings.calls.presence", { sharePresence: false }],
     ["double appel", "settings.calls.callWaiting", { callWaiting: false }],
@@ -131,9 +153,18 @@ describe("« Messages et appels » — un interrupteur, un appel à l'adaptateur
     expect(mocks.success).toHaveBeenCalledWith(t("settings.saved"))
   })
 
-  it("« qui peut vous appeler » : « Mes relations seulement » part à l'adaptateur", async () => {
+  it("« qui peut vous appeler » : « Tous les membres » part à l'adaptateur, seul", async () => {
     const user = userEvent.setup()
     const { capability } = fakeCapability()
+    mount(capability)
+    await user.click(region().getByRole("radio", { name: t("settings.calls.outside.ring") }))
+    await user.click(save())
+    await waitFor(() => expect(capability.update).toHaveBeenCalledWith(membership.personId, { outsideRelationsCalls: "ring" }))
+  })
+
+  it("« qui peut vous appeler » : revenir à « Mes relations seulement » part à l'adaptateur", async () => {
+    const user = userEvent.setup()
+    const { capability } = fakeCapability({ status: "ready", data: { ...DEFAULT_CALL_SETTINGS, outsideRelationsCalls: "ring" } })
     mount(capability)
     await user.click(region().getByRole("radio", { name: t("settings.calls.outside.silent") }))
     await user.click(save())
@@ -190,13 +221,17 @@ describe("« Messages et appels » — « Ne pas déranger »", () => {
     mount(fakeCapability().capability, "engine", "en")
     const english = within(screen.getByRole("region", { name: "Messages and calls" }))
     expect(english.getByRole("switch", { name: "Voicemail" })).toBeInTheDocument()
+    expect(english.getByRole("switch", { name: "Read receipts" })).toBeInTheDocument()
     expect(english.getByRole("radio", { name: "My connections only" })).toBeInTheDocument()
     expect(english.getByRole("button", { name: "Turn on" })).toBeInTheDocument()
   })
 })
 
 describe("« Messages et appels » — avec le fournisseur de démonstration", () => {
-  it("un réglage enregistré est relu par la démonstration, pour le seul compte de la session", async () => {
+  it.each([
+    ["double appel", "settings.calls.callWaiting"],
+    ["accusés de lecture", "settings.calls.readReceipts"],
+  ] as const)("« %s » : enregistré, relu par la démonstration, pour le seul compte de la session", async (_label, key) => {
     const user = userEvent.setup()
     const state: DemoState = { ...createDemoSeed(NOW), session: { personId: "p-prisca" } }
     const stored = new Map([[DEMO_STORAGE_KEY, JSON.stringify(state)]])
@@ -210,10 +245,10 @@ describe("« Messages et appels » — avec le fournisseur de démonstration", (
       </I18nProvider>,
     )
     expect(region().getByText(text("settings.calls.demoNotice"))).toBeInTheDocument()
-    await user.click(region().getByRole("switch", { name: t("settings.calls.callWaiting") }))
+    await user.click(region().getByRole("switch", { name: t(key) }))
     await user.click(save())
     await waitFor(() => expect(mocks.success).toHaveBeenCalledWith(t("settings.saved")))
-    expect(region().getByRole("switch", { name: t("settings.calls.callWaiting") })).not.toBeChecked()
+    expect(region().getByRole("switch", { name: t(key) })).not.toBeChecked()
     expect(save()).toBeDisabled()
     // Un autre compte de démonstration ne se règle pas depuis cette session.
     expect(await source.callSettings?.update("p-nadia", { callWaiting: false })).toEqual({ ok: false, code: "not_found" })
