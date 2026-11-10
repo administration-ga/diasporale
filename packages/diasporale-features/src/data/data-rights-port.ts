@@ -53,6 +53,13 @@ export const APPEAL_REASON_MAX = DECISION_REASON_MAX
 /** Une page de décisions (le moteur borne chaque page à cinquante). */
 export const DECISIONS_PAGE_SIZE = 10
 
+/**
+ * La fenêtre lue au moteur pour MES décisions : la plus large qu'il admet (cinquante). Le filtre
+ * de MD-07 (`authorDecisionOutcome`) retire d'une fenêtre les dossiers ouverts et les classements :
+ * plus elle est large, plus il est rare qu'une fenêtre se vide tout en annonçant une suite.
+ */
+export const AUTHOR_DECISIONS_WINDOW = 50
+
 /** Codes de refus propres aux droits personnels (fragment `data-rights.json`). */
 export const DATA_RIGHTS_ERROR_CODES = [
   // Effacement : la grâce est passée, la demande ne peut plus être annulée.
@@ -198,6 +205,30 @@ export function nextAppealLevel(decision: Pick<ModerationDecisionView, "status" 
   const network = decision.appeals.find((appeal) => appeal.level === "network")
   const level: DecisionAppealLevel = decision.level === "team" && network?.status !== "upheld" ? "network" : "platform"
   return decision.appeals.some((appeal) => appeal.level === level) ? null : level
+}
+
+/**
+ * MD-07 (plan 14, décision 6 du propriétaire) — ce que l'AUTEUR d'un contenu lit d'un dossier :
+ * une mesure prise (`actioned`), et cette même mesure une fois annulée sur son recours (le moteur
+ * repasse alors le dossier à `dismissed` et garde le recours `overturned`). Jamais un dossier
+ * ouvert ou en examen, jamais un classement sans suite ni une relecture approuvée : dans une
+ * conversation à deux ou un petit hub, apprendre qu'un dossier s'ouvre peut désigner la personne
+ * qui a signalé. Le correctif de fond est demandé au moteur (antsia#99) ; d'ici là, l'adaptateur
+ * et l'écran de DIASPORALE appliquent cette règle, quel que soit le fournisseur.
+ */
+export const AUTHOR_DECISION_OUTCOMES = ["actioned", "overturned"] as const
+export type AuthorDecisionOutcome = (typeof AUTHOR_DECISION_OUTCOMES)[number]
+
+/** L'issue que l'auteur lit, ou `null` : le dossier ne se montre pas à lui. */
+export function authorDecisionOutcome(decision: Pick<ModerationDecisionView, "status" | "appeals">): AuthorDecisionOutcome | null {
+  if (decision.status === "actioned") return "actioned"
+  if (decision.status === "dismissed" && decision.appeals.some((appeal) => appeal.status === "overturned")) return "overturned"
+  return null
+}
+
+/** Une fenêtre réduite à ce que l'auteur lit (MD-07) ; la continuation du moteur est gardée telle quelle. */
+export function authorDecisionsOnly(page: ModerationDecisionsPage): ModerationDecisionsPage {
+  return { ...page, items: page.items.filter((decision) => authorDecisionOutcome(decision) !== null) }
 }
 
 /** Le motif d'un recours, jugé avant tout appel : la même borne que le moteur. */

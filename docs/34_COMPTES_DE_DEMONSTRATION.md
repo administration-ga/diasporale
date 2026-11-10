@@ -38,7 +38,15 @@ Adresses réservées `<acteur>@demo.diasporale.test`. Le domaine `.test` n'est j
 Gestes réels, joués par l'application à la première entrée :
 - profil de mentor (mentor) et profil de talent (talent) ;
 - offre de service et offre d'emploi de la page d'entreprise (entreprise) ;
-- mission bénévole de l'association (association).
+- mission bénévole de l'association (association) ;
+- deux événements fictifs de l'association (association, geste `associationEvent`, EV-01 du
+  plan 08, ajouté le 10/11/2026) : une soirée d'accueil ouverte à tout DIASPORALE, deux places,
+  dans sept jours ; une assemblée générale réservée aux adhérents, dans quatorze jours. Fuseau de
+  Paris, heure ronde. Créés par la capacité du port (`associationEvents.create`), chacun sous une
+  clé d'idempotence stable (`diasporale-demo:association-event:accueil`, `…:assemblee`). Aucune
+  politique de modération n'est posée : ils restent « en attente de modération », visibles de
+  l'équipe de la page seule, jusqu'à l'approbation par la modératrice (compte `moderateur`) au
+  bureau, par le chemin réel.
 
 ## Fonctionnement
 
@@ -94,8 +102,15 @@ Gestes réels, joués par l'application à la première entrée :
   l'équipement la rend telle quelle et n'y pose rien.
 - Les envois de code sont limités à 3 par 5 minutes et par adresse, et les connexions à 5 par
   15 minutes. Un quatrième appui rapide sur le même acteur est refusé un moment.
+- Les gestes d'une page ne se jouent qu'à sa création : sur un backend où l'association a déjà
+  été équipée avant EV-01, ses deux événements ne se créent pas (backend local neuf, ou création
+  à la main par l'écran de la page).
 - La politique des conversations de mise en relation (CC-V) n'est PAS ouverte par les comptes
-  de démonstration : décision réservée au propriétaire, ou à un opérateur.
+  de démonstration : décision réservée au propriétaire, ou à un opérateur. Pour un backend LOCAL,
+  la graine du banc de recette (LX-04, `modules/diaspora/seed:matchmakingBenchForRecette` dans
+  ANTSIA) pose l'équipe de démonstration et y met la modératrice ; elle relit les trois politiques
+  sans les écrire tant que le moteur n'a pas extrait le cœur de `setPolicy` (issue [S1]). Elle est
+  refusée sur tout déploiement en nuage, démonstration comprise.
 - L'équipe de modération de démonstration n'a pas de périmètre : elle reçoit les nouveaux
   signalements du réseau local.
 - Pendant la préparation, quelques secondes, l'adhésion est encore « en attente » : la carte de
@@ -104,7 +119,8 @@ Gestes réels, joués par l'application à la première entrée :
 ## Vérifications
 
 - Tests :
-  - panneau (8), amorçage (12), catalogue du domaine (7) ;
+  - panneau (8), amorçage (16 depuis EV-01, dont 4 pour les événements de l'association),
+    catalogue du domaine (7) ;
   - équipement côté moteur : `demoAccounts.test.ts` d'ANTSIA, 49 tests, dont 13 pour les accès
     restreints, chaque garde avec son contrôle positif ;
   - cliquets i18n : familles `demoAccounts.*`.

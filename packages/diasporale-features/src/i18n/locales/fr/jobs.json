@@ -111,6 +111,12 @@
       "applied": "Vous avez candidaté. État : {{status}}.",
       "myApplications": "Voir mes candidatures"
     },
+    "fraud": {
+      "title": "On ne paie jamais pour candidater",
+      "body": "Une vraie offre ne demande jamais d'argent : ni frais de dossier, ni formation payante, ni avance pour un visa, un billet ou un logement. Méfiez-vous d'une promesse de visa et de qui vous presse de poursuivre hors de DIASPORALE.",
+      "report": "Une offre vous semble fausse ? Signalez-la avec le motif « {{reason}} » : elle disparaît aussitôt pour vous.",
+      "reportHint": "Frais demandés, promesse de visa : choisissez le motif « {{reason}} »."
+    },
     "apply": {
       "cta": "Candidater",
       "title": "Candidater : {{offer}}",
@@ -295,6 +301,7 @@
       "deadline": "Date limite des candidatures (facultative)",
       "deadlineHint": "Jusqu'à la fin de ce jour, fuseau {{zone}}. Six mois au plus.",
       "fairness": "N'exigez ni âge, ni sexe, ni origine, ni situation familiale, ni photo. Aucune coordonnée : les candidatures arrivent sur DIASPORALE.",
+      "noFees": "Ne demandez jamais d'argent aux candidats : ni frais de dossier, ni formation payante, ni avance pour un visa ou un voyage. Une offre qui en demande peut être signalée par les membres et retirée par la modération.",
       "saveDraft": "Enregistrer le brouillon",
       "publish": "Publier",
       "save": "Enregistrer les modifications",

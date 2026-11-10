@@ -10,6 +10,10 @@
  * Idempotence : une clé STABLE pendant la vie de la feuille ; un double clic ou
  * un renvoi après une coupure rend la même candidature. Aucune coordonnée dans
  * le message ; aucun âge, sexe, origine, situation familiale ni photo demandés.
+ *
+ * EM-01 : la feuille s'ouvre sur l'encart « On ne paie jamais pour candidater »,
+ * lisible sans défiler, « Signaler » à côté ; il est monté hors du formulaire, pour
+ * que son bouton n'envoie jamais la candidature.
  */
 import { JOB_APPLICATION_MESSAGE_MAX_LENGTH, JOB_APPLICATION_MESSAGE_MIN_LENGTH, jobTextHasContact } from "@diasporale/domain"
 import { Button, Card, Checkbox, Field, Label, Sheet, SheetContent, Textarea } from "@diasporale/features"
@@ -25,7 +29,7 @@ import { z } from "zod"
 
 import { routes } from "@/lib/routes"
 
-import { newJobIdempotencyKey } from "./job-parts"
+import { JobFraudNotice, newJobIdempotencyKey } from "./job-parts"
 
 const applySchema = z.object({
   message: z
@@ -170,79 +174,82 @@ function ApplyForm(props: { readonly jobs: JobsCapability; readonly offer: JobOf
 
   const busy = form.formState.isSubmitting
   return (
-    <form noValidate className="flex min-w-0 flex-col gap-4" onSubmit={submit}>
-      <Field
-        id={`${id}-message`}
-        label={t("jobs.apply.message")}
-        hint={t("jobs.apply.messageHint", { min: JOB_APPLICATION_MESSAGE_MIN_LENGTH })}
-        error={message(errors.message?.message)}
-      >
-        {(field) => (
-          <Textarea id={field.id} rows={6} maxLength={JOB_APPLICATION_MESSAGE_MAX_LENGTH} aria-describedby={field.describedBy} aria-invalid={field.invalid || undefined} disabled={busy} {...form.register("message")} />
-        )}
-      </Field>
+    <div className="flex min-w-0 flex-col gap-4">
+      <JobFraudNotice offerId={props.offer.id} />
+      <form noValidate className="flex min-w-0 flex-col gap-4" onSubmit={submit}>
+        <Field
+          id={`${id}-message`}
+          label={t("jobs.apply.message")}
+          hint={t("jobs.apply.messageHint", { min: JOB_APPLICATION_MESSAGE_MIN_LENGTH })}
+          error={message(errors.message?.message)}
+        >
+          {(field) => (
+            <Textarea id={field.id} rows={6} maxLength={JOB_APPLICATION_MESSAGE_MAX_LENGTH} aria-describedby={field.describedBy} aria-invalid={field.invalid || undefined} disabled={busy} {...form.register("message")} />
+          )}
+        </Field>
 
-      <div className="flex flex-col gap-1.5">
-        {attachable ? (
+        <div className="flex flex-col gap-1.5">
+          {attachable ? (
+            <div className="flex items-start gap-3">
+              <Controller
+                control={form.control}
+                name="shareTalentProfile"
+                render={({ field }) => (
+                  <Checkbox id={`${id}-profil`} checked={field.value} onCheckedChange={(checked) => field.onChange(checked === true)} onBlur={field.onBlur} disabled={busy} />
+                )}
+              />
+              <Label htmlFor={`${id}-profil`} className="font-normal leading-snug">{t("jobs.apply.shareProfile", { title: profile.title })}</Label>
+            </div>
+          ) : profile !== null ? (
+            <p className="text-[13px] text-muted-foreground">{t("jobs.apply.profileHidden")}</p>
+          ) : talent.status === "ready" ? (
+            <p className="text-[13px] text-muted-foreground">
+              {t("jobs.apply.noProfile")}{" "}
+              <NextLink href={routes.talents()} className="font-medium text-primary underline-offset-4 hover:underline">{t("jobs.apply.createProfile")}</NextLink>
+            </p>
+          ) : null}
+        </div>
+
+        <p className="rounded-lg bg-muted px-3 py-2 text-[13px]">{t("jobs.apply.reminder")}</p>
+
+        <div className="flex flex-col gap-1.5">
           <div className="flex items-start gap-3">
             <Controller
               control={form.control}
-              name="shareTalentProfile"
+              name="consent"
               render={({ field }) => (
-                <Checkbox id={`${id}-profil`} checked={field.value} onCheckedChange={(checked) => field.onChange(checked === true)} onBlur={field.onBlur} disabled={busy} />
+                <Checkbox
+                  id={`${id}-consentement`}
+                  checked={field.value}
+                  onCheckedChange={(checked) => field.onChange(checked === true)}
+                  onBlur={field.onBlur}
+                  aria-invalid={errors.consent ? true : undefined}
+                  aria-describedby={errors.consent ? `${id}-consentement-erreur` : undefined}
+                  disabled={busy}
+                />
               )}
             />
-            <Label htmlFor={`${id}-profil`} className="font-normal leading-snug">{t("jobs.apply.shareProfile", { title: profile.title })}</Label>
+            <Label htmlFor={`${id}-consentement`} className="font-normal leading-snug">{t("jobs.apply.consent", { page: props.offer.employer.name })}</Label>
           </div>
-        ) : profile !== null ? (
-          <p className="text-[13px] text-muted-foreground">{t("jobs.apply.profileHidden")}</p>
-        ) : talent.status === "ready" ? (
-          <p className="text-[13px] text-muted-foreground">
-            {t("jobs.apply.noProfile")}{" "}
-            <NextLink href={routes.talents()} className="font-medium text-primary underline-offset-4 hover:underline">{t("jobs.apply.createProfile")}</NextLink>
-          </p>
+          {errors.consent?.message ? <p id={`${id}-consentement-erreur`} role="alert" className="text-[13px] font-medium text-destructive">{message(errors.consent.message)}</p> : null}
+        </div>
+
+        {formError ? (
+          <div role="alert" className="flex flex-col items-start gap-2 text-sm">
+            <p className="font-medium text-destructive">{OFFER_MOVED.has(formError) ? t(formError === "not_found" ? "jobs.apply.closed" : "jobs.apply.changed") : t(`errors.${formError}`)}</p>
+            {formError === "job_application_already_exists" ? (
+              <Button asChild variant="outline" size="sm">
+                <NextLink href={routes.myApplications()}>{t("jobs.apply.myApplications")}</NextLink>
+              </Button>
+            ) : null}
+            {OFFER_MOVED.has(formError) ? <Button variant="outline" size="sm" onClick={props.onClose}>{t("jobs.apply.reread")}</Button> : null}
+          </div>
         ) : null}
-      </div>
-
-      <p className="rounded-lg bg-muted px-3 py-2 text-[13px]">{t("jobs.apply.reminder")}</p>
-
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-start gap-3">
-          <Controller
-            control={form.control}
-            name="consent"
-            render={({ field }) => (
-              <Checkbox
-                id={`${id}-consentement`}
-                checked={field.value}
-                onCheckedChange={(checked) => field.onChange(checked === true)}
-                onBlur={field.onBlur}
-                aria-invalid={errors.consent ? true : undefined}
-                aria-describedby={errors.consent ? `${id}-consentement-erreur` : undefined}
-                disabled={busy}
-              />
-            )}
-          />
-          <Label htmlFor={`${id}-consentement`} className="font-normal leading-snug">{t("jobs.apply.consent", { page: props.offer.employer.name })}</Label>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="commerce" type="submit" disabled={busy} aria-busy={busy}>{t(busy ? "jobs.apply.sending" : "jobs.apply.submit")}</Button>
+          <Button type="button" variant="ghost" disabled={busy} onClick={props.onClose}>{t("common.cancel")}</Button>
         </div>
-        {errors.consent?.message ? <p id={`${id}-consentement-erreur`} role="alert" className="text-[13px] font-medium text-destructive">{message(errors.consent.message)}</p> : null}
-      </div>
-
-      {formError ? (
-        <div role="alert" className="flex flex-col items-start gap-2 text-sm">
-          <p className="font-medium text-destructive">{OFFER_MOVED.has(formError) ? t(formError === "not_found" ? "jobs.apply.closed" : "jobs.apply.changed") : t(`errors.${formError}`)}</p>
-          {formError === "job_application_already_exists" ? (
-            <Button asChild variant="outline" size="sm">
-              <NextLink href={routes.myApplications()}>{t("jobs.apply.myApplications")}</NextLink>
-            </Button>
-          ) : null}
-          {OFFER_MOVED.has(formError) ? <Button variant="outline" size="sm" onClick={props.onClose}>{t("jobs.apply.reread")}</Button> : null}
-        </div>
-      ) : null}
-      <div className="flex flex-wrap gap-2">
-        <Button variant="commerce" type="submit" disabled={busy} aria-busy={busy}>{t(busy ? "jobs.apply.sending" : "jobs.apply.submit")}</Button>
-        <Button type="button" variant="ghost" disabled={busy} onClick={props.onClose}>{t("common.cancel")}</Button>
-      </div>
-    </form>
+      </form>
+    </div>
   )
 }
