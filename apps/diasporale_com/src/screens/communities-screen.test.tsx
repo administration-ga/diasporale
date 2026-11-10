@@ -125,6 +125,17 @@ describe("/communautes — le hub de mon pays", () => {
     expect(screen.getAllByRole("navigation", { name: "Vie communautaire du pays" })).toHaveLength(1)
   })
 
+  it("démonstration : le bloc « À propos » et ce que comptent les membres visibles, sans date de passage (HB-05)", () => {
+    const { source } = demo("p-mireille")
+    renderCommunities(source)
+
+    expect(screen.getByText("Compteurs de démonstration, calculés sur les données fictives.")).toBeInTheDocument()
+    expect(screen.getByText("Membres visibles : ceux qui ont choisi l'annuaire.")).toBeInTheDocument()
+    expect(screen.queryByText(/Comptés le/)).not.toBeInTheDocument()
+    const details = screen.getByText(/^À propos du hub/).closest("details")
+    expect(details).toHaveTextContent("Pays ouvert : les membres qui y résident peuvent publier dans ce hub.")
+  })
+
   it("sans session, ne montre aucun hub et renvoie vers l'entrée", () => {
     const { source } = demo("p-mireille")
     const anonymous: DiasporaleDataSource = { ...source, useSession: () => ({ status: "ready", data: { status: "anonymous" } }) }

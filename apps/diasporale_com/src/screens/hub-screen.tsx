@@ -42,6 +42,7 @@ import { AppShell, useComposer } from "@/components/app-shell"
 import { CommunityShortcuts } from "@/components/community-shortcuts"
 import { FeedPages } from "@/components/feed-pages"
 import { Gate } from "@/components/gate"
+import { HubAbout, HubCountersNote, hubCountersMeasured } from "@/components/hub-about"
 import { countryEventsReader, HubEventsTab } from "@/components/hub-events"
 import { HubJobsTab } from "@/components/job-hub-tab"
 import { StatusBanner } from "@/components/status-banner"
@@ -168,7 +169,8 @@ function HubBody(props: HubContentProps & { readonly pages: HubPagesQuery | null
             <CountryJump membership={props.membership} label={t("hub.switch")} current={props.country} />
           </div>
         </div>
-        {hub.status === "ready" && !hub.data.counters.dormant ? (
+        {/* HB-05 : un compteur du moteur sans date de passage n'est pas mesuré ; il ne s'affiche pas. */}
+        {hub.status === "ready" && !hub.data.counters.dormant && hubCountersMeasured(hub.data) ? (
           <div className={cn("grid grid-cols-2 gap-4 border-t border-border bg-[var(--ink-50)] px-5 py-4 md:px-6", hub.data.eventsSource === "unmeasured" ? "sm:grid-cols-3" : "sm:grid-cols-4")}>
             <StatCounter value={hub.data.counters.members} label={t("hub.counters.members")} />
             <StatCounter value={hub.data.counters.associations} label={t("hub.counters.associations")} />
@@ -178,6 +180,7 @@ function HubBody(props: HubContentProps & { readonly pages: HubPagesQuery | null
             {hub.data.countersSource === "demo" ? (
               <p className="col-span-full text-[11px] text-muted-foreground">{t("hub.countersDemo")}</p>
             ) : null}
+            <HubCountersNote computedAt={hub.data.countersComputedAt} />
           </div>
         ) : null}
         {/* HB-04 : les rubriques du pays du hub, le pays consulté compris ; la résidence ne change pas. */}
@@ -185,6 +188,8 @@ function HubBody(props: HubContentProps & { readonly pages: HubPagesQuery | null
           <CommunityShortcuts country={props.country} />
         </div>
       </header>
+
+      {hub.status === "ready" ? <HubAbout open={hub.data.open} countryLabel={name} /> : null}
 
       {searchParams.get("bienvenue") === "1" && isHome ? (
         <FloatingNotice

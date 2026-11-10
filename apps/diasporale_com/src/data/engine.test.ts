@@ -140,6 +140,15 @@ describe("projections du moteur vers les vues de DIASPORALE", () => {
     expect(view.events).toEqual([])
   })
 
+  it("le hub d'un pays : la date du dernier passage est reprise telle quelle, et aucune avant le premier passage (HB-05)", () => {
+    const counters = { dormant: false, members: { kind: "below_threshold", threshold: 20 }, associations: { kind: "value", value: 2 }, companies: { kind: "value", value: 0 }, upcomingEvents: { kind: "value", value: 0 } }
+    const pass = Date.UTC(2026, 10, 9, 2, 30)
+    expect(toCountryHubView({ country: "FR", open: true, counters, countersComputedAt: pass, upcomingEventsComputedAt: null } as never, "FR").countersComputedAt).toBe(pass)
+    expect(toCountryHubView({ country: "FR", open: true, counters, countersComputedAt: null, upcomingEventsComputedAt: null } as never, "FR").countersComputedAt).toBeNull()
+    // Une valeur absente ne devient jamais une date.
+    expect(toCountryHubView({ country: "FR", open: true, counters } as never, "FR").countersComputedAt).toBeNull()
+  })
+
   it("une publication du moteur est de portée « diaspora » : elle paraît dans « Mon pays » et « Diaspora », « Pour vous » si elle est à soi", () => {
     const item = (id: string, isMine: boolean) =>
       ({

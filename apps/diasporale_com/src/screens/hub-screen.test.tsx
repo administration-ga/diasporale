@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
+import { COUNTRY_OPENING_REQUIREMENTS, DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
+import { formatDate } from "@diasporale/features"
 import type { CountryHubView, Loadable, MembershipView } from "@diasporale/features/data"
 import { I18nProvider } from "@diasporale/features/i18n/client"
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
@@ -74,6 +75,9 @@ const membership: MembershipView = {
   directoryVisibility: "hidden",
 }
 
+/** Le dernier passage nocturne du moteur (2 h 30 UTC). */
+const PASS = Date.UTC(2026, 10, 9, 2, 30)
+
 const hub: CountryHubView = {
   country: "CA",
   open: true,
@@ -85,6 +89,7 @@ const hub: CountryHubView = {
     upcomingEvents: { kind: "value", value: 0 },
   },
   countersSource: "materialized",
+  countersComputedAt: PASS,
   officialPages: [],
   associations: [],
   companies: [],
@@ -92,9 +97,12 @@ const hub: CountryHubView = {
   eventsSource: "unmeasured",
 }
 
-function tree(iso = "CA") {
-  return <I18nProvider locale="fr"><HubScreen iso={iso} /></I18nProvider>
+function tree(iso = "CA", locale: "fr" | "en" = "fr") {
+  return <I18nProvider locale={locale}><HubScreen iso={iso} /></I18nProvider>
 }
+
+/** Le texte tel que l'écran le montre, espaces insécables comprises, comparé espaces repliées. */
+const spaced = (text: string) => text.replace(/\s+/g, " ")
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -225,5 +233,92 @@ describe("HubScreen — pays pas encore ouvert (HB-01)", () => {
     mocks.hub = { status: "ready", data: hub }
     render(tree())
     expect(screen.queryByRole("note")).not.toBeInTheDocument()
+  })
+})
+
+describe("HubScreen — compteurs datés (HB-05)", () => {
+  it("après un passage, la date affichée est celle du passage, et « Membres visibles » dit ce qu'il compte", () => {
+    mocks.hub = { status: "ready", data: hub }
+    render(tree())
+
+    expect(screen.getByText("Membres visibles")).toBeInTheDocument()
+    expect(screen.getByText(spaced(`Comptés le ${formatDate(PASS, "fr")}.`))).toBeInTheDocument()
+    expect(screen.getByText("Membres visibles : ceux qui ont choisi l'annuaire.")).toBeInTheDocument()
+  })
+
+  it("avant tout passage, aucune date, et les compteurs du moteur ne se montrent pas comme mesurés", () => {
+    mocks.hub = { status: "ready", data: { ...hub, countersComputedAt: null } }
+    render(tree())
+
+    expect(screen.queryByText(/Comptés le/)).not.toBeInTheDocument()
+    expect(screen.queryByText("Membres visibles")).not.toBeInTheDocument()
+    expect(screen.queryByText("Membres visibles : ceux qui ont choisi l'annuaire.")).not.toBeInTheDocument()
+  })
+
+  it("la démonstration garde ses compteurs signalés comme fictifs, sans date de passage", () => {
+    mocks.hub = { status: "ready", data: { ...hub, countersSource: "demo", countersComputedAt: null, eventsSource: "demo" } }
+    render(tree())
+
+    expect(screen.getByText("Membres visibles")).toBeInTheDocument()
+    expect(screen.getByText("Compteurs de démonstration, calculés sur les données fictives.")).toBeInTheDocument()
+    expect(screen.getByText("Membres visibles : ceux qui ont choisi l'annuaire.")).toBeInTheDocument()
+    expect(screen.queryByText(/Comptés le/)).not.toBeInTheDocument()
+  })
+
+  it("en anglais : la date du passage et ce que comptent les membres visibles", () => {
+    mocks.hub = { status: "ready", data: hub }
+    render(tree("CA", "en"))
+
+    expect(screen.getByText(spaced(`Counted on ${formatDate(PASS, "en")}.`))).toBeInTheDocument()
+    expect(screen.getByText("Visible members: those who chose to appear in the directory.")).toBeInTheDocument()
+  })
+})
+
+describe("HubScreen — à propos du hub (HB-05)", () => {
+  const about = (title: RegExp = /^À propos du hub/) => {
+    const summary = screen.getByText(title)
+    const details = summary.closest("details")
+    if (!details) throw new Error("Le bloc « À propos » n'est pas repliable.")
+    return { summary, details }
+  }
+
+  it("se replie sous l'en-tête : statut, règle d'ouverture lue dans le domaine, règles de la communauté et signalement", () => {
+    mocks.hub = { status: "ready", data: hub }
+    render(tree())
+
+    const { summary, details } = about()
+    expect(summary).toHaveTextContent("À propos du hub — Canada")
+    expect(details).not.toHaveAttribute("open")
+    expect(details).toHaveTextContent("Pays ouvert : les membres qui y résident peuvent publier dans ce hub. Tout membre de DIASPORALE le lit, quel que soit son pays.")
+    expect(details).toHaveTextContent(`Un pays est ouvert par l'administration de la plateforme. Le réseau s'est donné pour règle de l'ouvrir avec ${COUNTRY_OPENING_REQUIREMENTS.relayAssociations} associations relais et ${COUNTRY_OPENING_REQUIREMENTS.activeModerators} modérateur ; l'application ne vérifie pas encore cette condition d'elle-même.`)
+    expect(details).toHaveTextContent("l'équipe de modération du réseau l'examine, et son auteur ne sait pas qui l'a signalé.")
+    expect(within(details).getByRole("link", { name: "Lire les règles de la communauté", hidden: true })).toHaveAttribute("href", "/regles-communaute")
+    expect(within(details).getByRole("link", { name: "Suivre mes signalements", hidden: true })).toHaveAttribute("href", "/parametres#mes-signalements")
+    // La date d'ouverture n'existe pas encore (HB-08) : aucune n'est affichée.
+    expect(details).not.toHaveTextContent(/ouvert le|ouvert depuis/i)
+  })
+
+  it("un pays pas encore ouvert : ce que l'on peut y faire, sans promesse de relecture", () => {
+    mocks.hub = { status: "ready", data: { ...hub, country: "ES", open: false } }
+    render(tree("es"))
+
+    const { details } = about()
+    expect(details).toHaveTextContent("Pas encore ouvert : tout membre lit ce hub. Ceux qui y résident peuvent publier pour toute la diaspora ; la publication dans ce hub attend l'ouverture du pays.")
+    expect(details).not.toHaveTextContent(/relue|relecture/i)
+  })
+
+  it("avant la lecture du hub, aucun bloc « À propos »", () => {
+    render(tree())
+    expect(screen.queryByText(/^À propos du hub/)).not.toBeInTheDocument()
+  })
+
+  it("en anglais", () => {
+    mocks.hub = { status: "ready", data: hub }
+    render(tree("CA", "en"))
+
+    const { summary, details } = about(/^About the hub/)
+    expect(summary).toHaveTextContent("About the hub — Canada")
+    expect(details).toHaveTextContent("Open country: members who live there can post in this hub.")
+    expect(within(details).getByRole("link", { name: "Read the community rules", hidden: true })).toHaveAttribute("href", "/regles-communaute")
   })
 })

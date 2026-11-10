@@ -68,6 +68,7 @@ import enPostPublicationState from "./locales/en/post-publication-state.json"
 import enCommentPages from "./locales/en/comment-pages.json"
 import enObjectReports from "./locales/en/object-reports.json"
 import enHubShortcuts from "./locales/en/hub-shortcuts.json"
+import enHubAbout from "./locales/en/hub-about.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -125,6 +126,7 @@ import frPostPublicationState from "./locales/fr/post-publication-state.json"
 import frCommentPages from "./locales/fr/comment-pages.json"
 import frObjectReports from "./locales/fr/object-reports.json"
 import frHubShortcuts from "./locales/fr/hub-shortcuts.json"
+import frHubAbout from "./locales/fr/hub-about.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -190,6 +192,7 @@ export const LOCALE_PARTS = {
     "welcome-profile": frWelcomeProfile,
     "object-reports": frObjectReports,
     "hub-shortcuts": frHubShortcuts,
+    "hub-about": frHubAbout,
   },
   en: {
     diasporale: enDiasporale,
@@ -249,6 +252,7 @@ export const LOCALE_PARTS = {
     "welcome-profile": enWelcomeProfile,
     "object-reports": enObjectReports,
     "hub-shortcuts": enHubShortcuts,
+    "hub-about": enHubAbout,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

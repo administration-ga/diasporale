@@ -620,6 +620,8 @@ export function countryHubView(state: DemoState, country: CountryCode, now: numb
     open: isCountryOpen(country, state.openCountries),
     counters: hubCounters(state, country, now),
     countersSource: "demo",
+    // Aucun passage ici : les compteurs se comptent à la lecture sur les données fictives, et le hub le dit (HB-05).
+    countersComputedAt: null,
     officialPages: pages.filter((page) => page.trust === "official"),
     associations: pages.filter((page) => page.ownerKind === "association"),
     companies: pages.filter((page) => page.ownerKind === "company"),
