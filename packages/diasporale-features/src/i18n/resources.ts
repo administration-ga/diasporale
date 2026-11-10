@@ -58,6 +58,7 @@ import enCommunityNotifications from "./locales/en/community-notifications.json"
 import enPostExplanation from "./locales/en/post-explanation.json"
 import enReporterNotices from "./locales/en/reporter-notices.json"
 import enFunctionalHealth from "./locales/en/functional-health.json"
+import enPostPublicationState from "./locales/en/post-publication-state.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAssociations from "./locales/fr/associations.json"
 import frAssociationActivities from "./locales/fr/association-activities.json"
@@ -105,6 +106,7 @@ import frCommunityNotifications from "./locales/fr/community-notifications.json"
 import frPostExplanation from "./locales/fr/post-explanation.json"
 import frReporterNotices from "./locales/fr/reporter-notices.json"
 import frFunctionalHealth from "./locales/fr/functional-health.json"
+import frPostPublicationState from "./locales/fr/post-publication-state.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -160,6 +162,7 @@ export const LOCALE_PARTS = {
     "reporter-notices": frReporterNotices,
     "appearance-themes": frAppearanceThemes,
     "functional-health": frFunctionalHealth,
+    "post-publication-state": frPostPublicationState,
   },
   en: {
     diasporale: enDiasporale,
@@ -209,6 +212,7 @@ export const LOCALE_PARTS = {
     "reporter-notices": enReporterNotices,
     "appearance-themes": enAppearanceThemes,
     "functional-health": enFunctionalHealth,
+    "post-publication-state": enPostPublicationState,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

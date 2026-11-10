@@ -203,6 +203,15 @@ export interface PublishInput {
   readonly idempotencyKey?: string
 }
 
+/**
+ * Ce qu'une publication est devenue à l'envoi (FD-04), tel que le fournisseur le dit :
+ * publiée, ou retenue en relecture (visible de son seul auteur). `null` : le fournisseur
+ * n'a pas rendu l'état ; l'écran n'annonce alors ni « publiée » ni « en relecture ».
+ */
+export interface PublishOutcome {
+  readonly moderation: ContentModerationState | null
+}
+
 /** Commenter une publication ; une réponse à une réponse rejoint sa racine (un seul niveau). */
 export interface CommentInput {
   readonly postId: string
@@ -227,7 +236,7 @@ export interface DiasporaleActions {
   join(input: JoinInput): Promise<ActionResult<{ country: CountryCode }>>
   /** Déposer une photo ou une vidéo avant de publier ; les règles du moteur jugent le fichier d'abord. */
   uploadMedia(file: File): Promise<ActionResult<UploadedMedia>>
-  publish(input: PublishInput): Promise<ActionResult<{ moderation: ContentModerationState }>>
+  publish(input: PublishInput): Promise<ActionResult<PublishOutcome>>
   react(postId: string, kind: ReactionKind | null): Promise<ActionResult>
   /** Commenter ou répondre (EXF-DG-12) ; l'auteur de la publication et la personne à qui l'on répond sont avisés. */
   comment(input: CommentInput): Promise<ActionResult>

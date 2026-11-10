@@ -204,8 +204,9 @@ describe("R3 — un compte léger se fait parrainer", () => {
     expect(store.statusOf(newcomer)).toBe("declaree")
     expect(membershipView(store.getState(), newcomer, T0)?.sponsoredBy).toEqual({ handle: "mireille.ivindo", displayName: "Mireille IVINDO" })
     // HB-01 : le Canada n'est pas ouvert ici ; le hub local refuse, comme l'adaptateur du moteur, sans rien écrire.
+    // FD-04 : le refus dit ce que dit le composeur (`hub_not_open`).
     const before = store.getState().posts.length
-    expect(await store.publish(post)).toEqual({ ok: false, code: "feature_unavailable" })
+    expect(await store.publish(post)).toEqual({ ok: false, code: "hub_not_open" })
     expect(store.getState().posts).toHaveLength(before)
     expect(await store.publish({ ...post, reach: "diaspora" })).toEqual({ ok: true, value: { moderation: "published" } })
     expect(store.getState().posts[0]).toMatchObject({ body: "Bonjour Montréal", scope: { reach: "diaspora", country: "CA" } })
@@ -218,6 +219,22 @@ describe("R3 — un compte léger se fait parrainer", () => {
     const published = await store.publish({ body: "Bonjour Lyon", reach: "local", audience: "public", alsoOnRoot: true })
     expect(published).toEqual({ ok: true, value: { moderation: "published" } })
     expect(store.getState().posts[0]).toMatchObject({ visibility: "root", scope: { reach: "local", country: "FR" } })
+  })
+
+  it("FD-04 : une publication retenue en relecture se dit à son auteur, jamais aux autres lecteurs", async () => {
+    const { store, storage } = demo()
+    await store.switchTo("p-steeve")
+    // Une équipe sans modérateur actif : tout contenu passe d'abord par la relecture (PD6).
+    storage.setItem(DEMO_STORAGE_KEY, JSON.stringify({ ...store.getState(), countryModerators: {}, networkModerators: 0 }))
+    const retaining = new DemoStore(storage, () => T0, 0)
+    const sent = await retaining.publish({ body: "Retenue en relecture (démo)", reach: "local", audience: "public", alsoOnRoot: false })
+    expect(sent).toEqual({ ok: true, value: { moderation: "pending_review" } })
+    const id = retaining.getState().posts[0]!.id
+    // L'auteur la lit, avec son état ; un autre membre ne la voit ni dans le fil ni par son lien.
+    expect(feedView(retaining.getState(), "p-steeve", "recents", T0).find((item) => item.id === id)).toMatchObject({ isMine: true, moderation: "pending_review" })
+    expect(postDetailView(retaining.getState(), id, "p-steeve", T0)).toMatchObject({ moderation: "pending_review" })
+    expect(feedView(retaining.getState(), "p-mireille", "recents", T0).some((item) => item.id === id)).toBe(false)
+    expect(postDetailView(retaining.getState(), id, "p-mireille", T0)).toBeNull()
   })
 
   it("« publier aussi sur ANTSIA » est ignoré hors audience publique : la visibilité reste au réseau", async () => {

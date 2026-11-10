@@ -125,6 +125,7 @@ import {
   toOwnProfileView,
   toPostView,
   toProfileView,
+  toPublishOutcome,
   toRelationView,
   toSuggestionView,
   toSponsorDashboardView,
@@ -768,15 +769,16 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         const scope = parseContentScope({ reach: input.reach, country: input.country ?? null })
         if (!scope.ok) throw new Refusal(scope.code)
         const networkId = await diasporale()
-        // Relecture avant publication (invariant 10) : tant que le moteur ne retient pas un contenu
-        // (PA5), un pays qui n'est pas ouvert ne reçoit pas de publication locale. Garde d'écran
-        // seulement : la garde serveur viendra avec le crochet de politique de la tranche.
+        // Un pays qui n'est pas ouvert ne reçoit pas de publication locale tant qu'aucune relecture
+        // par pays n'existe (HB-11) : le refus dit ce que dit le composeur (FD-04). Garde d'écran
+        // seulement : la garde serveur est demandée au moteur (issue [S1] de FD-04).
         if (scope.value.reach === "local") {
           const local = scope.value.country
           const open = await deps.convex.query(api.modules.diaspora.hubs.listOpenCountries, { networkId })
-          if (!open.some((hub) => hub.country === local)) throw new Refusal("feature_unavailable")
+          if (!open.some((hub) => hub.country === local)) throw new Refusal("hub_not_open")
         }
-        await deps.convex.mutation(api.modules.posts.posts.publish, {
+        // L'état que le moteur rend (publiée, ou retenue en relecture) ; jamais « publiée » d'office.
+        const published = await deps.convex.mutation(api.modules.posts.posts.publish, {
           networkId,
           body: input.body,
           audience: input.audience,
@@ -788,7 +790,7 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           ...(input.sharedPostId ? { sharedPostId: input.sharedPostId as Id<"posts"> } : {}),
           ...(input.idempotencyKey ? { idempotencyKey: input.idempotencyKey } : {}),
         })
-        return { moderation: "published" as const }
+        return toPublishOutcome(published)
       }),
 
     comment: (input) =>
