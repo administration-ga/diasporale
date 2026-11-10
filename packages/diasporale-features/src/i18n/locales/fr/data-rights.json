@@ -33,9 +33,9 @@
       },
       "decisions": {
         "title": "Décisions de modération",
-        "lead": "Les décisions prises sur vos contenus ou sur votre compte, dans tous les réseaux de votre compte ANTSIA, leurs motifs et vos recours. Les personnes qui ont signalé ne sont jamais nommées.",
+        "lead": "Les mesures prises sur vos contenus ou sur votre compte, dans tous les réseaux de votre compte ANTSIA, leurs motifs et vos recours. Un signalement en cours d'examen ou classé sans suite n'apparaît pas ici, et les personnes qui ont signalé ne sont jamais nommées.",
         "loadError": "Les décisions n'ont pas pu être chargées.",
-        "empty": "Aucune décision de modération ne vous concerne.",
+        "empty": "Aucune mesure de modération ne vous concerne.",
         "emptyPage": "Aucune autre décision.",
         "previous": "Décisions précédentes",
         "next": "Décisions suivantes",
@@ -91,10 +91,8 @@
           "editorialMedia": "Présentation du média"
         },
         "status": {
-          "open": "En attente d'examen",
-          "reviewing": "En cours d'examen",
-          "dismissed": "Classé sans suite",
-          "actioned": "Mesure prise"
+          "actioned": "Mesure prise",
+          "overturned": "Mesure annulée sur recours"
         },
         "sanction": {
           "warning": "Avertissement",

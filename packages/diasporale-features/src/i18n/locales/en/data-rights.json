@@ -33,9 +33,9 @@
       },
       "decisions": {
         "title": "Moderation decisions",
-        "lead": "Decisions taken on your content or your account, across all the networks of your ANTSIA account, their reasons and your appeals. People who reported are never named.",
+        "lead": "Measures taken on your content or your account, across all the networks of your ANTSIA account, their reasons and your appeals. A report under review or dismissed does not appear here, and people who reported are never named.",
         "loadError": "Decisions could not be loaded.",
-        "empty": "No moderation decision concerns you.",
+        "empty": "No moderation measure concerns you.",
         "emptyPage": "No other decision.",
         "previous": "Previous decisions",
         "next": "Next decisions",
@@ -91,10 +91,8 @@
           "editorialMedia": "Media presentation"
         },
         "status": {
-          "open": "Awaiting review",
-          "reviewing": "Under review",
-          "dismissed": "Dismissed",
-          "actioned": "Measure taken"
+          "actioned": "Measure taken",
+          "overturned": "Measure overturned on appeal"
         },
         "sanction": {
           "warning": "Warning",
