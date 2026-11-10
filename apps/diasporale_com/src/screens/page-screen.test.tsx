@@ -1,12 +1,30 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
-import { DataSourceProvider, type DiasporaleDataSource, type MembershipView, type PageDetailQuery, type PageDetailView, type PagesCapability } from "@diasporale/features/data"
+import {
+  contentReportKey,
+  DataSourceProvider,
+  type ActionResult,
+  type ContentReportInput,
+  type ContentReportsCapability,
+  type ContentReportTarget,
+  type DiasporaleDataSource,
+  type MembershipView,
+  type PageDetailQuery,
+  type PageDetailView,
+  type PagesCapability,
+} from "@diasporale/features/data"
+import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
-import type { ReactNode } from "react"
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { useSyncExternalStore, type ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { routes } from "@/lib/routes"
+
 import { PageScreen } from "./page-screen"
+
+const t = getFixedT("fr")
 
 const mocks = vi.hoisted(() => ({
   membership: null as MembershipView | null,
@@ -349,5 +367,81 @@ describe("PageScreen — fiche d'une institution (VC-01)", () => {
     render(tree())
     expect(mocks.contact).toHaveBeenCalled()
     expect(screen.queryByText("Les questions sur un dossier se traitent sur consulat.ga.")).not.toBeInTheDocument()
+  })
+})
+
+describe("PageScreen — AS-02 : signaler la page depuis le menu « … » de la fiche", () => {
+  const plain = (value: string) => value.replace(/\s+/g, " ").trim()
+  const menuName = t("objectMenu.open", { name: "Collectif de Lyon" })
+
+  /** Une capacité factice : sa mémoire des cibles signalées relance le rendu, comme les vrais fournisseurs. */
+  function fakeReports() {
+    const reported = new Set<string>()
+    const listeners = new Set<() => void>()
+    let version = 0
+    const subscribe = (listener: () => void) => {
+      listeners.add(listener)
+      return () => { listeners.delete(listener) }
+    }
+    const getVersion = () => version
+    const report = vi.fn(async (input: ContentReportInput): Promise<ActionResult<{ readonly created: boolean }>> => {
+      reported.add(contentReportKey(input))
+      version += 1
+      for (const listener of listeners) listener()
+      return { ok: true, value: { created: true } }
+    })
+    function useReported(target: ContentReportTarget): boolean {
+      useSyncExternalStore(subscribe, getVersion, getVersion)
+      return reported.has(contentReportKey(target))
+    }
+    const capability: ContentReportsCapability = { demonstration: false, report, useReported }
+    return { capability, report }
+  }
+
+  function reportingTree(capability: ContentReportsCapability) {
+    const source = { kind: "engine", contentReports: capability } as unknown as DiasporaleDataSource
+    return (
+      <I18nProvider locale="fr">
+        <DataSourceProvider source={source}>
+          <PageScreen handle="collectif-lyon" />
+        </DataSourceProvider>
+      </I18nProvider>
+    )
+  }
+
+  it("un membre sans rôle signale la page par le menu ; elle se masque aussitôt pour lui, avec le retour à l'annuaire", async () => {
+    const user = userEvent.setup()
+    const { capability, report } = fakeReports()
+    mocks.detail = { status: "ready", data: view({ role: null }) }
+    render(reportingTree(capability))
+    // Jamais en bouton plein : le geste vit dans le menu.
+    expect(screen.queryByRole("button", { name: t("contentReports.action.page") })).not.toBeInTheDocument()
+    screen.getByRole("button", { name: menuName }).focus()
+    await user.keyboard("{Enter}")
+    await user.click(within(await screen.findByRole("menu")).getByRole("menuitem", { name: t("contentReports.action.page") }))
+    const dialog = await screen.findByRole("dialog", { name: t("contentReports.title.page") })
+    expect(within(dialog).queryByText(plain(t("contentReports.rootNotice")))).not.toBeInTheDocument()
+    await user.click(within(dialog).getByRole("radio", { name: t("report.reason.misinformation") }))
+    await user.click(within(dialog).getByRole("button", { name: t("contentReports.confirm") }))
+
+    await waitFor(() => expect(report).toHaveBeenCalledExactlyOnceWith({ kind: "page", id: "page-lyon", reason: "misinformation" }))
+    await waitFor(() => expect(screen.queryByRole("heading", { level: 1, name: "Collectif de Lyon" })).not.toBeInTheDocument())
+    const notice = screen.getByRole("note")
+    expect(notice).toHaveTextContent(plain(t("contentReports.masked.title")))
+    expect(within(notice).getByRole("link", { name: t("pageBrowsing.backToDirectory") })).toHaveAttribute("href", routes.pages({ ownerKind: "association", country: "FR" }))
+  })
+
+  it("jamais sur la page que l'on administre ou signe ; sans capacité, aucun menu", () => {
+    const { capability } = fakeReports()
+    for (const role of ["admin", "signatory"] as const) {
+      mocks.detail = { status: "ready", data: view({ role }) }
+      const mounted = render(reportingTree(capability))
+      expect(screen.getByRole("heading", { level: 1, name: "Collectif de Lyon" })).toBeInTheDocument()
+      expect(screen.queryByRole("button", { name: menuName })).not.toBeInTheDocument()
+      mounted.unmount()
+    }
+    mocks.detail = { status: "ready", data: view({ role: null }) }
+    render(tree())
+    expect(screen.queryByRole("button", { name: menuName })).not.toBeInTheDocument()
   })
 })

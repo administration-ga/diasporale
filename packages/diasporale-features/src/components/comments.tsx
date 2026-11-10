@@ -29,6 +29,7 @@ import { Sheet, SheetContent } from "../primitives/sheet"
 import { Avatar, Skeleton } from "../primitives/surface"
 import { useRouting } from "../routing"
 import { EmptyState } from "./empty-state"
+import { ReportContentButton, ReportedContentMask } from "./report-content"
 import { RichText } from "./rich-text"
 
 const commentSchema = z.object({
@@ -203,7 +204,8 @@ function PageFailure(props: { code: ActionErrorCode; onRetry: () => void; classN
  * aux plus récents, un seul niveau de réponse, trois réponses en aperçu puis
  * « voir les réponses ». Tous se lisent, page après page (FD-03), et ce qu'on
  * vient d'envoyer paraît aussitôt. On retire son commentaire, ou n'importe
- * lequel sous sa propre publication — en deux gestes. Aucune coordonnée : le
+ * lequel sous sa propre publication — en deux gestes. On signale celui d'autrui,
+ * jamais le sien (FD-05) : il se masque aussitôt pour soi. Aucune coordonnée : le
  * contact passe par la messagerie.
  */
 export function PostCommentsSheet(props: {
@@ -385,6 +387,8 @@ function Comment(props: CommentHandlers & {
 }) {
   const { t, locale } = useDiasporaleT()
   const actions = useActions()
+  // FD-05 : la capacité de signalement du fournisseur ; absente, aucun geste ni masque.
+  const reports = useDataSource().contentReports ?? null
   const { routes, Link } = useRouting()
   const { comment } = props
   const [confirming, setConfirming] = useState(false)
@@ -397,6 +401,9 @@ function Comment(props: CommentHandlers & {
   const name = neutral ? t("comments.someone") : comment.author.displayName ?? t("comments.someone")
   const canRemove = comment.isMine || props.postIsMine
   const editComment = comment.isMine && props.canComment ? actions.editComment : undefined
+  // Jamais sur son propre commentaire : le moteur le refuserait, l'écran ne l'offre pas.
+  const reportCapability = comment.isMine ? null : reports
+  const reportTarget = { kind: "comment", id: comment.id } as const
 
   useLayoutEffect(() => {
     if (!editing && restoreFocus.current) {
@@ -427,7 +434,7 @@ function Comment(props: CommentHandlers & {
     } finally { operation.finish(token) }
   }
 
-  return (
+  const article = (
     <article className="flex gap-3 rounded-xl px-2 py-2">
       <Avatar id={neutral ? "neutral" : comment.author.personId} name={name} size={props.compact ? "sm" : "md"} className={neutral ? "bg-muted text-muted-foreground" : undefined} />
       <div className="min-w-0 flex-1">
@@ -448,7 +455,7 @@ function Comment(props: CommentHandlers & {
         {editing && editComment ? (
           <CommentEditor key={commentKey(comment)} comment={comment} editComment={editComment} onSaved={(body) => props.onEdited(comment.id, body)} onClose={closeEditor} />
         ) : <p className="mt-0.5 whitespace-pre-line break-words text-[14px] leading-relaxed"><RichText text={comment.body} /></p>}
-        {!editing && (props.canComment || canRemove) ? (
+        {!editing && (props.canComment || canRemove || reportCapability !== null) ? (
           <div className="mt-1 flex flex-wrap items-center gap-1">
             {props.canComment ? (
               <Button variant="ghost" size="sm" disabled={operation.busy} onClick={() => { if (!operation.isBusy() && !editingRef.current) props.onReply({ commentId: comment.id, rootId: props.rootId, name }) }}>
@@ -475,11 +482,14 @@ function Comment(props: CommentHandlers & {
                 </Button>
               </>
             ) : null}
+            {reportCapability !== null && !confirming ? <ReportContentButton capability={reportCapability} target={reportTarget} /> : null}
           </div>
         ) : null}
       </div>
     </article>
   )
+  // Signalé par la personne de la session : l'avis le remplace, pour elle seule (masque immédiat).
+  return reportCapability === null ? article : <ReportedContentMask capability={reportCapability} target={reportTarget}>{article}</ReportedContentMask>
 }
 
 function CommentEditor(props: { comment: CommentView; editComment: NonNullable<DiasporaleActions["editComment"]>; onSaved: (body: string) => void; onClose: () => void }) {

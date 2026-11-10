@@ -27,7 +27,9 @@ import { Gate } from "@/components/gate"
 import { IcomIsland, useEngineNetwork, useIcomState, useWriteTo } from "@/components/icom"
 import { ProfileAlbums } from "@/components/profile-albums"
 import { ProfileAvatar, ProfileCover } from "@/components/profile-images"
+import { ProfileMenu } from "@/components/profile-menu"
 import { ProfilePostPages } from "@/components/feed-pages"
+import { ReportedContent } from "@/components/report-content-sheet"
 import { callsAreOpen } from "@/lib/calls"
 import { routes } from "@/lib/routes"
 
@@ -82,7 +84,7 @@ function Profile(props: { handle: string; membership: MembershipView }) {
   const view = profile.data
   const facet: FacetProjection = view.isSelf && preview ? view.publicFacet : view.facet
 
-  return (
+  const body = (
     <>
       {view.isSelf && preview ? (
         <p className="rounded-xl bg-[var(--info-50)] px-4 py-3 text-[13px] text-[var(--info-600)]">{t("profile.previewNotice")}</p>
@@ -197,12 +199,21 @@ function Profile(props: { handle: string; membership: MembershipView }) {
       )}
     </>
   )
+  if (view.isSelf) return body
+  // RP-02 : signalée depuis son menu, la fiche d'autrui se masque aussitôt pour la personne qui l'a signalée.
+  return (
+    <ReportedContent target={{ kind: "person", id: view.personId }} back={{ href: routes.feed(), label: t("contentReports.back.feed") }}>
+      {body}
+    </ReportedContent>
+  )
 }
 
 /**
  * Ma relation avec ce membre (EXF-DG-11, EXF-DG-12) : se connecter, répondre à
  * une demande reçue, suivre, bloquer. Un blocage posé par l'autre ne se voit
  * pas ; bloquer se confirme, et défait le lien et les abonnements de la paire.
+ * Bloquer, signaler, mettre en sourdine et copier le lien vivent dans le menu
+ * « … » de la fiche (RP-02).
  */
 function RelationBar(props: { personId: string; handle: string; displayName: string; canCommunicate: boolean }) {
   const { t } = useDiasporaleT()
@@ -233,10 +244,13 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
 
   if (connection === "blocked_by_me") {
     return (
-      <Button variant="outline" size="sm" disabled={busy} onClick={() => run(() => actions.unblock(props.personId), t("relation.unblocked", { name }))}>
-        <ShieldOffIcon aria-hidden />
-        {t("relation.unblock")}
-      </Button>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="outline" size="sm" disabled={busy} onClick={() => run(() => actions.unblock(props.personId), t("relation.unblocked", { name }))}>
+          <ShieldOffIcon aria-hidden />
+          {t("relation.unblock")}
+        </Button>
+        <ProfileMenu personId={props.personId} handle={props.handle} displayName={name} />
+      </div>
     )
   }
 
@@ -303,10 +317,8 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
       >
         {following ? t("relation.unfollow") : t("relation.follow")}
       </Button>
-      <Button size="sm" variant="ghost" disabled={busy} onClick={() => setConfirmingBlock(true)}>
-        <BanIcon aria-hidden />
-        {t("relation.block")}
-      </Button>
+      {/* RP-02 : Signaler, Bloquer, Mettre en sourdine et Copier le lien, dans le menu « … » de la fiche. */}
+      <ProfileMenu personId={props.personId} handle={props.handle} displayName={name} onBlock={() => { if (!running.current) setConfirmingBlock(true) }} />
       {props.canCommunicate ? null : (
         <p id={hintId} className="basis-full text-right text-[12px] text-muted-foreground">
           {t("relation.needsStatus")}
