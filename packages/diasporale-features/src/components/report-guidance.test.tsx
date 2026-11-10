@@ -17,7 +17,8 @@ import { ReportContentSheet } from "./report-content"
 /**
  * Ce que rappelle toute feuille de signalement du paquet (feuille commune, feuille d'une
  * publication) : le lien vers les règles de la communauté (MD-05), pris dans la table de
- * routes de l'application, et rien quand la feuille est rendue hors d'elle. Données fictives.
+ * routes de l'application, et rien quand la feuille est rendue hors d'elle ; la consigne
+ * d'urgence en tête (MD-06), en français et en anglais, sans aucun numéro. Données fictives.
  */
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }))
 
@@ -124,5 +125,36 @@ describe("feuille de signalement — le lien vers les règles de la communauté 
     const t = getFixedT("fr")
     const dialog = await openPostReport()
     expect(within(dialog).getByRole("link", { name: t("communityRules.read") })).toHaveAttribute("href", "/regles-communaute")
+  })
+})
+
+/** Le texte tel que Testing Library le lit dans le DOM (espaces insécables ramenées à l'espace simple). */
+const plain = (value: string) => value.replace(/\s+/g, " ").trim()
+
+describe("feuille de signalement — la consigne d'urgence (MD-06)", () => {
+  it.each(["fr", "en"] as const)("la feuille commune la porte en tête, en %s, avant les motifs", (locale) => {
+    const t = getFixedT(locale)
+    render(withRoutes(contentSheet(locale)))
+    const dialog = screen.getByRole("dialog")
+    const notice = within(dialog).getByText(plain(t("reportEmergency.heading"))).closest("div")!
+    expect(notice).toHaveTextContent(plain(t("reportEmergency.body")))
+    // En tête : avant le premier motif.
+    const firstReason = within(dialog).getAllByRole("radio")[0]!
+    expect(notice.compareDocumentPosition(firstReason) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it("la feuille d'une publication la porte aussi", async () => {
+    const t = getFixedT("fr")
+    const dialog = await openPostReport()
+    expect(within(dialog).getByText(plain(t("reportEmergency.body")))).toBeInTheDocument()
+  })
+
+  it("ne cite aucun numéro ni aucun service : seulement les secours du pays où l'on se trouve", () => {
+    for (const locale of ["fr", "en"] as const) {
+      const t = getFixedT(locale)
+      const text = `${t("reportEmergency.heading")} ${t("reportEmergency.body")}`
+      expect(text, locale).not.toMatch(/\d/)
+      expect(text, locale).toMatch(locale === "fr" ? /secours du pays où vous vous trouvez/ : /emergency services of the country you are in/)
+    }
   })
 })

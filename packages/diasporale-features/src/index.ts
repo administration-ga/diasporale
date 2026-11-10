@@ -69,3 +69,4 @@ export {
   type ReportContentSheetProps,
   type ReportedContentProps,
 } from "./components/report-content"
+export { ReportEmergencyNotice } from "./components/report-guidance"

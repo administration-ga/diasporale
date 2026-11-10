@@ -12,7 +12,7 @@ import { useActions, useOptionalDataSource } from "../data/context"
 import { REPORT_NOTE_MAX, REPORT_REASONS, type PostView } from "../data/types"
 import { POST_BODY_MAX } from "./composer"
 import { PostExplanationSheet } from "./post-explanation"
-import { ReportRulesLink } from "./report-guidance"
+import { ReportEmergencyNotice, ReportRulesLink } from "./report-guidance"
 import { useDiasporaleT } from "../i18n/client"
 import { cn } from "../lib/cn"
 import { Button } from "../primitives/button"
@@ -162,6 +162,8 @@ function ReportPostSheet(props: { postId: string; open: boolean; onOpenChange: (
     <Sheet open={props.open} onOpenChange={props.onOpenChange}>
       <SheetContent title={t("report.title")} description={t("report.description")} closeLabel={t("report.close")}>
         <form noValidate onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 py-4">
+          {/* MD-06 : un signalement n'alerte pas les secours ; la consigne d'urgence passe en tête. */}
+          <ReportEmergencyNotice />
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1 text-sm font-medium">{t("report.reasonLegend")}</legend>
             <Controller

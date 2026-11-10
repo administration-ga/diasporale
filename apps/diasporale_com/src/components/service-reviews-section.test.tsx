@@ -284,6 +284,14 @@ describe("avis de service — preuve, publication et gestes", () => {
     expect(ruleLink("scams")).toHaveAttribute("href", "/regles-communaute#arnaques")
   })
 
+  it("la feuille de signalement porte en tête la consigne d'urgence, sans numéro (MD-06)", () => {
+    render(cardTree({ ...REVIEW, isMine: false, reply: null }))
+    fireEvent.click(screen.getByRole("button", { name: t("serviceReviews.report.cta") }))
+    const dialog = screen.getByRole("dialog", { name: t("serviceReviews.report.title") })
+    expect(within(dialog).getByText(text("reportEmergency.heading"))).toBeInTheDocument()
+    expect(within(dialog).getByText(text("reportEmergency.body"), { exact: false })).toBeInTheDocument()
+  })
+
   it("un avis retiré ne propose aucune republication ; l'avis en attente se présente comme non publié", () => {
     mocks.mine = personalReview({ ...REVIEW, status: "withdrawn", author: { displayName: null } })
     const view = render(requestTree())
