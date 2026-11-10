@@ -85,6 +85,8 @@ Hors boutons : `features/components/cards/post-card.tsx:113-118`, l'icône de la
 
 ## Laissés tels quels, famille pas claire : à trancher
 
+> **Tranché le 9/11/2026, appliqué le 10/11 (lot DS-02).** Demander un mentorat et son envoi, Faire (ou modifier) une proposition, Afficher (ou renouveler) mon billet QR : `commerce` ; « Envoyer » du formulaire de proposition : `send` ; Parrainer : `social` ; Appeler : `message` ; Retenir cette réponse reste `outline`, la réponse retenue portant une pastille en encre de succès. Les quatre autres lignes ne changent pas. L'inventaire a été refait le 10/11 avec ces variantes (lignes des fichiers remises à jour, aucun autre bouton changé). Non revu à l'écran par ce lot.
+
 Ces boutons gardent leur variante d'origine, aucune famille ne leur est attribuée.
 
 | Bouton | Fichier | Variante | Pourquoi |

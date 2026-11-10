@@ -11,6 +11,7 @@ import type { ProfilePostPagesProps } from "@/components/feed-pages"
 import type { IcomNetwork, IcomState } from "@/components/icom"
 import type { ProfileAlbums } from "@/components/profile-albums"
 import { routes } from "@/lib/routes"
+import { filledButtons } from "@/test-utils"
 
 import { ProfileScreen } from "./profile-screens"
 
@@ -415,6 +416,19 @@ describe("ProfileScreen — « Appeler » derrière l'interrupteur des appels (I
     expect(call).toBeEnabled()
     fireEvent.click(call)
     expect(mocks.ring).toHaveBeenCalledExactlyOnceWith({ personId: relationProfile.personId, handle: relationProfile.handle, displayName: relationProfile.displayName })
+  })
+
+  it("DS-02 : « Appeler » en tonal des messages, comme « Écrire » ; un seul bouton plein dans la zone", () => {
+    mocks.callsOpen = true
+    render(tree(relationProfile.handle))
+
+    const call = screen.getByRole("button", { name: callName })
+    const write = screen.getByRole("button", { name: writeName })
+    expect(call).toHaveClass("bg-message-soft", "text-message-ink")
+    expect(write).toHaveClass("bg-message-soft")
+    const zone = call.parentElement
+    if (zone === null) throw new Error("Zone d'actions absente")
+    expect(filledButtons(zone)).toEqual([screen.getByRole("button", { name: t("relation.follow") })])
   })
 
   it("ouverts ou non, aucun appel hors relation : seul « Écrire », fermé, dit pourquoi", () => {

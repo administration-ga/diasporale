@@ -361,7 +361,7 @@ function CallButton(props: { personId: string; handle: string; displayName: stri
   const { busyHandle, ring } = useRingRelation()
   return (
     <Button
-      variant="outline"
+      variant="message"
       disabled={busyHandle === props.handle}
       aria-label={t("contact.callTo", { name: props.displayName })}
       onClick={() => void ring({ personId: props.personId as Id<"persons">, handle: props.handle, displayName: props.displayName })}

@@ -96,8 +96,9 @@ function AnswerItem(props: {
   return (
     <li className={props.highlighted ? "flex min-w-0 flex-col gap-3 rounded-xl border-2 border-primary bg-card p-4" : "flex min-w-0 flex-col gap-3 rounded-xl border border-border p-4"}>
       <ReportedContent target={reportTarget}>
+        {/* DS-02 : « Retenir cette réponse » reste neutre (un par réponse) ; la réponse retenue porte une pastille en encre de succès. */}
         {props.highlighted ? (
-          <p className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+          <p className="inline-flex items-center gap-1.5 self-start rounded-full bg-success-soft px-2.5 py-0.5 text-[13px] font-semibold text-success-ink">
             <CheckCircle2Icon aria-hidden className="size-4" />{t("mutualAid.answers.accepted")}
           </p>
         ) : null}

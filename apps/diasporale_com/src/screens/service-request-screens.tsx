@@ -299,7 +299,7 @@ function RequestView(props: { readonly capability: ServiceRequestsCapability; re
             <div className="flex flex-wrap gap-2">
               {actions.has("accept") && current ? <Button variant="commerce" onClick={() => setAcceptVersion(current.version)}>{t("serviceRequests.accept.cta")}</Button> : null}
               {actions.has("propose") ? (
-                <Button onClick={() => setProposingFrom(detail.currentProposal ? detail.currentProposal.version : 0)}>
+                <Button variant="commerce" onClick={() => setProposingFrom(detail.currentProposal ? detail.currentProposal.version : 0)}>
                   {t(detail.currentProposal ? "serviceRequests.propose.update" : "serviceRequests.propose.cta")}
                 </Button>
               ) : null}

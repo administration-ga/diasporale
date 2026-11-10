@@ -6,6 +6,8 @@ import { I18nProvider } from "@diasporale/features/i18n/client"
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { filledButtons } from "@/test-utils"
+
 import { AssociationEventAttendance } from "./association-event-attendance"
 import { AssociationEventDetail, AssociationEventsSection } from "./association-events"
 import { formatServiceInstant } from "./service-request-ui"
@@ -231,6 +233,22 @@ describe("DG-023 — billet personnel et contexte vivant", () => {
     view.rerender(tree({ ...EVENT, endAt: NOW }))
     expect(screen.getByText(t("associationAttendance.closed"))).toBeVisible()
     expect(screen.queryByRole("button", { name: t("associationAttendance.issue") })).not.toBeInTheDocument()
+  })
+})
+
+describe("DS-02 — « Afficher mon billet QR » en famille commerce", () => {
+  it("suite de « M'inscrire » : un seul bouton plein dans le billet personnel, avant et après l'émission", async () => {
+    render(tree())
+    const zone = screen.getByRole("region", { name: t("associationAttendance.title") })
+    const issue = within(zone).getByRole("button", { name: t("associationAttendance.issue") })
+    expect(issue).toHaveClass("bg-commerce-fill")
+    expect(filledButtons(zone)).toEqual([issue])
+
+    await act(async () => { fireEvent.click(issue) })
+    const renew = within(zone).getByRole("button", { name: t("associationAttendance.renew") })
+    expect(renew).toHaveClass("bg-commerce-fill")
+    expect(within(zone).getByRole("button", { name: t("associationAttendance.copy") })).toHaveClass("bg-neutral")
+    expect(filledButtons(zone)).toEqual([renew])
   })
 })
 
