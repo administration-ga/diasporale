@@ -16,7 +16,8 @@
     },
     "rootNotice": "A profile is shared by DIASPORALE and ANTSIA, the public network: reports about it are reviewed by ANTSIA's moderation, not by the DIASPORALE team.",
     "back": {
-      "feed": "Back to the feed"
+      "feed": "Back to the feed",
+      "page": "Back to the page"
     }
   },
   "objectMenu": {

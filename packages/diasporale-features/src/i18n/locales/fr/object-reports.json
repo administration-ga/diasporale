@@ -16,7 +16,8 @@
     },
     "rootNotice": "Un profil est commun à DIASPORALE et à ANTSIA, le réseau public : son signalement est examiné par la modération d'ANTSIA, pas par l'équipe de DIASPORALE.",
     "back": {
-      "feed": "Retour au fil"
+      "feed": "Retour au fil",
+      "page": "Retour à la page"
     }
   },
   "objectMenu": {
