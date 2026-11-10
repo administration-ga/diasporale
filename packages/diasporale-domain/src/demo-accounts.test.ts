@@ -94,11 +94,16 @@ describe("comptes de démonstration de DIASPORALE", () => {
     for (const actor of DIASPORALE_DEMO_ACTORS) {
       const spec = DIASPORALE_DEMO_ACTOR_SPECS[actor]
       if (spec.gestures.includes("mission")) expect(spec.page?.kind).toBe("association")
+      // Un évènement d'association ne se crée que sous l'identité d'une page d'association (moteur, `associationEventPage`).
+      if (spec.gestures.includes("associationEvent")) expect(spec.page?.kind).toBe("association")
       if (spec.gestures.includes("service") || spec.gestures.includes("job")) expect(spec.page?.kind).toBe("company")
       if (spec.moderationTeam) expect(spec.role).not.toBe("member")
       if (spec.canSponsor) expect(spec.expectedStatus).toBe("verifiee")
       expect(DIASPORALE_DEMO_COUNTRIES as readonly string[]).toContain(spec.country)
     }
+    // EV-01 : la recette des évènements a ses évènements (l'association) et qui les publie au bureau (une équipe de modération).
+    expect(DIASPORALE_DEMO_ACTORS.filter((actor) => DIASPORALE_DEMO_ACTOR_SPECS[actor].gestures.includes("associationEvent"))).toEqual(["association"])
+    expect(DIASPORALE_DEMO_ACTORS.filter((actor) => DIASPORALE_DEMO_ACTOR_SPECS[actor].moderationTeam)).toEqual(["moderateur"])
     // Le parrain du compte parrainé existe et peut parrainer.
     expect(DIASPORALE_DEMO_ACTOR_SPECS.verifie.canSponsor).toBe(true)
     expect(DIASPORALE_DEMO_ACTORS.filter((actor) => DIASPORALE_DEMO_ACTOR_SPECS[actor].grounds.sponsored)).toEqual(["parraine"])
