@@ -8,7 +8,7 @@ import { getFunctionName } from "convex/server"
 import { ConvexError } from "convex/values"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { createEngineModerationDesk, engineZone, moderationDeskErrorCode, toCaseView, toDeadlineView, toPendingView, toPreviewView } from "./engine-moderation-desk"
+import { createEngineModerationDesk, engineZone, moderationDeskErrorCode, responsibleRoleErrorCode, toCaseView, toDeadlineView, toPendingView, toPreviewView } from "./engine-moderation-desk"
 
 /**
  * L'adaptateur du guichet de modération sans moteur : lectures réactives jouées
@@ -386,5 +386,69 @@ describe("Guichet — équipes", () => {
       ["modules/moderation/cases:createTeam", { networkId: DIASPORALE._id, name: "Avis", scope: "serviceReview", reason: "Équipe dédiée aux avis." }],
       ["modules/moderation/cases:setTeamMember", { networkId: DIASPORALE._id, teamId: "team-new", personId: "person-awa", active: true, reason: "Modératrice volontaire." }],
     ])
+  })
+})
+
+describe("Guichet — responsables du réseau (MD-01)", () => {
+  const RESPONSIBLES = "modules/diaspora/moderationDesk:responsibles"
+  const SET_ROLE = "modules/diaspora/membership:setResponsibleRole"
+  const ROW = {
+    members: [
+      { personId: "person-awa", role: "network_admin", handle: "awa.fixture", displayName: "Awa", active: true, isMe: true, contact: "PRIVATE_CONTACT" },
+      { personId: "person-ruth", role: "network_moderator", handle: null, displayName: null, active: false, isMe: false },
+    ],
+    more: false,
+  }
+
+  it("lit les responsables pour la personne attendue et ne projette que le profil publié", () => {
+    respondWith({ [RESPONSIBLES]: ROW })
+    const { desk } = setup()
+    const { result, rerender } = renderHook(() => desk.useResponsibles(PERSON._id))
+    expect(result.current).toEqual({
+      status: "ready",
+      data: {
+        members: [
+          { personId: "person-awa", role: "network_admin", handle: "awa.fixture", displayName: "Awa", active: true, isMe: true },
+          { personId: "person-ruth", role: "network_moderator", handle: null, displayName: null, active: false, isMe: false },
+        ],
+        more: false,
+      },
+    })
+    expect(JSON.stringify(result.current)).not.toContain("PRIVATE_CONTACT")
+    const first = result.current
+    rerender()
+    expect(result.current).toBe(first)
+    expect(lastArgs(RESPONSIBLES)).toEqual({ networkId: DIASPORALE._id, expectedPersonId: PERSON._id })
+    respondWith({ [RESPONSIBLES]: engineError({ code: "notFound" }) })
+    rerender()
+    expect(result.current).toEqual({ status: "error", code: "not_found" })
+  })
+
+  it("nomme, change et retire par la tranche : motif jugé avant tout appel, personne relue, réponse du moteur rendue", async () => {
+    const { desk, calls, writes } = setup({ [SET_ROLE]: (args) => ({ role: args.role, changed: args.personId !== "person-deja" }) })
+    expect(await desk.setResponsibleRole({ personId: PERSON._id, memberPersonId: "person-ruth", role: "network_moderator", reason: "Court" })).toEqual({ ok: false, code: "moderation_desk_reason_length" })
+    expect(calls).toEqual([])
+    expect(await desk.setResponsibleRole({ personId: PERSON._id, memberPersonId: "person-ruth", role: "network_moderator", reason: "  Modératrice désignée pour la France.  " })).toEqual({ ok: true, value: { role: "network_moderator", changed: true } })
+    expect(await desk.setResponsibleRole({ personId: PERSON._id, memberPersonId: "person-ruth", role: "member", reason: "Fin de la permanence de modération." })).toEqual({ ok: true, value: { role: "member", changed: true } })
+    expect(await desk.setResponsibleRole({ personId: PERSON._id, memberPersonId: "person-deja", role: "network_admin", reason: "Administration déjà confiée." })).toEqual({ ok: true, value: { role: "network_admin", changed: false } })
+    expect(calls.slice(0, 3).map(({ kind, name, args }) => [kind, name, args])).toEqual([
+      ["query", "modules/people/persons:getMyPerson", {}],
+      ["query", "modules/networks/networks:getBySlug", { slug: "diasporale" }],
+      ["mutation", SET_ROLE, { networkId: DIASPORALE._id, personId: "person-ruth", role: "network_moderator", reason: "Modératrice désignée pour la France." }],
+    ])
+    expect(writes().map(({ args }) => args.role)).toEqual(["network_moderator", "member", "network_admin"])
+  })
+
+  it("dit la règle du dernier administrateur et le refus indistinct ; une autre session n'écrit rien", async () => {
+    const lastAdmin = setup({ [SET_ROLE]: () => { throw engineError({ code: "invalidArgument", rule: "NETWORK_LAST_ADMIN", params: {} }) } })
+    expect(await lastAdmin.desk.setResponsibleRole({ personId: PERSON._id, memberPersonId: PERSON._id, role: "member", reason: "Je quitte l'administration." })).toEqual({ ok: false, code: "moderation_desk_last_admin" })
+    const refused = setup({ [SET_ROLE]: () => { throw engineError({ code: "notFound" }) } })
+    expect(await refused.desk.setResponsibleRole({ personId: PERSON._id, memberPersonId: "person-attente", role: "network_moderator", reason: "Nomination d'une personne en attente." })).toEqual({ ok: false, code: "moderation_desk_role_refused" })
+    const other = setup({ "modules/people/persons:getMyPerson": () => ({ _id: "autre-personne" }), [SET_ROLE]: () => ({ role: "member", changed: true }) })
+    expect(await other.desk.setResponsibleRole({ personId: PERSON._id, memberPersonId: "person-ruth", role: "member", reason: "Retrait par une autre session." })).toEqual({ ok: false, code: "not_found" })
+    expect(other.writes()).toEqual([])
+    expect(responsibleRoleErrorCode(engineError({ code: "policyRefused" }))).toBe("moderation_desk_limit")
+    expect(responsibleRoleErrorCode(engineError({ code: "rateLimited", retryAfterMs: 1000 }))).toBe("rate_limited")
+    expect(moderationDeskErrorCode(engineError({ code: "invalidArgument", rule: "NETWORK_LAST_ADMIN", params: {} }))).toBe("moderation_desk_last_admin")
   })
 })

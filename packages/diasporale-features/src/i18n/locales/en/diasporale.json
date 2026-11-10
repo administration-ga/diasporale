@@ -218,7 +218,7 @@
     "official": "Official",
     "officialHint": "Page of a recognized institution (consular post, ministry).",
     "verified": "Verified",
-    "verifiedHint": "Level 2 digital identity, attested consular registration, or validated claim.",
+    "verifiedHint": "Level 2 digital identity, attested consular registration, validated claim, or founding member admitted by a recorded decision of the network.",
     "publicAgent": "Public servant",
     "publicAgentHint": "Government employee linked to their administration account.",
     "community": "Community",

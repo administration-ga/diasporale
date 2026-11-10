@@ -5,6 +5,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { routes } from "@/lib/routes"
+import { OFFLINE_CACHE_PREFIX, offlineCacheName } from "@/lib/service-worker"
 
 import { SignOutSettings } from "./sign-out-settings"
 
@@ -139,5 +140,41 @@ describe("SignOutSettings — navigation conservée par la source", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
     if (kind === "demo") await waitFor(() => expect(mocks.assign).toHaveBeenCalledExactlyOnceWith(routes.home()))
     else expect(mocks.assign).not.toHaveBeenCalled()
+  })
+})
+
+describe("SignOutSettings — la sortie partout vide les réserves du script de fond (MO-05)", () => {
+  function reserves(names: string[]) {
+    const kept = [...names]
+    const order: string[] = []
+    const remove = vi.fn(async (name: string) => {
+      order.push(`purge:${name}`)
+      kept.splice(kept.indexOf(name), 1)
+      return true
+    })
+    vi.stubGlobal("caches", { keys: async () => [...kept], delete: remove })
+    return { kept, order, remove }
+  }
+
+  it.each(["engine", "demo"] as const)("efface ses seules réserves avant la sortie de la source (%s)", async (kind) => {
+    mocks.kind = kind
+    const storage = reserves([offlineCacheName(), `${OFFLINE_CACHE_PREFIX}0`, "autre-reserve"])
+    mocks.signOut.mockImplementationOnce(async () => { storage.order.push("sortie") })
+    render(tree())
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: t("settings.signOutEverywhere") })) })
+
+    await waitFor(() => expect(mocks.signOut).toHaveBeenCalledOnce())
+    expect(storage.kept).toEqual(["autre-reserve"])
+    expect(storage.order.at(-1)).toBe("sortie")
+    expect(storage.order.filter((step) => step.startsWith("purge:"))).toHaveLength(2)
+  })
+
+  it("une purge en échec n'empêche pas la sortie", async () => {
+    vi.stubGlobal("caches", { keys: async () => { throw new Error("stockage indisponible") }, delete: vi.fn() })
+    render(tree())
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: t("settings.signOutEverywhere") })) })
+
+    await waitFor(() => expect(mocks.signOut).toHaveBeenCalledOnce())
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument()
   })
 })

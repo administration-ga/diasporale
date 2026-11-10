@@ -218,7 +218,7 @@
     "official": "Officiel",
     "officialHint": "Page d'une institution reconnue (poste consulaire, ministère).",
     "verified": "Vérifié",
-    "verifiedHint": "Identité numérique de niveau 2, inscription consulaire attestée, ou revendication validée.",
+    "verifiedHint": "Identité numérique de niveau 2, inscription consulaire attestée, revendication validée, ou membre fondateur admis par une décision tracée du réseau.",
     "publicAgent": "Agent public",
     "publicAgentHint": "Agent de l'État relié à son compte administration.",
     "community": "Communauté",

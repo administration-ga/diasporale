@@ -78,6 +78,13 @@ import enReportEmergency from "./locales/en/report-emergency.json"
 import enMessagesUnread from "./locales/en/messages-unread.json"
 import enIdnEntry from "./locales/en/idn-entry.json"
 import enPostVideos from "./locales/en/post-videos.json"
+import enMissionVolunteerNotices from "./locales/en/mission-volunteer-notices.json"
+import enEventOutcomeNotices from "./locales/en/event-outcome-notices.json"
+import enNetworkResponsibles from "./locales/en/network-responsibles.json"
+import enAidFinding from "./locales/en/aid-finding.json"
+import enAidOnTheWay from "./locales/en/aid-on-the-way.json"
+import enAidUsefulness from "./locales/en/aid-usefulness.json"
+import enInstallableApp from "./locales/en/installable-app.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -145,6 +152,13 @@ import frReportEmergency from "./locales/fr/report-emergency.json"
 import frMessagesUnread from "./locales/fr/messages-unread.json"
 import frIdnEntry from "./locales/fr/idn-entry.json"
 import frPostVideos from "./locales/fr/post-videos.json"
+import frMissionVolunteerNotices from "./locales/fr/mission-volunteer-notices.json"
+import frEventOutcomeNotices from "./locales/fr/event-outcome-notices.json"
+import frNetworkResponsibles from "./locales/fr/network-responsibles.json"
+import frAidFinding from "./locales/fr/aid-finding.json"
+import frAidOnTheWay from "./locales/fr/aid-on-the-way.json"
+import frAidUsefulness from "./locales/fr/aid-usefulness.json"
+import frInstallableApp from "./locales/fr/installable-app.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -220,6 +234,13 @@ export const LOCALE_PARTS = {
     "messages-unread": frMessagesUnread,
     "idn-entry": frIdnEntry,
     "post-videos": frPostVideos,
+    "mission-volunteer-notices": frMissionVolunteerNotices,
+    "event-outcome-notices": frEventOutcomeNotices,
+    "network-responsibles": frNetworkResponsibles,
+    "aid-finding": frAidFinding,
+    "aid-on-the-way": frAidOnTheWay,
+    "aid-usefulness": frAidUsefulness,
+    "installable-app": frInstallableApp,
   },
   en: {
     diasporale: enDiasporale,
@@ -289,6 +310,13 @@ export const LOCALE_PARTS = {
     "messages-unread": enMessagesUnread,
     "idn-entry": enIdnEntry,
     "post-videos": enPostVideos,
+    "mission-volunteer-notices": enMissionVolunteerNotices,
+    "event-outcome-notices": enEventOutcomeNotices,
+    "network-responsibles": enNetworkResponsibles,
+    "aid-finding": enAidFinding,
+    "aid-on-the-way": enAidOnTheWay,
+    "aid-usefulness": enAidUsefulness,
+    "installable-app": enInstallableApp,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

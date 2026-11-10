@@ -1,0 +1,18 @@
+{
+  "aidOnTheWay": {
+    "page": {
+      "title": "Volunteer missions",
+      "lead": "This association's next open missions. Signing up shows your published name to its team, never your contact details."
+    },
+    "agenda": {
+      "title": "My volunteer missions",
+      "lead": "The upcoming missions you signed up for; a cancelled mission says so.",
+      "all": "All my sign-ups"
+    },
+    "hub": {
+      "title": "Mutual aid: {{country}}",
+      "lead": "The latest open questions in this country. A simple answer already helps.",
+      "all": "See all mutual aid"
+    }
+  }
+}

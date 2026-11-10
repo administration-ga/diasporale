@@ -263,7 +263,7 @@ describe("activités associatives — gestes volontaires et droits vivants", () 
     expect(mocks.success).not.toHaveBeenCalled()
   })
 
-  it("l'annulation se confirme avec la version figée avant une lecture plus récente", async () => {
+  it("l'annulation se confirme avec la version figée avant une lecture plus récente et le motif choisi (EV-03)", async () => {
     const view = render(detailTree())
     fireEvent.click(screen.getByRole("button", { name: t("associationActivities.event.cancelEvent") }))
     const dialog = screen.getByRole("dialog", { name: t("associationActivities.event.cancelEvent") })
@@ -271,12 +271,71 @@ describe("activités associatives — gestes volontaires et droits vivants", () 
     expect(mocks.eventCancel).not.toHaveBeenCalled()
     mocks.event = { status: "ready", data: { ...EVENT, version: 8 } }
     view.rerender(detailTree())
+    // Sans motif, rien ne part : la liste fermée est exigée.
+    await act(async () => { fireEvent.click(within(dialog).getByRole("button", { name: t("associationActivities.event.cancelEvent") })) })
+    expect(within(dialog).getByRole("alert")).toHaveTextContent(t("errors.association_event_cancel_reason_required"))
+    expect(mocks.eventCancel).not.toHaveBeenCalled()
+    expect(within(dialog).getAllByRole("radio").map((radio) => radio.textContent)).toEqual([
+      t("associationActivities.eventCancel.reason.venue_unavailable"), t("associationActivities.eventCancel.reason.weather"),
+      t("associationActivities.eventCancel.reason.organizer_unavailable"), t("associationActivities.eventCancel.reason.other"),
+    ])
+    fireEvent.click(within(dialog).getByRole("radio", { name: t("associationActivities.eventCancel.reason.weather") }))
     await act(async () => { fireEvent.click(within(dialog).getByRole("button", { name: t("associationActivities.event.cancelEvent") })) })
 
-    expect(mocks.eventCancel).toHaveBeenCalledExactlyOnceWith({ eventId: "event-1", expectedVersion: 7 })
+    expect(mocks.eventCancel).toHaveBeenCalledExactlyOnceWith({ eventId: "event-1", expectedVersion: 7, reason: "weather" })
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    expect(mocks.success).toHaveBeenCalledWith(t("associationActivities.eventCancel.done"))
     expect(mocks.eventUpdate).not.toHaveBeenCalled()
     expect(mocks.eventUnregister).not.toHaveBeenCalled()
+  })
+
+  it("EV-03 : la feuille d'annulation ne promet un avis aux inscrits que si le fournisseur l'écrit, et la démonstration le dit", async () => {
+    render(detailTree())
+    fireEvent.click(screen.getByRole("button", { name: t("associationActivities.event.cancelEvent") }))
+    expect(screen.getByRole("dialog")).not.toHaveTextContent(plain(t("associationActivities.eventCancel.notice")))
+    cleanup()
+
+    mocks.events = { ...EVENTS, outcomeNotices: "engine" }
+    render(detailTree())
+    fireEvent.click(screen.getByRole("button", { name: t("associationActivities.event.cancelEvent") }))
+    expect(screen.getByRole("dialog")).toHaveTextContent(plain(t("associationActivities.eventCancel.notice")))
+    expect(screen.getByRole("dialog")).not.toHaveTextContent(plain(t("associationActivities.eventCancel.noticeDemo")))
+    cleanup()
+
+    mocks.events = { ...EVENTS, outcomeNotices: "simulated" }
+    render(detailTree())
+    fireEvent.click(screen.getByRole("button", { name: t("associationActivities.event.cancelEvent") }))
+    expect(screen.getByRole("dialog")).toHaveTextContent(plain(t("associationActivities.eventCancel.noticeDemo")))
+  })
+
+  it("EV-03 : l'inscrit lit le motif d'un événement annulé ; sans motif ni lecture, la fiche dit seulement « annulé »", () => {
+    const readCancellation = vi.fn<NonNullable<AssociationEventsCapability["useCancellation"]>>(() => ({ status: "ready", data: { reason: "venue_unavailable" } }))
+    mocks.events = { ...EVENTS, useCancellation: readCancellation }
+    mocks.event = { status: "ready", data: { ...EVENT, status: "cancelled", canManage: false, registration: "confirmed", isRegistered: true } }
+    const view = render(detailTree())
+    expect(screen.getByText(t("associationActivities.event.cancelled"))).toBeInTheDocument()
+    expect(screen.getByText(plain(t("associationActivities.eventCancellation.reason", { reason: t("associationActivities.eventCancel.reason.venue_unavailable") })))).toBeInTheDocument()
+    expect(readCancellation).toHaveBeenCalledWith("event-1")
+
+    readCancellation.mockImplementation(() => ({ status: "ready", data: { reason: null } }))
+    view.rerender(detailTree())
+    expect(screen.queryByText(/^Motif/)).not.toBeInTheDocument()
+    expect(screen.getByText(t("associationActivities.event.cancelled"))).toBeInTheDocument()
+
+    // Un événement programmé ne lit aucun motif.
+    readCancellation.mockClear()
+    mocks.event = { status: "ready", data: EVENT }
+    view.rerender(detailTree())
+    expect(readCancellation).not.toHaveBeenCalled()
+  })
+
+  it("EV-03 : en liste d'attente, l'écran dit que la place obtenue sera annoncée, seulement si l'avis existe", () => {
+    mocks.event = { status: "ready", data: WAITLISTED }
+    const view = render(detailTree())
+    expect(screen.queryByText(plain(t("associationActivities.eventSeat.waitlistNotice")))).not.toBeInTheDocument()
+    mocks.events = { ...EVENTS, outcomeNotices: "engine" }
+    view.rerender(detailTree())
+    expect(screen.getByText(plain(t("associationActivities.eventSeat.waitlistNotice")))).toBeInTheDocument()
   })
 
   it("ignore une publication tardive de l'ancienne personne sans effacer le nouveau brouillon ni émettre de toast", async () => {

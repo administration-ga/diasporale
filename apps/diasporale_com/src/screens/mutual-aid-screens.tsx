@@ -7,7 +7,8 @@
  *     saisie, sans GPS), par état ou les miennes, « Poser une question » ; les
  *     MISSIONS bénévoles à venir des associations, mes inscriptions, celles des
  *     associations que je gère, « Proposer une mission ». Listes paginées
- *     (« Afficher plus »), vides expliqués ; le filtre se lit dans l'adresse ;
+ *     (« Afficher plus »), vides expliqués ; le lieu, l'onglet, la vue, le thème
+ *     et les mots cherchés se lisent dans l'adresse (ET-04) : elle se partage ;
  *   · `/entraide/<id>` : une question (réponses, réponse retenue, répondre) ou
  *     une mission (places, inscription consentie, retrait ; équipe : bénévoles).
  *
@@ -18,7 +19,7 @@
  * les missions de mes associations, et les fiches que le lecteur gère.
  * PROPRIÉTAIRE : chantier « entraide ».
  */
-import { AID_CITY_MAX_LENGTH, parseResidenceCountry, type CountryCode } from "@diasporale/domain"
+import { AID_CITY_MAX_LENGTH, AID_QUERY_MAX_LENGTH, AID_THEMES, isAidTheme, parseResidenceCountry, type AidTheme, type CountryCode } from "@diasporale/domain"
 import {
   Button,
   Card,
@@ -75,8 +76,9 @@ import {
 import { AidQuestionDetail } from "@/components/mutual-aid-question-detail"
 import { AidQuestionForm } from "@/components/mutual-aid-question-form"
 import { useNow } from "@/components/service-request-ui"
+import { useUrlState } from "@/components/url-state"
 import { ServicePager } from "@/components/service-pager"
-import { routes } from "@/lib/routes"
+import { AID_MISSION_VIEW_SLUGS, AID_QUESTION_VIEW_SLUGS, routes } from "@/lib/routes"
 
 const selectClass = "h-11 w-full min-w-0 rounded-md border border-input bg-card px-3 text-[15px] focus-visible:shadow-focus aria-invalid:border-destructive"
 
@@ -128,13 +130,57 @@ export function aidFilterFromParams(params: Pick<URLSearchParams, "get">, fallba
   return { country: country.ok ? country.value : fallback, city: params.get("ville")?.trim() ?? "" }
 }
 
+/** ET-04 — tout ce que l'adresse porte de l'écran : lieu, onglet, vue de chaque onglet, thème et mots des questions. */
+export interface MutualAidUrlState {
+  readonly country: CountryCode
+  readonly city: string
+  readonly tab: "questions" | "missions"
+  readonly questionView: MutualAidQuestionView
+  readonly missionView: MutualAidMissionView
+  readonly theme: AidTheme | null
+  readonly q: string
+}
+
+/** Chaque vue de l'écran a son mot dans l'adresse (la table des routes les tient). */
+const QUESTION_VIEW_SLUGS: Readonly<Record<MutualAidQuestionView, string | null>> = AID_QUESTION_VIEW_SLUGS
+const MISSION_VIEW_SLUGS: Readonly<Record<MutualAidMissionView, string | null>> = AID_MISSION_VIEW_SLUGS
+
+function viewOf<View extends string>(views: readonly View[], slugs: Readonly<Record<View, string | null>>, slug: string | null, fallback: View): View {
+  return views.find((view) => slugs[view] !== null && slugs[view] === slug) ?? fallback
+}
+
+/** L'état porté par l'adresse ; une valeur illisible (vue, thème inconnus) est ignorée, jamais devinée. */
+export function aidStateFromParams(params: Pick<URLSearchParams, "get">, fallback: CountryCode): MutualAidUrlState {
+  const tab = params.get("onglet") === "missions" ? "missions" : "questions"
+  const slug = params.get("vue")
+  const theme = params.get("theme") ?? ""
+  return {
+    ...aidFilterFromParams(params, fallback),
+    tab,
+    questionView: tab === "questions" ? viewOf(MUTUAL_AID_QUESTION_VIEWS, QUESTION_VIEW_SLUGS, slug, "open") : "open",
+    missionView: tab === "missions" ? viewOf(MUTUAL_AID_MISSION_VIEWS, MISSION_VIEW_SLUGS, slug, "upcoming") : "upcoming",
+    theme: isAidTheme(theme) ? theme : null,
+    q: (params.get("q") ?? "").trim().slice(0, AID_QUERY_MAX_LENGTH),
+  }
+}
+
+/** L'adresse d'un état : le lieu, l'onglet et SA vue, le thème et les mots. */
+export function aidHrefOf(state: MutualAidUrlState): string {
+  return routes.mutualAid(state.country, state.city || undefined, {
+    tab: state.tab,
+    view: state.tab === "missions" ? state.missionView : state.questionView,
+    theme: state.theme,
+    q: state.q,
+  })
+}
+
 function MutualAidHome(props: { readonly membership: MembershipView }) {
   const { t } = useDiasporaleT()
   const capability = useMutualAid()
   const params = useSearchParams()
-  const router = useRouter()
-  const filter = useMemo(() => aidFilterFromParams(params, props.membership.facet.countryOfResidence), [params, props.membership.facet.countryOfResidence])
-  const [tab, setTab] = useState<"questions" | "missions">("questions")
+  const fromUrl = useMemo(() => aidStateFromParams(params, props.membership.facet.countryOfResidence), [params, props.membership.facet.countryOfResidence])
+  const [state, setState] = useUrlState(fromUrl, aidHrefOf)
+  const go = (next: Partial<MutualAidUrlState>) => setState({ ...state, ...next })
   return (
     <>
       <header className="flex flex-col gap-2">
@@ -144,21 +190,29 @@ function MutualAidHome(props: { readonly membership: MembershipView }) {
       {capability === null ? <Unavailable /> : (
         <>
           <PlaceFilter
-            key={`${filter.country}:${filter.city}`}
-            country={filter.country}
-            city={filter.city}
-            onApply={(country, city) => router.replace(routes.mutualAid(country, city || undefined))}
+            key={`${state.country}:${state.city}`}
+            country={state.country}
+            city={state.city}
+            onApply={(country, city) => go({ country, city })}
           />
-          <FolderTabs value={tab} onValueChange={(value) => setTab(value === "missions" ? "missions" : "questions")} className="min-w-0">
+          <FolderTabs value={state.tab} onValueChange={(value) => go({ tab: value === "missions" ? "missions" : "questions" })} className="min-w-0">
             <FolderTabsList aria-label={t("mutualAid.tabsLabel")} className="flex-wrap overflow-visible">
               <FolderTabsTrigger value="questions" className="min-h-11 flex-1 whitespace-normal px-3 text-center">{t("mutualAid.tab.questions")}</FolderTabsTrigger>
               <FolderTabsTrigger value="missions" className="min-h-11 flex-1 whitespace-normal px-3 text-center">{t("mutualAid.tab.missions")}</FolderTabsTrigger>
             </FolderTabsList>
             <FolderTabsContent value="questions">
-              <QuestionsPanel capability={capability} country={filter.country} city={filter.city} />
+              <QuestionsPanel
+                capability={capability}
+                country={state.country}
+                city={state.city}
+                view={state.questionView}
+                theme={state.theme}
+                query={state.q}
+                onChange={(next) => go(next)}
+              />
             </FolderTabsContent>
             <FolderTabsContent value="missions">
-              <MissionsPanel capability={capability} country={filter.country} city={filter.city} />
+              <MissionsPanel capability={capability} country={state.country} city={state.city} view={state.missionView} onView={(missionView) => go({ missionView })} />
             </FolderTabsContent>
           </FolderTabs>
         </>
@@ -210,34 +264,98 @@ function PlaceFilter(props: { readonly country: CountryCode; readonly city: stri
 
 // ── Questions ─────────────────────────────────────────────────────
 
-function QuestionsPanel(props: { readonly capability: MutualAidCapability; readonly country: CountryCode; readonly city: string }) {
+const searchSchema = z.object({ q: z.string().trim().max(AID_QUERY_MAX_LENGTH, "aid_query_too_long") })
+type SearchValues = z.infer<typeof searchSchema>
+
+/**
+ * ET-04 — chercher par mots dans les questions du lieu : le titre et le détail. La
+ * saisie part dans l'adresse ; le moteur cherche dès deux caractères.
+ */
+function QuestionSearch(props: { readonly query: string; readonly onSearch: (q: string) => void }) {
+  const { t } = useDiasporaleT()
+  const id = useId()
+  const form = useForm<SearchValues>({ resolver: zodResolver(searchSchema), defaultValues: { q: props.query } })
+  const error = form.formState.errors.q?.message
+  const submit = form.handleSubmit((values) => props.onSearch(values.q))
+  return (
+    <form noValidate role="search" aria-label={t("mutualAid.search.label")} className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end" onSubmit={submit}>
+      <Field id={`${id}-q`} label={t("mutualAid.search.query")} hint={t("mutualAid.search.hint")} error={error ? t(errorKey(error)) : undefined} className="min-w-0 flex-1">
+        {(field) => <Input id={field.id} type="search" maxLength={AID_QUERY_MAX_LENGTH} aria-invalid={field.invalid || undefined} aria-describedby={field.describedBy} {...form.register("q")} />}
+      </Field>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" variant="outline">{t("mutualAid.search.submit")}</Button>
+        {props.query ? <Button type="button" variant="ghost" onClick={() => props.onSearch("")}>{t("mutualAid.search.clear")}</Button> : null}
+      </div>
+    </form>
+  )
+}
+
+function QuestionsPanel(props: {
+  readonly capability: MutualAidCapability
+  readonly country: CountryCode
+  readonly city: string
+  readonly view: MutualAidQuestionView
+  readonly theme: AidTheme | null
+  readonly query: string
+  readonly onChange: (next: { readonly questionView?: MutualAidQuestionView; readonly theme?: AidTheme | null; readonly q?: string }) => void
+}) {
   const { t } = useDiasporaleT()
   const id = useId()
   const router = useRouter()
-  const { capability, country, city } = props
-  const [view, setView] = useState<MutualAidQuestionView>("open")
+  const { capability, country, city, view, theme, query } = props
   const [asking, setAsking] = useState(false)
+  // « Mes questions » n'est pas une liste du lieu : ni thème ni mots ne la restreignent.
+  const searching = view !== "mine" && (theme !== null || query.length > 0)
   const read = (cursor: string | null) => (view === "mine"
     ? capability.useMyQuestions({ cursor })
-    : capability.useQuestions({ country, ...(city ? { city } : {}), status: view, cursor }))
+    : capability.useQuestions({
+      country,
+      ...(city ? { city } : {}),
+      status: view === "unanswered" ? "open" : view,
+      ...(view === "unanswered" ? { unanswered: true } : {}),
+      ...(theme ? { theme } : {}),
+      ...(query ? { query } : {}),
+      cursor,
+    }))
   return (
     <section aria-labelledby={`${id}-titre`} className="flex min-w-0 flex-col gap-4">
       <div className="flex min-w-0 flex-wrap items-end justify-between gap-3">
         <h2 id={`${id}-titre`} className="text-lg font-semibold">{t("mutualAid.questions.title")}</h2>
         <Button onClick={() => setAsking(true)}>{t("mutualAid.questions.ask")}</Button>
       </div>
-      <Field id={`${id}-vue`} label={t("mutualAid.questions.viewLabel")} className="max-w-xs">
-        {(field) => (
-          <select id={field.id} aria-describedby={field.describedBy} className={selectClass} value={view} onChange={(event) => setView(event.target.value as MutualAidQuestionView)}>
-            {MUTUAL_AID_QUESTION_VIEWS.map((value) => <option key={value} value={value}>{t(`mutualAid.questions.view.${value}`)}</option>)}
-          </select>
-        )}
-      </Field>
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+        <Field id={`${id}-vue`} label={t("mutualAid.questions.viewLabel")}>
+          {(field) => (
+            <select id={field.id} aria-describedby={field.describedBy} className={selectClass} value={view} onChange={(event) => props.onChange({ questionView: event.target.value as MutualAidQuestionView })}>
+              {MUTUAL_AID_QUESTION_VIEWS.map((value) => <option key={value} value={value}>{t(`mutualAid.questions.view.${value}`)}</option>)}
+            </select>
+          )}
+        </Field>
+        {view !== "mine" ? (
+          <Field id={`${id}-theme`} label={t("mutualAid.search.theme")}>
+            {(field) => (
+              <select
+                id={field.id}
+                aria-describedby={field.describedBy}
+                className={selectClass}
+                value={theme ?? ""}
+                onChange={(event) => props.onChange({ theme: isAidTheme(event.target.value) ? event.target.value : null })}
+              >
+                <option value="">{t("mutualAid.search.anyTheme")}</option>
+                {AID_THEMES.map((value) => <option key={value} value={value}>{t(`mutualAid.theme.${value}`)}</option>)}
+              </select>
+            )}
+          </Field>
+        ) : null}
+      </div>
+      {view !== "mine" ? <QuestionSearch key={query} query={query} onSearch={(q) => props.onChange({ q })} /> : null}
       <ServicePager
-        key={`${view}:${country}:${city}`}
+        key={`${view}:${country}:${city}:${theme ?? ""}:${query}`}
         read={read}
         keyOf={(question) => question.id}
-        empty={<EmptyState icon={<MessageCircleQuestionIcon />} title={t(`mutualAid.questions.empty.${view}.title`)} description={t(`mutualAid.questions.empty.${view}.body`)} />}
+        empty={searching
+          ? <EmptyState icon={<MessageCircleQuestionIcon />} title={t("mutualAid.search.emptyTitle")} description={t("mutualAid.search.emptyBody")} />
+          : <EmptyState icon={<MessageCircleQuestionIcon />} title={t(`mutualAid.questions.empty.${view}.title`)} description={t(`mutualAid.questions.empty.${view}.body`)} />}
       >
         {(questions) => (
           <ul className="flex min-w-0 flex-col gap-3">
@@ -294,12 +412,17 @@ function QuestionCard(props: { readonly question: AidQuestionCardView }) {
 
 // ── Missions bénévoles ───────────────────────────────────────────
 
-function MissionsPanel(props: { readonly capability: MutualAidCapability; readonly country: CountryCode; readonly city: string }) {
+function MissionsPanel(props: {
+  readonly capability: MutualAidCapability
+  readonly country: CountryCode
+  readonly city: string
+  readonly view: MutualAidMissionView
+  readonly onView: (view: MutualAidMissionView) => void
+}) {
   const { t } = useDiasporaleT()
   const id = useId()
   const router = useRouter()
-  const { capability, country, city } = props
-  const [view, setView] = useState<MutualAidMissionView>("upcoming")
+  const { capability, country, city, view } = props
   const now = useNow()
   const [from] = useState(() => aidListStart(Date.now()))
   const [proposing, setProposing] = useState(false)
@@ -324,7 +447,7 @@ function MissionsPanel(props: { readonly capability: MutualAidCapability; readon
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <Field id={`${id}-vue`} label={t("mutualAid.missions.viewLabel")}>
           {(field) => (
-            <select id={field.id} aria-describedby={field.describedBy} className={selectClass} value={shown} onChange={(event) => setView(event.target.value as MutualAidMissionView)}>
+            <select id={field.id} aria-describedby={field.describedBy} className={selectClass} value={shown} onChange={(event) => props.onView(event.target.value as MutualAidMissionView)}>
               {views.map((value) => <option key={value} value={value}>{t(`mutualAid.missions.view.${value}`)}</option>)}
             </select>
           )}

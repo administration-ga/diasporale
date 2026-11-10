@@ -4,10 +4,13 @@
  * DG-010 : événements sous identité d'association, audience explicite et inscription personnelle.
  * EV-04 : un évènement publié se signale depuis sa carte et son détail (nature « event »),
  * jamais par l'équipe de la page ; signalé, il se masque aussitôt pour qui l'a signalé.
+ * EV-03 : l'équipe annule avec un motif de la liste fermée, lu sur la fiche ; les inscrits et les
+ * personnes en attente en sont avisés, et la personne en attente apprend la place obtenue — l'écran
+ * ne le promet que si le fournisseur écrit ces avis.
  */
 import { associationEventReminderAt, isAssociationEventRegistrationOpen } from "@diasporale/domain"
 import { Button, Card, Checkbox, Sheet, SheetContent, Skeleton } from "@diasporale/features"
-import { useAssociationEvents, useSession, type ActionErrorCode, type AssociationEventView, type AssociationEventsCapability } from "@diasporale/features/data"
+import { useAssociationEvents, useSession, type AssociationEventView, type AssociationEventsCapability } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import NextLink from "next/link"
 import { useId, useState } from "react"
@@ -15,13 +18,13 @@ import { toast } from "sonner"
 
 import { routes } from "@/lib/routes"
 
+import { AssociationEventCancellationReason, AssociationEventCancelSheet } from "./association-event-cancel-sheet"
 import { AssociationEventForm } from "./association-event-form"
 import { AssociationEventAttendance } from "./association-event-attendance"
 import { AssociationEventGallery } from "./association-event-gallery"
 import { AssociationEventCalendar } from "./association-event-calendar"
 import { ReportContentAction, ReportedContent } from "./report-content-sheet"
 import { ServicePager } from "./service-pager"
-import { ConfirmSheet } from "./service-request-sheets"
 import { browserTimeZone, formatServiceInstant, SlotText, useNow } from "./service-request-ui"
 import { useReviewTask as useActivityTask } from "./service-review-editor"
 
@@ -107,11 +110,6 @@ function AssociationEventCard(props: { readonly event: AssociationEventView; rea
     if (enabled && (!canEnableReminder || Date.now() >= associationEventReminderAt(event.startAt))) return
     void task.run(() => props.capability.setReminder({ eventId: event.eventId, enabled }), () => toast.success(t("associationActivities.event.reminderSaved")))
   }
-  async function cancel(): Promise<ActionErrorCode | null> {
-    if (!cancelling) return null
-    const result = await props.capability.cancel({ eventId: cancelling.eventId, expectedVersion: cancelling.version })
-    return result.ok ? null : result.code
-  }
   const title = <span className="break-words">{event.title}</span>
   const Heading = props.detail ? "h1" : "h3"
   // EV-04 : jamais offert à l'équipe de la page, ni sur un évènement qui n'est pas publié.
@@ -134,9 +132,12 @@ function AssociationEventCard(props: { readonly event: AssociationEventView; rea
       {event.location ? <p className="whitespace-pre-line break-words">{event.location}</p> : null}
       {event.description ? <p className="whitespace-pre-line break-words">{event.description}</p> : null}
       {event.status === "cancelled" ? <p role="status" className="font-semibold">{t("associationActivities.event.cancelled")}</p> : event.endAt <= now ? <p role="status">{t("associationActivities.event.past")}</p> : null}
+      {event.status === "cancelled" && props.capability.useCancellation ? <AssociationEventCancellationReason eventId={event.eventId} useCancellation={props.capability.useCancellation} /> : null}
       {event.moderation !== "published" ? <p role="status" className="text-sm text-muted-foreground">{t(event.moderation === "removed" ? "associationActivities.removed" : "associationActivities.pending")}</p> : null}
       {confirmed ? <p role="status">{t("associationActivities.event.registered")}</p> : null}
       {waitlisted ? <p role="status">{event.waitlistPosition === null ? t("associationActivities.event.waitlisted") : t("associationActivities.event.waitlistPosition", { position: formatNumber.format(event.waitlistPosition) })}</p> : null}
+      {waitlisted && event.status === "scheduled" && props.capability.outcomeNotices ? <p className="text-sm text-muted-foreground">{t("associationActivities.eventSeat.waitlistNotice")}</p> : null}
+      {waitlisted && event.status === "scheduled" && props.capability.outcomeNotices === "simulated" ? <p className="text-sm text-muted-foreground">{t("associationActivities.eventCancel.noticeDemo")}</p> : null}
       {canRequest ? <p id={placeHintId} className="text-sm text-muted-foreground">{t("associationActivities.event.placeRequestConsent")}</p> : null}
       <div className="flex flex-wrap gap-2">
         {canRequest ? <Button variant="commerce" disabled={task.busy} aria-busy={task.busy} aria-describedby={placeHintId} onClick={requestPlace}>{t(full ? "associationActivities.event.joinWaitlist" : "associationActivities.event.register")}</Button> : null}
@@ -166,7 +167,7 @@ function AssociationEventCard(props: { readonly event: AssociationEventView; rea
       {props.detail && props.capability.calendar ? <AssociationEventCalendar event={event} capability={props.capability.calendar} /> : null}
       {task.error ? <p role="alert" className="text-sm text-destructive">{t(`errors.${task.error}`)}</p> : null}
       {editor ? <EventEditor initial={editor} pageId={event.pageId} capability={props.capability} onClose={() => setEditor(null)} /> : null}
-      {cancelling ? <ConfirmSheet open onOpenChange={(open) => { if (!open) setCancelling(null) }} title={t("associationActivities.event.cancelEvent")} description={t("associationActivities.event.cancelDescription")} confirmLabel={t("associationActivities.event.cancelEvent")} destructive onConfirm={cancel} /> : null}
+      {cancelling ? <AssociationEventCancelSheet event={cancelling} capability={props.capability} onClose={() => setCancelling(null)} onCancelled={() => { setCancelling(null); toast.success(t("associationActivities.eventCancel.done")) }} /> : null}
     </Card>
   )
   if (event.canManage) return card

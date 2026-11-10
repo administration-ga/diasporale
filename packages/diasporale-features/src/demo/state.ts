@@ -26,7 +26,7 @@ import {
   type Visibility,
 } from "@diasporale/domain"
 
-import type { AssociationType, CompanySector, EventCategory, NotificationKind, ReactionKind, ReportReason } from "../data/types"
+import type { AssociationType, CommunityNoticeView, CompanySector, EventCategory, NotificationKind, ReactionKind, ReportReason } from "../data/types"
 
 /**
  * Version de l'état persisté : v2 = relations (demandes, blocages, abonnements) ;
@@ -222,6 +222,15 @@ export interface DemoNotification {
   readonly inviteDeclined: boolean
   /** La publication dont parle l'avis (commentaire, réaction), pour l'ouvrir. */
   readonly postId: string | null
+  /**
+   * Avis du SYSTÈME écrit par une démonstration voisine (`DemoStore.notifySystem`) : la clé
+   * qui le dédoublonne. Absente des avis plus anciens, qui gardent leur propre rapprochement.
+   */
+  readonly noticeKey?: string
+  /** EV-03 : l'évènement d'association annoncé (annulation, place obtenue), pour ouvrir sa fiche. */
+  readonly associationEvent?: { readonly eventId: string; readonly pageHandle: string }
+  /** ET-01 : l'objet qu'ouvre un avis de la vie communautaire (mission annulée ou déplacée). */
+  readonly communityNotice?: CommunityNoticeView
 }
 
 export interface DemoState {

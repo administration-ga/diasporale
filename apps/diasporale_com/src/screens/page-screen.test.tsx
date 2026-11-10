@@ -7,8 +7,10 @@ import {
   type ContentReportInput,
   type ContentReportsCapability,
   type ContentReportTarget,
+  type AidMissionCardView,
   type DiasporaleDataSource,
   type MembershipView,
+  type MutualAidCapability,
   type PageDetailQuery,
   type PageDetailView,
   type PagesCapability,
@@ -443,5 +445,33 @@ describe("PageScreen — AS-02 : signaler la page depuis le menu « … » de la
     mocks.detail = { status: "ready", data: view({ role: null }) }
     render(tree())
     expect(screen.queryByRole("button", { name: menuName })).not.toBeInTheDocument()
+  })
+})
+
+describe("PageScreen — ET-09 : les missions bénévoles de l'association sur sa fiche", () => {
+  const MISSION: AidMissionCardView = {
+    id: "mission-1", page: { id: "page-lyon", handle: "collectif-lyon", name: "Collectif de Lyon", badge: "community" }, title: "Accueillir les étudiants à la gare",
+    description: "Orienter les nouveaux arrivants. (Mission fictive.)", country: "FR", city: "Lyon", area: null, startsAt: Date.UTC(2030, 0, 5, 9), endsAt: null,
+    timeZone: "Europe/Paris", places: 4, signupCount: 1, status: "open", signedUp: false,
+  }
+
+  it("ses prochaines missions ouvertes se montrent sous ses évènements, lues pour cette page ; sans mission, aucune section", () => {
+    const read = vi.fn((_args: { readonly pageId: string }) => ({ status: "ready" as const, data: [MISSION] }))
+    const mutualAid = { useUpcomingPageMissions: read } as unknown as MutualAidCapability
+    mocks.detail = { status: "ready", data: view({ role: null }) }
+    const tree = (missions: MutualAidCapability) => (
+      <I18nProvider locale="fr">
+        <DataSourceProvider source={{ kind: "engine", mutualAid: missions } as unknown as DiasporaleDataSource}>
+          <PageScreen handle="collectif-lyon" />
+        </DataSourceProvider>
+      </I18nProvider>
+    )
+    const { unmount } = render(tree(mutualAid))
+    expect(read).toHaveBeenCalledWith({ pageId: "page-lyon" })
+    const section = screen.getByRole("region", { name: "Missions bénévoles" })
+    expect(within(section).getByRole("link", { name: "Accueillir les étudiants à la gare" })).toHaveAttribute("href", routes.mutualAidItem("mission-1"))
+    unmount()
+    render(tree({ useUpcomingPageMissions: () => ({ status: "ready", data: [] }) } as unknown as MutualAidCapability))
+    expect(screen.queryByRole("region", { name: "Missions bénévoles" })).not.toBeInTheDocument()
   })
 })

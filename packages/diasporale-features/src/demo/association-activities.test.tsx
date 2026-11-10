@@ -720,7 +720,7 @@ describe("DG-023 — clôture et choix personnel de rappel de démonstration", (
     expect(stored(context)).toEqual(before)
   })
 
-  it("garde le rappel désactivé par défaut, distingue attente et confirmation et ne fabrique aucune notification", async () => {
+  it("garde le rappel désactivé par défaut, distingue attente et confirmation, ne fabrique aucun rappel et n'annonce que la place obtenue (EV-03)", async () => {
     const context = setup()
     const eventId = await event(context, { ...later, capacity: 1 })
     const activities = publishedFixture(context)
@@ -738,7 +738,9 @@ describe("DG-023 — clôture et choix personnel de rappel de démonstration", (
     expect(eventView(activities, eventId)).toMatchObject({ registration: "confirmed", reminderEnabled: true, reminderState: "scheduled" })
     await requestPlace(context, activities, eventId, "p-nadia")
     expect(eventView(activities, eventId)).toMatchObject({ reminderEnabled: false, reminderState: "off" })
-    expect(context.store.getState().notifications).toBe(notifications)
+    // Aucun rappel n'est livré par la démonstration ; seule la place obtenue par p-clarisse est annoncée.
+    const added = context.store.getState().notifications.filter((row) => !notifications.includes(row))
+    expect(added.map((row) => [row.kind, row.recipientId, row.actorId])).toEqual([["association_event_seat_confirmed", "p-clarisse", null]])
     expect(stored(context).registrations.every((row) => row.reminderRecordedForStartAt === undefined)).toBe(true)
   })
 
@@ -1292,7 +1294,7 @@ describe("DG-023 — agenda associatif et copie iCalendar de démonstration", ()
     expect(ready(renderHook(() => calendarOf(exact).useAgenda({ now: NOW })).result.current)).toMatchObject({ truncated: true, items: expect.any(Array) })
   })
 
-  it("exporte à tout lecteur actuel, garde l'UID entre versions et ne crée ni présence ni notification", async () => {
+  it("exporte à tout lecteur actuel, garde l'UID entre versions et ne crée ni présence ni notification (seule l'annulation avise, EV-03)", async () => {
     const context = setup()
     const eventId = await event(context, { audience: "network" })
     expect(await calendarOf(context).exportIcal(eventId)).toEqual({ ok: false, code: "not_found" })
@@ -1318,13 +1320,16 @@ describe("DG-023 — agenda associatif et copie iCalendar de démonstration", ()
     clock += 1000
     await activities.events.update({ ...eventInput({ audience: "network", capacity: 3 }), eventId, expectedVersion: 1 })
     await activities.events.cancel({ eventId, expectedVersion: 2 })
+    // L'annulation avise l'inscrite ; l'export qui suit n'ajoute rien.
+    const afterCancel = context.store.getState().notifications
+    expect(afterCancel.filter((row) => !notifications.includes(row)).map((row) => [row.kind, row.recipientId])).toEqual([["association_event_cancelled", "p-nadia"]])
     const cancelled = await calendar.exportIcal(eventId)
     if (!cancelled.ok) throw new Error(cancelled.code)
     expect(cancelled.value.content).toContain(uid)
     expect(cancelled.value.content).toContain("STATUS:CANCELLED\r\n")
     expect(cancelled.value.content).toContain("SEQUENCE:3\r\n")
     expect(context.store.getState().posts).toBe(posts)
-    expect(context.store.getState().notifications).toBe(notifications)
+    expect(context.store.getState().notifications).toBe(afterCancel)
     expect(stored(context).registrations).toHaveLength(1)
   })
 
@@ -1532,5 +1537,77 @@ describe("HB-02 — évènements d'un pays dans le hub, démonstration alignée 
     const suspended = setup({ state: { ...seed, memberships: { ...seed.memberships, "p-steeve": { ...seed.memberships["p-steeve"]!, grounds: { ...seed.memberships["p-steeve"]!.grounds, suspension: { until: null, readAccess: "none" } } } } } })
     const result = renderHook(() => suspended.events.useCountryEvents!({ country: "FR", anchor: NOW, cursor: null })).result.current
     expect(result.status).toBe("error")
+  })
+})
+
+describe("EV-03 — avis aux inscrits de démonstration : annulation, place obtenue", () => {
+  const later = { startAt: NOW + 48 * HOUR, endAt: NOW + 50 * HOUR }
+  function cancellation(activities: Activities, eventId: string) {
+    const read = activities.events.useCancellation
+    if (!read) throw new Error("Lecture du motif absente")
+    return ready(renderHook(() => read(eventId)).result.current)
+  }
+  function added(context: Setup, before: readonly unknown[]) {
+    return context.store.getState().notifications.filter((row) => !before.includes(row))
+  }
+
+  it("l'annulation garde son motif fermé, lu par l'inscrite, et avise chaque confirmé et chaque personne en attente, jamais l'équipe", async () => {
+    const context = setup()
+    expect(context.events.outcomeNotices).toBe("simulated")
+    const eventId = await event(context, { ...later, capacity: 1 })
+    const activities = publishedFixture(context)
+    await requestPlace(context, activities, eventId, "p-nadia")
+    await requestPlace(context, activities, eventId, "p-clarisse")
+    await as(context.store, "p-nadia")
+    expect(cancellation(activities, eventId)).toBeNull()
+    await as(context.store, "p-steeve")
+    const before = context.store.getState().notifications
+    const free = "Il pleut des cordes" as unknown as "weather"
+    expect(await activities.events.cancel({ eventId, expectedVersion: 1, reason: free })).toEqual({ ok: false, code: "association_event_invalid" })
+    expect(eventView(activities, eventId)?.status).toBe("scheduled")
+    await act(async () => { expect(await activities.events.cancel({ eventId, expectedVersion: 1, reason: "weather" })).toEqual({ ok: true, value: null }) })
+
+    const notices = added(context, before)
+    expect(notices.map((row) => row.recipientId).sort()).toEqual(["p-clarisse", "p-nadia"])
+    for (const row of notices) expect(row).toMatchObject({ kind: "association_event_cancelled", actorId: null, postId: null, associationEvent: { eventId, pageHandle: expect.any(String) } })
+    // Aucun contenu dans l'avis : ni titre, ni lieu, ni motif.
+    expect(JSON.stringify(notices)).not.toMatch(/Rencontre de l'association|Salle de démonstration|weather/)
+    await as(context.store, "p-clarisse")
+    expect(cancellation(activities, eventId)).toEqual({ reason: "weather" })
+
+    // Rejouée : ni le motif ni les avis ne changent.
+    await as(context.store, "p-steeve")
+    const after = context.store.getState().notifications
+    expect(await activities.events.cancel({ eventId, expectedVersion: 2, reason: "other" })).toEqual({ ok: true, value: null })
+    expect(context.store.getState().notifications).toBe(after)
+    expect(cancellation(activities, eventId)).toEqual({ reason: "weather" })
+  })
+
+  it("annulé sans motif, l'évènement le dit sans motif ; un évènement terminé n'avise personne", async () => {
+    const context = setup()
+    const eventId = await event(context, later)
+    const activities = publishedFixture(context)
+    await requestPlace(context, activities, eventId, "p-nadia")
+    await as(context.store, "p-steeve")
+    clock = NOW + 51 * HOUR
+    const before = context.store.getState().notifications
+    await act(async () => { await activities.events.cancel({ eventId, expectedVersion: 1 }) })
+    expect(added(context, before)).toEqual([])
+    expect(cancellation(activities, eventId)).toEqual({ reason: null })
+  })
+
+  it("un retrait promeut la première personne en attente, avisée de sa place ; jamais l'auteur du geste", async () => {
+    const context = setup()
+    const eventId = await event(context, { ...later, capacity: 1 })
+    const activities = publishedFixture(context)
+    await requestPlace(context, activities, eventId, "p-nadia")
+    await requestPlace(context, activities, eventId, "p-clarisse")
+    const before = context.store.getState().notifications
+    await withdrawPlace(context, activities, eventId, "p-nadia")
+    const notices = added(context, before)
+    expect(notices.map((row) => [row.kind, row.recipientId, row.actorId])).toEqual([["association_event_seat_confirmed", "p-clarisse", null]])
+    expect(notices[0]?.associationEvent).toEqual({ eventId, pageHandle: expect.any(String) })
+    await as(context.store, "p-clarisse")
+    expect(eventView(activities, eventId)).toMatchObject({ registration: "confirmed" })
   })
 })

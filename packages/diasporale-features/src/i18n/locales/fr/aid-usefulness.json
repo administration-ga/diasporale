@@ -1,0 +1,58 @@
+{
+  "pilotMetrics": {
+    "group": {
+      "mutual_aid": "Entraide, mentorat et kit d’arrivée"
+    },
+    "indicator": {
+      "aid_questions_asked": {
+        "label": "Questions d’entraide posées",
+        "hint": "Questions créées pendant la période ; une question retirée par son auteur ou par la modération ne compte pas."
+      },
+      "aid_questions_answered": {
+        "label": "Questions qui ont reçu une réponse",
+        "hint": "Au moins une réponse publiée, à ce jour."
+      },
+      "aid_questions_resolved": {
+        "label": "Aides abouties",
+        "hint": "Questions dont l’auteur a retenu une réponse, à ce jour, même closes ensuite."
+      },
+      "aid_signups": {
+        "label": "Inscriptions bénévoles",
+        "hint": "Inscriptions à une mission nées pendant la période et encore confirmées."
+      },
+      "mentoring_requested": {
+        "label": "Demandes de mentorat",
+        "hint": "Demandes envoyées pendant la période."
+      },
+      "mentoring_accepted": {
+        "label": "Demandes de mentorat acceptées",
+        "hint": "Acceptées à ce jour, même closes ensuite."
+      },
+      "kit_resources_listed": {
+        "label": "Ressources du kit d’arrivée publiées",
+        "hint": "Ressources relues et servies dans le kit, relevées au dernier passage."
+      },
+      "kit_resources_to_review": {
+        "label": "Ressources du kit à revoir",
+        "hint": "Signalées périmées, vérifiées il y a plus de douze mois ou marquées par un relecteur, au dernier passage."
+      }
+    },
+    "base": {
+      "aid_questions_asked": "sur {{value}} questions posées",
+      "mentoring_requested": "sur {{value}} demandes de mentorat",
+      "kit_resources_listed": "sur {{value}} ressources publiées"
+    },
+    "baseBelow": {
+      "aid_questions_asked": "sur moins de {{threshold}} questions posées",
+      "mentoring_requested": "sur moins de {{threshold}} demandes de mentorat",
+      "kit_resources_listed": "sur moins de {{threshold}} ressources publiées"
+    },
+    "durationAid": {
+      "median": "Délai de première réponse à une question, médiane",
+      "p75": "Délai de première réponse à une question, 75e centile",
+      "hint": "De la question à sa plus ancienne réponse encore publiée, rangé par classe d’heures.",
+      "sample": "sur {{value}} questions répondues",
+      "sampleBelow": "sur moins de {{threshold}} questions répondues"
+    }
+  }
+}

@@ -2,8 +2,9 @@
  * Démonstration de la capacité « entraide » (DG-024 a) — données FICTIVES.
  * PROPRIÉTAIRE : ce chantier.
  *
- * L'état de l'entraide est LOCAL à ce chantier (le magasin commun n'est pas
- * modifié) : un registre en mémoire, gardé dans ce seul navigateur et remis à
+ * L'état de l'entraide est LOCAL à ce chantier (le magasin commun ne reçoit que
+ * les avis neutres aux bénévoles d'une mission annulée ou déplacée, ET-01, par
+ * `notifySystem`) : un registre en mémoire, gardé dans ce seul navigateur et remis à
  * zéro avec la démonstration (il suit la date de création du jeu fictif). Les
  * règles sont celles de `@diasporale/domain`, dans l'ordre du moteur : session
  * → adhésion au réseau → capacité → droit sur la ressource → règle de l'entraide.
@@ -19,6 +20,8 @@
  */
 import { isProfilePublished } from "@antsia/social-domain/content"
 import {
+  aidQuestionSearchText,
+  aidSearchWordsMatch,
   aidSignupBlocker,
   aidStatusWithoutAcceptedAnswer,
   checkAidAcceptedAnswer,
@@ -32,10 +35,12 @@ import {
   checkAidSignupWithdrawal,
   DAY_MS,
   HOUR_MS,
+  matchesAidQuestionSearch,
   parseAidAnswer,
   parseAidMission,
   parseAidPlaceFilter,
   parseAidQuestion,
+  parseAidQuestionSearch,
   parseAidReason,
   type AidAnswerStatus,
   type AidMissionStatus,
@@ -72,6 +77,9 @@ import type { DemoPage, DemoState } from "./state"
 import type { DemoStore } from "./store"
 
 export const DEMO_MUTUAL_AID_STORAGE_KEY = "diasporale:demonstration:mutual-aid:v1"
+
+/** ET-09 — les prochaines missions montrées sur la fiche d'une association (même borne que le moteur). */
+const DEMO_UPCOMING_PAGE_MISSIONS_MAX = 5
 
 export interface DemoAidQuestion {
   readonly id: string
@@ -226,8 +234,11 @@ const CURSOR_TAG = "demo-mutual-aid"
 type Failure = { readonly ok: false; readonly code: ActionErrorCode }
 const fail = (code: ActionErrorCode): Failure => ({ ok: false, code })
 
-/** Une écriture admise : le registre suivant et la valeur rendue à l'écran. */
-type Outcome<T> = { readonly next: DemoAidLedger; readonly value: T } | Failure
+/**
+ * Une écriture admise : le registre suivant et la valeur rendue à l'écran ; `then`, ce qui suit
+ * l'écriture une fois gardée (ET-01 : les avis aux bénévoles, comme le moteur après la transaction).
+ */
+type Outcome<T> = { readonly next: DemoAidLedger; readonly value: T; readonly then?: () => void } | Failure
 
 function isLedger(value: unknown): value is DemoAidLedger {
   if (typeof value !== "object" || value === null) return false
@@ -250,7 +261,7 @@ function personView(state: DemoState, personId: string, now: number): AidPersonV
 }
 
 /** Une fenêtre d'une liste triée ; le curseur est opaque pour l'écran, validé ici. */
-function windowOf<T>(items: readonly T[], cursor: string | null, scope: string): Loadable<AidListPage<T>> {
+function windowOf<T>(items: readonly T[], cursor: string | null, scope: string, size: number = MUTUAL_AID_PAGE_SIZE): Loadable<AidListPage<T>> {
   let offset = 0
   if (cursor !== null) {
     try {
@@ -263,7 +274,7 @@ function windowOf<T>(items: readonly T[], cursor: string | null, scope: string):
       return { status: "error", code: "unknown" }
     }
   }
-  const end = offset + MUTUAL_AID_PAGE_SIZE
+  const end = offset + size
   const isDone = end >= items.length
   return { status: "ready", data: { items: items.slice(offset, end), isDone, continueCursor: isDone ? null : JSON.stringify([CURSOR_TAG, scope, end]) } }
 }
@@ -350,6 +361,7 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
     const outcome = work(state, viewerId, store.now())
     if ("next" in outcome) {
       commit(outcome.next)
+      outcome.then?.()
       return { ok: true, value: outcome.value }
     }
     return outcome
@@ -515,7 +527,7 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
     gesture: "close" | "cancel",
     missionId: string,
     expectedVersion: number,
-    apply: (mission: DemoAidMission, status: AidMissionStatus, base: DemoAidLedger, now: number) => Outcome<null>,
+    apply: (mission: DemoAidMission, status: AidMissionStatus, base: DemoAidLedger, now: number, state: DemoState, viewerId: string) => Outcome<null>,
   ) => act((state, viewerId, now) => {
     const refusal = demoViewerRefusal(state, now, "publish")
     if (refusal) return fail(refusal)
@@ -524,24 +536,48 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
     if (!mission) return fail("not_found")
     const check = checkAidMissionGesture({ gesture, status: mission.status, expectedVersion, version: mission.version })
     if (!check.ok) return fail(check.code)
-    return apply(mission, check.value, base, now)
+    return apply(mission, check.value, base, now, state, viewerId)
   })
+
+  /**
+   * ET-01 : après l'annulation ou un changement d'horaire, l'avis neutre à chaque bénévole à
+   * l'inscription confirmée (jamais l'auteur du geste), simulé dans la cloche de ce navigateur ;
+   * un avis par mission, changement et version, comme la clé du moteur. Ni motif ni horaire.
+   */
+  const noticeVolunteers = (state: DemoState, base: DemoAidLedger, mission: DemoAidMission, kind: "aid_mission_cancelled" | "aid_mission_rescheduled", version: number, viewerId: string) => () => {
+    const recipientIds = base.signups.filter((row) => row.missionId === mission.id && row.status === "confirmed").map((row) => row.personId)
+    if (recipientIds.length === 0) return
+    store.notifySystem({
+      kind,
+      recipientIds,
+      sourceId: viewerId,
+      noticeKey: `aidMission:${mission.id}:${kind === "aid_mission_cancelled" ? "cancelled" : "rescheduled"}:${version}`,
+      communityNotice: { audience: "volunteer", opens: "aidMission", objectId: mission.id, pageHandle: associationPage(state, mission.pageId)?.handle ?? null },
+    })
+  }
 
   return {
     // ── Lectures des questions ───────────────────────────────────
-    useQuestions({ country, city, status, cursor }) {
+    useQuestions({ country, city, status, theme, query, unanswered, limit, cursor }) {
       const revisionKey = useRevision()
       return useMemo(() => read(revisionKey, (state, viewerId, now): Loadable<AidListPage<AidQuestionCardView>> => {
         const filter = parseAidPlaceFilter({ country, city })
         if (!filter.ok) return { status: "error", code: filter.code }
+        // ET-04 : thème, mots et « sans réponse », jugés par la règle du domaine, comme le moteur.
+        const search = parseAidQuestionSearch({ query, theme, unanswered })
+        if (!search.ok) return { status: "error", code: search.code }
         const items = current().questions
           .filter((question) => question.country === filter.value.country && question.status === status
             && (filter.value.cityKey === null || question.cityKey === filter.value.cityKey)
+            && matchesAidQuestionSearch(question, search.value)
+            && aidSearchWordsMatch(aidQuestionSearchText(question), search.value.query)
             && !blockedBetween(state, viewerId, question.authorId))
           .sort((left, right) => right.createdAt - left.createdAt || (left.id < right.id ? 1 : -1))
           .map((question) => questionCard(state, question, viewerId, now))
-        return windowOf(items, cursor, `questions:${filter.value.country}:${filter.value.cityKey ?? ""}:${status}`)
-      }), [revisionKey, country, city, status, cursor])
+        const size = limit !== undefined && Number.isFinite(limit) ? Math.min(Math.max(Math.trunc(limit), 1), MUTUAL_AID_PAGE_SIZE) : MUTUAL_AID_PAGE_SIZE
+        const scope = [filter.value.country, filter.value.cityKey ?? "", status, search.value.theme ?? "", search.value.query ?? "", search.value.unanswered ? "u" : "", size].join(":")
+        return windowOf(items, cursor, `questions:${scope}`, size)
+      }), [revisionKey, country, city, status, theme, query, unanswered, limit, cursor])
     },
 
     useMyQuestions({ cursor }) {
@@ -752,6 +788,22 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
       }), [revisionKey, pageId, cursor])
     },
 
+    useUpcomingPageMissions({ pageId }) {
+      const revisionKey = useRevision()
+      return useMemo(() => read(revisionKey, (state, viewerId, now): Loadable<readonly AidMissionCardView[]> => {
+        // ET-09 : même lecture que le moteur — une association lisible, ses missions ouvertes à venir, cinq au plus.
+        const page = associationPage(state, pageId)
+        if (!page) return { status: "error", code: "not_found" }
+        const base = current()
+        const items = base.missions
+          .filter((mission) => mission.pageId === page.id && mission.status === "open" && now < mission.startsAt)
+          .sort((left, right) => left.startsAt - right.startsAt || (left.id < right.id ? -1 : 1))
+          .slice(0, DEMO_UPCOMING_PAGE_MISSIONS_MAX)
+          .map((mission) => missionCard(page, mission, signupOf(base, mission.id, viewerId)?.status === "confirmed"))
+        return { status: "ready", data: items }
+      }), [revisionKey, pageId])
+    },
+
     useVolunteers({ missionId, cursor }) {
       const revisionKey = useRevision()
       return useMemo(() => read(revisionKey, (state, viewerId, now): Loadable<AidListPage<AidVolunteerView>> => {
@@ -802,7 +854,13 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
       }
       const status = checkAidMissionPlacesChange(draft.value.places, mission.signupCount)
       if (!status.ok) return fail(status.code)
-      return { next: updateMissionRow(base, mission, { ...draft.value, status: status.value, updatedAt: now, version: mission.version + 1 }), value: null }
+      const version = mission.version + 1
+      return {
+        next: updateMissionRow(base, mission, { ...draft.value, status: status.value, updatedAt: now, version }),
+        value: null,
+        // ET-01 : seul un horaire changé s'annonce aux bénévoles inscrits.
+        ...(rescheduled ? { then: noticeVolunteers(state, base, mission, "aid_mission_rescheduled", version, viewerId) } : {}),
+      }
     }),
 
     closeMission: ({ missionId, expectedVersion }) => missionGesture("close", missionId, expectedVersion, (mission, status, base, now) => ({
@@ -810,10 +868,16 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
       value: null,
     })),
 
-    cancelMission: ({ missionId, expectedVersion, reason }) => missionGesture("cancel", missionId, expectedVersion, (mission, status, base, now) => {
+    cancelMission: ({ missionId, expectedVersion, reason }) => missionGesture("cancel", missionId, expectedVersion, (mission, status, base, now, state, viewerId) => {
       const parsed = parseAidReason(reason)
       if (!parsed.ok) return fail(parsed.code)
-      return { next: updateMissionRow(base, mission, { status, cancelReason: parsed.value, updatedAt: now, version: mission.version + 1 }), value: null }
+      const version = mission.version + 1
+      return {
+        next: updateMissionRow(base, mission, { status, cancelReason: parsed.value, updatedAt: now, version }),
+        value: null,
+        // ET-01 : chaque bénévole inscrit en est avisé, sans le motif (il se lit sur la fiche).
+        then: noticeVolunteers(state, base, mission, "aid_mission_cancelled", version, viewerId),
+      }
     }),
 
     // ── Gestes des bénévoles ─────────────────────────────────────
