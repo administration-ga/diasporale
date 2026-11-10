@@ -79,9 +79,9 @@ describe("RP-03 en démonstration — une page dont toute l'équipe vivante a bl
 
   it("demande d'adhésion : l'association dont le seul responsable vivant a bloqué la personne se tait", async () => {
     const closed = createDemoAssociations(storeWith("p-prisca", [blockOf("p-steeve", "p-prisca")]), { storage: null, latencyMs: 0 })
-    expect(await closed.request({ pageId: LYON })).toEqual({ ok: false, code: "not_found" })
+    expect(await closed.request({ pageId: LYON, message: "Bonjour, je souhaite rejoindre votre association." })).toEqual({ ok: false, code: "not_found" })
     const open = createDemoAssociations(storeWith("p-prisca"), { storage: null, latencyMs: 0 })
-    expect(await open.request({ pageId: LYON })).toMatchObject({ ok: true })
+    expect(await open.request({ pageId: LYON, message: "Bonjour, je souhaite rejoindre votre association." })).toMatchObject({ ok: true })
   })
 
   it("candidature : l'offre d'une page dont toute l'équipe a bloqué la personne se tait", async () => {
