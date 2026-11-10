@@ -240,6 +240,12 @@ export const routes = {
   contact: () => "/contact",
   health: () => "/sante-fonctionnelle",
   healthApi: () => "/api/sante-fonctionnelle",
+  /**
+   * Les icônes de l'application installée que le manifeste déclare (MO-02) : 192 et 512 px, et la
+   * variante masquable (symbole tenu dans la zone sûre). L'icône d'onglet et l'icône Apple sont
+   * celles des conventions de Next (`app/icon.tsx`, `app/apple-icon.tsx`), liées par lui.
+   */
+  appIcon: (format: "192" | "512" | "masquable") => `/icone-application/${format}`,
 } as const
 
 /**
