@@ -12,6 +12,8 @@
  * lève une erreur à l'import, donc au premier test.
  */
 import enAppearanceThemes from "./locales/en/appearance-themes.json"
+import enAccountMenu from "./locales/en/account-menu.json"
+import enAppErrors from "./locales/en/app-errors.json"
 import enAssociations from "./locales/en/associations.json"
 import enAssociationActivities from "./locales/en/association-activities.json"
 import enEventReminderNotices from "./locales/en/event-reminder-notices.json"
@@ -57,6 +59,8 @@ import enCommunityNotifications from "./locales/en/community-notifications.json"
 import enPostExplanation from "./locales/en/post-explanation.json"
 import enReporterNotices from "./locales/en/reporter-notices.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
+import frAccountMenu from "./locales/fr/account-menu.json"
+import frAppErrors from "./locales/fr/app-errors.json"
 import frAssociations from "./locales/fr/associations.json"
 import frAssociationActivities from "./locales/fr/association-activities.json"
 import frEventReminderNotices from "./locales/fr/event-reminder-notices.json"
@@ -154,6 +158,8 @@ export const LOCALE_PARTS = {
     "post-explanation": frPostExplanation,
     "reporter-notices": frReporterNotices,
     "appearance-themes": frAppearanceThemes,
+    "app-errors": frAppErrors,
+    "account-menu": frAccountMenu,
   },
   en: {
     diasporale: enDiasporale,
@@ -201,6 +207,8 @@ export const LOCALE_PARTS = {
     "post-explanation": enPostExplanation,
     "reporter-notices": enReporterNotices,
     "appearance-themes": enAppearanceThemes,
+    "app-errors": enAppErrors,
+    "account-menu": enAccountMenu,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

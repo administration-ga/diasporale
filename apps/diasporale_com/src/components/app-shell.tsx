@@ -43,9 +43,13 @@ import {
   HandshakeIcon,
   HeartHandshakeIcon,
   HouseIcon,
+  LockKeyholeIcon,
+  LogOutIcon,
   MessageCircleIcon,
+  PaletteIcon,
   PenSquareIcon,
   PlusIcon,
+  ScaleIcon,
   Settings2Icon,
   ShieldCheckIcon,
   StoreIcon,
@@ -58,11 +62,13 @@ import {
 import NextLink from "next/link"
 import { usePathname } from "next/navigation"
 import { DropdownMenu, Popover } from "radix-ui"
-import { createContext, Suspense, useContext, useId, useState, type ReactNode } from "react"
+import { createContext, Suspense, useContext, useEffect, useId, useState, type ReactNode } from "react"
+import { toast } from "sonner"
 
 import { routes } from "@/lib/routes"
 
 import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
+import { useSignOutEverywhere } from "./sign-out-settings"
 import { AppDemoChip } from "./site-chrome"
 import { Wordmark } from "./wordmark"
 
@@ -101,6 +107,9 @@ type EntryId =
   | "profile"
   | "settings"
   | "myData"
+  | "legalNotice"
+  | "privacy"
+  | "charte"
 
 /** Une entrée de navigation : une adresse de la table des routes, son icône, sa clé de libellé, son état courant. */
 interface NavEntry {
@@ -284,6 +293,19 @@ function accountEntries(membership: MembershipView, pathname: string, personal: 
 }
 
 /**
+ * Le groupe « Informations » du menu du compte (UX-03) : les textes du site, à deux gestes
+ * depuis tout écran une fois connecté — ils n'étaient qu'au pied des pages publiques.
+ * Mêmes libellés que ce pied de page. L'aide s'y ajoutera avec UX-04.
+ */
+function informationEntries(pathname: string): NavEntry[] {
+  return [
+    { id: "legalNotice", href: routes.legalNotice(), icon: ScaleIcon, labelKey: "footer.legalNotice", active: withinAny(pathname, [routes.legalNotice()]) },
+    { id: "privacy", href: routes.privacy(), icon: LockKeyholeIcon, labelKey: "footer.privacy", active: withinAny(pathname, [routes.privacy()]) },
+    { id: "charte", href: routes.charte(), icon: PaletteIcon, labelKey: "footer.charte", active: withinAny(pathname, [routes.charte()]) },
+  ]
+}
+
+/**
  * Le pays CONSULTÉ, quand il n'est pas celui de résidence : le hub d'un autre pays
  * (`/pays/<iso>`). Consulter une zone ne réécrit jamais la résidence (plan G1, point 5).
  */
@@ -343,7 +365,8 @@ function publishRefusal(status: MembershipStatus): PublishRefusal {
  *
  * Aucune perte d'accès : chaque lien d'avant reste à un geste (destinations, Publier,
  * cloche) ou à deux (Membres par Explorer ; Profil, Réglages, Relations, Parrainer par
- * le menu du compte, aussi présents dans le rail du bureau).
+ * le menu du compte, aussi présents dans le rail du bureau). Le menu du compte porte
+ * aussi les textes du site (« Informations ») et « Se déconnecter partout » (UX-03).
  * Jamais d'AppShell de l'administration, jamais de chrome du Poste.
  */
 export function AppShell(props: { membership: MembershipView; rail?: ReactNode; children: ReactNode }) {
@@ -374,6 +397,7 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
     }),
   ]
   const account = accountEntries(membership, pathname, personal)
+  const information = informationEntries(pathname)
   const openComposer = () => setComposerOpen(true)
 
   const startShare = (post: PostView) => {
@@ -386,10 +410,10 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
     <PostShareProvider value={canPublish ? startShare : null}>
       <div className="min-h-dvh">
         <div className="mx-auto flex w-full max-w-[1400px]">
-          <DesktopRail membership={membership} primary={primary} personal={personal} account={account} onPublish={openComposer} />
+          <DesktopRail membership={membership} primary={primary} personal={personal} account={account} information={information} onPublish={openComposer} />
 
           <div className="min-w-0 flex-1">
-            <MobileHeader membership={membership} account={account} onPublish={openComposer} />
+            <MobileHeader membership={membership} account={account} information={information} onPublish={openComposer} />
             <main
               id="contenu"
               className="mx-auto grid w-full gap-6 px-4 pb-[calc(var(--esp-reseau-tabbar-inset)+env(safe-area-inset-bottom)+1rem)] pt-4 min-[960px]:pb-10 min-[960px]:pt-6 xl:grid-cols-[minmax(0,792px)_312px] xl:justify-center"
@@ -454,6 +478,7 @@ function DesktopRail(props: {
   primary: readonly NavEntry[]
   personal: readonly NavEntry[]
   account: readonly NavEntry[]
+  information: readonly NavEntry[]
   onPublish: () => void
 }) {
   const { t } = useDiasporaleT()
@@ -482,7 +507,7 @@ function DesktopRail(props: {
         ))}
       </nav>
       <PublishAction variant="rail" membership={props.membership} onPublish={props.onPublish} />
-      <AccountMenu membership={props.membership} entries={props.account} />
+      <AccountMenu membership={props.membership} entries={props.account} information={props.information} />
     </aside>
   )
 }
@@ -517,9 +542,52 @@ function HomeCountryLink(props: { membership: MembershipView; caption: "visible"
   )
 }
 
-/** Le menu du compte au bureau : la carte de l'avatar l'ouvre (flèches, Échap, focus rendu par Radix). */
-function AccountMenu(props: { membership: MembershipView; entries: readonly NavEntry[] }) {
+/** L'avis d'un échec de sortie : un seul à la fois, quel que soit le menu qui l'a tenté. */
+const SIGN_OUT_FAILED_TOAST = "diasporale:sortie-echouee"
+
+/**
+ * Se déconnecter partout depuis le menu du compte (UX-03), par la porte unique des
+ * réglages et de l'accueil (`useSignOutEverywhere`) : un seul geste à la fois, la
+ * navigation de la source conservée. Le menu reste ouvert pendant la sortie, qui s'y
+ * lit (« Déconnexion… ») ; un échec, toujours générique, passe par un avis.
+ */
+function useAccountSignOut() {
   const { t } = useDiasporaleT()
+  const exit = useSignOutEverywhere()
+  const failure = t("errors.unknown")
+  useEffect(() => {
+    if (exit.failed) toast.error(failure, { id: SIGN_OUT_FAILED_TOAST })
+  }, [exit.failed, failure])
+  return { busy: exit.busy, run: () => void exit.signOutEverywhere(), label: t(exit.busy ? "settings.signingOut" : "settings.signOutEverywhere") }
+}
+
+function MenuLink(props: { entry: NavEntry }) {
+  const { t } = useDiasporaleT()
+  const { entry } = props
+  const Icon = entry.icon
+  return (
+    <DropdownMenu.Item asChild>
+      <NextLink
+        href={entry.href}
+        aria-current={entry.active ? "page" : undefined}
+        className={cn(
+          "flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-3 text-sm outline-none focus-visible:shadow-focus data-[highlighted]:bg-muted",
+          // La page courante se lit aussi sans la couleur : graisse et `aria-current`.
+          entry.active ? "font-semibold text-[var(--esp-accent-deep)]" : "font-medium",
+        )}
+      >
+        <Icon className="size-4 shrink-0" aria-hidden />
+        {t(entry.labelKey)}
+      </NextLink>
+    </DropdownMenu.Item>
+  )
+}
+
+/** Le menu du compte au bureau : la carte de l'avatar l'ouvre (flèches, Échap, focus rendu par Radix). */
+function AccountMenu(props: { membership: MembershipView; entries: readonly NavEntry[]; information: readonly NavEntry[] }) {
+  const { t } = useDiasporaleT()
+  const informationId = useId()
+  const exit = useAccountSignOut()
   const { membership } = props
   return (
     <DropdownMenu.Root>
@@ -535,31 +603,44 @@ function AccountMenu(props: { membership: MembershipView; entries: readonly NavE
         <ChevronsUpDownIcon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content side="top" align="start" sideOffset={8} collisionPadding={12} className="z-60 w-[min(16rem,calc(100vw-2rem))] rounded-xl bg-popover p-1.5 text-popover-foreground shadow-float">
+        <DropdownMenu.Content
+          side="top"
+          align="start"
+          sideOffset={8}
+          collisionPadding={12}
+          aria-busy={exit.busy}
+          className="z-60 max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(16rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-xl bg-popover p-1.5 text-popover-foreground shadow-float"
+        >
           <DropdownMenu.Label className="px-3 py-2">
             <span className="block truncate text-sm font-semibold">{membership.displayName}</span>
             <span className="block truncate text-[13px] text-muted-foreground">@{membership.handle}</span>
           </DropdownMenu.Label>
           <DropdownMenu.Separator className="my-1 h-px bg-border" />
-          {props.entries.map((entry) => {
-            const Icon = entry.icon
-            return (
-              <DropdownMenu.Item key={entry.id} asChild>
-                <NextLink
-                  href={entry.href}
-                  aria-current={entry.active ? "page" : undefined}
-                  className={cn(
-                    "flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-3 text-sm outline-none focus-visible:shadow-focus data-[highlighted]:bg-muted",
-                    // La page courante se lit aussi sans la couleur : graisse et `aria-current`.
-                    entry.active ? "font-semibold text-[var(--esp-accent-deep)]" : "font-medium",
-                  )}
-                >
-                  <Icon className="size-4 shrink-0" aria-hidden />
-                  {t(entry.labelKey)}
-                </NextLink>
-              </DropdownMenu.Item>
-            )
-          })}
+          {props.entries.map((entry) => (
+            <MenuLink key={entry.id} entry={entry} />
+          ))}
+          <DropdownMenu.Separator className="my-1 h-px bg-border" />
+          <DropdownMenu.Group aria-labelledby={informationId}>
+            <DropdownMenu.Label id={informationId} className="px-3 pb-1 pt-2 text-xs font-semibold text-muted-foreground">
+              {t("nav.account.info")}
+            </DropdownMenu.Label>
+            {props.information.map((entry) => (
+              <MenuLink key={entry.id} entry={entry} />
+            ))}
+          </DropdownMenu.Group>
+          <DropdownMenu.Separator className="my-1 h-px bg-border" />
+          {/* L'action neutre de sortie : le menu reste ouvert pendant qu'elle se fait. */}
+          <DropdownMenu.Item
+            disabled={exit.busy}
+            onSelect={(event) => {
+              event.preventDefault()
+              exit.run()
+            }}
+            className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-3 text-sm font-medium outline-none focus-visible:shadow-focus data-[disabled]:cursor-wait data-[disabled]:opacity-70 data-[highlighted]:bg-muted"
+          >
+            <LogOutIcon className="size-4 shrink-0" aria-hidden />
+            {exit.label}
+          </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
@@ -570,7 +651,7 @@ function AccountMenu(props: { membership: MembershipView; entries: readonly NavE
 // Téléphone : l'en-tête, la feuille du compte, la barre basse
 // ═══════════════════════════════════════════════════════════════
 
-function MobileHeader(props: { membership: MembershipView; account: readonly NavEntry[]; onPublish: () => void }) {
+function MobileHeader(props: { membership: MembershipView; account: readonly NavEntry[]; information: readonly NavEntry[]; onPublish: () => void }) {
   const { t } = useDiasporaleT()
   const demo = useDataSource().kind === "demo"
   return (
@@ -591,17 +672,42 @@ function MobileHeader(props: { membership: MembershipView; account: readonly Nav
         <HomeCountryLink membership={props.membership} caption="hidden" className="hidden min-[440px]:flex" />
         <PublishAction variant="header" membership={props.membership} onPublish={props.onPublish} />
         <NotificationBell />
-        <AccountSheet membership={props.membership} entries={props.account} />
+        <AccountSheet membership={props.membership} entries={props.account} information={props.information} />
       </div>
     </header>
   )
 }
 
+function SheetLink(props: { entry: NavEntry; onFollow: () => void }) {
+  const { t } = useDiasporaleT()
+  const { entry } = props
+  const Icon = entry.icon
+  return (
+    <li>
+      <NextLink
+        href={entry.href}
+        aria-current={entry.active ? "page" : undefined}
+        onClick={props.onFollow}
+        className={cn(
+          "flex min-h-12 min-w-0 items-center gap-3 rounded-lg px-3 text-[15px] font-medium transition-colors focus-visible:shadow-focus",
+          entry.active ? "bg-[var(--esp-accent-soft)] text-[var(--esp-accent-deep)]" : "hover:bg-muted",
+        )}
+      >
+        <Icon className="size-5 shrink-0" aria-hidden />
+        <span className="min-w-0 truncate">{t(entry.labelKey)}</span>
+      </NextLink>
+    </li>
+  )
+}
+
 /** Le menu du compte au téléphone : une feuille (piège de focus, Échap, focus rendu à l'avatar). */
-function AccountSheet(props: { membership: MembershipView; entries: readonly NavEntry[] }) {
+function AccountSheet(props: { membership: MembershipView; entries: readonly NavEntry[]; information: readonly NavEntry[] }) {
   const { t } = useDiasporaleT()
   const [open, setOpen] = useState(false)
+  const informationId = useId()
+  const exit = useAccountSignOut()
   const { membership } = props
+  const close = () => setOpen(false)
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
@@ -624,27 +730,28 @@ function AccountSheet(props: { membership: MembershipView; entries: readonly Nav
         </div>
         <nav aria-label={t("nav.account.title")} className="mt-4">
           <ul className="flex flex-col gap-0.5">
-            {props.entries.map((entry) => {
-              const Icon = entry.icon
-              return (
-                <li key={entry.id}>
-                  <NextLink
-                    href={entry.href}
-                    aria-current={entry.active ? "page" : undefined}
-                    onClick={() => setOpen(false)}
-                    className={cn(
-                      "flex min-h-12 min-w-0 items-center gap-3 rounded-lg px-3 text-[15px] font-medium transition-colors focus-visible:shadow-focus",
-                      entry.active ? "bg-[var(--esp-accent-soft)] text-[var(--esp-accent-deep)]" : "hover:bg-muted",
-                    )}
-                  >
-                    <Icon className="size-5 shrink-0" aria-hidden />
-                    <span className="min-w-0 truncate">{t(entry.labelKey)}</span>
-                  </NextLink>
-                </li>
-              )
-            })}
+            {props.entries.map((entry) => (
+              <SheetLink key={entry.id} entry={entry} onFollow={close} />
+            ))}
           </ul>
         </nav>
+        <nav aria-labelledby={informationId} className="mt-3 border-t border-border pt-3">
+          <p id={informationId} className="px-3 pb-1 text-xs font-semibold text-muted-foreground">
+            {t("nav.account.info")}
+          </p>
+          <ul className="flex flex-col gap-0.5">
+            {props.information.map((entry) => (
+              <SheetLink key={entry.id} entry={entry} onFollow={close} />
+            ))}
+          </ul>
+        </nav>
+        {/* La sortie, en bouton neutre ; la feuille reste ouverte pendant qu'elle se fait. */}
+        <div aria-busy={exit.busy} className="mt-3 border-t border-border pt-4">
+          <Button type="button" variant="outline" disabled={exit.busy} onClick={exit.run} className="w-full">
+            <LogOutIcon aria-hidden className="size-4" />
+            {exit.label}
+          </Button>
+        </div>
       </SheetContent>
     </Sheet>
   )

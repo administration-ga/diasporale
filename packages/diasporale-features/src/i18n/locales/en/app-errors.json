@@ -1,0 +1,13 @@
+{
+  "appError": {
+    "title": "This screen couldn’t be displayed.",
+    "body": "An unexpected error interrupted it. You can try again, or go back to the feed.",
+    "retry": "Try again",
+    "backToFeed": "Back to the feed",
+    "stale": {
+      "title": "A new version of the site is available.",
+      "body": "{{brand}} was updated during your visit. Reload the page to continue.",
+      "reload": "Reload"
+    }
+  }
+}
