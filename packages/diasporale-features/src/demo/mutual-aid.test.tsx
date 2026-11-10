@@ -262,3 +262,20 @@ describe("démonstration — retrouver une question (ET-04)", () => {
     expect(renderHook(() => aid.useQuestions({ country: "FR", status: "open", theme: "sports" as never, cursor: null })).result.current).toEqual({ status: "error", code: "aid_theme_invalid" })
   })
 })
+
+describe("démonstration — l'entraide là où l'on passe (ET-09)", () => {
+  it("les prochaines missions ouvertes d'une association ; complète, close ou d'une autre page : absente ; une entreprise : refus indistinct", () => {
+    const { aid } = setup({ viewer: "p-mireille" })
+    const upcoming = ready(renderHook(() => aid.useUpcomingPageMissions({ pageId: LYON })).result.current)
+    expect(upcoming.map((mission) => [mission.id, mission.status])).toEqual([["aid-m-1", "open"]])
+    expect(ready(renderHook(() => aid.useUpcomingPageMissions({ pageId: "page-asso-bordeaux" })).result.current)).toEqual([])
+    expect(renderHook(() => aid.useUpcomingPageMissions({ pageId: "page-saveurs" })).result.current).toEqual({ status: "error", code: "not_found" })
+  })
+
+  it("une fenêtre courte de questions (le hub) : jamais plus longue que celle des listes", () => {
+    const { aid } = setup()
+    const page = ready(renderHook(() => aid.useQuestions({ country: "FR", status: "open", limit: 1, cursor: null })).result.current)
+    expect(page.items.map((row) => row.id)).toEqual(["aid-q-2"])
+    expect(ready(renderHook(() => aid.useQuestions({ country: "FR", status: "open", limit: 0, cursor: null })).result.current).items).toHaveLength(1)
+  })
+})

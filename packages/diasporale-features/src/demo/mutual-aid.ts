@@ -77,6 +77,9 @@ import type { DemoStore } from "./store"
 
 export const DEMO_MUTUAL_AID_STORAGE_KEY = "diasporale:demonstration:mutual-aid:v1"
 
+/** ET-09 — les prochaines missions montrées sur la fiche d'une association (même borne que le moteur). */
+const DEMO_UPCOMING_PAGE_MISSIONS_MAX = 5
+
 export interface DemoAidQuestion {
   readonly id: string
   readonly authorId: string
@@ -254,7 +257,7 @@ function personView(state: DemoState, personId: string, now: number): AidPersonV
 }
 
 /** Une fenêtre d'une liste triée ; le curseur est opaque pour l'écran, validé ici. */
-function windowOf<T>(items: readonly T[], cursor: string | null, scope: string): Loadable<AidListPage<T>> {
+function windowOf<T>(items: readonly T[], cursor: string | null, scope: string, size: number = MUTUAL_AID_PAGE_SIZE): Loadable<AidListPage<T>> {
   let offset = 0
   if (cursor !== null) {
     try {
@@ -267,7 +270,7 @@ function windowOf<T>(items: readonly T[], cursor: string | null, scope: string):
       return { status: "error", code: "unknown" }
     }
   }
-  const end = offset + MUTUAL_AID_PAGE_SIZE
+  const end = offset + size
   const isDone = end >= items.length
   return { status: "ready", data: { items: items.slice(offset, end), isDone, continueCursor: isDone ? null : JSON.stringify([CURSOR_TAG, scope, end]) } }
 }
@@ -533,7 +536,7 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
 
   return {
     // ── Lectures des questions ───────────────────────────────────
-    useQuestions({ country, city, status, theme, query, unanswered, cursor }) {
+    useQuestions({ country, city, status, theme, query, unanswered, limit, cursor }) {
       const revisionKey = useRevision()
       return useMemo(() => read(revisionKey, (state, viewerId, now): Loadable<AidListPage<AidQuestionCardView>> => {
         const filter = parseAidPlaceFilter({ country, city })
@@ -549,9 +552,10 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
             && !blockedBetween(state, viewerId, question.authorId))
           .sort((left, right) => right.createdAt - left.createdAt || (left.id < right.id ? 1 : -1))
           .map((question) => questionCard(state, question, viewerId, now))
-        const scope = [filter.value.country, filter.value.cityKey ?? "", status, search.value.theme ?? "", search.value.query ?? "", search.value.unanswered ? "u" : ""].join(":")
-        return windowOf(items, cursor, `questions:${scope}`)
-      }), [revisionKey, country, city, status, theme, query, unanswered, cursor])
+        const size = limit !== undefined && Number.isFinite(limit) ? Math.min(Math.max(Math.trunc(limit), 1), MUTUAL_AID_PAGE_SIZE) : MUTUAL_AID_PAGE_SIZE
+        const scope = [filter.value.country, filter.value.cityKey ?? "", status, search.value.theme ?? "", search.value.query ?? "", search.value.unanswered ? "u" : "", size].join(":")
+        return windowOf(items, cursor, `questions:${scope}`, size)
+      }), [revisionKey, country, city, status, theme, query, unanswered, limit, cursor])
     },
 
     useMyQuestions({ cursor }) {
@@ -760,6 +764,22 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
           .map((mission) => missionCard(page, mission, signupOf(base, mission.id, viewerId)?.status === "confirmed"))
         return windowOf(items, cursor, `page:${page.id}`)
       }), [revisionKey, pageId, cursor])
+    },
+
+    useUpcomingPageMissions({ pageId }) {
+      const revisionKey = useRevision()
+      return useMemo(() => read(revisionKey, (state, viewerId, now): Loadable<readonly AidMissionCardView[]> => {
+        // ET-09 : même lecture que le moteur — une association lisible, ses missions ouvertes à venir, cinq au plus.
+        const page = associationPage(state, pageId)
+        if (!page) return { status: "error", code: "not_found" }
+        const base = current()
+        const items = base.missions
+          .filter((mission) => mission.pageId === page.id && mission.status === "open" && now < mission.startsAt)
+          .sort((left, right) => left.startsAt - right.startsAt || (left.id < right.id ? -1 : 1))
+          .slice(0, DEMO_UPCOMING_PAGE_MISSIONS_MAX)
+          .map((mission) => missionCard(page, mission, signupOf(base, mission.id, viewerId)?.status === "confirmed"))
+        return { status: "ready", data: items }
+      }), [revisionKey, pageId])
     },
 
     useVolunteers({ missionId, cursor }) {

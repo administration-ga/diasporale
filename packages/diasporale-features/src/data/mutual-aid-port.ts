@@ -193,6 +193,8 @@ export interface AidQuestionsRequest {
   readonly query?: string
   /** ET-04 — seulement les questions sans aucune réponse publiée. */
   readonly unanswered?: boolean
+  /** ET-09 — une fenêtre plus courte que `MUTUAL_AID_PAGE_SIZE` (les dernières questions du hub) ; jamais plus longue. */
+  readonly limit?: number
   readonly cursor: string | null
 }
 
@@ -258,6 +260,12 @@ export interface MutualAidCapability {
   useMissionPages(): Loadable<readonly AidMissionPageOption[]>
   /** Toutes les missions d'une page que je gère ; refus indistinct (`not_found`) hors de son équipe. */
   usePageMissions(args: { readonly pageId: string; readonly cursor: string | null }): Loadable<AidListPage<AidMissionCardView>>
+  /**
+   * ET-09 — les prochaines missions OUVERTES d'une association, pour sa fiche publique : quelques-unes
+   * (cinq au plus), des plus proches aux plus lointaines, servies selon la modération ; refus
+   * indistinct (`not_found`) pour une page illisible ou qui n'est pas une association.
+   */
+  useUpcomingPageMissions(args: { readonly pageId: string }): Loadable<readonly AidMissionCardView[]>
   /** Les bénévoles d'une mission — l'équipe vivante de la page seulement. */
   useVolunteers(args: { readonly missionId: string; readonly cursor: string | null }): Loadable<AidListPage<AidVolunteerView>>
   createMission(input: AidMissionInputView & { readonly pageId: string }): Promise<ActionResult<{ missionId: string }>>

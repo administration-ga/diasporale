@@ -74,6 +74,7 @@ import enReportEmergency from "./locales/en/report-emergency.json"
 import enMessagesUnread from "./locales/en/messages-unread.json"
 import enIdnEntry from "./locales/en/idn-entry.json"
 import enAidFinding from "./locales/en/aid-finding.json"
+import enAidOnTheWay from "./locales/en/aid-on-the-way.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -137,6 +138,7 @@ import frReportEmergency from "./locales/fr/report-emergency.json"
 import frMessagesUnread from "./locales/fr/messages-unread.json"
 import frIdnEntry from "./locales/fr/idn-entry.json"
 import frAidFinding from "./locales/fr/aid-finding.json"
+import frAidOnTheWay from "./locales/fr/aid-on-the-way.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -208,6 +210,7 @@ export const LOCALE_PARTS = {
     "messages-unread": frMessagesUnread,
     "idn-entry": frIdnEntry,
     "aid-finding": frAidFinding,
+    "aid-on-the-way": frAidOnTheWay,
   },
   en: {
     diasporale: enDiasporale,
@@ -273,6 +276,7 @@ export const LOCALE_PARTS = {
     "messages-unread": enMessagesUnread,
     "idn-entry": enIdnEntry,
     "aid-finding": enAidFinding,
+    "aid-on-the-way": enAidOnTheWay,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 
