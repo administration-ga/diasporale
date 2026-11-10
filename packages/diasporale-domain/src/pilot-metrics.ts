@@ -171,7 +171,7 @@ export interface PilotDayTotals {
 }
 
 function sanitize(value: number | undefined): number {
-  return Number.isFinite(value) && value > 0 ? Math.trunc(value) : 0
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? Math.trunc(value) : 0
 }
 
 export function emptyPilotCounts(): Record<PilotDailyCounter, number> {
