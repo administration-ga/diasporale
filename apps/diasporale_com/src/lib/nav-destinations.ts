@@ -171,10 +171,15 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   privacy: outside("public"),
   terms: outside("public"),
   communityRules: outside("public"),
+  // Une règle précise (MD-05) : une ancre de la page publique des règles.
   communityRule: outside("public"),
   contact: outside("public"),
   health: outside("public"),
   healthApi: outside("public"),
+  // Les fichiers de l'application installée (MO-02, MO-05) : servis à tous, aucune page de membre.
+  appIcon: outside("public"),
+  serviceWorker: outside("public"),
+  offline: outside("public"),
 }
 
 interface Row {

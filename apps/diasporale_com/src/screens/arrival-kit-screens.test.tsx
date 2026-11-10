@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 
 import { routes } from "@/lib/routes"
 
-import { ArrivalKitResourceScreen, ArrivalKitScreen, zoneFromParams } from "./arrival-kit-screens"
+import { ArrivalKitResourceScreen, ArrivalKitScreen, kitFiltersFromParams, kitHrefOf, zoneFromParams } from "./arrival-kit-screens"
 
 const mocks = vi.hoisted(() => ({
   params: new URLSearchParams(),
@@ -135,9 +135,11 @@ describe("/kit-arrivee — le kit d'un pays et d'une ville", () => {
     expect(titles(france)).toHaveLength(5)
     fireEvent.change(screen.getByLabelText("Rubrique"), { target: { value: "health" } })
     expect(titles(await screen.findByRole("list", { name: "Ressources pour France" }))).toEqual(["Se soigner à Paris : centres de santé de quartier (démo)"])
+    // ET-04 : la rubrique s'écrit dans l'adresse, et la suit d'une zone à l'autre.
+    expect(mocks.replace).toHaveBeenLastCalledWith(routes.arrivalKit("FR", undefined, { category: "health" }))
     fireEvent.change(screen.getByLabelText("Ville (facultatif)"), { target: { value: " Lyon " } })
     fireEvent.click(screen.getByRole("button", { name: "Afficher" }))
-    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith(routes.arrivalKit("FR", "Lyon")))
+    await waitFor(() => expect(mocks.replace).toHaveBeenLastCalledWith(routes.arrivalKit("FR", "Lyon", { category: "health" })))
   })
 
   it("une zone sans ressource relue : le vide s'explique et invite à proposer", async () => {
@@ -319,5 +321,24 @@ describe("/kit-arrivee/<id> — le lien externe de la source", () => {
     mount("p-rodrigue", <ArrivalKitResourceScreen resourceId="r-1" />, { source: engineSource({ ...DETAIL, source: { name: "Portail fictif", url: "javascript:alert(1)" } }) })
     expect(screen.queryByRole("link", { name: /Portail fictif/ })).not.toBeInTheDocument()
     expect(screen.getByText("Aucun lien sûr n'est disponible pour cette source.")).toBeInTheDocument()
+  })
+})
+
+describe("/kit-arrivee — chercher par mots, rubrique dans l'adresse (ET-04)", () => {
+  it("l'adresse porte la rubrique et les mots ; une rubrique inconnue est ignorée ; l'adresse se relit à l'identique", () => {
+    expect(kitFiltersFromParams(new URLSearchParams("categorie=health&q=%20sant%C3%A9%20"))).toEqual({ category: "health", query: "santé" })
+    expect(kitFiltersFromParams(new URLSearchParams("categorie=sports"))).toEqual({ category: null, query: "" })
+    expect(kitHrefOf({ zone: { country: "FR", city: "Paris" }, filters: { category: "banking", query: "compte" } })).toBe("/kit-arrivee?pays=FR&ville=Paris&q=compte&categorie=banking")
+  })
+
+  it("une adresse cherchée se recharge à l'identique ; une nouvelle recherche réécrit l'adresse ; un vide de recherche le dit", async () => {
+    mocks.params = new URLSearchParams("pays=FR&q=bancaire")
+    mount("p-rodrigue", <ArrivalKitScreen />)
+    expect(titles(await screen.findByRole("list", { name: "Ressources pour France" }))).toEqual(["Ouvrir un premier compte bancaire à Paris (démo)"])
+    expect(screen.getByLabelText("Mots cherchés")).toHaveValue("bancaire")
+    fireEvent.change(screen.getByLabelText("Mots cherchés"), { target: { value: "téléportation" } })
+    fireEvent.click(screen.getByRole("button", { name: "Chercher" }))
+    await waitFor(() => expect(mocks.replace).toHaveBeenLastCalledWith(routes.arrivalKit("FR", undefined, { q: "téléportation" })))
+    expect(await screen.findByText(/Aucune ressource ne contient ces mots/)).toBeInTheDocument()
   })
 })

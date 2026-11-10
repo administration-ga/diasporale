@@ -15,6 +15,9 @@ import type {
   DeskPendingView,
   DeskPreviewView,
   DeskQueueRequest,
+  DeskResponsibleRoleInput,
+  DeskResponsibleRoleResult,
+  DeskResponsiblesView,
   DeskRosterView,
   DeskTeamMemberInput,
   Loadable,
@@ -119,13 +122,27 @@ const APPEAL: DeskAppealView = {
   sanctions: [{ kind: "warning", until: null }], party: null,
 }
 const CANDIDATE: DeskCandidateView = { personId: "person-awa", handle: "awa.fixture", displayName: "Awa Fixture" }
+/** MD-01 : les responsables du réseau, dont la personne de la session et un rôle en sommeil (profil non publié). */
+const RESPONSIBLES: DeskResponsiblesView = {
+  members: [
+    { personId: ME, role: "network_admin", handle: "moderatrice.fixture", displayName: "Serge Fixture", active: true, isMe: true },
+    { personId: "person-ruth", role: "network_moderator", handle: "ruth.fixture", displayName: "Ruth Fixture", active: true, isMe: false },
+    { personId: "person-paul", role: "network_moderator", handle: null, displayName: null, active: false, isMe: false },
+  ],
+  more: false,
+}
 
 const ready = <T,>(data: T): Loadable<T> => ({ status: "ready", data })
 const windowOf = <Row,>(items: readonly Row[]): Loadable<DeskPage<Row>> => ready({ items, continueCursor: null, isDone: true })
 const OK: ActionResult = { ok: true, value: null }
 
 /** Une capacité factice : chaque lecture rend une référence STABLE, comme les fournisseurs réels. */
-function fakeDesk(options: { readonly view?: Loadable<ModerationDeskView | null>; readonly demonstration?: boolean; readonly deadlines?: Loadable<DeskDeadlineLane> } = {}) {
+function fakeDesk(options: {
+  readonly view?: Loadable<ModerationDeskView | null>
+  readonly demonstration?: boolean
+  readonly deadlines?: Loadable<DeskDeadlineLane>
+  readonly roleResult?: (input: DeskResponsibleRoleInput) => ActionResult<DeskResponsibleRoleResult>
+} = {}) {
   const view = options.view ?? ready(MODERATOR)
   const deadlines = options.deadlines ?? ready(EMPTY_LANE)
   const cases = windowOf([CASE, PARTY_CASE])
@@ -147,6 +164,9 @@ function fakeDesk(options: { readonly view?: Loadable<ModerationDeskView | null>
   const decideAppeal = vi.fn(async (_input: DeskAppealDecisionInput): Promise<ActionResult> => OK)
   const setTeamMember = vi.fn(async (_input: DeskTeamMemberInput): Promise<ActionResult> => OK)
   const findMember = vi.fn(async (): Promise<ActionResult<DeskCandidateView | null>> => ({ ok: true, value: CANDIDATE }))
+  const responsibles: Loadable<DeskResponsiblesView> = ready(RESPONSIBLES)
+  const setResponsibleRole = vi.fn(async (input: DeskResponsibleRoleInput): Promise<ActionResult<DeskResponsibleRoleResult>> =>
+    options.roleResult?.(input) ?? { ok: true, value: { role: input.role, changed: true } })
   const desk: ModerationDeskCapability = {
     demonstration: options.demonstration ?? false,
     useDesk: () => view,
@@ -170,8 +190,10 @@ function fakeDesk(options: { readonly view?: Loadable<ModerationDeskView | null>
     findMember,
     createTeam: vi.fn(async () => ({ ok: true as const, value: { teamId: "team-new" } })),
     setTeamMember,
+    useResponsibles: () => responsibles,
+    setResponsibleRole,
   }
-  return { desk, queueReads, deadlineReads, decide, decideAppeal, setTeamMember, findMember }
+  return { desk, queueReads, deadlineReads, decide, decideAppeal, setTeamMember, findMember, setResponsibleRole }
 }
 
 const tree = () => <I18nProvider locale="fr"><ModerationDesk membership={MEMBER} /></I18nProvider>
@@ -489,5 +511,125 @@ describe("Guichet — recours et équipe", () => {
     render(tree())
     expect(screen.getByText(text("moderationDesk.team.readOnly"))).toBeInTheDocument()
     expect(screen.queryByLabelText(text("moderationDesk.team.handle"))).toBeNull()
+    // MD-01 : les responsables du réseau ne se lisent ni ne se nomment hors de l'administration.
+    expect(screen.queryByRole("heading", { name: text("moderationDesk.responsibles.title") })).toBeNull()
+    expect(screen.queryByLabelText(text("moderationDesk.responsibles.handle"))).toBeNull()
+  })
+})
+
+describe("Guichet — responsables du réseau (MD-01)", () => {
+  /** Le bloc « Responsables du réseau » de l'onglet « Équipe ». */
+  function responsiblesBlock(): HTMLElement {
+    const section = screen.getByRole("heading", { name: text("moderationDesk.responsibles.title") }).closest("section")
+    if (!section) throw new Error("bloc des responsables absent")
+    return section
+  }
+  function lineOf(block: HTMLElement, name: string): HTMLElement {
+    const line = within(block).getByText(name).closest("li")
+    if (!line) throw new Error(`ligne absente : ${name}`)
+    return line
+  }
+
+  it("liste les responsables par leur profil publié et nomme par identifiant, rôle et motif", async () => {
+    mocks.params = new URLSearchParams("onglet=equipe")
+    const fake = fakeDesk({ view: ready(ADMIN) })
+    mocks.desk = fake.desk
+    const user = userEvent.setup()
+    render(tree())
+    const block = responsiblesBlock()
+    expect(within(lineOf(block, "Serge Fixture")).getByText(text("moderationDesk.team.me"))).toBeInTheDocument()
+    expect(within(lineOf(block, "Serge Fixture")).getByText(text("moderationDesk.responsibles.role.network_admin"))).toBeInTheDocument()
+    expect(within(lineOf(block, "Ruth Fixture")).getByText(text("moderationDesk.responsibles.role.network_moderator"))).toBeInTheDocument()
+    // Un rôle en sommeil, au profil non publié : nom neutre, aucun changement de rôle offert, le retrait reste.
+    const dormant = lineOf(block, text("moderationDesk.team.neutralName"))
+    expect(within(dormant).getByText(text("moderationDesk.responsibles.inactive"))).toBeInTheDocument()
+    expect(within(dormant).queryByRole("button", { name: text("moderationDesk.responsibles.change") })).toBeNull()
+    expect(within(dormant).getByRole("button", { name: text("moderationDesk.responsibles.remove") })).toBeInTheDocument()
+
+    await user.type(within(block).getByLabelText(text("moderationDesk.responsibles.handle")), "@awa.fixture")
+    await user.click(within(block).getByRole("button", { name: text("moderationDesk.responsibles.search") }))
+    expect(await within(block).findByText("Awa Fixture")).toBeInTheDocument()
+    expect(fake.findMember).toHaveBeenCalledWith({ personId: ME, handle: "awa.fixture" })
+    await user.selectOptions(within(block).getByLabelText(text("moderationDesk.responsibles.roleField")), "network_admin")
+    const submit = within(block).getByRole("button", { name: text("moderationDesk.responsibles.appointConfirm") })
+    await user.click(submit)
+    expect(await within(block).findByText(text("errors.moderation_desk_reason_length", DESK_ERROR_VALUES))).toBeInTheDocument()
+    expect(fake.setResponsibleRole).not.toHaveBeenCalled()
+    await user.type(within(block).getByLabelText(text("moderationDesk.decision.reason")), "Deuxième administratrice pour les recours.")
+    await act(async () => {
+      await user.click(submit)
+    })
+    await waitFor(() => expect(fake.setResponsibleRole).toHaveBeenCalledExactlyOnceWith({
+      personId: ME, memberPersonId: CANDIDATE.personId, role: "network_admin", reason: "Deuxième administratrice pour les recours.",
+    }))
+    // Le message d'un geste abouti, tel que l'écran le passe à sonner (espaces insécables comprises).
+    expect(mocks.success).toHaveBeenCalledWith(translate("moderationDesk.responsibles.appointed", { name: "Awa Fixture", role: translate("moderationDesk.responsibles.role.network_admin") }))
+    expect(within(block).getByLabelText(text("moderationDesk.responsibles.handle"))).toHaveValue("")
+  })
+
+  it("confirme un retrait motivé, traduit la règle du dernier administrateur, puis change un rôle", async () => {
+    mocks.params = new URLSearchParams("onglet=equipe")
+    const fake = fakeDesk({
+      view: ready(ADMIN),
+      roleResult: (input) => (input.memberPersonId === ME ? { ok: false, code: "moderation_desk_last_admin" } : { ok: true, value: { role: input.role, changed: true } }),
+    })
+    mocks.desk = fake.desk
+    const user = userEvent.setup()
+    render(tree())
+    const block = responsiblesBlock()
+
+    await user.click(within(lineOf(block, "Serge Fixture")).getByRole("button", { name: text("moderationDesk.responsibles.remove") }))
+    const removal = await screen.findByRole("dialog", { name: text("moderationDesk.responsibles.removeTitle", { name: "Serge Fixture" }) })
+    expect(within(removal).getByText(text("moderationDesk.responsibles.selfWarning"))).toBeInTheDocument()
+    await user.type(within(removal).getByLabelText(text("moderationDesk.decision.reason")), "Je quitte l'administration du réseau.")
+    await act(async () => {
+      await user.click(within(removal).getByRole("button", { name: text("moderationDesk.responsibles.removeConfirm") }))
+    })
+    expect(await within(removal).findByText(text("errors.moderation_desk_last_admin"))).toBeInTheDocument()
+    expect(fake.setResponsibleRole).toHaveBeenLastCalledWith({ personId: ME, memberPersonId: ME, role: "member", reason: "Je quitte l'administration du réseau." })
+    await user.click(within(removal).getByRole("button", { name: text("common.cancel") }))
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+
+    await user.click(within(lineOf(block, "Ruth Fixture")).getByRole("button", { name: text("moderationDesk.responsibles.change") }))
+    const change = await screen.findByRole("dialog", { name: text("moderationDesk.responsibles.changeTitle", { name: "Ruth Fixture" }) })
+    expect(within(change).getByText(text("moderationDesk.responsibles.changeBody", {
+      name: "Ruth Fixture",
+      from: text("moderationDesk.responsibles.role.network_moderator"),
+      to: text("moderationDesk.responsibles.role.network_admin"),
+    }))).toBeInTheDocument()
+    expect(within(change).queryByText(text("moderationDesk.responsibles.selfWarning"))).toBeNull()
+    await user.type(within(change).getByLabelText(text("moderationDesk.decision.reason")), "Relève de l'administration pendant les congés.")
+    await act(async () => {
+      await user.click(within(change).getByRole("button", { name: text("moderationDesk.responsibles.changeConfirm") }))
+    })
+    await waitFor(() => expect(fake.setResponsibleRole).toHaveBeenLastCalledWith({
+      personId: ME, memberPersonId: "person-ruth", role: "network_admin", reason: "Relève de l'administration pendant les congés.",
+    }))
+    expect(mocks.success).toHaveBeenCalledWith(translate("moderationDesk.responsibles.changed", { name: "Ruth Fixture", role: translate("moderationDesk.responsibles.role.network_admin") }))
+  })
+})
+
+describe("Guichet — rôle posé puis retiré, effet au rendu suivant (LX-03)", () => {
+  it("un administrateur nommé voit les recours et les responsables ; rétrogradé il les perd, retiré le guichet se dit indisponible", () => {
+    mocks.params = new URLSearchParams("onglet=equipe")
+    const fake = fakeDesk()
+    let current: Loadable<ModerationDeskView | null> = ready(ADMIN)
+    mocks.desk = { ...fake.desk, useDesk: () => current } satisfies ModerationDeskCapability
+    const { rerender } = render(tree())
+    const links = () => within(screen.getByRole("navigation", { name: text("moderationDesk.tabsLabel") })).getAllByRole("link").map((link) => link.getAttribute("href"))
+    expect(links()).toEqual(["/moderation?onglet=file", "/moderation?onglet=recours", "/moderation?onglet=equipe"])
+    expect(screen.getByRole("heading", { name: text("moderationDesk.responsibles.title") })).toBeInTheDocument()
+
+    // Rétrogradé à la modération du réseau : plus de recours, plus de nomination ; la file reste.
+    current = ready(MODERATOR)
+    rerender(tree())
+    expect(links()).toEqual(["/moderation?onglet=file", "/moderation?onglet=equipe"])
+    expect(screen.queryByRole("heading", { name: text("moderationDesk.responsibles.title") })).toBeNull()
+
+    // Retiré, sans équipe : le refus indistinct du guichet, rien n'est révélé.
+    current = ready(null)
+    rerender(tree())
+    expect(screen.getByText(text("moderationDesk.unavailable.title"))).toBeInTheDocument()
+    expect(screen.queryByRole("navigation", { name: text("moderationDesk.tabsLabel") })).toBeNull()
   })
 })

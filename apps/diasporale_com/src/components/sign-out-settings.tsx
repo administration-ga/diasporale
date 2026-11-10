@@ -9,6 +9,7 @@ import { useRef, useState } from "react"
 import { forgetPendingCode } from "@/lib/pending-code"
 import { forgetReturnPath } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
+import { clearOfflineReserves, offlineReservesSupported } from "@/lib/service-worker"
 
 /**
  * Se déconnecter partout, un seul geste à la fois. La source moteur conserve sa
@@ -32,6 +33,10 @@ export function useSignOutEverywhere() {
     // d'un code (EA-08), quelle que soit la source.
     forgetReturnPath()
     forgetPendingCode()
+    // Les réserves du script de fond sont vidées AVANT la navigation de la source (MO-05) : bornée,
+    // la purge ne retient jamais la sortie, et son échec ne l'empêche pas. Sans réserves possibles
+    // (navigateur sans stockage de script de fond), rien à attendre.
+    if (offlineReservesSupported()) await clearOfflineReserves()
     try {
       await actions.signOutEverywhere()
       if (kind === "demo") window.location.assign(routes.home())

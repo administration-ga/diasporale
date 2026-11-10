@@ -255,6 +255,74 @@ describe("Guichet de démonstration — équipes", () => {
   })
 })
 
+describe("Guichet de démonstration — responsables du réseau (MD-01)", () => {
+  const responsibles = (desk: ReturnType<typeof setup>["desk"], personId = PERSON) => renderHook(() => desk.useResponsibles(personId)).result.current
+  const capacity = (desk: ReturnType<typeof setup>["desk"]) => ready(renderHook(() => desk.useDesk(PERSON)).result.current)
+
+  it("la personne de la session administre seule au départ : personne n'est nommé d'office, et le dernier administrateur reste", async () => {
+    const { desk } = setup()
+    expect(ready(responsibles(desk))).toEqual({
+      members: [{ personId: PERSON, role: "network_admin", handle: "prisca.abanga", displayName: "Prisca ABANGA", active: true, isMe: true }],
+      more: false,
+    })
+    expect(await desk.setResponsibleRole({ personId: PERSON, memberPersonId: PERSON, role: "member", reason: REASON })).toEqual({ ok: false, code: "moderation_desk_last_admin" })
+    expect(await desk.setResponsibleRole({ personId: PERSON, memberPersonId: PERSON, role: "network_moderator", reason: REASON })).toEqual({ ok: false, code: "moderation_desk_last_admin" })
+    expect(responsibles(desk, OTHER)).toEqual({ status: "error", code: "not_found" })
+    expect(await desk.setResponsibleRole({ personId: OTHER, memberPersonId: PERSON, role: "member", reason: REASON })).toEqual({ ok: false, code: "not_found" })
+  })
+
+  it("nomme un membre actif, motif exigé ; refuse une adhésion en attente ou absente ; un rôle déjà posé ne change rien", async () => {
+    const seed = createDemoSeed(NOW)
+    const clarisse = seed.memberships["p-clarisse"]!
+    const { desk } = setup({ memberships: { ...seed.memberships, "p-clarisse": { ...clarisse, grounds: { ...clarisse.grounds, idn: null } } } })
+    expect(await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-steeve", role: "network_moderator", reason: "Court" })).toEqual({ ok: false, code: "moderation_desk_reason_length" })
+    await act(async () => {
+      expect(await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-steeve", role: "network_moderator", reason: REASON })).toEqual({ ok: true, value: { role: "network_moderator", changed: true } })
+    })
+    expect(await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-steeve", role: "network_moderator", reason: REASON })).toEqual({ ok: true, value: { role: "network_moderator", changed: false } })
+    expect(await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-clarisse", role: "network_moderator", reason: REASON })).toEqual({ ok: false, code: "moderation_desk_role_refused" })
+    expect(await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-inconnue", role: "network_moderator", reason: REASON })).toEqual({ ok: false, code: "moderation_desk_role_refused" })
+    expect(ready(responsibles(desk)).members.map((row) => [row.personId, row.role, row.isMe])).toEqual([[PERSON, "network_admin", true], ["p-steeve", "network_moderator", false]])
+    await act(async () => {
+      expect(await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-steeve", role: "network_admin", reason: REASON })).toEqual({ ok: true, value: { role: "network_admin", changed: true } })
+    })
+    await act(async () => {
+      expect(await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-steeve", role: "member", reason: REASON })).toEqual({ ok: true, value: { role: "member", changed: true } })
+    })
+    expect(ready(responsibles(desk)).members.map((row) => row.personId)).toEqual([PERSON])
+  })
+
+  it("rétrogradée, la personne de la session perd les recours et les équipes au geste suivant, et garde toute la file", async () => {
+    const { desk } = setup()
+    await act(async () => { await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-steeve", role: "network_admin", reason: REASON }) })
+    await act(async () => {
+      expect(await desk.setResponsibleRole({ personId: PERSON, memberPersonId: PERSON, role: "network_moderator", reason: REASON })).toEqual({ ok: true, value: { role: "network_moderator", changed: true } })
+    })
+    expect(capacity(desk)).toMatchObject({ role: "network_moderator", networkWide: true, canReviewAppeals: false, canManageTeams: false })
+    expect(renderHook(() => desk.useAppeals({ personId: PERSON, zone: { kind: "all" }, surface: null, cursor: null })).result.current).toEqual({ status: "error", code: "not_found" })
+    expect(responsibles(desk)).toEqual({ status: "error", code: "not_found" })
+    expect(await desk.setResponsibleRole({ personId: PERSON, memberPersonId: PERSON, role: "network_admin", reason: REASON })).toEqual({ ok: false, code: "not_found" })
+    expect(await desk.findMember({ personId: PERSON, handle: "steeve.ngounie" })).toEqual({ ok: false, code: "not_found" })
+    expect(allCases(desk).length).toBeGreaterThan(0)
+  })
+
+  it("retirée, elle ne garde que la file de ses équipes ; sans équipe, plus de guichet", async () => {
+    const { desk } = setup()
+    await act(async () => { await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-steeve", role: "network_admin", reason: REASON }) })
+    await act(async () => { await desk.setResponsibleRole({ personId: PERSON, memberPersonId: PERSON, role: "member", reason: REASON }) })
+    expect(capacity(desk)).toEqual({
+      role: "team_member", networkWide: false, canReviewAppeals: false, canManageTeams: false,
+      teams: [{ teamId: DEMO_DESK_TEAM_ID, name: "Équipe France (fictive)", scope: null, isMember: true }],
+    })
+    const queue = (teamId: string | null) => renderHook(() => desk.useQueue({ personId: PERSON, zone: { kind: "all" }, surface: null, teamId, cursor: null })).result.current
+    expect(queue(null)).toEqual({ status: "error", code: "not_found" })
+    expect(ready(queue(DEMO_DESK_TEAM_ID)).items.length).toBeGreaterThan(0)
+    expect(ready(queue(DEMO_DESK_TEAM_ID)).items.every((row) => row.level === "team")).toBe(true)
+    expect(renderHook(() => desk.useCase({ personId: PERSON, reportId: "demo-dossier-1" })).result.current).toEqual({ status: "error", code: "not_found" })
+    expect(await desk.setTeamMember({ personId: PERSON, teamId: DEMO_DESK_TEAM_ID, memberPersonId: PERSON, active: false, reason: REASON })).toEqual({ ok: false, code: "not_found" })
+  })
+})
+
 describe("Règles pures du port — mesures", () => {
   it("date les mesures temporaires et confirme les seules mesures lourdes", () => {
     expect(deskSanctions({ decision: "actioned", removal: true, personMeasure: "mute", durationDays: 7 }, NOW)).toEqual({ ok: true, value: [{ kind: "removal" }, { kind: "mute", until: NOW + 7 * DAY }] })

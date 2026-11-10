@@ -118,3 +118,23 @@ describe("routes de l'arborescence — cinq destinations et espace personnel (DG
     expect(routes.register()).toBe("/entrer?inscription=1")
   })
 })
+
+describe("routes de l'entraide, du kit et du mentorat — retrouver (ET-04)", () => {
+  it("l'entraide garde son adresse sans filtre ; onglet, vue, thème et mots s'y écrivent, la vue par défaut jamais", () => {
+    expect(routes.mutualAid()).toBe("/entraide")
+    expect(routes.mutualAid("FR", "Lyon")).toBe("/entraide?pays=FR&ville=Lyon")
+    expect(routes.mutualAid("FR", undefined, { view: "open" })).toBe("/entraide?pays=FR")
+    expect(routes.mutualAid("FR", "Lyon", { view: "unanswered", theme: "housing", q: " colocation " })).toBe("/entraide?pays=FR&ville=Lyon&vue=sans-reponse&theme=housing&q=colocation")
+    expect(routes.mutualAid("FR", undefined, { tab: "missions", view: "mine" })).toBe("/entraide?pays=FR&onglet=missions&vue=mes-inscriptions")
+    expect(routes.mutualAid("FR", undefined, { tab: "missions", view: "upcoming", theme: "health" })).toBe("/entraide?pays=FR&onglet=missions&theme=health")
+  })
+
+  it("le kit porte ses mots et sa rubrique ; les mentors, leur domaine, leur langue et la ville saisie", () => {
+    expect(routes.arrivalKit("FR")).toBe("/kit-arrivee?pays=FR")
+    expect(routes.arrivalKit("FR", "Lyon", { q: "banque", category: "banking" })).toBe("/kit-arrivee?pays=FR&ville=Lyon&q=banque&categorie=banking")
+    expect(routes.arrivalKit(undefined, undefined, { q: " " })).toBe("/kit-arrivee")
+    expect(routes.mentoring("FR")).toBe("/mentorat?pays=FR")
+    expect(routes.mentoring("FR", { domain: "housing", language: "fan", city: "Lyon" })).toBe("/mentorat?pays=FR&ville=Lyon&domaine=housing&langue=fan")
+    expect(routes.mentoring("FR", { domain: null, language: null, city: "" })).toBe("/mentorat?pays=FR")
+  })
+})

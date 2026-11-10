@@ -10,6 +10,7 @@ import {
   hasCapability,
   idnCountsAsGround,
   isSuspensionActive,
+  membershipStatusDrift,
   writeRateTier,
   type MemberCapability,
   type MembershipEvent,
@@ -30,6 +31,7 @@ const FIXTURES = {
   declaree_sponsored: { ...LIGHT_ACCOUNT_GROUNDS, sponsored: true },
   verifiee_attested: { ...LIGHT_ACCOUNT_GROUNDS, consularAttestation: true },
   verifiee_idn_sponsored: { ...LIGHT_ACCOUNT_GROUNDS, idn: IDN_GA(2), sponsored: true },
+  verifiee_founding: { ...LIGHT_ACCOUNT_GROUNDS, foundingAdmission: { seniorityWaiver: true } },
   suspendue: {
     ...LIGHT_ACCOUNT_GROUNDS,
     idn: IDN_GA(1),
@@ -127,6 +129,19 @@ const MATRIX: Record<FixtureName, Record<MembershipEventKind, Expected>> = {
     left: "partie",
     rejoined: R("not_left"),
   },
+  verifiee_founding: {
+    idn_linked: "verifiee",
+    idn_loa_updated: R("no_idn_link"),
+    idn_unlinked: R("no_idn_link"),
+    sponsored: "verifiee",
+    sponsorship_revoked: R("no_sponsorship"),
+    attestation_confirmed: "verifiee",
+    attestation_revoked: R("no_attestation"),
+    suspended: "suspendue",
+    suspension_lifted: R("not_suspended"),
+    left: "partie",
+    rejoined: R("not_left"),
+  },
   suspendue: {
     idn_linked: R("idn_already_linked"),
     idn_loa_updated: "suspendue",
@@ -162,6 +177,7 @@ describe("deriveMembershipStatus — la règle unique", () => {
     expect(deriveMembershipStatus(FIXTURES.declaree_sponsored, NOW)).toBe("declaree")
     expect(deriveMembershipStatus(FIXTURES.verifiee_attested, NOW)).toBe("verifiee")
     expect(deriveMembershipStatus(FIXTURES.verifiee_idn_sponsored, NOW)).toBe("verifiee")
+    expect(deriveMembershipStatus(FIXTURES.verifiee_founding, NOW)).toBe("verifiee")
     expect(deriveMembershipStatus(FIXTURES.suspendue, NOW)).toBe("suspendue")
     expect(deriveMembershipStatus(FIXTURES.partie, NOW)).toBe("partie")
   })
@@ -194,6 +210,18 @@ describe("deriveMembershipStatus — la règle unique", () => {
     }
     expect(deriveMembershipStatus(suspendedAttested, NOW)).toBe("suspendue")
     expect(deriveMembershipStatus({ ...suspendedAttested, leftAt: NOW }, NOW)).toBe("partie")
+  })
+
+  test("EA-01 : l'admission fondatrice vérifie seule, avec ou sans dispense ; le départ et la sanction l'emportent", () => {
+    const founding = { ...LIGHT_ACCOUNT_GROUNDS, foundingAdmission: { seniorityWaiver: false } }
+    expect(deriveMembershipStatus(founding, NOW)).toBe("verifiee")
+    expect(deriveMembershipStatus({ ...founding, suspension: { until: null, readAccess: "read_only" } }, NOW)).toBe("suspendue")
+    expect(deriveMembershipStatus({ ...founding, leftAt: NOW }, NOW)).toBe("partie")
+    // Sans la décision, le statut retombe selon les faits restants.
+    expect(deriveMembershipStatus({ ...founding, idn: IDN_GA(1), foundingAdmission: null }, NOW)).toBe("declaree")
+    // Des faits enregistrés avant EA-01, sans le champ, ne vérifient personne.
+    const legacy = { idn: null, sponsored: false, consularAttestation: false, suspension: null, leftAt: null } as unknown as MembershipGrounds
+    expect(deriveMembershipStatus(legacy, NOW)).toBe("en_attente")
   })
 
   test("une sanction échue ne suspend plus", () => {
@@ -255,6 +283,15 @@ describe("applyMembershipEvent — 100 % des transitions", () => {
     expect(back.value.status).toBe("en_attente")
   })
 
+  test("le départ éteint l'admission fondatrice : au retour, il faut une nouvelle décision", () => {
+    const left = applyMembershipEvent(FIXTURES.verifiee_founding, EVENTS.left, NOW)
+    if (!left.ok) throw new Error("départ refusé")
+    expect(left.value.grounds.foundingAdmission).toBeNull()
+    const back = applyMembershipEvent(left.value.grounds, EVENTS.rejoined, NOW)
+    if (!back.ok) throw new Error("retour refusé")
+    expect(back.value.status).toBe("en_attente")
+  })
+
   test("on ne sort pas d'une sanction en partant puis en revenant", () => {
     const left = applyMembershipEvent(FIXTURES.suspendue, EVENTS.left, NOW)
     if (!left.ok) throw new Error("départ refusé")
@@ -292,6 +329,29 @@ describe("effectiveMembershipStatus — la racine suspend partout", () => {
   test("un départ reste un départ", () => {
     expect(effectiveMembershipStatus("partie", { suspended: true })).toBe("partie")
     expect(effectiveMembershipStatus("partie", { suspended: false })).toBe("partie")
+  })
+})
+
+describe("membershipStatusDrift — le statut enregistré relu contre les faits (EA-03)", () => {
+  test("un compte léger qui lie IDN est attendu « déclarée »", () => {
+    expect(membershipStatusDrift("en_attente", FIXTURES.declaree_idn, NOW)).toBe("declaree")
+  })
+
+  test("un lien révoqué fait retomber : déclarée sans IDN redevient en attente, vérifiée sans décision aussi", () => {
+    expect(membershipStatusDrift("declaree", LIGHT_ACCOUNT_GROUNDS, NOW)).toBe("en_attente")
+    expect(membershipStatusDrift("verifiee", { ...FIXTURES.verifiee_idn_sponsored, idn: IDN_GA(1) }, NOW)).toBe("declaree")
+    expect(membershipStatusDrift("verifiee", LIGHT_ACCOUNT_GROUNDS, NOW)).toBe("en_attente")
+  })
+
+  test("aucun écart quand les faits justifient le statut enregistré", () => {
+    expect(membershipStatusDrift("declaree", FIXTURES.declaree_idn, NOW)).toBeNull()
+    expect(membershipStatusDrift("verifiee", FIXTURES.verifiee_founding, NOW)).toBeNull()
+    expect(membershipStatusDrift("en_attente", LIGHT_ACCOUNT_GROUNDS, NOW)).toBeNull()
+  })
+
+  test("suspendue et partie ne se relisent jamais ici, quels que soient les faits", () => {
+    expect(membershipStatusDrift("suspendue", FIXTURES.verifiee_attested, NOW)).toBeNull()
+    expect(membershipStatusDrift("partie", FIXTURES.verifiee_attested, NOW)).toBeNull()
   })
 })
 

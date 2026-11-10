@@ -29,7 +29,7 @@
 import { HOME_COUNTRY, isCountryCode, normalizeCountryCode, type CountryCode } from "./countries"
 import { ok, refuse, type Result } from "./result"
 import { canonicalTimeZone, isServiceInstant, normalizeServiceText, serviceTextRefusal } from "./service-requests"
-import { cityKeyOf, containsContactDetails } from "./services"
+import { cityKeyOf, containsContactDetails, serviceSearchWords } from "./services"
 import { DAY_MS } from "./time"
 
 // ═══════════════════════════════════════════════════════════════
@@ -111,6 +111,9 @@ export const AID_REASON_MAX_LENGTH = 500
 export const AID_ANSWERS_PER_QUESTION_MAX = 300
 /** Taille d'une page de liste : plafond dur du moteur. */
 export const AID_PAGE_MAX = 50
+/** Les mots cherchés (ET-04) : deux caractères repliés au moins pour chercher, cent au plus. */
+export const AID_QUERY_MIN_LENGTH = 2
+export const AID_QUERY_MAX_LENGTH = 100
 
 // ═══════════════════════════════════════════════════════════════
 // Refus fermés, traduits par l'écran (`errors.<code>`)
@@ -170,6 +173,8 @@ export const MUTUAL_AID_REFUSALS = [
   "aid_signup_exists",
   "aid_signup_missing",
   "aid_reason_too_long",
+  // La recherche (ET-04).
+  "aid_query_too_long",
 ] as const
 export type MutualAidRefusal = (typeof MUTUAL_AID_REFUSALS)[number]
 
@@ -255,6 +260,72 @@ export function parseAidPlaceFilter(input: { readonly country: string; readonly 
   const city = parseAidOptionalCity(input.city)
   if (!city.ok) return city
   return ok({ country: country.value, cityKey: city.value === null ? null : city.value.cityKey })
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Retrouver une question (ET-04) : thème, mots, sans réponse
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Le texte INDEXÉ d'une question : son titre et son détail, en mots repliés (sans
+ * accents, ponctuation comptée pour une espace). Même découpe que la requête, des
+ * deux côtés : « démarches » trouve « Demarches » et « d'arrivée » trouve « arrivee ».
+ * Jamais de coordonnée (le domaine les refuse déjà à l'écriture), jamais l'auteur.
+ */
+export function aidQuestionSearchText(question: { readonly title: string; readonly detail: string }): string {
+  return serviceSearchWords(`${question.title} ${question.detail}`)
+}
+
+/** La recherche d'une liste de questions, validée : chaque filtre RESTREINT, aucun n'ouvre. */
+export interface AidQuestionSearch {
+  /** Les mots repliés, ou `null` (vide ou trop court pour chercher). */
+  readonly query: string | null
+  /** `null` : tous les thèmes. */
+  readonly theme: AidTheme | null
+  /** Seulement les questions qui n'ont encore reçu aucune réponse publiée. */
+  readonly unanswered: boolean
+}
+
+export interface AidQuestionSearchInput {
+  readonly query?: string | null | undefined
+  readonly theme?: string | null | undefined
+  readonly unanswered?: boolean | null | undefined
+}
+
+/** Les mots d'une recherche : repliés ; `null` sous deux caractères ; refus au-delà de cent. */
+export function parseAidQuery(raw: string | null | undefined): Result<string | null, MutualAidRefusal> {
+  const query = serviceSearchWords(raw ?? "")
+  if (query.length > AID_QUERY_MAX_LENGTH) return refuse("aid_query_too_long")
+  return ok(query.length >= AID_QUERY_MIN_LENGTH ? query : null)
+}
+
+/** LA règle d'une recherche de questions : mots, puis thème (liste fermée), puis « sans réponse ». */
+export function parseAidQuestionSearch(input: AidQuestionSearchInput): Result<AidQuestionSearch, MutualAidRefusal> {
+  const query = parseAidQuery(input.query)
+  if (!query.ok) return query
+  const rawTheme = (input.theme ?? "").trim()
+  if (rawTheme.length > 0 && !isAidTheme(rawTheme)) return refuse("aid_theme_invalid")
+  return ok({ query: query.value, theme: rawTheme.length > 0 && isAidTheme(rawTheme) ? rawTheme : null, unanswered: input.unanswered === true })
+}
+
+/**
+ * Une question garde-t-elle sa place dans une recherche ? Thème et « sans réponse »
+ * seulement : les mots sont jugés par l'index du moteur, ou par `aidSearchWordsMatch`
+ * côté démonstration. Rejugé sur chaque ligne lue (défense en profondeur).
+ */
+export function matchesAidQuestionSearch(question: { readonly theme: AidTheme; readonly answerCount: number }, search: Pick<AidQuestionSearch, "theme" | "unanswered">): boolean {
+  if (search.theme !== null && question.theme !== search.theme) return false
+  return !search.unanswered || question.answerCount === 0
+}
+
+/**
+ * La règle de correspondance des mots, telle que la démonstration l'applique (le
+ * moteur a son index plein texte) : chaque mot cherché commence un mot du texte.
+ */
+export function aidSearchWordsMatch(searchText: string, query: string | null): boolean {
+  if (query === null) return true
+  const words = searchText.split(" ")
+  return query.split(" ").every((term) => words.some((word) => word.startsWith(term)))
 }
 
 // ═══════════════════════════════════════════════════════════════

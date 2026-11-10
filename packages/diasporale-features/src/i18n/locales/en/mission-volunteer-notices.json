@@ -1,0 +1,8 @@
+{
+  "bell": {
+    "system": {
+      "aid_mission_cancelled": "A mission you signed up for was cancelled.",
+      "aid_mission_rescheduled": "The time of a mission you signed up for has changed."
+    }
+  }
+}

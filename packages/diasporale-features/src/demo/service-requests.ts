@@ -15,19 +15,24 @@
  */
 import {
   availableServiceRequestActions,
+  availableServiceRescheduleActions,
+  bookingCapacityAllows,
   canContestNoShow,
   checkNoShowContest,
   checkProposalVersion,
   checkServiceRequestTiming,
   checkServiceRequestTransition,
+  checkServiceRescheduleGesture,
   effectiveServiceRequestStatus,
   hasCapability,
   isServiceIdempotencyKey,
   isServiceRequestTerminal,
   nextProposalVersion,
   normalizeServiceRequestDraft,
+  openServiceReschedule,
   parseServiceProposal,
   parseServiceReason,
+  parseServiceReschedule,
   serviceRequestFingerprint,
   serviceRequestTimeline,
   slotsOverlap,
@@ -39,6 +44,8 @@ import {
   type ServiceRequestActor,
   type ServiceRequestCloser,
   type ServiceRequestStatus,
+  type ServiceReschedule,
+  type ServiceRescheduleAction,
   type ServiceWindow,
 } from "@diasporale/domain"
 import { useMemo, useSyncExternalStore } from "react"
@@ -47,6 +54,7 @@ import type { ActionErrorCode } from "../data/errors"
 import type { ActionResult } from "../data/port"
 import {
   SERVICE_REQUESTS_PAGE_SIZE,
+  type ProposeRescheduleInput,
   type ProposeServiceInput,
   type SendServiceRequestInput,
   type ServiceRequestDetailView,
@@ -127,6 +135,8 @@ interface DemoProposalRow {
   readonly cancellationTerms: string
   readonly expiresAt: number
   readonly state: ServiceProposalState
+  /** SV-03 : la version qu'un déplacement accepté a remplacée (absente d'un état local antérieur). */
+  readonly rescheduledFrom?: number | null
   readonly createdAt: number
 }
 
@@ -141,6 +151,10 @@ interface DemoBookingRow {
   readonly status: ServiceBookingStatus
   readonly reason: string | null
   readonly createdAt: number
+  /** SV-09 : les rendez-vous simultanés admis à l'accord (absent d'un état local antérieur : un). */
+  readonly capacity?: number
+  /** SV-03 : le nouvel horaire proposé, en attente de l'autre partie. */
+  readonly reschedule?: ServiceReschedule | null
 }
 
 export interface DemoServiceRequestsState {
@@ -306,6 +320,7 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
         ? { version: proposal.version, amountMinor: proposal.amountMinor, currency: proposal.currency, startAt: proposal.startAt, endAt: proposal.endAt, timeZone: proposal.timeZone, expiresAt: proposal.expiresAt }
         : null,
       booking: booking ? { startAt: booking.startAt, endAt: booking.endAt, timeZone: booking.timeZone, status: booking.status } : null,
+      reschedule: booking && booking.status === "confirmed" && status === "confirmed" ? openServiceReschedule(booking.reschedule ?? null, now) : null,
       deadlineAt: status === "sent" || status === "proposed" ? row.deadlineAt : null,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
@@ -333,11 +348,12 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
         cancellationTerms: proposal.cancellationTerms,
         expiresAt: proposal.expiresAt,
         state: proposal.state,
+        rescheduledFrom: proposal.rescheduledFrom ?? null,
         createdAt: proposal.createdAt,
       })),
       timeline: serviceRequestTimeline({
         createdAt: row.createdAt,
-        proposals: proposals.map((proposal) => ({ version: proposal.version, createdAt: proposal.createdAt })),
+        proposals: proposals.map((proposal) => ({ version: proposal.version, createdAt: proposal.createdAt, rescheduledFrom: proposal.rescheduledFrom ?? null })),
         confirmedAt: booking ? booking.createdAt : null,
         closed: row.closedAt !== null && isServiceRequestTerminal(row.status) ? { status: row.status, at: row.closedAt } : null,
         effectiveStatus: summary.status,
@@ -352,9 +368,37 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
         bookingStartAt: booking ? booking.startAt : null,
         proposalVersion: row.proposalVersion,
       }),
+      rescheduleActions: availableServiceRescheduleActions({ ...rescheduleFacts(row, booking, summary.status, now), actor: viewerRole }),
       noShowContest: row.contestedAt != null && row.contestReason != null ? { at: row.contestedAt, reason: row.contestReason } : null,
       canContestNoShow: viewerRole === "requester" && canContestNoShow(contestInput(row, summary.status, now)),
+      // SV-04 : l'offre relue pour l'équipe seulement, comme le moteur.
+      proposalPrefill: viewerRole === "page" ? (deps.findOffer(row.offerId)?.proposalPrefill ?? null) : null,
     }
+  }
+
+  /** SV-03 : les faits d'un geste de déplacement (rendez-vous confirmé, proposition écrite, versions). */
+  function rescheduleFacts(row: DemoRequestRow, booking: DemoBookingRow | undefined, status: ServiceRequestStatus, now: number) {
+    return {
+      status,
+      now,
+      bookingStartAt: booking && booking.status === "confirmed" ? booking.startAt : null,
+      reschedule: booking?.reschedule ?? null,
+      proposalVersion: row.proposalVersion,
+    }
+  }
+
+  /** SV-03 : la demande, son rendez-vous et le geste de déplacement jugé, comme le moteur ; un refus en code fermé. */
+  function rescheduleScope(requestId: string, action: ServiceRescheduleAction) {
+    const access = viewer("publish")
+    if (!access.ok) return { refusal: access.code }
+    const found = participantRow(requestId, access.personId)
+    if (!found) return { refusal: "not_found" as const }
+    const { data, row, actor } = found
+    const now = store.now()
+    const booking = data.bookings.find((candidate) => candidate.id === row.bookingId)
+    const gesture = checkServiceRescheduleGesture({ ...rescheduleFacts(row, booking, effectiveOf(row, now), now), action, actor })
+    if (!gesture.ok) return { refusal: gesture.code }
+    return { data, row, actor, booking, now }
   }
 
   /** Les faits de la contestation d'une absence : le constat de la page est l'instant de clôture `no_show`. */
@@ -389,8 +433,17 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
     }
   }
 
-  function slotTaken(data: DemoServiceRequestsState, pageId: string, slot: ServiceWindow): boolean {
-    return data.bookings.some((booking) => booking.pageId === pageId && booking.status === "confirmed" && slotsOverlap(booking, slot))
+  /** SV-09 : les rendez-vous simultanés que l'offre d'une demande admet (un par défaut), comme le moteur. */
+  function offerCapacityOf(row: DemoRequestRow): number {
+    return deps.findOffer(row.offerId)?.proposalPrefill?.settings.bookingCapacity ?? 1
+  }
+
+  /** Le créneau est-il plein pour la page ? La règle de capacité du domaine ; le rendez-vous déplacé ne se compte pas. */
+  function slotTaken(data: DemoServiceRequestsState, pageId: string, slot: ServiceWindow, capacity: number, exceptBookingId: string | null = null): boolean {
+    const overlapping = data.bookings
+      .filter((booking) => booking.pageId === pageId && booking.status === "confirmed" && booking.id !== exceptBookingId && slotsOverlap(booking, slot))
+      .map((booking) => ({ capacity: booking.capacity ?? 1 }))
+    return !bookingCapacityAllows({ capacity, overlapping })
   }
 
   function replaceRequest(data: DemoServiceRequestsState, next: DemoRequestRow): readonly DemoRequestRow[] {
@@ -521,7 +574,7 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
       if (!next.ok) return fail(next.code)
       const terms = parseServiceProposal(input, now)
       if (!terms.ok) return fail(terms.code)
-      if (slotTaken(data, row.pageId, terms.value)) return fail("booking_slot_unavailable")
+      if (slotTaken(data, row.pageId, terms.value, offerCapacityOf(row))) return fail("booking_slot_unavailable")
       const proposalId = `proposition-demo-${data.sequence}`
       commit({
         ...data,
@@ -565,7 +618,7 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
       if (!motive.ok) return fail(motive.code)
       commit({
         ...data,
-        bookings: data.bookings.map((candidate) => (candidate.id === booking?.id ? { ...candidate, status: "cancelled" as const, reason: motive.value } : candidate)),
+        bookings: data.bookings.map((candidate) => (candidate.id === booking?.id ? { ...candidate, status: "cancelled" as const, reason: motive.value, reschedule: null } : candidate)),
         requests: replaceRequest(data, { ...row, status: "cancelled", closedBy: actor, closedReason: motive.value, closedAt: now, deadlineAt: null, updatedAt: now }),
       })
       return OK
@@ -584,14 +637,18 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
       if (!expected.ok) return fail(expected.code)
       const proposal = data.proposals.find((candidate) => candidate.id === row.currentProposalId)
       if (!proposal || proposal.state !== "current") return fail("request_not_open")
-      if (slotTaken(data, row.pageId, proposal)) return fail("booking_slot_unavailable")
+      const capacity = offerCapacityOf(row)
+      if (slotTaken(data, row.pageId, proposal, capacity)) return fail("booking_slot_unavailable")
       const bookingId = `rendez-vous-demo-${data.sequence}`
       commit({
         ...data,
         sequence: data.sequence + 1,
         bookings: [
           ...data.bookings,
-          { id: bookingId, requestId: row.id, proposalId: proposal.id, pageId: row.pageId, startAt: proposal.startAt, endAt: proposal.endAt, timeZone: proposal.timeZone, status: "confirmed", reason: null, createdAt: now },
+          {
+            id: bookingId, requestId: row.id, proposalId: proposal.id, pageId: row.pageId, startAt: proposal.startAt, endAt: proposal.endAt,
+            timeZone: proposal.timeZone, status: "confirmed", reason: null, createdAt: now, ...(capacity > 1 ? { capacity } : {}),
+          },
         ],
         requests: replaceRequest(data, { ...row, status: "confirmed", bookingId, deadlineAt: null, updatedAt: now }),
       })
@@ -615,6 +672,69 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
       if (!motive.ok) return fail(motive.code)
       commit({ ...data, requests: replaceRequest(data, { ...row, contestedAt: now, contestReason: motive.value, updatedAt: now }) })
       return { ok: true, value: { contestedAt: now, created: true } }
+    },
+
+    async proposeReschedule(input: ProposeRescheduleInput) {
+      const scope = rescheduleScope(input.requestId, "propose_reschedule")
+      if (scope.refusal !== undefined) return fail(scope.refusal)
+      const { data, row, actor, booking, now } = scope
+      const expected = checkProposalVersion(input.expectedProposalVersion, row.proposalVersion)
+      if (!expected.ok) return fail(expected.code)
+      if (!booking) return fail("request_not_open")
+      const slot = parseServiceReschedule(input, booking, now)
+      if (!slot.ok) return fail(slot.code)
+      if (slotTaken(data, row.pageId, slot.value, booking.capacity ?? 1, booking.id)) return fail("booking_slot_unavailable")
+      commit({
+        ...data,
+        bookings: data.bookings.map((candidate) => (candidate.id === booking.id ? { ...candidate, reschedule: { ...slot.value, proposedBy: actor, proposedAt: now } } : candidate)),
+        requests: replaceRequest(data, { ...row, updatedAt: now }),
+      })
+      return OK
+    },
+
+    async acceptReschedule({ requestId, expectedProposalVersion, expectedStartAt }) {
+      const scope = rescheduleScope(requestId, "accept_reschedule")
+      if (scope.refusal !== undefined) return fail(scope.refusal)
+      const { data, row, booking, now } = scope
+      const expected = checkProposalVersion(expectedProposalVersion, row.proposalVersion)
+      if (!expected.ok) return fail(expected.code)
+      const pending = booking?.reschedule ?? null
+      if (!booking || pending === null) return fail("reschedule_not_open")
+      if (pending.startAt !== expectedStartAt) return fail("reschedule_changed")
+      const current = data.proposals.find((candidate) => candidate.id === row.currentProposalId)
+      if (!current || current.state !== "current" || current.id !== booking.proposalId) return fail("request_not_open")
+      const next = nextProposalVersion(row.proposalVersion)
+      if (!next.ok) return fail(next.code)
+      if (slotTaken(data, row.pageId, pending, booking.capacity ?? 1, booking.id)) return fail("booking_slot_unavailable")
+      const proposalId = `proposition-demo-${data.sequence}`
+      commit({
+        ...data,
+        sequence: data.sequence + 1,
+        proposals: [
+          ...data.proposals.map((proposal) => (proposal.id === current.id ? { ...proposal, state: "superseded" as const } : proposal)),
+          {
+            ...current, id: proposalId, version: next.value, startAt: pending.startAt, endAt: pending.endAt, timeZone: pending.timeZone,
+            expiresAt: pending.expiresAt, state: "current", rescheduledFrom: current.version, createdAt: now,
+          },
+        ],
+        bookings: data.bookings.map((candidate) => (candidate.id === booking.id
+          ? { ...candidate, proposalId, startAt: pending.startAt, endAt: pending.endAt, timeZone: pending.timeZone, reschedule: null }
+          : candidate)),
+        requests: replaceRequest(data, { ...row, currentProposalId: proposalId, proposalVersion: next.value, updatedAt: now }),
+      })
+      return { ok: true, value: { version: next.value } }
+    },
+
+    async declineReschedule({ requestId }) {
+      const scope = rescheduleScope(requestId, "decline_reschedule")
+      if (scope.refusal !== undefined) return fail(scope.refusal)
+      const { data, row, booking, now } = scope
+      commit({
+        ...data,
+        bookings: data.bookings.map((candidate) => (candidate.id === booking?.id ? { ...candidate, reschedule: null } : candidate)),
+        requests: replaceRequest(data, { ...row, updatedAt: now }),
+      })
+      return OK
     },
   }
 
@@ -658,7 +778,7 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
     const status = transition.value === "completed" ? "completed" : "no_show"
     commit({
       ...data,
-      bookings: data.bookings.map((candidate) => (candidate.id === booking?.id ? { ...candidate, status } : candidate)),
+      bookings: data.bookings.map((candidate) => (candidate.id === booking?.id ? { ...candidate, status, reschedule: null } : candidate)),
       requests: replaceRequest(data, { ...row, status, closedBy: "page", closedAt: now, updatedAt: now }),
     })
     return OK

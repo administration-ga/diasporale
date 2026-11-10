@@ -316,6 +316,12 @@ export interface DiasporaleActions {
   revokeSponsorship(sponsorshipId: string): Promise<ActionResult>
   requestAttestation(): Promise<ActionResult<{ outcome: AttestationOutcome }>>
   setConsent(purpose: ConsentPurpose, granted: boolean): Promise<ActionResult>
+  /**
+   * EA-03 : faire relire son statut quand ses faits ont changé hors de DIASPORALE ; à
+   * n'appeler que si l'adhésion le signale (`statusOutdated`). Capacité facultative du
+   * fournisseur (la démonstration dérive le statut à chaque lecture).
+   */
+  refreshMembership?(): Promise<ActionResult<{ changed: boolean }>>
   /** Quitte cette seule adhésion, sans retirer le profil ni les consentements communs. */
   leaveDiasporale(): Promise<ActionResult>
   updateFacet(input: FacetInput): Promise<ActionResult>

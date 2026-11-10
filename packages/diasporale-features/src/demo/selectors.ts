@@ -13,6 +13,7 @@ import {
   countsInSponsorshipWindow,
   deriveMembershipStatus,
   DIRECTORY_PAGE_SIZE_MAX,
+  foundingSeniorityWaived,
   isCountryOpen,
   isListedInDirectoryFor,
   isReadableByOthers,
@@ -209,6 +210,10 @@ export function notificationsView(state: DemoState, viewerId: string): Notificat
         // Une demande tranchée : refusée par moi, acceptée (le lien existe), sinon disparue (retirée, défaite).
         inviteOutcome: !isRequest || request ? null : item.inviteDeclined ? "declined" : item.actorId && isConnected(state, viewerId, item.actorId) ? "accepted" : "gone",
         postId: item.postId,
+        // ET-01 : l'objet qu'ouvre un avis du système écrit par une démonstration voisine (une mission).
+        ...(item.communityNotice ? { communityNotice: item.communityNotice } : {}),
+        // EV-03 : la fiche de l'évènement annoncé (annulation, place obtenue).
+        ...(item.associationEvent ? { associationEvent: item.associationEvent } : {}),
       }
     })
 }
@@ -747,6 +752,8 @@ export function sponsorFacts(state: DemoState, sponsorId: string, now: number) {
   return {
     status,
     ...(status === "verifiee" && membership?.verifiedSince != null ? { verifiedSince: membership.verifiedSince } : {}),
+    // EA-01 : la dispense d'ancienneté suit l'admission fondatrice en vigueur, comme dans le moteur.
+    ...(membership && foundingSeniorityWaived(membership.grounds) ? { seniorityWaived: true } : {}),
     sponsorshipsInWindow: state.sponsorships.filter(
       (item) => item.sponsorId === sponsorId && countsInSponsorshipWindow(item.createdAt, now),
     ).length,

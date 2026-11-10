@@ -22,6 +22,7 @@ import NextLink from "next/link"
 import { useId, useLayoutEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { PageMissionsSection } from "@/components/aid-on-the-way"
 import { AppShell } from "@/components/app-shell"
 import { AssociationMembershipEntry } from "@/components/association-membership-entry"
 import { AssociationGroupEntry } from "@/components/association-group"
@@ -220,6 +221,8 @@ function PageFiche(props: { view: PageDetailView; membership: MembershipView; ca
       {page.ownerKind === "association" ? <>
         <AssociationGroupEntry pageId={page.id} handle={page.handle} isAdmin={view.viewer.role === "admin"} canPublish={props.membership.canPublish} />
         <AssociationEventsSection pageId={page.id} handle={page.handle} canManage={view.viewer.role !== null} />
+        {/* ET-09 : les prochaines missions bénévoles de l'association, quand elle en a d'ouvertes. */}
+        <PageMissionsSection pageId={page.id} />
       </> : null}
 
       {page.ownerKind !== "association" && events.length > 0 ? (

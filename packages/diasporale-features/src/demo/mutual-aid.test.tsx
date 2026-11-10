@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 
 import type { AidItemView, MutualAidCapability } from "../data/mutual-aid-port"
 import { createDemoMutualAid, DEMO_MUTUAL_AID_STORAGE_KEY, demoMutualAidSeed } from "./mutual-aid"
+import { notificationsView } from "./selectors"
 import { createDemoSeed, type DemoState } from "./state"
 import { DemoStore } from "./store"
 
@@ -221,6 +222,37 @@ describe("démonstration — missions et inscriptions", () => {
     expect(await aid.closeMission({ missionId: "aid-m-20", expectedVersion: 4 })).toEqual({ ok: false, code: "aid_mission_cancelled" })
   })
 
+  it("ET-01 : un horaire changé puis l'annulation avisent chaque bénévole inscrit dans la cloche, sans motif ; jamais l'équipe ni un inscrit retiré", async () => {
+    const { store, aid } = setup({ viewer: "p-steeve" })
+    await aid.createMission({ ...MISSION, pageId: LYON, places: 3 })
+    for (const who of ["p-prisca", "p-nadia", "p-mireille"]) {
+      await store.switchTo(who)
+      expect(await aid.signUp({ missionId: "aid-m-20", shareNameWithTeam: true })).toEqual({ ok: true, value: null })
+    }
+    expect(await aid.withdrawSignup("aid-m-20")).toEqual({ ok: true, value: null })
+    await store.switchTo("p-steeve")
+    const notices = (kind: string) => store.getState().notifications.filter((row) => row.kind === kind)
+
+    // Des places en plus : aucun avis.
+    expect(await aid.updateMission({ ...MISSION, places: 5, missionId: "aid-m-20", expectedVersion: 1 })).toEqual({ ok: true, value: null })
+    expect(notices("aid_mission_rescheduled")).toEqual([])
+    // Un horaire changé : un avis par inscrite confirmée.
+    expect(await aid.updateMission({ ...MISSION, places: 5, startsAt: MISSION.startsAt + DAY_MS, missionId: "aid-m-20", expectedVersion: 2 })).toEqual({ ok: true, value: null })
+    expect(notices("aid_mission_rescheduled").map((row) => row.recipientId).sort()).toEqual(["p-nadia", "p-prisca"])
+
+    expect(await aid.cancelMission({ missionId: "aid-m-20", expectedVersion: 3, reason: "Salle indisponible" })).toEqual({ ok: true, value: null })
+    const cancelled = notices("aid_mission_cancelled")
+    expect(cancelled.map((row) => row.recipientId).sort()).toEqual(["p-nadia", "p-prisca"])
+    for (const row of cancelled) expect(row).toMatchObject({ actorId: null, postId: null, communityNotice: { audience: "volunteer", opens: "aidMission", objectId: "aid-m-20", pageHandle: expect.any(String) } })
+    expect(JSON.stringify(cancelled)).not.toContain("Salle indisponible")
+    expect(JSON.stringify(cancelled)).not.toContain(MISSION.title)
+
+    // La cloche de l'inscrite nomme l'avis et l'objet qu'il ouvre.
+    expect(notificationsView(store.getState(), "p-prisca").filter((row) => row.kind === "aid_mission_cancelled")).toEqual([
+      expect.objectContaining({ actor: null, read: false, communityNotice: { audience: "volunteer", opens: "aidMission", objectId: "aid-m-20", pageHandle: expect.any(String) } }),
+    ])
+  })
+
   it("gardes : sans session, en attente, mission commencée", async () => {
     const anonymous = setup({ viewer: null })
     expect(renderHook(() => anonymous.aid.useQuestions({ country: "FR", status: "open", cursor: null })).result.current).toEqual({ status: "error", code: "not_signed_in" })
@@ -244,5 +276,38 @@ describe("démonstration — missions et inscriptions", () => {
     expect(ready(renderHook(() => started.aid.useMissions({ country: "FR", from: 0, cursor: null })).result.current).items).toEqual([])
     await started.store.switchTo("p-mireille")
     expect(await started.aid.withdrawSignup("aid-m-1")).toEqual({ ok: false, code: "aid_mission_started" })
+  })
+})
+
+describe("démonstration — retrouver une question (ET-04)", () => {
+  it("thème, mots repliés et « sans réponse » restreignent comme le moteur ; un thème inconnu est refusé", () => {
+    const { aid } = setup()
+    const ids = (request: Parameters<MutualAidCapability["useQuestions"]>[0]) => ready(renderHook(() => aid.useQuestions(request)).result.current).items.map((row) => row.id)
+    expect(ids({ country: "FR", status: "open", theme: "procedures", cursor: null })).toEqual(["aid-q-2"])
+    expect(ids({ country: "FR", status: "open", theme: "housing", cursor: null })).toEqual([])
+    expect(ids({ country: "FR", status: "resolved", query: "Colocation étudiante", cursor: null })).toEqual(["aid-q-1"])
+    expect(ids({ country: "FR", status: "open", query: "sejour", cursor: null })).toEqual(["aid-q-2"])
+    expect(ids({ country: "FR", status: "open", query: "medecin", cursor: null })).toEqual([])
+    // La question ouverte de Paris a une réponse ; celle de Montréal n'en a aucune.
+    expect(ids({ country: "FR", status: "open", unanswered: true, cursor: null })).toEqual([])
+    expect(ids({ country: "CA", status: "open", unanswered: true, cursor: null })).toEqual(["aid-q-3"])
+    expect(renderHook(() => aid.useQuestions({ country: "FR", status: "open", theme: "sports" as never, cursor: null })).result.current).toEqual({ status: "error", code: "aid_theme_invalid" })
+  })
+})
+
+describe("démonstration — l'entraide là où l'on passe (ET-09)", () => {
+  it("les prochaines missions ouvertes d'une association ; complète, close ou d'une autre page : absente ; une entreprise : refus indistinct", () => {
+    const { aid } = setup({ viewer: "p-mireille" })
+    const upcoming = ready(renderHook(() => aid.useUpcomingPageMissions({ pageId: LYON })).result.current)
+    expect(upcoming.map((mission) => [mission.id, mission.status])).toEqual([["aid-m-1", "open"]])
+    expect(ready(renderHook(() => aid.useUpcomingPageMissions({ pageId: "page-asso-bordeaux" })).result.current)).toEqual([])
+    expect(renderHook(() => aid.useUpcomingPageMissions({ pageId: "page-saveurs" })).result.current).toEqual({ status: "error", code: "not_found" })
+  })
+
+  it("une fenêtre courte de questions (le hub) : jamais plus longue que celle des listes", () => {
+    const { aid } = setup()
+    const page = ready(renderHook(() => aid.useQuestions({ country: "FR", status: "open", limit: 1, cursor: null })).result.current)
+    expect(page.items.map((row) => row.id)).toEqual(["aid-q-2"])
+    expect(ready(renderHook(() => aid.useQuestions({ country: "FR", status: "open", limit: 0, cursor: null })).result.current).items).toHaveLength(1)
   })
 })
