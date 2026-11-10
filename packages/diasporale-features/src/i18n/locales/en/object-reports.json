@@ -14,6 +14,17 @@
       "event": "Report this event",
       "person": "Report this profile"
     },
-    "rootNotice": "A profile is shared by DIASPORALE and ANTSIA, the public network: reports about it are reviewed by ANTSIA's moderation, not by the DIASPORALE team."
+    "rootNotice": "A profile is shared by DIASPORALE and ANTSIA, the public network: reports about it are reviewed by ANTSIA's moderation, not by the DIASPORALE team.",
+    "back": {
+      "feed": "Back to the feed"
+    }
+  },
+  "objectMenu": {
+    "open": "More actions for {{name}}"
+  },
+  "profileMenu": {
+    "copyLink": "Copy profile link",
+    "linkCopied": "Profile link copied.",
+    "copyFailed": "The link could not be copied. Try again."
   }
 }

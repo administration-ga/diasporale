@@ -14,6 +14,17 @@
       "event": "Signaler cet évènement",
       "person": "Signaler ce profil"
     },
-    "rootNotice": "Un profil est commun à DIASPORALE et à ANTSIA, le réseau public : son signalement est examiné par la modération d'ANTSIA, pas par l'équipe de DIASPORALE."
+    "rootNotice": "Un profil est commun à DIASPORALE et à ANTSIA, le réseau public : son signalement est examiné par la modération d'ANTSIA, pas par l'équipe de DIASPORALE.",
+    "back": {
+      "feed": "Retour au fil"
+    }
+  },
+  "objectMenu": {
+    "open": "Plus d'actions pour {{name}}"
+  },
+  "profileMenu": {
+    "copyLink": "Copier le lien du profil",
+    "linkCopied": "Lien du profil copié.",
+    "copyFailed": "Le lien n'a pas pu être copié. Réessayez."
   }
 }
