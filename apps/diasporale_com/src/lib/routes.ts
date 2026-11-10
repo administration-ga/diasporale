@@ -219,6 +219,8 @@ export const routes = {
   post: (postId: string) => `/publication/${postId}`,
   /** Mes signets (EXF-DG-12). */
   bookmarks: () => "/enregistrements",
+  /** Tous mes avis de la cloche, page après page, avec le filtre « Non lues » (NP-04). */
+  notifications: () => "/notifications",
   /** L'annuaire opt-in des membres (EXF-DG-19). */
   members: () => "/membres",
   /** Mes liens dans le réseau, sans recherche d'annuaire générique. */

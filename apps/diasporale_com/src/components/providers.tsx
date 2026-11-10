@@ -47,6 +47,10 @@ const featureRoutes: FeatureRoutes = {
   contextualConversation: routes.contextualConversation,
   // Les règles de la communauté (MD-05) : la feuille de signalement y renvoie.
   communityRules: routes.communityRules,
+  // NP-04 : la page des notifications, l'album d'un avis d'album publié, l'agenda d'une invitation.
+  notifications: routes.notifications,
+  album: routes.album,
+  agenda: routes.agenda,
   hub: routes.hub,
   feed: (tag, context) => routes.feed(context?.scope, tag, context?.country),
   sponsor: routes.sponsor,

@@ -98,6 +98,9 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   stories: member("feed", routes.stories()),
   story: member("feed", routes.story(SEGMENT)),
   newStory: member("feed", routes.newStory()),
+  // La page des notifications (NP-04) relève du fil, comme le relevé des notifications du moteur
+  // (`reseau-agent-nav` : « notifications » aboutit au fil) ; la cloche, elle, reste dans l'en-tête.
+  notifications: member("feed", routes.notifications()),
   // Explorer : l'annuaire des membres et des pages, une page et ce qu'on y fait sans la gérer.
   explore: member("explore", routes.explore()),
   members: member("explore", routes.members()),

@@ -37,6 +37,12 @@ export interface FeatureRoutes {
   contextualConversation?(threadId: string): string
   /** Les règles de la communauté (MD-05), page publique : la feuille de signalement y renvoie. */
   communityRules?(): string
+  /** NP-04 : la page des notifications (« Tout voir » depuis la feuille de la cloche). */
+  notifications?(): string
+  /** NP-04 : l'album d'un profil (avis d'album publié), sur le profil de son auteur. */
+  album?(handle: string, albumId: string): string
+  /** NP-04 : l'agenda personnel (avis d'invitation à un évènement). */
+  agenda?(): string
   hub(country: CountryCode): string
   /** Le filtre restreint le fil ; une carte peut conserver sa portée et le pays de son hub. */
   feed(tag?: string, context?: { readonly scope: FeedScope; readonly country?: CountryCode }): string

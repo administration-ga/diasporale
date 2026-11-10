@@ -1,0 +1,45 @@
+{
+  "bell": {
+    "seeAll": "See all notifications",
+    "fileReleased": "A file you uploaded has since been accepted by the security scan.",
+    "openPage": "View the page",
+    "openAlbum": "View the album",
+    "openAgenda": "View my calendar",
+    "openSettings": "Open my settings",
+    "outcome": {
+      "maybe": "maybe"
+    },
+    "kind": {
+      "page_post": "posted.",
+      "album_published": "published an album.",
+      "thematic_group_invite": "invited you to join a group.",
+      "event_invite": "invited you to an event."
+    },
+    "system": {
+      "page_post": "A page you follow has posted.",
+      "file_withheld": "A file you uploaded is being held by the security scan: it is not shown to anyone.",
+      "membership_changed": "Your status in DIASPORALE has changed.",
+      "badge_changed": "Your trust badges have changed.",
+      "page_signatory_invite": "You are invited to join the team that signs for a page.",
+      "page_claim_decided": "Your claim to a page has been reviewed."
+    }
+  },
+  "notificationsCenter": {
+    "title": "Notifications",
+    "lead": "Everything that happened for you in DIASPORALE, newest first. A notification never shows content: it leads to what it refers to.",
+    "filterLabel": "Filter notifications",
+    "filter": {
+      "all": "All",
+      "unread": "Unread"
+    },
+    "filterScope": "The filter applies to the notifications already loaded. Older ones may include more.",
+    "emptyUnread": "No unread notifications among those loaded.",
+    "groups": {
+      "new": "New",
+      "earlier": "Earlier"
+    },
+    "loadMore": "Show older notifications",
+    "loadingMore": "Loading…",
+    "retry": "Try again"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "bell": {
+    "seeAll": "Voir toutes les notifications",
+    "fileReleased": "Un fichier que vous aviez déposé a depuis été accepté par l’analyse de sécurité.",
+    "openPage": "Voir la page",
+    "openAlbum": "Voir l’album",
+    "openAgenda": "Voir mon agenda",
+    "openSettings": "Ouvrir mes réglages",
+    "outcome": {
+      "maybe": "peut-être"
+    },
+    "kind": {
+      "page_post": "a publié.",
+      "album_published": "a publié un album.",
+      "thematic_group_invite": "vous invite à rejoindre un groupe.",
+      "event_invite": "vous invite à un événement."
+    },
+    "system": {
+      "page_post": "Une page que vous suivez a publié.",
+      "file_withheld": "Un fichier que vous avez déposé est retenu par l’analyse de sécurité : il n’est montré à personne.",
+      "membership_changed": "Votre statut dans DIASPORALE a changé.",
+      "badge_changed": "Vos badges de confiance ont changé.",
+      "page_signatory_invite": "Vous êtes invité à rejoindre l’équipe qui signe pour une page.",
+      "page_claim_decided": "Votre revendication d’une page a été examinée."
+    }
+  },
+  "notificationsCenter": {
+    "title": "Notifications",
+    "lead": "Tout ce qui s’est passé pour vous dans DIASPORALE, du plus récent au plus ancien. Un avis ne montre jamais de contenu : il mène à ce qu’il désigne.",
+    "filterLabel": "Filtrer les notifications",
+    "filter": {
+      "all": "Toutes",
+      "unread": "Non lues"
+    },
+    "filterScope": "Le filtre porte sur les notifications déjà chargées. Les plus anciennes peuvent en contenir d’autres.",
+    "emptyUnread": "Aucune notification non lue parmi celles chargées.",
+    "groups": {
+      "new": "Nouveau",
+      "earlier": "Plus tôt"
+    },
+    "loadMore": "Afficher les notifications plus anciennes",
+    "loadingMore": "Chargement…",
+    "retry": "Réessayer"
+  }
+}
