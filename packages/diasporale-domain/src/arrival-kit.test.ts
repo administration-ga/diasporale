@@ -53,6 +53,9 @@ import {
   type ArrivalKitReviewCause,
   type ArrivalKitStanding,
   type ArrivalKitStatus,
+  ARRIVAL_KIT_QUERY_MAX_LENGTH,
+  arrivalKitSearchText,
+  parseArrivalKitQuery,
 } from "./arrival-kit"
 import { DAY_MS } from "./time"
 
@@ -368,5 +371,19 @@ describe("lire le kit : pays, ville, rubrique", () => {
     expect(matchesArrivalKitListing(lyon, { ...country, zone: { kind: "national" } })).toBe(false)
     expect(matchesArrivalKitListing(lyon, { ...country, zone: { kind: "city", cityKey: "lyon" } })).toBe(true)
     expect(matchesArrivalKitListing({ ...lyon, cityKey: "paris" }, { ...country, zone: { kind: "city", cityKey: "lyon" } })).toBe(false)
+  })
+})
+
+describe("ET-04 — chercher dans le kit : titre et résumé", () => {
+  test("le texte indexé replie le titre et le résumé, jamais le contenu ni la source", () => {
+    expect(arrivalKitSearchText({ title: "Ouvrir un compte bancaire", summary: "Les pièces à réunir, l'attestation d'hébergement." }))
+      .toBe("ouvrir un compte bancaire les pieces a reunir l attestation d hebergement")
+  })
+
+  test("les mots se replient ; trop courts, on ne cherche pas ; trop longs, refusés", () => {
+    expect(parseArrivalKitQuery(undefined)).toEqual({ ok: true, value: null })
+    expect(parseArrivalKitQuery(" B ")).toEqual({ ok: true, value: null })
+    expect(parseArrivalKitQuery("Hébergement")).toEqual({ ok: true, value: "hebergement" })
+    expect(parseArrivalKitQuery("x".repeat(ARRIVAL_KIT_QUERY_MAX_LENGTH + 1))).toEqual({ ok: false, code: "arrival_kit_query_too_long" })
   })
 })

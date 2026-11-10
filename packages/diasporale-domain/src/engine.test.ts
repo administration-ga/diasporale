@@ -148,6 +148,14 @@ describe("engineVerificationSource — qui a vérifié, au vocabulaire du moteur
     expect(engineVerificationSource({ ...LIGHT_ACCOUNT_GROUNDS, idn: idn(2), sponsored: true }, NOW)).toBe("idn")
   })
 
+  it("EA-01 : la décision de l'opérateur seulement quand rien d'autre ne vérifie", () => {
+    const founding = { seniorityWaiver: true }
+    expect(engineVerificationSource({ ...LIGHT_ACCOUNT_GROUNDS, foundingAdmission: founding }, NOW)).toBe("operator")
+    expect(engineVerificationSource({ ...LIGHT_ACCOUNT_GROUNDS, foundingAdmission: founding, idn: idn(3), sponsored: false }, NOW)).toBe("operator")
+    expect(engineVerificationSource({ ...LIGHT_ACCOUNT_GROUNDS, foundingAdmission: founding, idn: idn(2), sponsored: true }, NOW)).toBe("idn")
+    expect(engineVerificationSource({ ...LIGHT_ACCOUNT_GROUNDS, foundingAdmission: founding, consularAttestation: true }, NOW)).toBe("consulat")
+  })
+
   it("rien quand les faits ne vérifient pas", () => {
     expect(engineVerificationSource(LIGHT_ACCOUNT_GROUNDS, NOW)).toBeNull()
     expect(engineVerificationSource({ ...LIGHT_ACCOUNT_GROUNDS, idn: idn(3) }, NOW)).toBeNull()

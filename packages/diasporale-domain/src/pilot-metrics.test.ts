@@ -4,6 +4,7 @@ import {
   canReadPilotMetrics,
   emptyPilotCounts,
   emptyPilotDay,
+  isPilotAidDailyCounter,
   normalizePilotHistogram,
   parsePilotScope,
   parsePilotWindowDays,
@@ -34,8 +35,14 @@ import {
   sumPilotDays,
   tallyPilotDay,
   type PilotDailyCounter,
+  type PilotDayAggregate,
   type PilotDayTotals,
   type PilotRequestFacts,
+  PILOT_AID_DAILY_COUNTERS,
+  pilotAidQuestionTally,
+  pilotAidSignupCounters,
+  pilotKitSnapshot,
+  pilotMentoringCounters,
 } from "./pilot-metrics"
 import { DAY_MS, HOUR_MS } from "./time"
 
@@ -332,5 +339,65 @@ describe("les indicateurs du pilote", () => {
     const json = JSON.stringify(presentPilotIndicators({ days: [tiny], offersActive: 2 }))
     expect(json).not.toContain('"value":1')
     expect(json).not.toContain('"value":2')
+  })
+})
+
+describe("ET-10 — l'utilité de l'entraide", () => {
+  const ASKED = Date.UTC(2026, 9, 1, 8)
+
+  test("une question : posée ; répondue si une réponse publiée existe ; résolue si une réponse est retenue ; retirée, elle ne compte pas", () => {
+    const facts = { status: "open" as const, hasAcceptedAnswer: false, answerCount: 0, createdAt: ASKED, firstAnswerAt: null }
+    expect(pilotAidQuestionTally(facts)).toEqual({ counters: ["aidQuestionsAsked"], aidFirstAnswerBucket: null })
+    expect(pilotAidQuestionTally({ ...facts, answerCount: 2, firstAnswerAt: ASKED + 3 * HOUR_MS })).toEqual({ counters: ["aidQuestionsAsked", "aidQuestionsAnswered"], aidFirstAnswerBucket: 2 })
+    // Résolue puis close : l'aide a abouti, elle le reste.
+    expect(pilotAidQuestionTally({ ...facts, status: "closed", hasAcceptedAnswer: true, answerCount: 1, firstAnswerAt: ASKED + 30 * HOUR_MS }).counters)
+      .toEqual(["aidQuestionsAsked", "aidQuestionsAnswered", "aidQuestionsResolved"])
+    expect(pilotAidQuestionTally({ ...facts, status: "withdrawn", answerCount: 3, firstAnswerAt: ASKED + HOUR_MS })).toEqual({ counters: [], aidFirstAnswerBucket: null })
+  })
+
+  test("une inscription compte confirmée ; une demande de mentorat, et son acceptation ; le kit se relève par son état effectif", () => {
+    expect(pilotAidSignupCounters("confirmed")).toEqual(["aidSignups"])
+    expect(pilotAidSignupCounters("withdrawn")).toEqual([])
+    expect(pilotMentoringCounters(false)).toEqual(["mentoringRequested"])
+    expect(pilotMentoringCounters(true)).toEqual(["mentoringRequested", "mentoringAccepted"])
+    const now = Date.UTC(2026, 9, 18)
+    expect(pilotKitSnapshot({ status: "published", lastVerifiedAt: now - 30 * DAY_MS, outdatedFlags: 0 }, now)).toEqual({ listed: true, toReview: false })
+    expect(pilotKitSnapshot({ status: "published", lastVerifiedAt: now - 400 * DAY_MS, outdatedFlags: 0 }, now)).toEqual({ listed: true, toReview: true })
+    expect(pilotKitSnapshot({ status: "published", lastVerifiedAt: now, outdatedFlags: 3 }, now)).toEqual({ listed: true, toReview: true })
+    expect(pilotKitSnapshot({ status: "needs_review", lastVerifiedAt: now, outdatedFlags: 0 }, now)).toEqual({ listed: true, toReview: true })
+    expect(pilotKitSnapshot({ status: "submitted", lastVerifiedAt: now, outdatedFlags: 0 }, now)).toEqual({ listed: false, toReview: false })
+  })
+
+  test("la première aide aboutie se lit avec sa base ; sous le seuil, rien ne se publie ; une ligne d'avant ET-10 vaut zéro", () => {
+    let day: PilotDayTotals = emptyPilotDay()
+    for (let index = 0; index < 20; index += 1) {
+      const tally = pilotAidQuestionTally({ status: index < 12 ? "resolved" : "open", hasAcceptedAnswer: index < 12, answerCount: index < 16 ? 1 : 0, createdAt: ASKED, firstAnswerAt: index < 16 ? ASKED + (index + 1) * HOUR_MS : null })
+      day = tallyPilotDay(day, tally.counters, null, tally.aidFirstAnswerBucket)
+    }
+    day = tallyPilotDay(day, pilotMentoringCounters(true))
+    // Une ligne écrite avant ET-10 n'a pas ces deux compteurs : ils sont ABSENTS, pas « indéfinis ».
+    const { aidQuestionsAsked: _asked, aidSignups: _signups, ...legacyCounts } = emptyPilotCounts()
+    const legacy: PilotDayAggregate = { counts: legacyCounts, firstResponse: [] }
+    const indicators = presentPilotIndicators({ days: [day, legacy], offersActive: 0, kitListed: 12, kitToReview: 3 })
+    const byId = new Map(indicators.map((indicator) => [indicator.id, indicator]))
+    expect(byId.get("aid_questions_asked")).toEqual({ id: "aid_questions_asked", group: "mutual_aid", kind: "count", value: { kind: "value", value: 20 } })
+    expect(byId.get("aid_questions_resolved")).toEqual({
+      id: "aid_questions_resolved", group: "mutual_aid", kind: "ratio", denominatorId: "aid_questions_asked",
+      value: { kind: "value", value: 12 }, denominator: { kind: "value", value: 20 }, rate: { kind: "value", percent: 60 },
+    })
+    // Seize répondues sur vingt : l'écart (quatre) passe sous le seuil, la part est masquée.
+    expect(byId.get("aid_questions_answered")).toMatchObject({ kind: "ratio", value: { kind: "complement_below_threshold" }, rate: { kind: "withheld" } })
+    expect(byId.get("aid_first_answer_hours")).toEqual({ id: "aid_first_answer_hours", group: "mutual_aid", kind: "duration", sample: { kind: "value", value: 16 }, median: { kind: "at_most", hours: 8 }, p75: { kind: "at_most", hours: 12 } })
+    // Le délai des demandes de service n'a pas bougé : les deux histogrammes sont distincts.
+    expect(byId.get("first_response_hours")).toMatchObject({ sample: { kind: "below_threshold" } })
+    expect(byId.get("mentoring_accepted")).toMatchObject({ kind: "ratio", value: { kind: "below_threshold" }, denominator: { kind: "below_threshold" } })
+    expect(byId.get("aid_signups")).toMatchObject({ kind: "count", value: { kind: "below_threshold", threshold: 5 } })
+    expect(byId.get("kit_resources_listed")).toEqual({ id: "kit_resources_listed", group: "mutual_aid", kind: "snapshot", value: { kind: "value", value: 12 } })
+    expect(byId.get("kit_resources_to_review")).toMatchObject({ kind: "ratio", denominatorId: "kit_resources_listed", value: { kind: "below_threshold" }, denominator: { kind: "value", value: 12 } })
+    expect(PILOT_AID_DAILY_COUNTERS.every((counter) => emptyPilotCounts()[counter] === 0)).toBe(true)
+    // Seuls les compteurs d'entraide peuvent manquer à une ligne d'avant ET-10 : la garde les reconnaît, et eux seuls.
+    expect(PILOT_AID_DAILY_COUNTERS.every((counter) => isPilotAidDailyCounter(counter))).toBe(true)
+    expect(isPilotAidDailyCounter("requestsSent")).toBe(false)
+    expect(isPilotAidDailyCounter("compteur_inconnu")).toBe(false)
   })
 })

@@ -112,6 +112,11 @@ describe("parseReturnPath — un chemin interne connu de la table, rien d'autre"
       routes.pageManage("amicale", "equipe"),
       routes.moderationDesk("recours"),
       routes.mutualAid("FR", "Lyon"),
+      // ET-04 : onglet, vue, thème et mots de l'entraide ; mots et rubrique du kit ; domaine, langue et ville des mentors.
+      routes.mutualAid("FR", "Lyon", { view: "unanswered", theme: "housing", q: "colocation" }),
+      routes.mutualAid("FR", undefined, { tab: "missions", view: "team" }),
+      routes.arrivalKit("FR", "Lyon", { q: "banque", category: "banking" }),
+      routes.mentoring("FR", { domain: "housing", language: "fan", city: "Lyon" }),
       routes.talents("FR"),
     ]
     const keys = new Set(hrefs.flatMap((href) => [...new URLSearchParams(href.split("?")[1] ?? "").keys()]))

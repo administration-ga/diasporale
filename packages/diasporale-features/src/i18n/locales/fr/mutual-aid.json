@@ -195,7 +195,7 @@
       "cancelledWithReason": "Cette mission est annulée. Motif : {{reason}}",
       "cancelSheet": {
         "title": "Annuler cette mission ?",
-        "description": "L'annulation s'affiche sur la fiche, avec son motif, et dans « Mes inscriptions » de chaque bénévole ; aucun avis ne leur est envoyé. Ce geste est définitif.",
+        "description": "L'annulation s'affiche sur la fiche, avec son motif, et dans « Mes inscriptions ». Chaque bénévole inscrit reçoit un avis dans sa cloche, sans le motif. Ce geste est définitif.",
         "reason": "Motif (facultatif)",
         "reasonHint": "{{max}} caractères au plus, sans coordonnée.",
         "keep": "Garder la mission",
@@ -236,13 +236,13 @@
         "body": "Votre place sera libérée. Vous pourrez vous réinscrire tant qu'une place reste libre.",
         "confirm": "Me retirer"
       },
-      "privacy": "Aucune coordonnée n'est partagée : l'équipe ne peut vous écrire que si vous êtes en relation. Un changement ou une annulation se lit sur cette fiche et dans « Mes inscriptions » ; aucun avis ne vous est envoyé."
+      "privacy": "Aucune coordonnée n'est partagée : l'équipe ne peut vous écrire que si vous êtes en relation. Si la mission est annulée ou si son horaire change, un avis s'affiche dans votre cloche ; le détail se lit sur cette fiche et dans « Mes inscriptions »."
     },
     "team": {
       "title": "Gérer la mission",
       "edit": "Modifier",
       "editTitle": "Modifier la mission",
-      "editDescription": "Les inscrits gardent leur place ; une mission replanifiée doit commencer dans le futur. Les changements s'affichent sur la fiche ; aucun avis n'est envoyé aux inscrits.",
+      "editDescription": "Les inscrits gardent leur place ; une mission replanifiée doit commencer dans le futur. Un changement d'horaire est annoncé à chaque bénévole inscrit par un avis dans sa cloche ; les autres changements s'affichent sur la fiche.",
       "close": "Clore les inscriptions",
       "closeConfirm": {
         "title": "Clore les inscriptions ?",

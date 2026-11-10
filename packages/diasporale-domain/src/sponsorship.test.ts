@@ -134,3 +134,33 @@ describe("sponsorStanding — ce que voit le parrain avant tout geste", () => {
     })
   })
 })
+
+describe("dispense d'ancienneté des fondateurs (EA-01, décisions 1 et 3)", () => {
+  const FOUNDER: SponsorFacts = { status: "verifiee", verifiedSince: NOW - 1000, seniorityWaived: true, sponsorshipsInWindow: 0 }
+
+  test("un fondateur dispensé parraine dès sa vérification ; l'ancienneté reste exigée des autres", () => {
+    expect(checkSponsorship(FOUNDER, PENDING_TARGET, NOW)).toEqual({ ok: true, value: true })
+    expect(checkSponsorship({ ...FOUNDER, seniorityWaived: false }, PENDING_TARGET, NOW)).toEqual({ ok: false, code: "sponsor_too_recent" })
+    expect(checkSponsorship({ status: "verifiee", verifiedSince: NOW - 1000, sponsorshipsInWindow: 0 }, PENDING_TARGET, NOW)).toEqual({
+      ok: false,
+      code: "sponsor_too_recent",
+    })
+  })
+
+  test("la dispense ne touche ni au quota, ni au statut du parrain, ni aux règles de la cible", () => {
+    expect(checkSponsorship({ ...FOUNDER, sponsorshipsInWindow: SPONSORSHIPS_PER_WINDOW }, PENDING_TARGET, NOW)).toEqual({ ok: false, code: "sponsor_quota_reached" })
+    expect(checkSponsorship({ status: "declaree", seniorityWaived: true, sponsorshipsInWindow: 0 }, PENDING_TARGET, NOW)).toEqual({ ok: false, code: "sponsor_not_verified" })
+    expect(checkSponsorship(FOUNDER, { ...PENDING_TARGET, isSelf: true }, NOW)).toEqual({ ok: false, code: "self_sponsorship" })
+    expect(checkSponsorship(FOUNDER, { ...PENDING_TARGET, status: "verifiee" }, NOW)).toEqual({ ok: false, code: "target_not_eligible" })
+  })
+
+  test("l'écran du parrain dispensé : éligible, l'ancienneté atteinte dès la vérification", () => {
+    expect(sponsorStanding(FOUNDER, NOW)).toEqual({
+      eligible: true,
+      refusal: null,
+      remaining: SPONSORSHIPS_PER_WINDOW,
+      windowDays: SPONSORSHIP_WINDOW_DAYS,
+      seniorityReachedAt: NOW - 1000,
+    })
+  })
+})

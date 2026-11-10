@@ -57,6 +57,11 @@ import {
   type AidMissionInput,
   type AidQuestionInput,
   type AidSignupFacts,
+  AID_QUERY_MAX_LENGTH,
+  aidQuestionSearchText,
+  aidSearchWordsMatch,
+  matchesAidQuestionSearch,
+  parseAidQuestionSearch,
 } from "./mutual-aid"
 import { DAY_MS, HOUR_MS } from "./time"
 
@@ -439,5 +444,37 @@ describe("entraide — inscriptions bénévoles", () => {
     expect(checkAidSignupWithdrawal({ ...full, status: "open", signupCount: 0 }, NOW)).toEqual({ ok: true, value: { status: "open", signupCount: 0 } })
     expect(checkAidSignupWithdrawal({ ...full, signedUp: false }, NOW)).toEqual({ ok: false, code: "aid_signup_missing" })
     expect(checkAidSignupWithdrawal(full, full.startsAt)).toEqual({ ok: false, code: "aid_mission_started" })
+  })
+})
+
+describe("ET-04 — retrouver une question : thème, mots, sans réponse", () => {
+  test("le texte indexé replie titre et détail en mots, sans accents ni ponctuation", () => {
+    expect(aidQuestionSearchText({ title: "Démarches d'arrivée à Lyon", detail: "Titre de séjour ?" })).toBe("demarches d arrivee a lyon titre de sejour")
+    expect(aidQuestionSearchText({ title: "Logement", detail: "" })).toBe("logement")
+  })
+
+  test("la recherche se replie, garde un thème fermé et refuse un texte trop long", () => {
+    expect(parseAidQuestionSearch({})).toEqual({ ok: true, value: { query: null, theme: null, unanswered: false } })
+    expect(parseAidQuestionSearch({ query: " Démarches ", theme: "procedures", unanswered: true })).toEqual({ ok: true, value: { query: "demarches", theme: "procedures", unanswered: true } })
+    // Un seul caractère : on ne cherche pas encore (la liste reste celle des filtres).
+    expect(parseAidQuestionSearch({ query: "a" })).toEqual({ ok: true, value: { query: null, theme: null, unanswered: false } })
+    expect(parseAidQuestionSearch({ theme: "" })).toEqual({ ok: true, value: { query: null, theme: null, unanswered: false } })
+    expect(parseAidQuestionSearch({ theme: "sports" })).toEqual({ ok: false, code: "aid_theme_invalid" })
+    expect(parseAidQuestionSearch({ query: "x".repeat(AID_QUERY_MAX_LENGTH + 1) })).toEqual({ ok: false, code: "aid_query_too_long" })
+  })
+
+  test("thème et « sans réponse » restreignent ; aucun filtre n'ouvre", () => {
+    const question = { theme: "housing" as const, answerCount: 0 }
+    expect(matchesAidQuestionSearch(question, { theme: null, unanswered: false })).toBe(true)
+    expect(matchesAidQuestionSearch(question, { theme: "housing", unanswered: true })).toBe(true)
+    expect(matchesAidQuestionSearch(question, { theme: "health", unanswered: false })).toBe(false)
+    expect(matchesAidQuestionSearch({ ...question, answerCount: 2 }, { theme: null, unanswered: true })).toBe(false)
+  })
+
+  test("chaque mot cherché commence un mot du texte (règle de la démonstration)", () => {
+    expect(aidSearchWordsMatch("demarches d arrivee a lyon", null)).toBe(true)
+    expect(aidSearchWordsMatch("demarches d arrivee a lyon", "arriv lyon")).toBe(true)
+    expect(aidSearchWordsMatch("demarches d arrivee a lyon", "rivee")).toBe(false)
+    expect(aidSearchWordsMatch("demarches d arrivee a lyon", "lyon paris")).toBe(false)
   })
 })

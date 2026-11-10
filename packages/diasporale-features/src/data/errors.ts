@@ -105,6 +105,8 @@ export const FORM_ERROR_CODES = [
   "code_format",
   "attestation_consent_required",
   "clipboard_unavailable",
+  // EV-03 : annuler un évènement exige un motif de la liste fermée.
+  "association_event_cancel_reason_required",
 ] as const
 
 export const ACTION_ERROR_CODES = [

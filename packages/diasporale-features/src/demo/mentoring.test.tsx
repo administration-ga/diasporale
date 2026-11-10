@@ -261,3 +261,28 @@ describe("démonstration — mentorat", () => {
     expect(renderHook(() => first.capability.useMenteeRequests({ cursor: "curseur illisible" })).result.current).toEqual({ status: "error", code: "unknown" })
   })
 })
+
+describe("démonstration — retrouver un mentor : langue et ville (ET-04)", () => {
+  it("la langue restreint ; la ville se juge sur ce que le lecteur voit ; une langue inconnue est refusée", () => {
+    const { capability } = setup()
+    const found = (args: { language?: "fr" | "en" | null; city?: string }) =>
+      ready(renderHook(() => capability.useSearch({ country: "FR", domain: null, ...args, cursor: null })).result.current).items.map((card) => [card.mentorId, card.city])
+    expect(found({ language: "fr" })).toEqual(found({}))
+    expect(found({ language: "en" })).toEqual([])
+    const [card] = found({})
+    // Mireille montre-t-elle sa ville à ce lecteur ? Le filtre ne trouve que ce qui se voit.
+    expect(found({ city: " PARIS " })).toEqual(card?.[1] === "Paris" ? [[MIREILLE, "Paris"]] : [])
+    expect(found({ city: "Lyon" })).toEqual([])
+    expect(renderHook(() => capability.useSearch({ country: "FR", domain: null, language: "klingon" as never, cursor: null })).result.current).toEqual({ status: "error", code: "mentor_language_invalid" })
+  })
+
+  it("une ville tenue cachée ne se devine pas par le filtre", () => {
+    const seed = createDemoSeed(NOW)
+    const mireille = seed.memberships["p-mireille"]!
+    const hidden = setup({ overrides: { memberships: { ...seed.memberships, "p-mireille": { ...mireille, facet: { ...mireille.facet, visibility: { ...mireille.facet.visibility, city: "only_me" } } } } } })
+    const shown = setup({ overrides: { memberships: { ...seed.memberships, "p-mireille": { ...mireille, facet: { ...mireille.facet, visibility: { ...mireille.facet.visibility, city: "network" } } } } } })
+    const byCity = (capability: MentoringCapability) => ready(renderHook(() => capability.useSearch({ country: "FR", domain: null, city: "Paris", cursor: null })).result.current).items.map((card) => card.mentorId)
+    expect(byCity(hidden.capability)).toEqual([])
+    expect(byCity(shown.capability)).toEqual([MIREILLE])
+  })
+})

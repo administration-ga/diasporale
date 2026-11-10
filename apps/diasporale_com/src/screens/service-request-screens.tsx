@@ -33,6 +33,7 @@ import { Gate } from "@/components/gate"
 import { ServiceProposalForm } from "@/components/service-proposal-form"
 import { ServiceRequestReview } from "@/components/service-reviews-section"
 import { ConfirmSheet, ReasonSheet } from "@/components/service-request-sheets"
+import { ServiceRescheduleSection } from "@/components/service-reschedule"
 import {
   browserTimeZone,
   formatServiceMoney,
@@ -235,6 +236,9 @@ function RequestView(props: { readonly capability: ServiceRequestsCapability; re
         </section>
       ) : null}
 
+      {/* SV-03 : déplacer le rendez-vous confirmé, sans l'annuler. */}
+      {confirmed ? <ServiceRescheduleSection capability={capability} detail={detail} viewerTimeZone={viewerTimeZone} now={now} /> : null}
+
       {current ? (
         <section aria-labelledby="proposition" className="flex min-w-0 flex-col gap-2">
           <h2 id="proposition" className="text-lg font-semibold">{t("serviceRequests.detail.proposal", { version: current.version })}</h2>
@@ -292,6 +296,9 @@ function RequestView(props: { readonly capability: ServiceRequestsCapability; re
               expectedVersion={proposingFrom}
               windows={detail.windows}
               viewerTimeZone={viewerTimeZone}
+              prefill={detail.proposalPrefill ?? null}
+              offerTitle={detail.offerTitle}
+              previous={detail.proposals[0] ?? null}
               onDone={() => setProposingFrom(null)}
               onCancel={() => setProposingFrom(null)}
             />
