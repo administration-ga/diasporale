@@ -34,6 +34,7 @@ import {
   sumPilotDays,
   tallyPilotDay,
   type PilotDailyCounter,
+  type PilotDayAggregate,
   type PilotDayTotals,
   type PilotRequestFacts,
   PILOT_AID_DAILY_COUNTERS,
@@ -373,7 +374,9 @@ describe("ET-10 — l'utilité de l'entraide", () => {
       day = tallyPilotDay(day, tally.counters, null, tally.aidFirstAnswerBucket)
     }
     day = tallyPilotDay(day, pilotMentoringCounters(true))
-    const legacy = { counts: { ...emptyPilotCounts(), aidQuestionsAsked: undefined, aidSignups: undefined }, firstResponse: [] }
+    // Une ligne écrite avant ET-10 n'a pas ces deux compteurs : ils sont ABSENTS, pas « indéfinis ».
+    const { aidQuestionsAsked: _asked, aidSignups: _signups, ...legacyCounts } = emptyPilotCounts()
+    const legacy: PilotDayAggregate = { counts: legacyCounts, firstResponse: [] }
     const indicators = presentPilotIndicators({ days: [day, legacy], offersActive: 0, kitListed: 12, kitToReview: 3 })
     const byId = new Map(indicators.map((indicator) => [indicator.id, indicator]))
     expect(byId.get("aid_questions_asked")).toEqual({ id: "aid_questions_asked", group: "mutual_aid", kind: "count", value: { kind: "value", value: 20 } })
