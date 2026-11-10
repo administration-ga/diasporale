@@ -13,6 +13,7 @@ import {
   countsInSponsorshipWindow,
   deriveMembershipStatus,
   DIRECTORY_PAGE_SIZE_MAX,
+  foundingSeniorityWaived,
   isCountryOpen,
   isListedInDirectoryFor,
   isReadableByOthers,
@@ -706,6 +707,8 @@ export function sponsorFacts(state: DemoState, sponsorId: string, now: number) {
   return {
     status,
     ...(status === "verifiee" && membership?.verifiedSince != null ? { verifiedSince: membership.verifiedSince } : {}),
+    // EA-01 : la dispense d'ancienneté suit l'admission fondatrice en vigueur, comme dans le moteur.
+    ...(membership && foundingSeniorityWaived(membership.grounds) ? { seniorityWaived: true } : {}),
     sponsorshipsInWindow: state.sponsorships.filter(
       (item) => item.sponsorId === sponsorId && countsInSponsorshipWindow(item.createdAt, now),
     ).length,

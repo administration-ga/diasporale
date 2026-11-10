@@ -33,6 +33,7 @@ describe("comptes de démonstration de DIASPORALE", () => {
           idn: spec.grounds.idn,
           sponsored: spec.grounds.sponsored,
           consularAttestation: spec.grounds.consularAttestation,
+          foundingAdmission: spec.grounds.foundingAdmission,
           // Une suspension de la racine vaut partout : dans DIASPORALE, elle se lit comme une suspension.
           suspension: spec.grounds.suspended || spec.grounds.suspendedAtRoot ? { until: null, readAccess: "read_only" } : null,
           leftAt: null,
@@ -104,6 +105,13 @@ describe("comptes de démonstration de DIASPORALE", () => {
     expect(DIASPORALE_DEMO_ACTORS.filter((actor) => DIASPORALE_DEMO_ACTOR_SPECS[actor].grounds.sponsored)).toEqual(["parraine"])
   })
 
+  test("EA-01 : un seul acteur fondateur, vérifié par la seule décision du réseau, dispensé d'ancienneté sans antidate", () => {
+    expect(DIASPORALE_DEMO_ACTORS.filter((actor) => DIASPORALE_DEMO_ACTOR_SPECS[actor].grounds.foundingAdmission !== null)).toEqual(["fondateur"])
+    const founder = DIASPORALE_DEMO_ACTOR_SPECS.fondateur
+    expect(founder.grounds).toEqual({ idn: null, sponsored: false, consularAttestation: false, foundingAdmission: { seniorityWaiver: true }, suspended: false, suspendedAtRoot: false })
+    expect([founder.group, founder.expectedStatus, founder.canSponsor, founder.role]).toEqual(["members", "verifiee", false, "member"])
+  })
+
   test("accès restreints : un bloqueur qui agit dans le réseau, une suspension de la racine, un extérieur sans rien dans DIASPORALE", () => {
     for (const actor of DIASPORALE_DEMO_ACTORS) {
       const spec = DIASPORALE_DEMO_ACTOR_SPECS[actor]
@@ -122,7 +130,7 @@ describe("comptes de démonstration de DIASPORALE", () => {
       if (spec.outsider) {
         // Rien dans DIASPORALE : ni fait, ni rôle, ni équipe, ni page, ni geste, ni blocage.
         expect(spec.profile, actor).not.toBeNull()
-        expect(spec.grounds, actor).toEqual({ idn: null, sponsored: false, consularAttestation: false, suspended: false, suspendedAtRoot: false })
+        expect(spec.grounds, actor).toEqual({ idn: null, sponsored: false, consularAttestation: false, foundingAdmission: null, suspended: false, suspendedAtRoot: false })
         expect([spec.role, spec.moderationTeam, spec.page, spec.gestures, spec.canSponsor, spec.blockedBy], actor).toEqual(["member", false, null, [], false, null])
       }
     }

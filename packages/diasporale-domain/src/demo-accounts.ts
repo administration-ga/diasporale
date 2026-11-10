@@ -28,6 +28,7 @@ export const DIASPORALE_DEMO_ACTORS = [
   "declare",
   "parraine",
   "verifie",
+  "fondateur",
   "belgique",
   "canada",
   "association",
@@ -69,6 +70,11 @@ export interface DiasporaleDemoGrounds {
   readonly sponsored: boolean
   /** Attestation consulaire fictive (lien d'identité, jamais de donnée consulaire). */
   readonly consularAttestation: boolean
+  /**
+   * Admission fondatrice fictive, par décision tracée du réseau (EA-01), et sa
+   * dispense d'ancienneté pour parrainer ; `null` sans décision.
+   */
+  readonly foundingAdmission: { readonly seniorityWaiver: boolean } | null
   /** Sanction fictive en cours dans DIASPORALE seulement (adhésion suspendue). */
   readonly suspended: boolean
   /**
@@ -137,7 +143,7 @@ export interface DiasporaleDemoActorSpec {
   readonly outsider: boolean
 }
 
-const NONE: DiasporaleDemoGrounds = { idn: null, sponsored: false, consularAttestation: false, suspended: false, suspendedAtRoot: false }
+const NONE: DiasporaleDemoGrounds = { idn: null, sponsored: false, consularAttestation: false, foundingAdmission: null, suspended: false, suspendedAtRoot: false }
 const ATTESTED: DiasporaleDemoGrounds = { ...NONE, consularAttestation: true }
 const IDN_2: DiasporaleDemoGrounds = { ...NONE, idn: { loa: 2, gaboneseNationality: true } }
 
@@ -168,6 +174,12 @@ export const DIASPORALE_DEMO_ACTOR_SPECS: Readonly<Record<DiasporaleDemoActor, D
     actor: "verifie", group: "members", country: "FR",
     profile: { handle: "demo.verifie", givenNames: "Patrice", familyName: "MBOUMBA", headline: "Membre vérifié, parrain (démonstration)" },
     grounds: ATTESTED, expectedStatus: "verifiee", canSponsor: true,
+  }),
+  // EA-01 : vérifiée par décision du réseau, sans attestation ; la dispense lui permet de parrainer sans attendre 30 jours.
+  fondateur: spec({
+    actor: "fondateur", group: "members", country: "FR",
+    profile: { handle: "demo.fondateur", givenNames: "Béatrice", familyName: "MOUSSAVOU", headline: "Membre fondatrice du réseau (démonstration)" },
+    grounds: { ...NONE, foundingAdmission: { seniorityWaiver: true } }, expectedStatus: "verifiee",
   }),
   belgique: spec({
     actor: "belgique", group: "members", country: "BE",

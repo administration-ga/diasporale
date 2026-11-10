@@ -39,6 +39,10 @@
         "title": "Membre vérifié",
         "description": "Inscription consulaire attestée ; il peut parrainer."
       },
+      "fondateur": {
+        "title": "Membre fondateur",
+        "description": "Vérifiée par une décision tracée du réseau, sans attestation ; elle parraine sans attendre 30 jours."
+      },
       "belgique": {
         "title": "Membre en Belgique",
         "description": "Vérifiée à Bruxelles, hub Belgique."

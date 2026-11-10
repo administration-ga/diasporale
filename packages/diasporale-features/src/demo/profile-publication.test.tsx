@@ -138,7 +138,7 @@ describe("Profil de démonstration — publication et découvrabilité distincte
     const seed = createDemoSeed(NOW)
     const membership = seed.memberships[PERSON]!
     const { store, publication } = setup({ memberships: { ...seed.memberships, [PERSON]: {
-      ...membership, grounds: { idn: null, sponsored: false, consularAttestation: false, suspension: null, leftAt: null },
+      ...membership, grounds: { idn: null, sponsored: false, consularAttestation: false, foundingAdmission: null, suspension: null, leftAt: null },
     } } })
     expect(membershipView(store.getState(), PERSON, NOW)?.canPublish).toBe(false)
     expect(await publication.setPrivacy(PERSON, true)).toEqual({ ok: true, value: null })
