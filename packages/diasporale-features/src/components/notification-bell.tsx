@@ -6,6 +6,8 @@ import {
   BriefcaseBusinessIcon,
   CalendarIcon,
   CalendarCheckIcon,
+  CalendarClockIcon,
+  CalendarOffIcon,
   CalendarXIcon,
   CheckIcon,
   CircleCheckIcon,
@@ -93,6 +95,9 @@ const KIND_ICONS: Readonly<Record<NotificationKind, LucideIcon>> = {
   aid_answer_received: MessagesSquareIcon,
   aid_answer_retained: CircleCheckIcon,
   aid_mission_signup: HandHeartIcon,
+  // ET-01 : au bénévole inscrit, la mission annulée ou déplacée.
+  aid_mission_cancelled: CalendarOffIcon,
+  aid_mission_rescheduled: CalendarClockIcon,
   mentoring_request_received: GraduationCapIcon,
   mentoring_request_accepted: UserRoundCheckIcon,
   mentoring_request_declined: UserRoundXIcon,

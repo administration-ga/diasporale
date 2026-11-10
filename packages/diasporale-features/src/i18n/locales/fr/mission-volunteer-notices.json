@@ -1,0 +1,8 @@
+{
+  "bell": {
+    "system": {
+      "aid_mission_cancelled": "Une mission à laquelle vous êtes inscrit a été annulée.",
+      "aid_mission_rescheduled": "L’horaire d’une mission à laquelle vous êtes inscrit a changé."
+    }
+  }
+}

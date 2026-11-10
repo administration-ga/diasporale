@@ -195,7 +195,7 @@
       "cancelledWithReason": "This mission is cancelled. Reason: {{reason}}",
       "cancelSheet": {
         "title": "Cancel this mission?",
-        "description": "The cancellation shows on the mission page, with its reason, and in each volunteer's “My sign-ups”; no notification is sent to them. This cannot be undone.",
+        "description": "The cancellation shows on the mission page, with its reason, and in “My sign-ups”. Each volunteer signed up gets a notice in their notification bell, without the reason. This cannot be undone.",
         "reason": "Reason (optional)",
         "reasonHint": "{{max}} characters at most, no contact details.",
         "keep": "Keep the mission",
@@ -236,13 +236,13 @@
         "body": "Your place will be freed. You can sign up again while a place is left.",
         "confirm": "Withdraw"
       },
-      "privacy": "No contact details are shared: the team can only write to you if you are connected. A change or a cancellation shows on this page and in “My sign-ups”; no notification is sent to you."
+      "privacy": "No contact details are shared: the team can only write to you if you are connected. If the mission is cancelled or its time changes, a notice shows in your notification bell; the details are on this page and in “My sign-ups”."
     },
     "team": {
       "title": "Manage the mission",
       "edit": "Edit",
       "editTitle": "Edit the mission",
-      "editDescription": "Volunteers keep their place; a rescheduled mission must start in the future. Changes show on the mission page; no notification is sent to volunteers.",
+      "editDescription": "Volunteers keep their place; a rescheduled mission must start in the future. A time change is announced to each volunteer signed up with a notice in their notification bell; other changes show on the mission page.",
       "close": "Close sign-ups",
       "closeConfirm": {
         "title": "Close sign-ups?",

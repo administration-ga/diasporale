@@ -209,6 +209,8 @@ export function notificationsView(state: DemoState, viewerId: string): Notificat
         // Une demande tranchée : refusée par moi, acceptée (le lien existe), sinon disparue (retirée, défaite).
         inviteOutcome: !isRequest || request ? null : item.inviteDeclined ? "declined" : item.actorId && isConnected(state, viewerId, item.actorId) ? "accepted" : "gone",
         postId: item.postId,
+        // ET-01 : l'objet qu'ouvre un avis du système écrit par une démonstration voisine (une mission).
+        ...(item.communityNotice ? { communityNotice: item.communityNotice } : {}),
       }
     })
 }

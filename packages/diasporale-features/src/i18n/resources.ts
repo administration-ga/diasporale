@@ -75,6 +75,7 @@ import enCommunityRules from "./locales/en/community-rules.json"
 import enReportEmergency from "./locales/en/report-emergency.json"
 import enMessagesUnread from "./locales/en/messages-unread.json"
 import enIdnEntry from "./locales/en/idn-entry.json"
+import enMissionVolunteerNotices from "./locales/en/mission-volunteer-notices.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -139,6 +140,7 @@ import frCommunityRules from "./locales/fr/community-rules.json"
 import frReportEmergency from "./locales/fr/report-emergency.json"
 import frMessagesUnread from "./locales/fr/messages-unread.json"
 import frIdnEntry from "./locales/fr/idn-entry.json"
+import frMissionVolunteerNotices from "./locales/fr/mission-volunteer-notices.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -211,6 +213,7 @@ export const LOCALE_PARTS = {
     "report-emergency": frReportEmergency,
     "messages-unread": frMessagesUnread,
     "idn-entry": frIdnEntry,
+    "mission-volunteer-notices": frMissionVolunteerNotices,
   },
   en: {
     diasporale: enDiasporale,
@@ -277,6 +280,7 @@ export const LOCALE_PARTS = {
     "report-emergency": enReportEmergency,
     "messages-unread": enMessagesUnread,
     "idn-entry": enIdnEntry,
+    "mission-volunteer-notices": enMissionVolunteerNotices,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

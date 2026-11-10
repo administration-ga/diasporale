@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 
 import type { AidItemView, MutualAidCapability } from "../data/mutual-aid-port"
 import { createDemoMutualAid, DEMO_MUTUAL_AID_STORAGE_KEY, demoMutualAidSeed } from "./mutual-aid"
+import { notificationsView } from "./selectors"
 import { createDemoSeed, type DemoState } from "./state"
 import { DemoStore } from "./store"
 
@@ -219,6 +220,37 @@ describe("démonstration — missions et inscriptions", () => {
     expect(await aid.cancelMission({ missionId: "aid-m-20", expectedVersion: 3, reason: " Salle indisponible " })).toEqual({ ok: true, value: null })
     expect(missionOf(aid, "aid-m-20")).toMatchObject({ status: "cancelled", cancelReason: "Salle indisponible" })
     expect(await aid.closeMission({ missionId: "aid-m-20", expectedVersion: 4 })).toEqual({ ok: false, code: "aid_mission_cancelled" })
+  })
+
+  it("ET-01 : un horaire changé puis l'annulation avisent chaque bénévole inscrit dans la cloche, sans motif ; jamais l'équipe ni un inscrit retiré", async () => {
+    const { store, aid } = setup({ viewer: "p-steeve" })
+    await aid.createMission({ ...MISSION, pageId: LYON, places: 3 })
+    for (const who of ["p-prisca", "p-nadia", "p-mireille"]) {
+      await store.switchTo(who)
+      expect(await aid.signUp({ missionId: "aid-m-20", shareNameWithTeam: true })).toEqual({ ok: true, value: null })
+    }
+    expect(await aid.withdrawSignup("aid-m-20")).toEqual({ ok: true, value: null })
+    await store.switchTo("p-steeve")
+    const notices = (kind: string) => store.getState().notifications.filter((row) => row.kind === kind)
+
+    // Des places en plus : aucun avis.
+    expect(await aid.updateMission({ ...MISSION, places: 5, missionId: "aid-m-20", expectedVersion: 1 })).toEqual({ ok: true, value: null })
+    expect(notices("aid_mission_rescheduled")).toEqual([])
+    // Un horaire changé : un avis par inscrite confirmée.
+    expect(await aid.updateMission({ ...MISSION, places: 5, startsAt: MISSION.startsAt + DAY_MS, missionId: "aid-m-20", expectedVersion: 2 })).toEqual({ ok: true, value: null })
+    expect(notices("aid_mission_rescheduled").map((row) => row.recipientId).sort()).toEqual(["p-nadia", "p-prisca"])
+
+    expect(await aid.cancelMission({ missionId: "aid-m-20", expectedVersion: 3, reason: "Salle indisponible" })).toEqual({ ok: true, value: null })
+    const cancelled = notices("aid_mission_cancelled")
+    expect(cancelled.map((row) => row.recipientId).sort()).toEqual(["p-nadia", "p-prisca"])
+    for (const row of cancelled) expect(row).toMatchObject({ actorId: null, postId: null, communityNotice: { audience: "volunteer", opens: "aidMission", objectId: "aid-m-20", pageHandle: expect.any(String) } })
+    expect(JSON.stringify(cancelled)).not.toContain("Salle indisponible")
+    expect(JSON.stringify(cancelled)).not.toContain(MISSION.title)
+
+    // La cloche de l'inscrite nomme l'avis et l'objet qu'il ouvre.
+    expect(notificationsView(store.getState(), "p-prisca").filter((row) => row.kind === "aid_mission_cancelled")).toEqual([
+      expect.objectContaining({ actor: null, read: false, communityNotice: { audience: "volunteer", opens: "aidMission", objectId: "aid-m-20", pageHandle: expect.any(String) } }),
+    ])
   })
 
   it("gardes : sans session, en attente, mission commencée", async () => {

@@ -496,6 +496,9 @@ export const COMMUNITY_NOTIFICATION_KINDS = [
   "aid_answer_received",
   "aid_answer_retained",
   "aid_mission_signup",
+  // ET-01 : au bénévole inscrit, la mission annulée ou son horaire changé (ni motif ni horaire dans l'avis).
+  "aid_mission_cancelled",
+  "aid_mission_rescheduled",
   "mentoring_request_received",
   "mentoring_request_accepted",
   "mentoring_request_declined",
@@ -507,8 +510,11 @@ export const COMMUNITY_NOTIFICATION_KINDS = [
 ] as const
 export type CommunityNotificationKind = (typeof COMMUNITY_NOTIFICATION_KINDS)[number]
 
-/** À qui parle un avis communautaire : l'auteur d'un contenu, l'équipe d'une page, le mentor, le mentoré, la personne qui candidate. */
-export const COMMUNITY_NOTICE_AUDIENCES = ["author", "team", "mentor", "mentee", "candidate"] as const
+/**
+ * À qui parle un avis communautaire : l'auteur d'un contenu, l'équipe d'une page, le mentor, le
+ * mentoré, la personne qui candidate, le bénévole inscrit à une mission (ET-01).
+ */
+export const COMMUNITY_NOTICE_AUDIENCES = ["author", "team", "mentor", "mentee", "candidate", "volunteer"] as const
 export type CommunityNoticeAudience = (typeof COMMUNITY_NOTICE_AUDIENCES)[number]
 
 /** L'objet qu'un avis communautaire ouvre, par une route de l'application. */

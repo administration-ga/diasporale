@@ -11,10 +11,11 @@
  *
  * Aucune coordonnée n'est montrée ni demandée. ET-01 : l'écran ne promet que ce
  * qui existe — la messagerie n'ouvre un fil qu'entre personnes en relation
- * (aucun canal entre l'équipe et un bénévole avant ET-02), et ni l'annulation ni
- * la modification n'envoient d'avis aux inscrits (genres à déclarer au moteur) :
- * elles se lisent sur la fiche et dans « Mes inscriptions ». L'état de
- * modération (G9) se dit à la seule équipe vivante, par l'avis de la fiche.
+ * (aucun canal entre l'équipe et un bénévole avant ET-02) ; l'annulation et le
+ * changement d'horaire écrivent un avis neutre dans la cloche de chaque bénévole
+ * inscrit (genres `aid_mission_cancelled` et `aid_mission_rescheduled`), le
+ * détail et le motif se lisant sur la fiche et dans « Mes inscriptions ». L'état
+ * de modération (G9) se dit à la seule équipe vivante, par l'avis de la fiche.
  */
 import { AID_REASON_MAX_LENGTH, parseAidReason } from "@diasporale/domain"
 import { Button, Card, Checkbox, EmptyState, Field, Label, ModerationBanner, Sheet, SheetClose, SheetContent, Textarea, TrustBadge, formatDate } from "@diasporale/features"
@@ -42,7 +43,7 @@ const cancelSchema = z.object({ reason: z.string() }).superRefine((values, conte
 })
 type CancelValues = z.infer<typeof cancelSchema>
 
-/** Annuler la mission : un motif facultatif, lisible sur la fiche ; terminal, sans avis aux inscrits (ET-01). */
+/** Annuler la mission : un motif facultatif, lisible sur la fiche ; terminal ; chaque inscrit en est avisé, sans le motif (ET-01). */
 function CancelSheet(props: { readonly capability: MutualAidCapability; readonly mission: AidMissionDetailView; readonly onClose: () => void; readonly onDone: () => void }) {
   const { t } = useDiasporaleT()
   const id = useId()
