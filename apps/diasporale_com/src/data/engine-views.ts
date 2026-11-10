@@ -428,6 +428,11 @@ type ConnectionWith = FunctionReturnType<typeof api.modules.graph.connections.co
  * Ma relation avec une personne, depuis le graphe du moteur. Une demande refusée
  * se lit « aucune relation » : le moteur permet de redemander. Un blocage posé
  * par l'autre est déjà rendu « none » par le moteur.
+ *
+ * Bloquer retire au moteur les abonnements de la paire, dans les deux sens
+ * (PF-01) : sous mon blocage, l'écran ne montre jamais « abonné », même le temps
+ * que `isFollowing` soit relu. Débloquer ne rétablit rien : après le déblocage,
+ * la vue est celle que rend le moteur, sans relation ni abonnement (RP-03).
  */
 export function toRelationView(connection: ConnectionWith, following: boolean): RelationView {
   switch (connection.state) {

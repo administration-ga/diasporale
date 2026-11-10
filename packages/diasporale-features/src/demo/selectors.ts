@@ -426,6 +426,17 @@ function blockedBetween(state: DemoState, a: string, b: string): boolean {
 }
 
 /**
+ * RP-03 (décision 5 du plan 05), la règle de la tranche (`isPageClosedByBlocks`) :
+ * une page est FERMÉE à une personne quand elle a au moins un signataire vivant
+ * et que TOUS sont en blocage avec elle, dans un sens ou dans l'autre. Un seul
+ * signataire ne ferme pas une page collective ; la personne elle-même
+ * signataire n'est jamais fermée. La page fermée répond comme une page retirée.
+ */
+export function isPageClosedByBlocks(state: DemoState, liveSignatoryIds: readonly string[], personId: string): boolean {
+  return liveSignatoryIds.length > 0 && liveSignatoryIds.every((signatoryId) => signatoryId !== personId && blockedBetween(state, signatoryId, personId))
+}
+
+/**
  * Ce que le lecteur a écarté, comme le moteur l'écarte : une publication
  * masquée (ou signalée) par lui, un blocage dans la paire, et — dans les fils
  * seulement — un auteur en sourdine.
