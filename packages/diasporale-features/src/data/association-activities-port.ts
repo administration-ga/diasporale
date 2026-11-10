@@ -1,7 +1,7 @@
 /** DG-010 : groupe privé et événements d'une association, participations volontaires. */
 import type { ActionResult } from "./port"
 import type { Loadable } from "./types"
-import type { AssociationEventReminderState } from "@diasporale/domain"
+import type { AssociationEventReminderState, CountryCode } from "@diasporale/domain"
 import type { AssociationEventAttendanceCapability } from "./association-attendance-port"
 import type { AssociationEventGalleryCapability } from "./association-event-gallery-port"
 import type { AssociationEventCalendarCapability } from "./association-event-calendar-port"
@@ -107,11 +107,63 @@ export interface AssociationEventView {
   readonly reminderState: AssociationEventReminderState
 }
 
+/** HB-02 : évènements d'un pays lus par fenêtre dans le hub, par défaut, et au plus. */
+export const COUNTRY_EVENTS_PAGE_SIZE = 10
+export const COUNTRY_EVENTS_PAGE_MAX = 20
+
+/**
+ * Un évènement d'association dans le hub de son pays (HB-02) : OUVERT AU RÉSEAU,
+ * programmé, publié par la modération, à venir. La carte seulement : ni inscrits,
+ * ni capacité, ni état du lecteur, que la fiche de l'évènement dit sous sa garde.
+ */
+export interface CountryEventView {
+  readonly eventId: string
+  readonly pageId: string
+  readonly title: string
+  /** Lieu saisi par l'association ; vide quand elle n'en dit rien. */
+  readonly location: string
+  readonly startAt: number
+  readonly endAt: number
+  /** Le fuseau dans lequel l'association a pensé l'évènement. */
+  readonly timeZone: string
+  readonly organizer: { readonly name: string; readonly handle: string }
+}
+
+export interface CountryEventsPage extends AssociationActivityPage<CountryEventView> {
+  /**
+   * La lecture n'a parcouru qu'une fenêtre bornée des pages du pays : des
+   * évènements d'autres associations peuvent manquer, et l'écran le dit.
+   */
+  readonly partial: boolean
+}
+
+export interface CountryEventsRequest {
+  readonly country: CountryCode
+  /** Instant fixé par l'écran : « à venir » se lit à partir de lui, et le curseur lui reste attaché. */
+  readonly anchor: number
+  /** Curseur opaque du fournisseur ; `null` pour la première fenêtre. */
+  readonly cursor: string | null
+  /** Évènements par fenêtre ; `COUNTRY_EVENTS_PAGE_SIZE` par défaut, `COUNTRY_EVENTS_PAGE_MAX` au plus. */
+  readonly limit?: number
+}
+
+/** La taille d'une fenêtre demandée, bornée comme le moteur la borne. */
+export function countryEventsPageSize(limit: number | undefined): number {
+  if (limit === undefined || !Number.isFinite(limit)) return COUNTRY_EVENTS_PAGE_SIZE
+  return Math.min(Math.max(Math.trunc(limit), 1), COUNTRY_EVENTS_PAGE_MAX)
+}
+
 export interface AssociationEventsCapability {
   readonly reminderDelivery?: "engine" | "preferences_only"
   readonly attendance?: AssociationEventAttendanceCapability
   readonly gallery?: AssociationEventGalleryCapability
   readonly calendar?: AssociationEventCalendarCapability
+  /**
+   * HB-02 : les prochains évènements ouverts au réseau des associations d'un pays,
+   * bornés et paginés, chacun repassé par la garde des évènements de page. Facultatif :
+   * un fournisseur qui ne le sert pas le laisse absent, et le hub le dit.
+   */
+  useCountryEvents?(request: CountryEventsRequest): Loadable<CountryEventsPage>
   useEvents(input: { readonly pageId: string; readonly cursor: string | null }): Loadable<AssociationActivityPage<AssociationEventView>>
   useEvent(eventId: string): Loadable<AssociationEventView | null>
   create(input: AssociationEventInput & { readonly idempotencyKey: string }): Promise<ActionResult<{ readonly eventId: string; readonly created: boolean }>>

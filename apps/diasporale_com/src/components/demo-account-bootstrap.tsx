@@ -1,8 +1,9 @@
 "use client"
 
-import { DAY_MS, DIASPORALE_DEMO_ACTOR_SPECS, diasporaleDemoDisplayName, type DiasporaleDemoActor, type DiasporaleDemoActorSpec } from "@diasporale/domain"
+import { DAY_MS, DIASPORALE_DEMO_ACTOR_SPECS, diasporaleDemoDisplayName, HOUR_MS, type DiasporaleDemoActor, type DiasporaleDemoActorSpec } from "@diasporale/domain"
 import {
   useActions,
+  useAssociationEvents,
   useDemoAccounts,
   useJobs,
   useMentoring,
@@ -10,6 +11,7 @@ import {
   useServices,
   useSession,
   type AidMissionInputView,
+  type AssociationEventInput,
   type DemoAccountsCapability,
   type DemoEquipmentView,
   type JobOfferInputView,
@@ -75,17 +77,76 @@ const MISSION = {
 /** Une mission commence dans une semaine : le début doit rester dans le futur. */
 const MISSION_LEAD_DAYS = 7
 
+/**
+ * EV-01 : les deux évènements FICTIFS de l'association, marqués comme tels. Le premier, ouvert à
+ * tout DIASPORALE, a deux places (la dernière place se dispute en recette) ; le second est réservé
+ * aux adhérents. Chacun a sa clé d'idempotence STABLE : un second envoi ne crée rien de plus.
+ */
+const ASSOCIATION_EVENTS = [
+  {
+    idempotencyKey: "diasporale-demo:association-event:accueil",
+    leadDays: 7,
+    durationHours: 3,
+    title: "Soirée d'accueil des nouveaux arrivants (démonstration)",
+    description: "Faire connaissance avec l'association et la communauté gabonaise de Lyon autour d'un repas partagé (événement de démonstration, fictif).",
+    location: "Salle municipale de Lyon (lieu fictif)",
+    audience: "network",
+    capacity: 2,
+  },
+  {
+    idempotencyKey: "diasporale-demo:association-event:assemblee",
+    leadDays: 14,
+    durationHours: 2,
+    title: "Assemblée générale des adhérents (démonstration)",
+    description: "Bilan de l'année et projets de l'association ; séance réservée aux adhérents (événement de démonstration, fictif).",
+    location: "Maison des associations de Lyon (lieu fictif)",
+    audience: "association",
+    capacity: null,
+  },
+] as const satisfies readonly (Omit<AssociationEventInput, "pageId" | "startAt" | "endAt" | "timeZone"> & {
+  readonly idempotencyKey: string
+  readonly leadDays: number
+  readonly durationHours: number
+})[]
+
+/** Le fuseau des évènements de l'association de démonstration (Lyon). */
+const ASSOCIATION_EVENT_TIME_ZONE = "Europe/Paris"
+
+/** Les évènements commencent à une heure ronde, `leadDays` jours après l'équipement. */
+function eventStart(now: number, leadDays: number): number {
+  return Math.ceil((now + leadDays * DAY_MS) / HOUR_MS) * HOUR_MS
+}
+
 interface GestureCapabilities {
   readonly mentoring: ReturnType<typeof useMentoring>
   readonly jobs: ReturnType<typeof useJobs>
   readonly services: ReturnType<typeof useServices>
   readonly mutualAid: ReturnType<typeof useMutualAid>
+  readonly associationEvents: ReturnType<typeof useAssociationEvents>
+}
+
+/**
+ * Les deux évènements de l'association, par la capacité du port (`associationEvents.create`).
+ * Aucune politique de modération n'est posée : ils restent « en attente » jusqu'à la décision de
+ * la modératrice au bureau. Rend `false` si l'un d'eux n'a pas abouti.
+ */
+async function playAssociationEvents(pageId: string, capabilities: GestureCapabilities): Promise<boolean> {
+  const events = capabilities.associationEvents
+  if (events === null) return false
+  const now = Date.now()
+  let complete = true
+  for (const { leadDays, durationHours, ...event } of ASSOCIATION_EVENTS) {
+    const startAt = eventStart(now, leadDays)
+    const created = await events.create({ ...event, pageId, startAt, endAt: startAt + durationHours * HOUR_MS, timeZone: ASSOCIATION_EVENT_TIME_ZONE })
+    if (!created.ok) complete = false
+  }
+  return complete
 }
 
 /**
  * Les VRAIS gestes de l'acteur, par les capacités du port : profil de mentor, de
- * talent, offre de service et offre d'emploi de la page d'entreprise, mission de
- * la page d'association. Rend `false` si l'un d'eux n'a pas abouti.
+ * talent, offre de service et offre d'emploi de la page d'entreprise, mission et
+ * évènements de la page d'association. Rend `false` si l'un d'eux n'a pas abouti.
  */
 async function playGestures(spec: DiasporaleDemoActorSpec, equipment: DemoEquipmentView, capabilities: GestureCapabilities): Promise<boolean> {
   const country = spec.country
@@ -100,6 +161,7 @@ async function playGestures(spec: DiasporaleDemoActorSpec, equipment: DemoEquipm
     else if (pageId === null) continue
     else if (gesture === "service") ok = (await capabilities.services?.createOffer({ ...SERVICE_OFFER, country, city, pageId, publish: true }))?.ok ?? false
     else if (gesture === "job") ok = (await capabilities.jobs?.createOffer({ ...JOB_OFFER, country, city, pageId, publish: true }))?.ok ?? false
+    else if (gesture === "associationEvent") ok = await playAssociationEvents(pageId, capabilities)
     else ok = (await capabilities.mutualAid?.createMission({ ...MISSION, country, city, pageId, startsAt: Date.now() + MISSION_LEAD_DAYS * DAY_MS }))?.ok ?? false
     if (!ok) complete = false
   }
@@ -132,6 +194,7 @@ function EngineDemoAccountBootstrap(props: { capability: DemoAccountsCapability 
   const jobs = useJobs()
   const services = useServices()
   const mutualAid = useMutualAid()
+  const associationEvents = useAssociationEvents()
   const router = useRouter()
   const running = useRef(false)
   const signedIn = session.status === "ready" && session.data.status === "signed_in"
@@ -174,7 +237,7 @@ function EngineDemoAccountBootstrap(props: { capability: DemoAccountsCapability 
         }
         const equipped = await capability.equip(actor)
         if (!equipped.ok) throw new Error(equipped.code)
-        const complete = firstEntry ? await playGestures(spec, equipped.value, { mentoring, jobs, services, mutualAid }) : true
+        const complete = firstEntry ? await playGestures(spec, equipped.value, { mentoring, jobs, services, mutualAid, associationEvents }) : true
         if (complete) toast.success(t("demoAccounts.ready", { name }), { id: notice })
         else toast.error(t("demoAccounts.equipFailed", { name }), { id: notice })
         // Sans adhésion (extérieur au réseau), l'accueil de DIASPORALE ; sinon la page demandée
@@ -187,7 +250,7 @@ function EngineDemoAccountBootstrap(props: { capability: DemoAccountsCapability 
         forgetDemoActor()
       }
     })()
-  }, [signedIn, member, actions, capability, mentoring, jobs, services, mutualAid, router, t])
+  }, [signedIn, member, actions, capability, mentoring, jobs, services, mutualAid, associationEvents, router, t])
 
   return null
 }
