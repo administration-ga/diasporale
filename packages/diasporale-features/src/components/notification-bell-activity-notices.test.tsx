@@ -81,6 +81,9 @@ async function openBell(count: number, t = fr) {
   return screen.getByRole("dialog")
 }
 
+/** Une phrase telle que le DOM la lit : Testing Library ramène les espaces (insécables comprises) à une espace. */
+const spoken = (text: string) => text.replace(/\s+/g, " ")
+
 /** La ligne d'un avis, par sa phrase. */
 function rowOf(dialog: HTMLElement, text: string | RegExp) {
   return within(dialog).getByText(text).closest("li") as HTMLElement
@@ -138,7 +141,7 @@ describe("cloche — un fichier retenu par l'analyse", () => {
       notice({ id: "libere", kind: "file_withheld", fileReleased: true }),
     ])
     const dialog = await openBell(2)
-    expect(within(dialog).getByText(fr("bell.system.file_withheld"))).toBeInTheDocument()
+    expect(within(dialog).getByText(spoken(fr("bell.system.file_withheld")))).toBeInTheDocument()
     expect(within(dialog).getByText(fr("bell.fileReleased"))).toBeInTheDocument()
     // Le seul lien de la feuille est « Voir toutes les notifications » : un fichier retenu n'a aucune page.
     expect(within(dialog).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/notifications"])
