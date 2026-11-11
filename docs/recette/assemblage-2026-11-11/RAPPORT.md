@@ -1,12 +1,12 @@
 # Vérifications d'assemblage — 11 novembre 2026
 
-Ce rapport dit l'état vérifié des deux dépôts après les lots du 11 novembre : le lot couplé, assemblé, vérifié et fusionné par la session du moteur, puis les lots 5 et 6, assemblés, vérifiés et fusionnés par la session DIASPORALE. Chaque lot a été vérifié dans le créneau lourd attribué par la session de coordination, sous le verrou commun des sessions. Ce rapport ne contient aucun identifiant de déploiement.
+Ce rapport dit l'état vérifié des deux dépôts après les lots du 11 novembre : le lot couplé, assemblé, vérifié et fusionné par la session du moteur, les lots 5, 6 et 7, assemblés, vérifiés et fusionnés par la session DIASPORALE, puis le lot 11, couplé, assemblé, vérifié et fusionné par la session du moteur. Chaque lot a été vérifié dans le créneau lourd attribué par la session de coordination, sous le verrou commun des sessions. Ce rapport ne contient aucun identifiant de déploiement.
 
 ## Le couple vérifié
 
 | Sujet | Constat |
 |---|---|
-| Couple de versions | ANTSIA `ecca990`, DIASPORALE `bf3ebe4` (`main` des deux dépôts après le lot 6) ; avant lui, ANTSIA `22bae3c` et DIASPORALE `20e5df4` (après le lot 5) |
+| Couple de versions | ANTSIA `599dc93`, DIASPORALE `fabc540` (`main` des deux dépôts après le lot 11) ; avant lui, ANTSIA `ecca990` et DIASPORALE `43b0aa1` (après le lot 7), `bf3ebe4` (après le lot 6), puis ANTSIA `22bae3c` et DIASPORALE `20e5df4` (après le lot 5) |
 | Arbres | chaque vérification a tourné sur l'assemblage local des PR ; l'arbre de chaque `main` fusionné est identique à l'arbre vérifié (contrôle fait après la dernière fusion de chaque lot) |
 | Commande | vérification complète depuis le moteur (`bun run verify` : génération, typage, tests du moteur, cliquets, scripts, puis typage, tests et lint de tous les espaces de travail, dont ceux de DIASPORALE), puis `bun run test:scripts` à la racine de DIASPORALE |
 | Résultat | **vert** pour chaque lot |
@@ -58,6 +58,35 @@ Vérifié de 13 h 48 à 13 h 59, fusions comprises, après la fusion du lot 10 d
 - `main` après fusion : ANTSIA `ecca990` (arbre `aa90391`), DIASPORALE `bf3ebe4` (arbre `bbcdab1`), identiques aux arbres vérifiés. Aucun conflit.
 - Contenu (AS-01) : le moteur admet, pour instruire une revendication de page, le rôle de réseau ou le membre de l'équipe de modération compétente (`pageClaimReviewCapacity`, antsia#155). La file « Pages à vérifier » de la tranche suit cette règle à l'identique (antsia#160), et l'onglet de DIASPORALE la lit (`myPageClaimReview`), avec repli sur le rôle de réseau (#72).
 
+## Lot 7 (session DIASPORALE)
+
+Vérifié de 14 h 42 à 14 h 56, fusion comprise : moteur `ecca990` seul, DIASPORALE `3a24a6c` + PR 74 à sa tête `e141ae1`.
+
+| Contrôle | Résultat |
+|---|---|
+| Tests du moteur | 3 653 passés ; cliquets 159 ; scripts 171 |
+| dont DIASPORALE | domaine 792 (couverture à 100 %) ; surfaces 1 214 ; application 2 175 |
+| Tests des scripts de DIASPORALE | 86 passés |
+| Lint | aucune erreur |
+
+- `main` après fusion : DIASPORALE `43b0aa1` (arbre `3d3916a`), identique à l'arbre vérifié ; ANTSIA inchangé.
+- Contenu (MD-07) : la règle qui dit ce que l'auteur d'un contenu signalé lit d'un dossier est celle du moteur (`authorDecisionOutcome`, antsia#156) ; le port de DIASPORALE lui délègue au lieu de la recopier, et garde le filtre en défense.
+
+## Lot 11 (session du moteur, couplé)
+
+Assemblé, vérifié et fusionné par la session du moteur, avec l'accord écrit de la session DIASPORALE pour la PR 73, sous le gel de `main` de DIASPORALE. Un premier passage s'est arrêté rouge dès l'essai léger, sans rien fusionner : la PR 162 du moteur fermait une porte de décision que trois tests de la PR 156 appelaient encore. La 162 corrigée, le second passage est vert.
+
+| Contrôle | Résultat (rapporté par la session du moteur) |
+|---|---|
+| Vérification complète | verte (`verify`, 706 s) |
+| Tests du moteur | 239 fichiers, 3 694 tests passés ; cliquets 159 ; scripts 171 |
+| Tests des scripts de DIASPORALE | 86 passés |
+| Lint | 11 paquets |
+
+- Moteur : PR 159, 161, 162, 163, 164 (le guichet de DIASPORALE range un commentaire de direct retenu, au pays de sa session) et 165 ; DIASPORALE : PR 73 (libellés du commentaire de direct, `145bc51`).
+- `main` après fusion : ANTSIA `599dc93` (arbre `b7bbd4c`), DIASPORALE `fabc540` (arbre `e495677`), identiques aux arbres vérifiés (contrôlé aussi par la session DIASPORALE après la fusion).
+- La PR 73 n'entre jamais seule : le cliquet `i18n-keys` est à double sens (clé manquante sans elle, clé orpheline sans la 163).
+
 ## Ce qui n'a pas été fait
 
 - **Aucune recette au navigateur** de ces lots : ni en démonstration, ni en mode moteur, ni à deux comptes, ni sur téléphone.
@@ -66,6 +95,6 @@ Vérifié de 13 h 48 à 13 h 59, fusions comprises, après la fusion du lot 10 d
 
 ## Connu et laissé pour la suite
 
-- Demandes au moteur encore ouvertes : filtre « non lues » côté serveur et destination d'une invitation de groupe (antsia#149) ; durée de validité du code publiée par le moteur (antsia#151). Servies au lot 10, puis suivies au lot 6 : équipe de modération admise et échéance de purge d'une revendication (antsia#148) ; décisions lues par l'auteur (antsia#99, alignement du port en #74).
+- Demandes au moteur encore ouvertes : filtre « non lues » côté serveur et destination d'une invitation de groupe (antsia#149) ; durée de validité du code publiée par le moteur (antsia#151) ; refus qu'un signataire signale sa propre page, ses évènements et ce qu'elle porte (antsia#114, point 2) ; actions d'audit et console des membres fondateurs (antsia#120) ; deux avis du déplacement d'un rendez-vous (antsia#133). Servies puis fermées : équipe de modération admise et échéance de purge d'une revendication (antsia#148, lots 10 et 6) ; décisions lues par l'auteur (antsia#99, lots 10 et 7) ; avis aux inscrits d'un évènement (antsia#97) ; responsables du réseau (antsia#98).
 - Revendications : les équipes par pays n'existent pas encore au moteur ; le rattrapage des revendications tranchées avant PG-01 et la durée de conservation des pièces (90 jours) restent à décider par le propriétaire et le juriste.
 - La durée de cinq minutes d'une vidéo est une valeur proposée par le moteur, à valider par le propriétaire.
