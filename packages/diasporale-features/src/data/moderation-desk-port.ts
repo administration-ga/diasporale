@@ -547,8 +547,9 @@ export const DESK_BLOCKED_TERMS_PAGE = 50
 /**
  * Les rubriques que DIASPORALE sert et dont le réglage vaut dans le réseau
  * `diasporale`, dans l'ordre de l'écran. Écartées : le compte (`person`, profil
- * commun modéré dans le réseau racine), le direct et les natures propres à
- * ANTSIA (boutique, emploi reflété, profils professionnels, médias).
+ * commun modéré dans le réseau racine), le direct et ses commentaires
+ * (`live`, `liveComment` : DIASPORALE ne sert pas encore de direct) et les natures
+ * propres à ANTSIA (boutique, emploi reflété, profils professionnels, médias).
  */
 export const DESK_POLICY_SURFACES = [
   "post",
