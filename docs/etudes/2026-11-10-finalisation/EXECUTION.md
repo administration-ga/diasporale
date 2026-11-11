@@ -204,7 +204,7 @@ Plan : [`07_PAGES_ASSOCIATIONS_GROUPES.md`](07_PAGES_ASSOCIATIONS_GROUPES.md)
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| AS-01 | Trancher une revendication en production, par pays | P0 | M | S2 | durée de conservation des pièces (juriste) | nouveau | fusionné (#67, antsia#147) pour « Pages à vérifier » par pays ; équipe de modération admise et échéance de purge : antsia#148 ; durée de conservation des pièces : juriste |
+| AS-01 | Trancher une revendication en production, par pays | P0 | M | S2 | durée de conservation des pièces (juriste) | nouveau | fusionné (#67, antsia#147) pour « Pages à vérifier » par pays ; équipe de modération admise et échéance de purge servies par le moteur (antsia#155, lot 10, demande antsia#148), suivies par la file de la tranche (antsia#160) et par l'onglet (#72), lot 6 ; restent : équipes par pays (pas encore au moteur), revendications tranchées avant PG-01 (décision du propriétaire), durée de conservation des pièces (juriste) |
 | AS-02 | Signaler une page, un groupe et ses publications | P0 | S | S2 | aucune | nouveau | fusionné (#48) |
 | AS-03 | Rouvrir le groupe d'une association | P1 | S | S2 | aucune | nouveau | à faire |
 | AS-04 | Renommage d'une page vérifiée au grand jour | P1 | S | S2 | aucune | nouveau | à faire |
@@ -399,7 +399,7 @@ Plan : [`14_MODERATION_SECURITE_CONFORMITE.md`](14_MODERATION_SECURITE_CONFORMIT
 | MD-04 | Réglages de modération au guichet | P0 | M | S2 | décision 4 du § 7 (valeurs de départ) | nouveau | fusionné (#67, antsia#147) ; valeurs de départ des réglages à valider par le propriétaire, aucun réglage écrit en base |
 | MD-05 | Règles de la communauté et charte des modérateurs | P0 | S | S2 + propriétaire | relecture du juriste (décision 1) ; décisions 7 et 9 | nouveau | fusionné (#55) ; texte provisoire, relecture du juriste et du propriétaire |
 | MD-06 | Permanence, escalade et procédure d'incident | P0 | S | S2 + propriétaire | décision 2 du § 7 ; questions 6 et 7 au juriste | nouveau | fusionné (#55) ; exercice à blanc non joué |
-| MD-07 | Protéger le déclarant : l'auteur ne lit qu'une décision | P0 | S | S2 + S1 | décision 6 du § 7 | nouveau | fusionné (#45) pour l'application ; moteur : antsia#99 et antsia#110 |
+| MD-07 | Protéger le déclarant : l'auteur ne lit qu'une décision | P0 | S | S2 + S1 | décision 6 du § 7 | nouveau | fusionné (#45) pour l'application ; moteur : antsia#99 servie par antsia#156 (lot 10) et antsia#110 ; le port reprend la règle du moteur : #74 (ouverte) |
 | MD-08 | Équipes par pays : compétence scellée et routage | P1 | L | S1 puis S2 | obligatoire avant l'ouverture d'un deuxième pays | nouveau | à faire |
 | MD-09 | Mesures lourdes selon la qualité du décideur | P1 | S | S1 puis S2 | décision 3 du § 7 | nouveau | à faire |
 | MD-10 | Signaler une demande, une proposition, une demande d'adhésion | P1 | M | S2 + S1 | aucune | nouveau | à faire |
