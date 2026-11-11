@@ -165,3 +165,11 @@ describe("démonstration — pagination du même fil gardé", () => {
     expect(result.current).toMatchObject({ data: undefined, isLoading: false, error: "suspended" })
   })
 })
+
+describe("démonstration — vidéos d'une publication (FD-02)", () => {
+  it("un .mov est refusé avec la marche à suivre, comme au moteur ; un autre fichier garde le refus de type", async () => {
+    const data = source()
+    expect(await data.actions.uploadMedia(new File(["mov"], "IMG_0412.MOV", { type: "video/quicktime" }))).toEqual({ ok: false, code: "media_video_format" })
+    expect(await data.actions.uploadMedia(new File(["%PDF"], "dossier.pdf", { type: "application/pdf" }))).toEqual({ ok: false, code: "media_type_invalid" })
+  })
+})

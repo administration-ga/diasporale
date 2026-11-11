@@ -73,8 +73,8 @@ import {
 } from "../data/jobs-port"
 import type { ActionResult } from "../data/port"
 import type { Loadable } from "../data/types"
-import { demoManagedPage } from "./page-admin"
-import { pageView, statusOf } from "./selectors"
+import { demoManagedPage, demoPageAdminContext } from "./page-admin"
+import { isPageClosedByBlocks, pageView, statusOf } from "./selectors"
 import type { DemoPage, DemoState } from "./state"
 import type { DemoStore } from "./store"
 
@@ -544,6 +544,8 @@ export function createDemoJobs(store: DemoStore, options: DemoJobsOptions = {}):
     if (!page || main.session.personId !== personId) return false
     return (demoManagedPage(store, page.handle)?.myRole ?? null) !== null
   }
+  /** Les signataires vivants d'une page (RP-03) : les équipes fixes des tests, sinon celles de la gestion des pages, relues à l'acte. */
+  const signatoriesOf = (pageId: string): readonly string[] => (teams ? teams[pageId] ?? [] : demoPageAdminContext(store).signatoriesOf(pageId))
   let state: DemoJobsState = load()
   let version = 0
   const listeners = new Set<() => void>()
@@ -935,6 +937,8 @@ export function createDemoJobs(store: DemoStore, options: DemoJobsOptions = {}):
       const found = data.offers.find((candidate) => candidate.id === input.jobId)
       const page = found ? employerPage(main, found.pageId) : null
       if (!found || !page || !isJobOfferOpen(stateOf(found), now)) return fail("not_found")
+      // RP-03 : toute l'équipe vivante en blocage avec la personne, l'offre se tait comme retirée.
+      if (isPageClosedByBlocks(main, signatoriesOf(page.id), viewer.personId)) return fail("not_found")
       if (found.version !== input.offerVersion) return fail("job_offer_changed")
       if (isOnTeam(page.id, viewer.personId)) return fail("job_application_own_page")
       if (data.applications.some((candidate) => candidate.offerId === found.id && candidate.candidateId === viewer.personId)) return fail("job_application_already_exists")

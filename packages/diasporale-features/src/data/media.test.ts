@@ -1,4 +1,4 @@
-import { POST_VIDEO_MAX_BYTES } from "@antsia/social-domain/content"
+import { POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS } from "@antsia/social-domain/content"
 import { jpegHasGpsMetadata, listImageMetadata } from "@antsia/social-domain/imageMetadata"
 import { IMAGE_UPLOAD_QUALITY, isPreparedImage, type PrepareImage } from "@antsia/social-features/media-upload"
 import { fakeImageRuntime, TEST_JPEG_WITH_GPS_BYTES, testPrepareImage } from "@antsia/social-features/tests/image-runtime"
@@ -17,6 +17,8 @@ import {
   postMediaRefusal,
   prepareImageFile,
   prepareMediaFile,
+  postVideoDurationRefusal,
+  unsupportedMediaRefusal,
 } from "./media"
 
 function file(bytes: Uint8Array, name: string, type: string): File {
@@ -59,9 +61,13 @@ afterEach(() => {
 describe("médias d'une publication — les règles du moteur, dites par DIASPORALE", () => {
   it("le type dit la nature du média : photo, vidéo, ou refus", () => {
     expect(postMediaKindOf("image/webp")).toBe("image")
-    expect(postMediaKindOf("video/quicktime")).toBe("video")
+    expect(postMediaKindOf("video/mp4")).toBe("video")
+    expect(postMediaKindOf("video/webm")).toBe("video")
+    // FD-02 (SD-03 du moteur) : une nouvelle publication n'accepte plus le .mov.
+    expect(postMediaKindOf("video/quicktime")).toBeNull()
     expect(postMediaKindOf("application/pdf")).toBeNull()
-    expect(POST_MEDIA_ACCEPT.split(",")).toEqual(expect.arrayContaining(["image/jpeg", "image/gif", "video/mp4"]))
+    expect(POST_MEDIA_ACCEPT.split(",")).toEqual(expect.arrayContaining(["image/jpeg", "image/gif", "video/mp4", "video/webm"]))
+    expect(POST_MEDIA_ACCEPT.split(",")).not.toContain("video/quicktime")
   })
 
   it("quatre photos au plus, une vidéo seule, un texte alternatif borné : chaque refus a son code", () => {
@@ -207,5 +213,92 @@ describe("FD-02 — une vidéo trop lourde est refusée avant l'envoi, à la bor
     expect(postMediaRefusal([{ kind: "video", mimeType: "video/mp4", sizeBytes: POST_VIDEO_MAX_BYTES }])).toBeNull()
     expect(await prepareMediaFile(heavy)).toEqual({ ok: false, code: "media_too_large" })
     expect((await measuredVideo(prepareMediaFile(atLimit))).ok).toBe(true)
+  })
+})
+
+/**
+ * Un navigateur qui sait lire les métadonnées d'une vidéo : jsdom n'a pas de
+ * décodeur ; on donne à l'élément `<video>` la durée voulue, et l'évènement
+ * `loadedmetadata` arrive dès que la source est posée.
+ */
+function fakeVideoMetadata(durationSeconds: number): () => void {
+  const urlStatics = URL as unknown as { createObjectURL?: (blob: Blob) => string; revokeObjectURL?: (url: string) => void }
+  const original = { create: urlStatics.createObjectURL, revoke: urlStatics.revokeObjectURL }
+  Object.defineProperty(URL, "createObjectURL", { configurable: true, writable: true, value: () => "blob:video-de-test" })
+  Object.defineProperty(URL, "revokeObjectURL", { configurable: true, writable: true, value: () => undefined })
+  const create = document.createElement.bind(document)
+  const spy = vi.spyOn(document, "createElement").mockImplementation((tag: string, options?: ElementCreationOptions) => {
+    const element = create(tag, options)
+    if (element instanceof HTMLVideoElement) {
+      Object.defineProperty(element, "duration", { value: durationSeconds })
+      Object.defineProperty(element, "videoWidth", { value: 1280 })
+      Object.defineProperty(element, "videoHeight", { value: 720 })
+      Object.defineProperty(element, "src", {
+        configurable: true,
+        get: () => "",
+        set: () => queueMicrotask(() => element.onloadedmetadata?.call(element, new Event("loadedmetadata"))),
+      })
+    }
+    return element
+  })
+  return () => {
+    spy.mockRestore()
+    Object.defineProperty(URL, "createObjectURL", { configurable: true, writable: true, value: original.create })
+    Object.defineProperty(URL, "revokeObjectURL", { configurable: true, writable: true, value: original.revoke })
+  }
+}
+
+describe("FD-02 — une vidéo lisible partout et bornée, refusée avant l'envoi", () => {
+  it("un .mov (ou tout autre conteneur vidéo) reçoit la marche à suivre ; un autre fichier, le refus de type", async () => {
+    expect(unsupportedMediaRefusal("video/quicktime")).toBe("media_video_format")
+    expect(unsupportedMediaRefusal("video/x-msvideo")).toBe("media_video_format")
+    expect(unsupportedMediaRefusal("application/pdf")).toBe("media_type_invalid")
+    const mov = new File(["mov"], "IMG_0412.MOV", { type: "video/quicktime" })
+    const prepare = vi.fn<PrepareImage>()
+    // Refusé avant tout envoi, au dépôt (moteur) comme à la démonstration : aucune préparation, aucun dépôt.
+    expect(await prepareMediaFile(mov, prepare)).toEqual({ ok: false, code: "media_video_format" })
+    expect(await describeMediaFile(mov)).toEqual({ ok: false, code: "media_video_format" })
+    expect(prepare).not.toHaveBeenCalled()
+  })
+
+  it("la durée est jugée par la règle du moteur : à la borne, recevable ; au-delà, refusée ; inconnue, elle passe", () => {
+    expect(postVideoDurationRefusal(POST_VIDEO_MAX_DURATION_MS)).toBeNull()
+    expect(postVideoDurationRefusal(POST_VIDEO_MAX_DURATION_MS + 1)).toBe("media_video_too_long")
+    expect(postVideoDurationRefusal(undefined)).toBeNull()
+    // Le refus du serveur (POST_VIDEO_TOO_LONG) se dit par le même code fermé.
+    expect(MEDIA_RULE_CODES.POST_VIDEO_TOO_LONG).toBe("media_video_too_long")
+    expect(ACTION_ERROR_CODES).toContain("media_video_too_long")
+    expect(ACTION_ERROR_CODES).toContain("media_video_format")
+  })
+
+  it("une vidéo mesurée au-delà de la borne de durée est refusée avant le dépôt ; à la borne, elle part avec sa durée", async () => {
+    const tooLong = fakeVideoMetadata(POST_VIDEO_MAX_DURATION_MS / 1000 + 1)
+    try {
+      const clip = new File(["clip"], "longue.mp4", { type: "video/mp4" })
+      expect(await describeMediaFile(clip)).toEqual({ ok: false, code: "media_video_too_long" })
+      expect(await prepareMediaFile(clip)).toEqual({ ok: false, code: "media_video_too_long" })
+    } finally {
+      tooLong()
+    }
+    const atLimit = fakeVideoMetadata(POST_VIDEO_MAX_DURATION_MS / 1000)
+    try {
+      const clip = new File(["clip"], "limite.webm", { type: "video/webm" })
+      expect(await describeMediaFile(clip)).toEqual({
+        ok: true,
+        value: { kind: "video", mimeType: "video/webm", sizeBytes: 4, width: 1280, height: 720, durationMs: POST_VIDEO_MAX_DURATION_MS },
+      })
+    } finally {
+      atLimit()
+    }
+  })
+
+  it("les textes suivent la liste d'envoi et la borne du moteur, jamais une valeur écrite", () => {
+    for (const locale of ["fr", "en"] as const) {
+      const t = getFixedT(locale)
+      expect(t("errors.media_video_format")).toContain("MP4")
+      expect(t("errors.media_video_format")).toContain("WebM")
+      expect(t("errors.media_video_format")).not.toContain("MOV")
+      expect(t("errors.media_video_too_long")).toContain(String(POST_VIDEO_MAX_DURATION_MS / 60_000))
+    }
   })
 })

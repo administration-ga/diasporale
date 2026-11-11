@@ -46,7 +46,7 @@ import type { ActionErrorCode } from "../data/errors"
 import type { ActionResult } from "../data/port"
 import type { Loadable } from "../data/types"
 import { demoManagedPage, demoPageAdminContext } from "./page-admin"
-import { statusOf } from "./selectors"
+import { isPageClosedByBlocks, statusOf } from "./selectors"
 import type { DemoState } from "./state"
 import type { DemoStore } from "./store"
 
@@ -451,6 +451,8 @@ export function createDemoAssociationsContext(store: DemoStore, options: DemoAss
       const refusal = demoViewerRefusal(state, now, "publish")
       if (refusal) return fail(refusal)
       if (!associationPage(state, pageId)) return fail("not_found")
+      // RP-03 : tous les responsables vivants en blocage avec la personne, l'association se tait comme retirée.
+      if (isPageClosedByBlocks(state, teams.signatoriesOf(pageId), viewerId)) return fail("not_found")
       const text = parseRequestMessage(message)
       if (!text.ok) return fail(text.code)
       const base = current()

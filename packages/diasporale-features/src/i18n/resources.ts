@@ -77,6 +77,7 @@ import enCommunityRules from "./locales/en/community-rules.json"
 import enReportEmergency from "./locales/en/report-emergency.json"
 import enMessagesUnread from "./locales/en/messages-unread.json"
 import enIdnEntry from "./locales/en/idn-entry.json"
+import enPostVideos from "./locales/en/post-videos.json"
 import enMissionVolunteerNotices from "./locales/en/mission-volunteer-notices.json"
 import enEventOutcomeNotices from "./locales/en/event-outcome-notices.json"
 import enNetworkResponsibles from "./locales/en/network-responsibles.json"
@@ -150,6 +151,7 @@ import frCommunityRules from "./locales/fr/community-rules.json"
 import frReportEmergency from "./locales/fr/report-emergency.json"
 import frMessagesUnread from "./locales/fr/messages-unread.json"
 import frIdnEntry from "./locales/fr/idn-entry.json"
+import frPostVideos from "./locales/fr/post-videos.json"
 import frMissionVolunteerNotices from "./locales/fr/mission-volunteer-notices.json"
 import frEventOutcomeNotices from "./locales/fr/event-outcome-notices.json"
 import frNetworkResponsibles from "./locales/fr/network-responsibles.json"
@@ -231,6 +233,7 @@ export const LOCALE_PARTS = {
     "report-emergency": frReportEmergency,
     "messages-unread": frMessagesUnread,
     "idn-entry": frIdnEntry,
+    "post-videos": frPostVideos,
     "mission-volunteer-notices": frMissionVolunteerNotices,
     "event-outcome-notices": frEventOutcomeNotices,
     "network-responsibles": frNetworkResponsibles,
@@ -306,6 +309,7 @@ export const LOCALE_PARTS = {
     "report-emergency": enReportEmergency,
     "messages-unread": enMessagesUnread,
     "idn-entry": enIdnEntry,
+    "post-videos": enPostVideos,
     "mission-volunteer-notices": enMissionVolunteerNotices,
     "event-outcome-notices": enEventOutcomeNotices,
     "network-responsibles": enNetworkResponsibles,
