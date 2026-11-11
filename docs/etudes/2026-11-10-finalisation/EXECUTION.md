@@ -35,7 +35,7 @@ Plan : [`01_ENTREE_ADHESION_CONFIANCE.md`](01_ENTREE_ADHESION_CONFIANCE.md)
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| EA-01 | Amorcer la confiance : membres fondateurs admis par décision tracée | P0 | M | S2 | décision du propriétaire (qui, combien, dispense, badge affiché) | nouveau | fusionné (#51, antsia#119) ; console et audit des admissions : antsia#120 ; plafond de la cohorte à confirmer |
+| EA-01 | Amorcer la confiance : membres fondateurs admis par décision tracée | P0 | M | S2 | décision du propriétaire (qui, combien, dispense, badge affiché) | nouveau | fusionné (#51, antsia#119) ; actions d'audit au moteur (antsia#171, lot 13) ; décisions par la console et au journal : antsia#176 (ouverte) ; écran de console : antsia#120 ; plafond de la cohorte à confirmer |
 | EA-02 | Entrée par IDN branchée dans DIASPORALE | P0 | M | S2 | variables IDN et origines sur le déploiement (propriétaire) ; recette avec un vrai compte IDN | nouveau | fusionné (#52) ; variables IDN et recette avec un vrai compte : propriétaire ; refus chez IDN : antsia#122 |
 | EA-03 | Statut relu quand l'identité change | P0 | S | S2 | aucune | nouveau | fusionné (#51, antsia#119) ; réconciliation du moteur : antsia#121 |
 | EA-04 | Accueil qui respecte un profil existant | P0 | S | S2 | aucune | nouveau | fusionné (#49) |
@@ -263,7 +263,7 @@ Plan : [`09_SERVICES_RENDEZ_VOUS_AVIS.md`](09_SERVICES_RENDEZ_VOUS_AVIS.md)
 |---|---|---|---|---|---|---|---|
 | SV-01 | Avis publiables : politique des deux surfaces et parcours prouvé | P0 | S | S2 | décision 2 ; rôle d'administrateur du réseau sur chaque déploiement (propriétaire) | nouveau | à faire |
 | SV-02 | Rappel du rendez-vous, rendez-vous à venir et fichier de calendrier | P1 | M | S2 | décision 6 (moment du rappel) | nouveau | à faire |
-| SV-03 | Déplacer un rendez-vous confirmé | P1 | M | S2 | aucune | nouveau | fusionné (#59, antsia#132) ; avis de cloche : antsia#133 |
+| SV-03 | Déplacer un rendez-vous confirmé | P1 | M | S2 | aucune | nouveau | fusionné (#59, antsia#132) ; avis de cloche fusionnés au lot 13 (antsia#172, #78 ; demande antsia#133) |
 | SV-04 | Proposition préremplie et réglages de prestation de la page | P1 | S | S2 | aucune | nouveau | fusionné (#59, antsia#132) ; réglages par offre, non par page |
 | SV-05 | Catégories élargies et politique des professions réglementées | P1 | M | S2 | décisions 3 et 4 ; juriste pour le texte sur les professions réglementées | nouveau | à faire |
 | SV-06 | Trouver près de chez soi : villes desservies, pays d'entrée, langue, tri | P1 | M | S2 | décision 5 | nouveau | à faire |
@@ -288,7 +288,7 @@ Plan : [`10_EMPLOI_TALENTS.md`](10_EMPLOI_TALENTS.md)
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| EM-01 | Fiche et candidature protégées contre les fausses offres | P0 | S | S2 | relecture du texte par le propriétaire | nouveau | fusionné (#45) ; textes à relire par le propriétaire |
+| EM-01 | Fiche et candidature protégées contre les fausses offres | P0 | S | S2 | relecture du texte par le propriétaire | nouveau | fusionné (#45) ; motifs dédiés « frais demandés au candidat » et « usurpation d'une entreprise » au lot 8 (#77, antsia#168) ; textes à relire par le propriétaire |
 | EM-02 | Conservation des candidatures : durées décidées et purge | P0 | S | S2 | juriste (durées, note de refus et droit d'accès) | nouveau | à faire |
 | EM-03 | Durée de vie d'une offre et relance de l'équipe | P1 | S | S2 | décision 7 | nouveau | à faire |
 | EM-04 | Rubrique « Emplois » sur la fiche d'une page | P1 | S | S2 | aucune | nouveau | à faire |
@@ -394,7 +394,7 @@ Plan : [`14_MODERATION_SECURITE_CONFORMITE.md`](14_MODERATION_SECURITE_CONFORMIT
 |---|---|---|---|---|---|---|---|
 | DS-04 (volet guichet) | Recette CC-V et traitement au guichet | P0 | M | S2 | accord pour les variables du backend local ; rien sur la démonstration en ligne sans accord écrit | plan 15 | à faire |
 | MD-01 | Responsables du réseau : nommer l'administration et les modérateurs | P0 | M | S2 + S1 | décision 2 du § 7 ; publication du moteur par S1 | nouveau | fusionné (#62, antsia#136) ; nomination réelle : propriétaire |
-| MD-02 | Signaler depuis chaque objet de DIASPORALE | P0 | L | S2 | aucune | nouveau | fusionné (#48) ; groupe et auto-signalement d'un signataire : antsia#114 |
+| MD-02 | Signaler depuis chaque objet de DIASPORALE | P0 | L | S2 | aucune | nouveau | fusionné (#48) ; groupe (antsia#137, #143) et refus d'auto-signalement d'un signataire (antsia#174, lot 13) servis par le moteur ; réponse d'avis et direct d'une page : PR à part du moteur |
 | MD-03 | Signaler et modérer une offre de service | P0 | M | S2 + S1 | publication du moteur par S1 | nouveau | à faire |
 | MD-04 | Réglages de modération au guichet | P0 | M | S2 | décision 4 du § 7 (valeurs de départ) | nouveau | fusionné (#67, antsia#147) ; valeurs de départ des réglages à valider par le propriétaire, aucun réglage écrit en base |
 | MD-05 | Règles de la communauté et charte des modérateurs | P0 | S | S2 + propriétaire | relecture du juriste (décision 1) ; décisions 7 et 9 | nouveau | fusionné (#55) ; texte provisoire, relecture du juriste et du propriétaire |
