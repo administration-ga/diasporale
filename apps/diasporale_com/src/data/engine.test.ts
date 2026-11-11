@@ -673,7 +673,8 @@ describe("la cloche du moteur (PD4)", () => {
   })
 
   it("un genre inconnu se dit « nouvelle activité » ; un profil non publié ne nomme personne ; lu, c'est lu", () => {
-    const view = toNotificationView(notice({ kind: "file_withheld", subject: null, inviteState: null, readAt: 9, actor: { personId: "p3", displayName: null, handle: null, avatarUrl: null, badges: [] } }))
+    // NP-04 : le fichier retenu est désormais nommé ; le direct, qui n'est pas servi ici, reste inconnu.
+    const view = toNotificationView(notice({ kind: "live_started", subject: null, inviteState: null, readAt: 9, actor: { personId: "p3", displayName: null, handle: null, avatarUrl: null, badges: [] } }))
     expect(view).toEqual({ id: "nt1", kind: "other", actor: null, createdAt: 5, read: true, pendingConnectionId: null, inviteOutcome: null, postId: null })
     expect(toNotificationView(notice({ kind: "sponsorship_withdrawn", inviteState: null, actor: null }))).toMatchObject({ kind: "sponsorship_withdrawn", actor: null })
   })

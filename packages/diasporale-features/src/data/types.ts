@@ -562,6 +562,41 @@ export const ASSOCIATION_EVENT_NOTIFICATION_KINDS = ["association_event_reminder
 export type AssociationEventNotificationKind = (typeof ASSOCIATION_EVENT_NOTIFICATION_KINDS)[number]
 
 /**
+ * NP-04 : les genres COMMUNS du moteur que DIASPORALE disait « nouvelle activité » et qu'elle
+ * nomme désormais — une page suivie a publié, un album publié, un fichier retenu par l'analyse,
+ * une invitation à un groupe ou à un évènement, le statut ou les badges changés. Mêmes noms que
+ * `NOTIFICATION_KINDS` du domaine du moteur ; aucun contenu dans l'avis.
+ */
+export const ACTIVITY_NOTIFICATION_KINDS = [
+  "page_post",
+  "album_published",
+  "file_withheld",
+  "thematic_group_invite",
+  "event_invite",
+  "membership_changed",
+  "badge_changed",
+] as const
+export type ActivityNotificationKind = (typeof ACTIVITY_NOTIFICATION_KINDS)[number]
+
+/**
+ * NP-04 · PG-01 du moteur (PR antsia 144) : les avis de GOUVERNANCE d'une page — invitation à
+ * signer pour elle, revendication tranchée. Avis du système, sans acteur, sans nom de page, rôle,
+ * sens de la décision ni motif ; ils mènent à la page, relue pour le lecteur. Nommés dès
+ * maintenant : tant que le moteur ne les émet pas, ces phrases ne s'affichent jamais.
+ */
+export const PAGE_GOVERNANCE_NOTIFICATION_KINDS = ["page_signatory_invite", "page_claim_decided"] as const
+export type PageGovernanceNotificationKind = (typeof PAGE_GOVERNANCE_NOTIFICATION_KINDS)[number]
+
+/**
+ * IM-04 : les avis d'iCom que le moteur émet déjà — un message dans un groupe de discussion, une
+ * invitation dans un groupe, un appel manqué, un message vocal. Le sujet est le FIL ou l'APPEL,
+ * jamais un message ; l'auteur est nommé par son profil publié. Aucun ne propose d'appel (IM-01) :
+ * l'appel manqué et le message vocal mènent au journal d'appels d'iCom.
+ */
+export const ICOM_NOTIFICATION_KINDS = ["group_message", "group_added", "call_missed", "voicemail_left"] as const
+export type IcomNotificationKind = (typeof ICOM_NOTIFICATION_KINDS)[number]
+
+/**
  * Les avis de la cloche que DIASPORALE sait dire. Tout autre genre du moteur se
  * dit « nouvelle activité » (`other`) : jamais un libellé inventé.
  */
@@ -584,6 +619,9 @@ export const NOTIFICATION_KINDS = [
   // P16 · G9 : une décision de modération qui me concerne, ou qui concerne une page dont je signe.
   "moderation_decision",
   ...REPORTER_NOTIFICATION_KINDS,
+  ...ACTIVITY_NOTIFICATION_KINDS,
+  ...PAGE_GOVERNANCE_NOTIFICATION_KINDS,
+  ...ICOM_NOTIFICATION_KINDS,
   "other",
 ] as const
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number]
@@ -601,8 +639,12 @@ export interface ServiceNoticeView {
   readonly pageHandle: string | null
 }
 
-/** Ce qu'est DEVENUE une demande de relation reçue (relu à l'instant). */
-export const INVITE_OUTCOMES = ["accepted", "declined", "gone"] as const
+/**
+ * Ce qu'est DEVENUE une invitation reçue (relu à l'instant) : une demande de relation, ou
+ * (NP-04) une invitation à un groupe ou à un évènement, d'après la résolution que le serveur
+ * pose — « peut-être » n'existe que pour un évènement ; annulée ou expirée se dit « disparue ».
+ */
+export const INVITE_OUTCOMES = ["accepted", "declined", "gone", "maybe"] as const
 export type InviteOutcome = (typeof INVITE_OUTCOMES)[number]
 
 export interface NotificationView {
@@ -631,6 +673,48 @@ export interface NotificationView {
   readonly moderationDecision?: { readonly pageHandle: string | null }
   /** Avis d'une conversation de mise en relation : le fil, relu pour moi ; `null` s'il ne se lit plus. */
   readonly contextualThreadId?: string | null
+  /**
+   * NP-04 · `page_post` : la page qui a publié, par sa carte PUBLIQUE relue à l'instant (son nom
+   * dit qui parle) ; `null` quand elle n'est plus active. Aucun contenu de la publication.
+   */
+  readonly page?: { readonly handle: string; readonly name: string } | null
+  /** NP-04 · `album_published` : l'album publié, sur le profil de son auteur ; `null` sans sujet. */
+  readonly albumId?: string | null
+  /** NP-04 · `file_withheld` : l'analyse a depuis libéré le fichier (statut vivant relu par le serveur). */
+  readonly fileReleased?: boolean
+  /**
+   * NP-04 · avis de gouvernance d'une page (PG-01 du moteur) : l'adresse de la page, lisible par
+   * le destinataire à l'instant ; `null` sinon. Jamais son nom dans l'avis.
+   */
+  readonly governancePageHandle?: string | null
+  /** IM-04 · message ou invitation de groupe : le fil de groupe d'iCom, relu à l'ouverture ; `null` sans sujet. */
+  readonly groupThreadId?: string | null
+}
+
+/** NP-04 : les avis lus par page sur la page des notifications ; « Afficher plus » lit la suivante. */
+export const NOTIFICATIONS_PAGE_SIZE = 20
+
+/** Une page de la cloche : curseur opaque du fournisseur (`null` ou absent : la première). */
+export interface NotificationsPageRequest {
+  readonly cursor?: string | null
+}
+
+/**
+ * Une page native des avis : ses lignes déjà relues pour ce lecteur, sa suite et sa fin. Une page
+ * peut être courte sans être la dernière (le serveur écarte un avis devenu illisible).
+ */
+export interface NotificationsPageView {
+  readonly items: readonly NotificationView[]
+  readonly continueCursor: string
+  readonly isDone: boolean
+}
+
+/** Une page réactive des avis : une panne après données conserve celles-ci pendant la reprise. */
+export interface NotificationsPageQuery {
+  readonly data: NotificationsPageView | undefined
+  readonly isLoading: boolean
+  readonly error: ActionErrorCode | null
+  readonly retry: () => void
 }
 
 /** Les non-lues, bornées : au-delà de 99, la cloche dit « 99+ ». */

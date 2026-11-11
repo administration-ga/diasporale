@@ -46,6 +46,8 @@ import type {
   OwnProfileView,
   PostView,
   NotificationView,
+  NotificationsPageQuery,
+  NotificationsPageRequest,
   ProfileImageView,
   ProfileView,
   ProfilePostsPageRequest,
@@ -423,6 +425,11 @@ export interface DiasporaleDataSource {
   useRepliesPage(args: RepliesPageRequest): CommentPageQuery<CommentView>
   /** La cloche : les avis les plus récents, et le compte des non-lus. */
   useNotifications(): Loadable<readonly NotificationView[]>
+  /**
+   * NP-04 : une page des MÊMES avis, du plus récent au plus ancien, sur le curseur du serveur ;
+   * la page des notifications lit la suivante à la demande, sans limite de nombre.
+   */
+  useNotificationsPage(args: NotificationsPageRequest): NotificationsPageQuery
   useUnreadCount(): Loadable<UnreadCountView>
   usePage(handle: string): Loadable<PageDetailView | null>
   useHandleSuggestions(displayName: string): readonly string[]

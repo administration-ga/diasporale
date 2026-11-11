@@ -4,6 +4,7 @@
  * rend ; ici, on ne fait que changer de forme, et une valeur hors forme (un pays
  * inconnu, une facette absente) fait retomber la vue au plus prudent.
  */
+import { isServableStatus } from "@antsia/social-domain/filePolicy"
 import type { api } from "@convex/_generated/api"
 import {
   admitsInFeedScope,
@@ -42,8 +43,10 @@ import {
   COMMUNITY_NOTIFICATION_KINDS,
   CONTEXTUAL_NOTIFICATION_KINDS,
   NOTIFICATION_KINDS,
+  PAGE_GOVERNANCE_NOTIFICATION_KINDS,
   SERVICE_NOTIFICATION_KINDS,
   type CommunityNoticeView,
+  type InviteOutcome,
   type NotificationKind,
   type NotificationView,
   type ProfileImageView,
@@ -477,6 +480,46 @@ function toCommunityNoticeView(notice: EngineNotification["communityNotice"]): C
 }
 
 /**
+ * NP-04 : les invitations dont le serveur pose la RÉSOLUTION dans la transaction qui tranche
+ * (groupe thématique, évènement personnel ; PG-01 : signer pour une page). Comparées comme
+ * chaînes : un genre que ce moteur ne déclare pas encore ne casse pas le typage.
+ */
+const RESOLVED_INVITE_KINDS: ReadonlySet<string> = new Set(["thematic_group_invite", "event_invite", "page_signatory_invite", "group_added"])
+
+/** IM-04 : les avis d'un groupe de discussion d'iCom (message, invitation) — le fil est leur seul sujet. */
+const GROUP_THREAD_NOTICE_KINDS: ReadonlySet<string> = new Set(["group_message", "group_added"])
+
+/** NP-04 · PG-01 : les avis de gouvernance d'une page, menés à la page relue pour le lecteur. */
+const PAGE_GOVERNANCE_NOTICE_KINDS: ReadonlySet<string> = new Set(PAGE_GOVERNANCE_NOTIFICATION_KINDS)
+
+/** L'issue d'une invitation d'après la résolution du serveur ; annulée ou expirée, elle n'est plus d'actualité. */
+function resolutionOutcome(resolution: EngineNotification["resolution"]): InviteOutcome | null {
+  switch (resolution?.kind) {
+    case undefined:
+      return null
+    case "accepted":
+      return "accepted"
+    case "declined":
+      return "declined"
+    case "maybe":
+      return "maybe"
+    case "cancelled":
+    case "expired":
+      return "gone"
+  }
+}
+
+/**
+ * L'adresse de la page d'une destination typée `page` (PG-01 du moteur, PR antsia 144), lue sans
+ * dépendre de sa déclaration : tant que ce moteur ne la sert pas, aucune adresse.
+ */
+function pageTargetHandle(target: unknown): string | null {
+  if (typeof target !== "object" || target === null) return null
+  const typed = target as { readonly kind?: unknown; readonly pageHandle?: unknown }
+  return typed.kind === "page" && typeof typed.pageHandle === "string" && typed.pageHandle !== "" ? typed.pageHandle : null
+}
+
+/**
  * Un avis de la cloche du moteur. Un genre que DIASPORALE ne sait pas dire se dit
  * « nouvelle activité » ; une demande de relation porte son état VIVANT (encore à
  * trancher par moi, acceptée, refusée, ou disparue).
@@ -487,7 +530,7 @@ export function toNotificationView(item: EngineNotification): NotificationView {
   const subject = item.subject
   const pendingConnectionId =
     item.kind === "connection_request" && invite?.status === "requested" && invite.iAmRecipient && subject?.kind === "connection" ? subject.id : null
-  const inviteOutcome =
+  const connectionOutcome =
     item.kind !== "connection_request" || !invite || invite.status === "requested"
       ? null
       : invite.status === "accepted"
@@ -495,6 +538,7 @@ export function toNotificationView(item: EngineNotification): NotificationView {
         : invite.status === "declined"
           ? "declined"
           : "gone"
+  const inviteOutcome = RESOLVED_INVITE_KINDS.has(item.kind) ? resolutionOutcome(item.resolution) : connectionOutcome
   return {
     id: item.notificationId,
     kind,
@@ -511,6 +555,16 @@ export function toNotificationView(item: EngineNotification): NotificationView {
     ...(item.kind === "moderation_decision" ? { moderationDecision: { pageHandle: item.page?.handle ?? null } } : {}),
     // CC-6 : le fil d'une conversation de mise en relation, relu pour le destinataire par le moteur.
     ...(CONTEXTUAL_NOTICE_KINDS.has(item.kind) ? { contextualThreadId: subject?.kind === "contextualThread" ? subject.id : null } : {}),
+    // NP-04 : la page suivie qui a publié, par sa carte publique relue (son nom dit qui parle).
+    ...(item.kind === "page_post" ? { page: item.page ? { handle: item.page.handle, name: item.page.name } : null } : {}),
+    // NP-04 : l'album publié, sur le profil de son auteur.
+    ...(item.kind === "album_published" ? { albumId: subject?.kind === "album" ? subject.id : null } : {}),
+    // NP-04 : un fichier retenu que l'analyse a depuis libéré (statut vivant relu par le serveur).
+    ...(item.kind === "file_withheld" ? { fileReleased: isServableStatus(item.fileScanStatus) } : {}),
+    // NP-04 · PG-01 : la page d'un avis de gouvernance, lisible par le destinataire à l'instant.
+    ...(PAGE_GOVERNANCE_NOTICE_KINDS.has(item.kind) ? { governancePageHandle: pageTargetHandle(item.target) } : {}),
+    // IM-04 : le fil de groupe d'iCom, relu avec sa garde à l'ouverture (jamais un message).
+    ...(GROUP_THREAD_NOTICE_KINDS.has(item.kind) ? { groupThreadId: subject?.kind === "groupThread" ? subject.id : null } : {}),
   }
 }
 

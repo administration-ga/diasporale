@@ -47,6 +47,13 @@ const featureRoutes: FeatureRoutes = {
   contextualConversation: routes.contextualConversation,
   // Les règles de la communauté (MD-05) : la feuille de signalement y renvoie.
   communityRules: routes.communityRules,
+  // NP-04 : la page des notifications, l'album d'un avis d'album publié, l'agenda d'une invitation.
+  notifications: routes.notifications,
+  album: routes.album,
+  agenda: routes.agenda,
+  // IM-04 : la conversation de groupe d'iCom, le journal d'appels (aucune route d'appel, IM-01).
+  groupConversation: routes.groupConversation,
+  callJournal: routes.callJournal,
   hub: routes.hub,
   feed: (tag, context) => routes.feed(context?.scope, tag, context?.country),
   sponsor: routes.sponsor,

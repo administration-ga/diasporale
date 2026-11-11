@@ -61,6 +61,8 @@ import type {
   OpenCountryView,
   PostView,
   NotificationView,
+  NotificationsPageQuery,
+  NotificationsPageRequest,
   ProfileView,
   ProfilePostsPageRequest,
   ReactionKind,
@@ -71,7 +73,7 @@ import type {
   SuggestionView,
   UnreadCountView,
 } from "@diasporale/features/data"
-import { BOOKMARKS_PAGE_SIZE, COMMENT_REPLIES_PAGE, COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH, prepareMediaFile } from "@diasporale/features/data"
+import { BOOKMARKS_PAGE_SIZE, COMMENT_REPLIES_PAGE, COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH, NOTIFICATIONS_PAGE_SIZE, prepareMediaFile } from "@diasporale/features/data"
 import { type ConvexReactClient, type RequestForQueries, useQueries } from "convex/react"
 import { type FunctionArgs, type FunctionReference, type FunctionReturnType, getFunctionName, makeFunctionReference } from "convex/server"
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
@@ -637,6 +639,33 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
       const page = useLoaded(api.modules.notifications.bell.paginateNotifications, id ? { networkId: id, paginationOpts: { numItems: BELL_PAGE, cursor: null } } : "skip")
       for (const loaded of [networkId, page]) if (loaded.state === "error") return failed(loaded.code)
       return page.state === "ready" ? ready(page.value.page.map(toNotificationView)) : LOADING
+    },
+
+    // NP-04 : la page des notifications lit la cloche page après page, sur le curseur natif du moteur
+    // (`paginateNotifications`), mêmes gardes que la feuille : une adhésion au réseau, le serveur juge
+    // le reste. Une panne garde la page déjà lue pendant la reprise ; un refus d'accès ne sert aucun cache.
+    useNotificationsPage(args: NotificationsPageRequest): NotificationsPageQuery {
+      const { auth, networkId, membership } = useMember()
+      const id = networkId.state === "ready" ? networkId.value : null
+      const row = membership.state === "ready" ? membership.value : null
+      const canRead = auth.isAuthenticated && id !== null && row !== null
+      const query = useAuthenticatedConvexQuery(
+        api.modules.notifications.bell.paginateNotifications,
+        canRead && id ? { networkId: id, paginationOpts: { numItems: NOTIFICATIONS_PAGE_SIZE, cursor: args.cursor ?? null } } : "skip",
+      )
+      let error: ActionErrorCode | null = query.isError ? engineActionErrorCode(query.error) : null
+      if (auth.isUnauthenticated) error = "not_signed_in"
+      else if (networkId.state === "error") error = networkId.code
+      else if (membership.state === "error") error = membership.code
+      else if (networkId.state === "ready" && id === null) error = "network_unavailable"
+      else if (membership.state === "ready" && !row) error = "not_member"
+      const page = useReadablePostsQuery(query, JSON.stringify(["notifications", id, args.cursor ?? null, canRead]), canRead, error)
+      const data = useMemo(() => page.data === undefined ? undefined : {
+        items: page.data.page.map(toNotificationView),
+        continueCursor: page.data.continueCursor,
+        isDone: page.data.isDone,
+      }, [page.data])
+      return { data, isLoading: page.isLoading, error: page.error, retry: page.retry }
     },
 
     useUnreadCount(): Loadable<UnreadCountView> {
