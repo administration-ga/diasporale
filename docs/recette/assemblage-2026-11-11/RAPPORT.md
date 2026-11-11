@@ -1,12 +1,12 @@
 # Vérifications d'assemblage — 11 novembre 2026
 
-Ce rapport dit l'état vérifié des deux dépôts après les lots du 11 novembre : le lot couplé, assemblé, vérifié et fusionné par la session du moteur, les lots 5, 6 et 7, assemblés, vérifiés et fusionnés par la session DIASPORALE, puis le lot 11, couplé, assemblé, vérifié et fusionné par la session du moteur. Chaque lot a été vérifié dans le créneau lourd attribué par la session de coordination, sous le verrou commun des sessions. Ce rapport ne contient aucun identifiant de déploiement.
+Ce rapport dit l'état vérifié des deux dépôts après les lots du 11 novembre : le lot couplé, assemblé, vérifié et fusionné par la session du moteur, les lots 5, 6, 7 et 8, assemblés, vérifiés et fusionnés par la session DIASPORALE, et les lots 11 et 13, couplés, assemblés, vérifiés et fusionnés par la session du moteur. Chaque lot a été vérifié dans le créneau lourd attribué par la session de coordination, sous le verrou commun des sessions. Ce rapport ne contient aucun identifiant de déploiement.
 
 ## Le couple vérifié
 
 | Sujet | Constat |
 |---|---|
-| Couple de versions | ANTSIA `599dc93`, DIASPORALE `fabc540` (`main` des deux dépôts après le lot 11) ; avant lui, ANTSIA `ecca990` et DIASPORALE `43b0aa1` (après le lot 7), `bf3ebe4` (après le lot 6), puis ANTSIA `22bae3c` et DIASPORALE `20e5df4` (après le lot 5) |
+| Couple de versions | ANTSIA `16f4391`, DIASPORALE `cfd5603` (`main` des deux dépôts après le lot 13) ; avant lui, ANTSIA `c44337f` et DIASPORALE `94eb9b9` (après le lot 8), ANTSIA `599dc93` et DIASPORALE `fabc540` (après le lot 11), ANTSIA `ecca990` et DIASPORALE `43b0aa1` (après le lot 7), `bf3ebe4` (après le lot 6), puis ANTSIA `22bae3c` et DIASPORALE `20e5df4` (après le lot 5) |
 | Arbres | chaque vérification a tourné sur l'assemblage local des PR ; l'arbre de chaque `main` fusionné est identique à l'arbre vérifié (contrôle fait après la dernière fusion de chaque lot) |
 | Commande | vérification complète depuis le moteur (`bun run verify` : génération, typage, tests du moteur, cliquets, scripts, puis typage, tests et lint de tous les espaces de travail, dont ceux de DIASPORALE), puis `bun run test:scripts` à la racine de DIASPORALE |
 | Résultat | **vert** pour chaque lot |
@@ -87,6 +87,28 @@ Assemblé, vérifié et fusionné par la session du moteur, avec l'accord écrit
 - `main` après fusion : ANTSIA `599dc93` (arbre `b7bbd4c`), DIASPORALE `fabc540` (arbre `e495677`), identiques aux arbres vérifiés (contrôlé aussi par la session DIASPORALE après la fusion).
 - La PR 73 n'entre jamais seule : le cliquet `i18n-keys` est à double sens (clé manquante sans elle, clé orpheline sans la 163).
 
+## Lot 8 (session DIASPORALE)
+
+Moteur `c44337f` seul (il contient antsia#168 depuis son lot 12), DIASPORALE `17b5045` + PR 77 à sa tête `6c75222`.
+
+- Premier passage à 15 h 49 : **rouge**, sans fusion. Un seul test d'écran (mentorat) a dépassé sa limite de 15 s (16,4 s) sous une charge de la machine de 150 ; rejoué seul, il passait en 4,3 s.
+- Rejeu de 16 h 25 à 16 h 38, agents des autres sessions en pause : **vert**. Moteur 3 715 tests, cliquets 163, scripts 171 ; domaine 792 (couverture à 100 %), surfaces 1 215, application 2 177 ; lint sans erreur ; scripts de DIASPORALE 86.
+- `main` après fusion : DIASPORALE `94eb9b9` (arbre `f98f33c`), identique à l'arbre vérifié.
+- Contenu (UM-03, EM-01) : une offre d'emploi propose d'abord « Frais demandés au candidat » et « Usurpation d'une entreprise » ; le guichet et « Mes données » les nomment ; l'encart contre les fausses offres cite le motif dédié.
+
+## Lot 13 (session du moteur, couplé)
+
+Assemblé, vérifié et fusionné par la session du moteur, avec l'accord écrit de la session DIASPORALE pour la PR 78, sous le gel de `main` de DIASPORALE.
+
+| Contrôle | Résultat (rapporté par la session du moteur) |
+|---|---|
+| Vérification complète | verte (`verify`, 785 s) |
+| Tests du moteur | 3 733 ; cliquets 163 |
+| Tests des scripts de DIASPORALE | verts |
+
+- Moteur : PR 171 (actions d'audit des admissions fondatrices), 172 (avis de déplacement d'un rendez-vous, règles et émissions de la tranche écrites par la session DIASPORALE), 173, 174 (un signataire ne signale ni sa page, ni ses évènements, ni ses publications) et 175 ; DIASPORALE : PR 78 (la cloche nomme les deux avis de déplacement).
+- `main` après fusion : ANTSIA `16f4391` (arbre `77794a0`), DIASPORALE `cfd5603` (arbre `bb32a69`), identiques aux arbres vérifiés (contrôlés aussi par la session DIASPORALE).
+
 ## Ce qui n'a pas été fait
 
 - **Aucune recette au navigateur** de ces lots : ni en démonstration, ni en mode moteur, ni à deux comptes, ni sur téléphone.
@@ -95,6 +117,6 @@ Assemblé, vérifié et fusionné par la session du moteur, avec l'accord écrit
 
 ## Connu et laissé pour la suite
 
-- Demandes au moteur encore ouvertes : filtre « non lues » côté serveur et destination d'une invitation de groupe (antsia#149) ; durée de validité du code publiée par le moteur (antsia#151) ; refus qu'un signataire signale sa propre page, ses évènements et ce qu'elle porte (antsia#114, point 2) ; actions d'audit et console des membres fondateurs (antsia#120) ; deux avis du déplacement d'un rendez-vous (antsia#133). Servies puis fermées : équipe de modération admise et échéance de purge d'une revendication (antsia#148, lots 10 et 6) ; décisions lues par l'auteur (antsia#99, lots 10 et 7) ; avis aux inscrits d'un évènement (antsia#97) ; responsables du réseau (antsia#98).
+- Demande au moteur encore ouverte : l'écran de console des membres fondateurs (antsia#120, point 4) ; les décisions par la console et au journal attendent antsia#176. Servies puis fermées : filtre « non lues » et destination d'une invitation de groupe (antsia#149) ; durée du code publiée (antsia#151) ; auto-signalement d'un signataire (antsia#114) ; avis du déplacement d'un rendez-vous (antsia#133) ; équipe de modération et purge d'une revendication (antsia#148) ; décisions lues par l'auteur (antsia#99) ; avis aux inscrits d'un évènement (antsia#97) ; responsables du réseau (antsia#98). Le moteur prépare une PR à part pour la réponse d'avis et le direct d'une page.
 - Revendications : les équipes par pays n'existent pas encore au moteur ; le rattrapage des revendications tranchées avant PG-01 et la durée de conservation des pièces (90 jours) restent à décider par le propriétaire et le juriste.
 - La durée de cinq minutes d'une vidéo est une valeur proposée par le moteur, à valider par le propriétaire.
