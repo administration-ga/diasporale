@@ -1,15 +1,15 @@
 # Vérifications d'assemblage — 11 novembre 2026
 
-Ce rapport dit l'état vérifié des deux dépôts après les deux lots du 11 novembre : le lot couplé, assemblé, vérifié et fusionné par la session du moteur, puis le lot 5, assemblé, vérifié et fusionné par la session DIASPORALE. Chaque lot a été vérifié dans le créneau lourd attribué par la session de coordination, sous le verrou commun des sessions. Ce rapport ne contient aucun identifiant de déploiement.
+Ce rapport dit l'état vérifié des deux dépôts après les lots du 11 novembre : le lot couplé, assemblé, vérifié et fusionné par la session du moteur, puis les lots 5 et 6, assemblés, vérifiés et fusionnés par la session DIASPORALE. Chaque lot a été vérifié dans le créneau lourd attribué par la session de coordination, sous le verrou commun des sessions. Ce rapport ne contient aucun identifiant de déploiement.
 
 ## Le couple vérifié
 
 | Sujet | Constat |
 |---|---|
-| Couple de versions | ANTSIA `22bae3c`, DIASPORALE `20e5df4` (`main` des deux dépôts après le lot 5) |
+| Couple de versions | ANTSIA `ecca990`, DIASPORALE `bf3ebe4` (`main` des deux dépôts après le lot 6) ; avant lui, ANTSIA `22bae3c` et DIASPORALE `20e5df4` (après le lot 5) |
 | Arbres | chaque vérification a tourné sur l'assemblage local des PR ; l'arbre de chaque `main` fusionné est identique à l'arbre vérifié (contrôle fait après la dernière fusion de chaque lot) |
 | Commande | vérification complète depuis le moteur (`bun run verify` : génération, typage, tests du moteur, cliquets, scripts, puis typage, tests et lint de tous les espaces de travail, dont ceux de DIASPORALE), puis `bun run test:scripts` à la racine de DIASPORALE |
-| Résultat | **vert** pour les deux lots |
+| Résultat | **vert** pour chaque lot |
 
 ## Lot couplé (session du moteur)
 
@@ -40,6 +40,24 @@ Vérifié de 11 h 10 à 11 h 30, fusions comprises.
 
 Le détail lot par lot est dans le registre (`docs/etudes/2026-11-10-finalisation/EXECUTION.md`).
 
+## Lot 6 (session DIASPORALE)
+
+Vérifié de 13 h 48 à 13 h 59, fusions comprises, après la fusion du lot 10 de la session du moteur (antsia#155 à #158, `main` `20cecf0`).
+
+| Contrôle | Résultat |
+|---|---|
+| Tests du moteur | 236 fichiers, 3 653 tests passés |
+| Cliquets du moteur | 27 fichiers, 159 tests passés |
+| Tests des scripts du moteur | 171 passés |
+| Typage et tests des espaces de travail | aucun échec |
+| dont DIASPORALE | domaine 792 (couverture à 100 %) ; surfaces 1 211 (62 fichiers) ; application 2 175 (147 fichiers) |
+| Tests des scripts de DIASPORALE | 86 passés |
+| Lint | aucune erreur |
+
+- Moteur, PR 160 à sa tête `7cdf90c` (accord écrit de la session du moteur) ; DIASPORALE, PR 72 à sa tête `d1a1ea6`.
+- `main` après fusion : ANTSIA `ecca990` (arbre `aa90391`), DIASPORALE `bf3ebe4` (arbre `bbcdab1`), identiques aux arbres vérifiés. Aucun conflit.
+- Contenu (AS-01) : le moteur admet, pour instruire une revendication de page, le rôle de réseau ou le membre de l'équipe de modération compétente (`pageClaimReviewCapacity`, antsia#155). La file « Pages à vérifier » de la tranche suit cette règle à l'identique (antsia#160), et l'onglet de DIASPORALE la lit (`myPageClaimReview`), avec repli sur le rôle de réseau (#72).
+
 ## Ce qui n'a pas été fait
 
 - **Aucune recette au navigateur** de ces lots : ni en démonstration, ni en mode moteur, ni à deux comptes, ni sur téléphone.
@@ -48,6 +66,6 @@ Le détail lot par lot est dans le registre (`docs/etudes/2026-11-10-finalisatio
 
 ## Connu et laissé pour la suite
 
-- Demandes au moteur : équipe de modération admise et échéance de purge d'une revendication (antsia#148, en cours) ; filtre « non lues » côté serveur et destination d'une invitation de groupe (antsia#149) ; durée de validité du code publiée par le moteur (antsia#151).
-- Quand le moteur admettra les équipes de modération pour les revendications, la file « Pages à vérifier » de la tranche devra suivre.
+- Demandes au moteur encore ouvertes : filtre « non lues » côté serveur et destination d'une invitation de groupe (antsia#149) ; durée de validité du code publiée par le moteur (antsia#151). Servies au lot 10, puis suivies au lot 6 : équipe de modération admise et échéance de purge d'une revendication (antsia#148) ; décisions lues par l'auteur (antsia#99, alignement du port en #74).
+- Revendications : les équipes par pays n'existent pas encore au moteur ; le rattrapage des revendications tranchées avant PG-01 et la durée de conservation des pièces (90 jours) restent à décider par le propriétaire et le juriste.
 - La durée de cinq minutes d'une vidéo est une valeur proposée par le moteur, à valider par le propriétaire.
