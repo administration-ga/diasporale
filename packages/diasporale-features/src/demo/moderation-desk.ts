@@ -427,6 +427,16 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
     const team = teamOf(desk, teamId)
     return team !== null && team !== undefined && isTeamMember(team, personId)
   }
+  /**
+   * AS-01, la règle du moteur (`pages/claims.pageClaimReviewCapacity`) : qui instruit les revendications
+   * de page — un rôle de réseau, ou le membre de l'équipe compétente pour les pages (l'équipe de nature
+   * « page », à défaut l'équipe sans nature). Une équipe d'une autre nature ne gagne rien.
+   */
+  const canReviewClaims = (desk: DeskWorld, personId: string): boolean => {
+    if (capacityOf(desk, personId).networkWide) return true
+    const team = desk.teams.find((row) => row.scope === "page") ?? desk.teams.find((row) => row.scope === null)
+    return team !== undefined && isTeamMember(team, personId)
+  }
   /** Les responsables du jeu en cours : la personne de la session d'abord, puis l'ordre des gestes ; administration avant modération. */
   const responsiblesOf = (desk: DeskWorld, viewer: string): DeskResponsibleView[] => {
     const ids = [viewer, ...[...desk.roles.keys()].filter((id) => id !== viewer)]
@@ -467,7 +477,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
             canReviewAppeals: capacity.admin,
             canManageTeams: capacity.admin,
             canManagePolicy: capacity.admin,
-            canReviewClaims: capacity.networkWide,
+            canReviewClaims: canReviewClaims(desk, personId),
             teams,
           },
         }
@@ -803,8 +813,8 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
         const refusal = viewerRefusal(personId)
         if (refusal !== null) return refused(refusal)
         const desk = deskWorld()
-        // Comme `pages/claims` : le rôle de réseau seul instruit.
-        if (!capacityOf(desk, personId).networkWide) return refused("not_found")
+        // Comme `pages/claims` : rôle de réseau, ou équipe compétente pour les pages.
+        if (!canReviewClaims(desk, personId)) return refused("not_found")
         const filter = deskZoneFromKey(zoneKey)
         return windowed(claims.pending(personId).filter((row) => isInDeskZone(filter, row.country)), cursor, desk.world)
       }, [version, personId, zoneKey, cursor])
@@ -816,7 +826,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
         if (version === null) return LOADING
         const refusal = viewerRefusal(personId)
         if (refusal !== null) return refused(refusal)
-        if (!capacityOf(deskWorld(), personId).networkWide) return refused("not_found")
+        if (!canReviewClaims(deskWorld(), personId)) return refused("not_found")
         const detail = claims.detail(personId, claimId)
         return detail === null ? refused("not_found") : { status: "ready", data: detail }
       }, [version, personId, claimId])
@@ -825,7 +835,7 @@ export function createDemoModerationDesk(store: DemoStore): ModerationDeskCapabi
     async decideClaim(input) {
       const refusal = viewerRefusal(input.personId)
       if (refusal !== null) return fail(refusal)
-      if (!capacityOf(deskWorld(), input.personId).networkWide) return fail("not_found")
+      if (!canReviewClaims(deskWorld(), input.personId)) return fail("not_found")
       const reasonRefusal = deskReasonRefusal(input.reason)
       if (reasonRefusal !== null) return fail(reasonRefusal)
       return claims.decide({ deciderId: input.personId, claimId: input.claimId, decision: input.decision, reason: input.reason })

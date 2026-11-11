@@ -189,7 +189,7 @@ export function toDeskView(row: NonNullable<DeskRow>): ModerationDeskView {
     canReviewAppeals: row.canReviewAppeals,
     canManageTeams: row.canManageTeams,
     canManagePolicy: row.canManagePolicy,
-    // AS-01 : `pages/claims` n'admet que le rôle de réseau (`networkRoleCapacity`), la règle de `networkWide`.
+    // AS-01 : avant la réponse du moteur (`pages.claims.myPageClaimReview`), la règle du rôle de réseau.
     canReviewClaims: row.networkWide,
     teams: row.teams.map((team) => ({ teamId: team.teamId, name: team.name, scope: team.scope, isMember: team.isMember })),
   }
@@ -487,7 +487,16 @@ export function createEngineModerationDesk(deps: EngineSourceDeps): ModerationDe
     useDesk(personId) {
       const reader = useDeskReader(personId)
       const loaded = useLoaded(DESK.myDesk, reader.networkId ? { networkId: reader.networkId, expectedPersonId: personId as Id<"persons"> } : "skip")
-      return useProjected(reader, loaded, projectDesk)
+      // AS-01 : qui instruit les revendications, par la règle du moteur (rôle de réseau, ou membre de l'équipe
+      // compétente pour les pages). Tant qu'elle n'est pas lue, ou si le moteur en ligne ne la sert pas encore,
+      // le guichet garde la règle du rôle de réseau : la lecture ne retarde ni ne casse le reste du guichet.
+      const review = useLoaded(CLAIMS.myPageClaimReview, reader.networkId ? { networkId: reader.networkId } : "skip")
+      const canReviewClaims = review.state === "ready" ? review.value.canReview : null
+      const desk = useProjected(reader, loaded, projectDesk)
+      return useMemo(
+        () => (desk.status === "ready" && desk.data !== null && canReviewClaims !== null ? ready({ ...desk.data, canReviewClaims }) : desk),
+        [desk, canReviewClaims],
+      )
     },
 
     useQueue({ personId, zone, surface, teamId, status, lane, cursor }) {
