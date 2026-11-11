@@ -215,6 +215,15 @@ describe("Guichet — file par pays", () => {
       media: [{ kind: "image", url: null, withheld: "quarantined", altText: null, width: null, height: null }],
     })
   })
+
+  it("MC-01 du moteur : un groupe et un message personnel se projettent tels quels, l'aperçu du message sans rien de plus", () => {
+    expect(toCaseView({ ...CASE_ROW, surface: "thematicGroup", party: "group" } as never)).toMatchObject({ surface: "thematicGroup", party: "group" })
+    expect(toCaseView({ ...CASE_ROW, surface: "personalMessage", country: null } as never)).toMatchObject({ surface: "personalMessage", country: null })
+    // Seuls titre, texte et médias passent : ni nature de contexte, ni révision, ni empreinte.
+    expect(toPreviewView({ kind: "personalMessage", available: true, title: null, body: "Message signalé", media: [], context: null, sourceRevision: 3, sourceDigest: "empreinte" } as never)).toEqual({
+      available: true, title: null, body: "Message signalé", media: [],
+    })
+  })
 })
 
 describe("Guichet — délais légaux (SU01d du moteur)", () => {

@@ -14,8 +14,9 @@
  *     de ses équipes, comme le moteur le ferait ;
  *   · la file est un jeu d'exemples fictifs, sans lien avec les publications ni
  *     les personnes du magasin, répartis entre la France, la Belgique, le Canada
- *     et les cibles sans pays ; deux dossiers montrent la retenue d'une personne
- *     partie au dossier ;
+ *     et les cibles sans pays ; trois dossiers montrent la retenue d'une personne
+ *     partie au dossier ; un groupe thématique et un message personnel (MC-01 du
+ *     moteur) y figurent, le second sans pays et sans titre, comme le moteur les sert ;
  *   · SU01d : un dossier porte un délai légal quand la règle du MOTEUR en pose un
  *     pour son motif (`reportLegalBasis`, `reportDecisionDueAt`), échéance comptée
  *     depuis sa transmission, accusé de réception remis à la transmission comme
@@ -218,12 +219,16 @@ function seedWorld(world: number): DeskWorld {
     demoCase({ id: "demo-dossier-9", surface: "post", country: "FR", ground: "deepfake_of_me", age: 21 * HOUR, world, team: true, hasAuthor: true, body: "Exemple fictif : vidéo truquée qui prête à une membre des propos qu'elle n'a jamais tenus, signalée par l'intéressée." }),
     demoCase({ id: "demo-dossier-4", surface: "serviceReview", country: "FR", ground: "spam", age: 18 * HOUR, world, team: true, hasAuthor: true, body: "Exemple fictif : avis promotionnel copié sous plusieurs prestations." }),
     demoCase({ id: "demo-dossier-5", surface: "serviceReviewReply", country: "BE", ground: "harassment", age: 14 * HOUR, world, team: false, hasAuthor: false, body: "Exemple fictif : réponse d'une page qui interpelle l'auteur de l'avis sur un ton agressif." }),
+    // MC-01 du moteur : un groupe se range au pays du groupe ; qui le tient ne tranche pas.
+    demoCase({ id: "demo-dossier-10", surface: "thematicGroup", country: "FR", ground: "fraud", age: 12 * HOUR, world, team: false, hasAuthor: true, party: "group", title: "Groupe fictif des démarches à Bordeaux", body: "Exemple fictif : fiche d'un groupe qui promet, contre paiement, d'accélérer les démarches consulaires de ses membres.\n\nRègles fictives : adhésion réservée aux membres qui ont réglé leur participation." }),
     demoCase({ id: "demo-dossier-6", surface: "event", country: "CA", ground: "other", age: 10 * HOUR, world, team: false, hasAuthor: false, title: "Soirée fictive à Montréal", body: "Exemple fictif : évènement dont la description renvoie vers une cagnotte extérieure non expliquée." }),
     demoCase({
       id: "demo-dossier-7", surface: "post", country: null, ground: "misinformation", age: 6 * HOUR, world, team: false, hasAuthor: true,
       body: "Exemple fictif : publication de portée diaspora annonçant une démarche consulaire inexistante.",
       history: [{ status: "dismissed", origin: "reader", decidedAt: world - 3 * DAY, decisionReason: "Information vérifiée auprès de la source citée (exemple fictif).", sanctions: [] }],
     }),
+    // MC-01 du moteur : un message personnel est « sans pays » ; l'aperçu n'est que son texte, sans titre.
+    demoCase({ id: "demo-dossier-11", surface: "personalMessage", country: null, ground: "spam", age: 4 * HOUR, world, team: false, hasAuthor: true, body: "Exemple fictif : message privé qui renvoie vers un placement financier présenté comme garanti." }),
     demoCase({ id: "demo-dossier-8", surface: "person", country: null, ground: "harassment", age: 2 * HOUR, world, team: false, hasAuthor: true, party: "reporter", title: "Compte fictif", body: "Exemple fictif : compte qui relance des membres en messages privés malgré leurs refus." }),
   ]
   const pending: DemoPending[] = [

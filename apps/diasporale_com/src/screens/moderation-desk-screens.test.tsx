@@ -142,21 +142,23 @@ function fakeDesk(options: {
   readonly demonstration?: boolean
   readonly deadlines?: Loadable<DeskDeadlineLane>
   readonly roleResult?: (input: DeskResponsibleRoleInput) => ActionResult<DeskResponsibleRoleResult>
+  /** Les dossiers de la file (par défaut `CASE` et `PARTY_CASE`). */
+  readonly cases?: readonly DeskCaseView[]
+  /** L'aperçu borné rendu pour tout dossier. */
+  readonly preview?: DeskPreviewView
 } = {}) {
   const view = options.view ?? ready(MODERATOR)
   const deadlines = options.deadlines ?? ready(EMPTY_LANE)
-  const cases = windowOf([CASE, PARTY_CASE])
+  const rows = options.cases ?? [CASE, PARTY_CASE]
+  const cases = windowOf(rows)
   // La file ordinaire ne reprend pas les dossiers de la voie, comme les fournisseurs réels.
   const shown = new Set(deadlines.status === "ready" ? deadlines.data.items.map((row) => row.reportId) : [])
-  const ordinary = windowOf([CASE, PARTY_CASE].filter((row) => !shown.has(row.reportId)))
+  const ordinary = windowOf(rows.filter((row) => !shown.has(row.reportId)))
   const deadlineReads: DeskDeadlinesRequest[] = []
   const pending = windowOf<DeskPendingView>([])
   const appeals = windowOf([APPEAL])
-  const preview: Loadable<DeskPreviewView> = ready({ available: true, title: null, body: "Texte signalé (fixture).", media: [] })
-  const details = new Map<string, Loadable<DeskCaseDetailView>>([
-    [CASE.reportId, ready({ case: CASE, history: [], historyMore: false })],
-    [PARTY_CASE.reportId, ready({ case: PARTY_CASE, history: [], historyMore: false })],
-  ])
+  const preview: Loadable<DeskPreviewView> = ready(options.preview ?? { available: true, title: null, body: "Texte signalé (fixture).", media: [] })
+  const details = new Map<string, Loadable<DeskCaseDetailView>>(rows.map((row) => [row.reportId, ready({ case: row, history: [], historyMore: false })]))
   const missing: Loadable<DeskCaseDetailView> = { status: "error", code: "not_found" }
   const roster: Loadable<DeskRosterView> = ready({ members: [{ personId: "person-nadia", handle: "nadia.fixture", displayName: "Nadia Fixture", inNetwork: true, isMe: false }], more: false })
   const queueReads: DeskQueueRequest[] = []
@@ -453,6 +455,40 @@ describe("Guichet — décision motivée", () => {
     const dialog = await screen.findByRole("dialog")
     const rule = within(dialog).getByRole("link", { name: String(translate("communityRules.readRule", { rule: translate("legal.community.respect.title") })) })
     expect(rule).toHaveAttribute("href", "/regles-communaute#respect")
+  })
+})
+
+describe("Guichet — groupe thématique et message personnel (MC-01 du moteur)", () => {
+  const MESSAGE_CASE: DeskCaseView = { ...CASE, reportId: "report-11", surface: "personalMessage", country: null, ground: "spam" }
+  const GROUP_CASE: DeskCaseView = { ...CASE, reportId: "report-10", surface: "thematicGroup", ground: "fraud", party: "group" }
+  const MESSAGE_PREVIEW: DeskPreviewView = { available: true, title: null, body: "Message signalé (fixture).", media: [] }
+
+  it("nomme les deux natures et ne montre du message que le texte signalé, sans pays", async () => {
+    mocks.desk = fakeDesk({ cases: [MESSAGE_CASE, GROUP_CASE], preview: MESSAGE_PREVIEW }).desk
+    const user = userEvent.setup()
+    render(tree())
+    expect(screen.getByRole("heading", { name: text("moderationDesk.surface.personalMessage") })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: text("moderationDesk.surface.thematicGroup") })).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: text("moderationDesk.case.open") }))
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).getByText(text("moderationDesk.case.title", { surface: translate("moderationDesk.surface.personalMessage") }))).toBeInTheDocument()
+    expect(within(dialog).getByText(text("moderationDesk.zone.none"))).toBeInTheDocument()
+    expect(within(dialog).getByText(text("moderationDesk.preview.bounded"))).toBeInTheDocument()
+    expect(within(dialog).getByText("Message signalé (fixture).")).toBeInTheDocument()
+    expect(within(dialog).queryByText(text("moderationDesk.preview.empty"))).toBeNull()
+    expect(within(dialog).getByRole("button", { name: text("moderationDesk.decision.submit") })).toBeInTheDocument()
+  })
+
+  it("dit pourquoi qui tient le groupe visé ne le tranche pas, sans lui offrir de formulaire", async () => {
+    mocks.desk = fakeDesk({ cases: [MESSAGE_CASE, GROUP_CASE] }).desk
+    const user = userEvent.setup()
+    render(tree())
+    expect(screen.getByText(text("moderationDesk.party.group"))).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: text("moderationDesk.case.view") }))
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).getByText(text("moderationDesk.party.group"))).toBeInTheDocument()
+    expect(within(dialog).queryByRole("button", { name: text("moderationDesk.decision.submit") })).toBeNull()
   })
 })
 

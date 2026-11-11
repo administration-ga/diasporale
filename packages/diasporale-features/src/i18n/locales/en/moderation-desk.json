@@ -25,7 +25,7 @@
       },
       "teams": "Your teams: {{names}}.",
       "noTeam": "You are not part of any team.",
-      "decisions": "A party to a case (author, reporter, signatory of the page concerned, previous decision-maker) does not decide it."
+      "decisions": "A party to a case (author, reporter, signatory of the page concerned, owner or moderator of the group concerned, previous decision-maker) does not decide it."
     },
     "filters": {
       "label": "Queue filters",
@@ -83,7 +83,9 @@
       "professionalProfile": "Professional profile",
       "professionalCollaboration": "Collaboration request",
       "editorialVersion": "Article version",
-      "editorialMedia": "Media presentation"
+      "editorialMedia": "Media presentation",
+      "thematicGroup": "Group (profile and rules)",
+      "personalMessage": "Personal message"
     },
     "ground": {
       "harassment": "Harassment",
@@ -115,6 +117,7 @@
       "reporter": "You reported this content.",
       "page": "You sign for the page this content belongs to.",
       "decider": "You took the contested decision.",
+      "group": "You own or moderate the group concerned.",
       "handOver": "Another team member must decide it."
     },
     "sanction": {

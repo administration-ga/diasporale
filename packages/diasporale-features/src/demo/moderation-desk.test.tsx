@@ -101,6 +101,23 @@ describe("Guichet de démonstration — capacité et file fictives", () => {
     expect(renderHook(() => desk.useQueue({ personId: PERSON, zone: { kind: "all" }, surface: null, teamId: "equipe-inconnue", cursor: null })).result.current).toEqual({ status: "error", code: "not_found" })
     expect(renderHook(() => desk.useQueue({ personId: PERSON, zone: { kind: "all" }, surface: null, teamId: null, cursor: "curseur-etranger" })).result.current).toEqual({ status: "error", code: "not_found" })
   })
+
+  it("range un groupe au pays du groupe et un message personnel sans pays, aperçu du seul texte (MC-01 du moteur)", async () => {
+    const { desk } = setup()
+    const group = allCases(desk, { kind: "country", country: "FR" }).find((row) => row.surface === "thematicGroup")
+    const message = allCases(desk, { kind: "none" }).find((row) => row.surface === "personalMessage")
+    expect(group).toMatchObject({ country: "FR", party: "group", hasAuthor: true })
+    expect(message).toMatchObject({ country: null, party: null, hasAuthor: true })
+    const messages = ready(renderHook(() => desk.useQueue({ personId: PERSON, zone: { kind: "all" }, surface: "personalMessage", teamId: null, cursor: null })).result.current)
+    expect(messages.items.map((row) => row.reportId)).toEqual([message?.reportId])
+    // La fiche du groupe a un nom ; le message n'a ni titre, ni pièce : son texte seul.
+    expect(ready(renderHook(() => desk.useCasePreview({ personId: PERSON, reportId: group?.reportId ?? "" })).result.current).title).not.toBeNull()
+    const preview = ready(renderHook(() => desk.useCasePreview({ personId: PERSON, reportId: message?.reportId ?? "" })).result.current)
+    expect(preview).toMatchObject({ available: true, title: null, media: [] })
+    expect(preview.body).not.toBeNull()
+    // Qui tient le groupe ne tranche pas, comme le moteur le refuse.
+    expect(await desk.decide({ personId: PERSON, reportId: group?.reportId ?? "", decision: "dismissed", reason: REASON, removal: false, personMeasure: "none", durationDays: null })).toEqual({ ok: false, code: "moderation_desk_party" })
+  })
 })
 
 describe("Guichet de démonstration — décisions sans effet", () => {
