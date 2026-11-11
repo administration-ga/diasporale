@@ -22,6 +22,8 @@ import type {
   Loadable,
   MemberHitView,
   NotificationView,
+  NotificationsPageQuery,
+  NotificationsPageRequest,
   PostView,
   ProfilePostsPageRequest,
   RelationView,
@@ -50,9 +52,11 @@ import {
   openCountriesView,
   ownProfileView,
   postDetailView,
+  notificationsPageView,
   notificationsView,
   profileView,
   readDemoCommentCursor,
+  readDemoNotificationCursor,
   relationView,
   repliesPageView,
   sessionView,
@@ -416,6 +420,21 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
         const viewerId = state.session.personId
         return viewerId ? ready(notificationsView(state, viewerId)) : { status: "error", code: "not_signed_in" }
       }, [version])
+    },
+
+    // NP-04 : la page des notifications lit les mêmes avis page après page, comme le moteur les pagine.
+    useNotificationsPage({ cursor = null }: NotificationsPageRequest): NotificationsPageQuery {
+      const version = useVersion()
+      return useMemo<NotificationsPageQuery>(() => {
+        if (version < 0) return { data: undefined, isLoading: true, error: null, retry: retryLocalFeed }
+        const unavailable = (error: NotificationsPageQuery["error"]) => ({ data: undefined, isLoading: false, error, retry: retryLocalFeed })
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return unavailable("not_signed_in")
+        const after = readDemoNotificationCursor(cursor)
+        if (after === undefined) return unavailable("unknown")
+        return { data: notificationsPageView(state, viewerId, after), isLoading: false, error: null, retry: retryLocalFeed }
+      }, [version, cursor])
     },
 
     useUnreadCount() {

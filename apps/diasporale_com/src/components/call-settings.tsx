@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button, Card, Label, RadioCard, RadioGroup, Skeleton, Switch, formatDate } from "@diasporale/features"
 import {
+  DEFAULT_CALL_SETTINGS,
   DND_DURATIONS,
   OUTSIDE_RELATIONS_CALLS,
   dndUntilFor,
@@ -25,6 +26,7 @@ import { callsAreOpen } from "@/lib/calls"
 
 const preferencesSchema = z.object({
   outsideRelationsCalls: z.enum(OUTSIDE_RELATIONS_CALLS),
+  readReceipts: z.boolean(),
   voicemailEnabled: z.boolean(),
   sharePresence: z.boolean(),
   callWaiting: z.boolean(),
@@ -34,6 +36,12 @@ type PreferencesValues = z.infer<typeof preferencesSchema>
 const dndSchema = z.object({ duration: z.enum(DND_DURATIONS) })
 type DndValues = z.infer<typeof dndSchema>
 
+/** Les choix de « qui peut m'appeler », le défaut du moteur d'abord (IC-04 : « mes relations seulement »). */
+const OUTSIDE_CHOICES: readonly OutsideRelationsCalls[] = [
+  DEFAULT_CALL_SETTINGS.outsideRelationsCalls,
+  ...OUTSIDE_RELATIONS_CALLS.filter((option) => option !== DEFAULT_CALL_SETTINGS.outsideRelationsCalls),
+]
+
 /** Les deux choix de « qui peut m'appeler », chacun avec ce qu'il fait vraiment. */
 const OUTSIDE_TEXTS: Readonly<Record<OutsideRelationsCalls, { readonly title: string; readonly hint: string }>> = {
   ring: { title: "settings.calls.outside.ring", hint: "settings.calls.outside.ringHint" },
@@ -41,7 +49,9 @@ const OUTSIDE_TEXTS: Readonly<Record<OutsideRelationsCalls, { readonly title: st
 }
 
 /** Les interrupteurs, dans l'ordre d'affichage : chacun change ce que fait le serveur. */
-const SWITCHES: readonly { readonly name: "voicemailEnabled" | "sharePresence" | "callWaiting"; readonly title: string; readonly hint: string }[] = [
+const SWITCHES: readonly { readonly name: "readReceipts" | "voicemailEnabled" | "sharePresence" | "callWaiting"; readonly title: string; readonly hint: string }[] = [
+  // IC-04 : réciproques, appliqués par le serveur dans les conversations à deux, ici comme dans ANTSIA.
+  { name: "readReceipts", title: "settings.calls.readReceipts", hint: "settings.calls.readReceiptsHint" },
   { name: "voicemailEnabled", title: "settings.calls.voicemail", hint: "settings.calls.voicemailHint" },
   { name: "sharePresence", title: "settings.calls.presence", hint: "settings.calls.presenceHint" },
   { name: "callWaiting", title: "settings.calls.callWaiting", hint: "settings.calls.callWaitingHint" },
@@ -58,6 +68,7 @@ const DND_LABELS: Readonly<Record<DndDuration, string>> = {
 function changedPreferences(values: PreferencesValues, saved: PreferencesValues): CallPreferencesPatch {
   return {
     ...(values.outsideRelationsCalls !== saved.outsideRelationsCalls ? { outsideRelationsCalls: values.outsideRelationsCalls } : {}),
+    ...(values.readReceipts !== saved.readReceipts ? { readReceipts: values.readReceipts } : {}),
     ...(values.voicemailEnabled !== saved.voicemailEnabled ? { voicemailEnabled: values.voicemailEnabled } : {}),
     ...(values.sharePresence !== saved.sharePresence ? { sharePresence: values.sharePresence } : {}),
     ...(values.callWaiting !== saved.callWaiting ? { callWaiting: values.callWaiting } : {}),
@@ -75,10 +86,10 @@ function useMounted() {
 }
 
 /**
- * « Messages et appels » (IM-02) : les réglages d'appel et de présence de la personne, ceux
- * de son compte commun — ils valent aussi dans ANTSIA. Seuls les réglages qui ont un effet
- * réel côté serveur sont montrés ; tant que DIASPORALE ne propose pas d'appel (IM-01), la
- * section le dit, sans rien promettre.
+ * « Messages et appels » (IM-02) : les réglages d'appel, de présence et de lecture de la
+ * personne, ceux de son compte commun — ils valent aussi dans ANTSIA. Seuls les réglages qui
+ * ont un effet réel côté serveur sont montrés ; tant que DIASPORALE ne propose pas d'appel
+ * (IM-01), la section le dit, sans rien promettre.
  */
 export function CallSettings({ membership }: { membership: MembershipView }) {
   const { t } = useDiasporaleT()
@@ -180,15 +191,15 @@ function DoNotDisturb(props: { personId: string; capability: CallSettingsCapabil
   )
 }
 
-/** Qui peut m'appeler, la messagerie vocale, la présence et le double appel (moteur : `update`). */
+/** Qui peut m'appeler, les accusés de lecture, la messagerie vocale, la présence et le double appel (moteur : `update`). */
 function PreferencesForm(props: { personId: string; capability: CallSettingsCapability; view: CallSettingsView }) {
   const { t } = useDiasporaleT()
   const ids = useId()
   const mounted = useMounted()
-  const { outsideRelationsCalls, voicemailEnabled, sharePresence, callWaiting } = props.view
+  const { outsideRelationsCalls, readReceipts, voicemailEnabled, sharePresence, callWaiting } = props.view
   const saved = useMemo<PreferencesValues>(
-    () => ({ outsideRelationsCalls, voicemailEnabled, sharePresence, callWaiting }),
-    [outsideRelationsCalls, voicemailEnabled, sharePresence, callWaiting],
+    () => ({ outsideRelationsCalls, readReceipts, voicemailEnabled, sharePresence, callWaiting }),
+    [outsideRelationsCalls, readReceipts, voicemailEnabled, sharePresence, callWaiting],
   )
   // Les valeurs du serveur suivent la lecture réactive ; un choix en cours n'est jamais écrasé.
   const form = useForm<PreferencesValues>({ resolver: zodResolver(preferencesSchema), values: saved, resetOptions: { keepDirtyValues: true } })
@@ -213,7 +224,7 @@ function PreferencesForm(props: { personId: string; capability: CallSettingsCapa
           name="outsideRelationsCalls"
           render={({ field }) => (
             <RadioGroup aria-labelledby={`${ids}-qui`} value={field.value} onValueChange={field.onChange}>
-              {OUTSIDE_RELATIONS_CALLS.map((option) => (
+              {OUTSIDE_CHOICES.map((option) => (
                 <RadioCard key={option} value={option} aria-label={t(OUTSIDE_TEXTS[option].title)} aria-describedby={`${ids}-${option}`}>
                   <span className="block text-sm font-medium">{t(OUTSIDE_TEXTS[option].title)}</span>
                   <span id={`${ids}-${option}`} className="mt-0.5 block text-[13px] leading-snug text-muted-foreground">

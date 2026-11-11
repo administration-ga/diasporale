@@ -5,7 +5,7 @@ import { createContext, useContext, type ReactNode } from "react"
 
 import { type EntryDoorsView, UNREAD_ENTRY_DOORS } from "./entry-doors-port"
 import type { DiasporaleDataSource } from "./port"
-import type { BookmarksPageRequest, CommentsPageRequest, FeedPageRequest, Loadable, ProfilePostsPageRequest, RepliesPageRequest } from "./types"
+import type { BookmarksPageRequest, CommentsPageRequest, FeedPageRequest, Loadable, NotificationsPageRequest, ProfilePostsPageRequest, RepliesPageRequest } from "./types"
 
 const DataSourceContext = createContext<DiasporaleDataSource | null>(null)
 
@@ -51,6 +51,7 @@ export const useBookmarks = () => useDataSource().useBookmarks()
 export const useBookmarksPage = (args: BookmarksPageRequest) => useDataSource().useBookmarksPage(args)
 export const useRepliesPage = (args: RepliesPageRequest) => useDataSource().useRepliesPage(args)
 export const useNotifications = () => useDataSource().useNotifications()
+export const useNotificationsPage = (args: NotificationsPageRequest) => useDataSource().useNotificationsPage(args)
 export const useUnreadCount = () => useDataSource().useUnreadCount()
 export const usePage = (handle: string) => useDataSource().usePage(handle)
 export const useHandleSuggestions = (displayName: string) => useDataSource().useHandleSuggestions(displayName)

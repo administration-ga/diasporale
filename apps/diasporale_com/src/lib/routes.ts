@@ -4,7 +4,7 @@
  * surfaces de `@diasporale/features` ne connaissent aucune URL : elles reçoivent
  * cette table par `RoutingProvider`.
  */
-import { contextualConversationKey } from "@antsia/social-features/features/messagerie/messagerie-dock"
+import { contextualConversationKey, groupeKey } from "@antsia/social-features/features/messagerie/messagerie-dock"
 import { conversationHref } from "@antsia/social-features/features/messagerie/messagerie-routes"
 import { parseResidenceCountry, type CommunityRule, type CountryCode, type FeedScope } from "@diasporale/domain"
 import { PAGE_ASSOCIATION_TYPES, PAGE_COMPANY_SECTORS, type PageAssociationType, type PageCompanySector } from "@antsia/social-domain/pagePresentation"
@@ -222,6 +222,8 @@ export const routes = {
   post: (postId: string) => `/publication/${postId}`,
   /** Mes signets (EXF-DG-12). */
   bookmarks: () => "/enregistrements",
+  /** Tous mes avis de la cloche, page après page, avec le filtre « Non lues » (NP-04). */
+  notifications: () => "/notifications",
   /** L'annuaire opt-in des membres (EXF-DG-19). */
   members: () => "/membres",
   /** Mes liens dans le réseau, sans recherche d'annuaire générique. */
@@ -238,6 +240,14 @@ export const routes = {
   messages: () => "/messages",
   /** Une conversation de mise en relation (CC-6) : `/messages/mise-en-relation/<fil>`, composée par la messagerie du moteur. */
   contextualConversation: (threadId: string) => conversationHref(contextualConversationKey(threadId), "/messages") ?? "/messages",
+  /** Une conversation de groupe d'iCom (IM-04 : message ou invitation de groupe) : `/messages/groupe/<fil>`, composée par la messagerie du moteur. */
+  groupConversation: (threadId: string) => conversationHref(groupeKey(threadId), "/messages") ?? "/messages",
+  /**
+   * Le journal d'appels d'iCom (IM-04 : appel manqué, message vocal), sur la brique iAppel de la
+   * messagerie, la même adresse que composent les avis du moteur (`icomMobileTabHref("iappel")`,
+   * égalité tenue par un test). Aucune route d'appel : IM-01.
+   */
+  callJournal: () => "/messages?brique=iappel",
   /** Statuts (stories) en plein écran, ouverts depuis iCom ; `…/nouvelle` ouvre le composeur. */
   stories: () => "/actus",
   story: (handle: string | null) => handle === null ? "/actus" : `/actus?${new URLSearchParams({ auteur: handle })}`,
@@ -290,8 +300,8 @@ export const routes = {
   jobOffer: (jobId: string) => `/emploi/${encodeURIComponent(jobId)}`,
   myApplications: () => "/mes-candidatures",
   talents: (country?: CountryCode) => zoneHref("/talents", country),
-  /** Modération par pays (PD6, G9) : file, décisions et recours, équipes habilitées seulement. */
-  moderationDesk: (tab?: "file" | "recours" | "equipe") => tab ? `/moderation?onglet=${tab}` : "/moderation",
+  /** Modération par pays (PD6, G9) : file, pages à vérifier (AS-01), recours, équipes habilitées seulement ; réglages (MD-04) pour l'administration du réseau. */
+  moderationDesk: (tab?: "file" | "pages" | "recours" | "equipe" | "reglages") => tab ? `/moderation?onglet=${tab}` : "/moderation",
   /** Mesure du pilote (G11, DG-027) : agrégats sans contenu privé, responsables du réseau seulement. */
   pilotDashboard: () => "/pilote",
   /** Revendiquer une page existante (preuves privées, instruction). */
@@ -376,6 +386,8 @@ export const ROUTE_FILTER_KEYS = [
   "theme",
   "domaine",
   "langue",
+  // IM-04 : la brique d'iCom ouverte (journal d'appels).
+  "brique",
 ] as const
 
 /** Ancres internes de la vitrine. */

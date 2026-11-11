@@ -1,0 +1,6 @@
+{
+  "errors": {
+    "media_video_format": "Seules les vidéos {{postVideoFormats}} sont acceptées, pour qu’elles se lisent sur tous les téléphones : celle-ci n’est pas envoyée. Enregistrez-la ou exportez-la dans l’un de ces formats, puis choisissez-la de nouveau.",
+    "media_video_too_long": "Cette vidéo est trop longue : elle doit durer {{postVideoMaxMinutes}} min au plus. Raccourcissez-la, puis choisissez-la de nouveau."
+  }
+}

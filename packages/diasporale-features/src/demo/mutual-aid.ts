@@ -72,7 +72,7 @@ import type { ActionResult } from "../data/port"
 import type { Loadable } from "../data/types"
 import { demoViewerRefusal } from "./associations"
 import { demoPageAdminContext } from "./page-admin"
-import { pageView, statusOf } from "./selectors"
+import { isPageClosedByBlocks, pageView, statusOf } from "./selectors"
 import type { DemoPage, DemoState } from "./state"
 import type { DemoStore } from "./store"
 
@@ -887,6 +887,8 @@ export function createDemoMutualAid(store: DemoStore, options: DemoMutualAidOpti
       const base = current()
       const mission = base.missions.find((candidate) => candidate.id === missionId)
       if (!mission || !associationPage(state, mission.pageId)) return fail("not_found")
+      // RP-03 : toute l'équipe vivante de la page en blocage avec la personne, la mission se tait comme retirée.
+      if (isPageClosedByBlocks(state, teams.signatoriesOf(mission.pageId), viewerId)) return fail("not_found")
       const row = signupOf(base, mission.id, viewerId)
       const next = checkAidSignup(factsOf(mission, row), shareNameWithTeam, now)
       if (!next.ok) return fail(next.code)

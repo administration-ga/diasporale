@@ -211,9 +211,17 @@ function Profile(props: { handle: string; membership: MembershipView }) {
 /**
  * Ma relation avec ce membre (EXF-DG-11, EXF-DG-12) : se connecter, répondre à
  * une demande reçue, suivre, bloquer. Un blocage posé par l'autre ne se voit
- * pas ; bloquer se confirme, et défait le lien et les abonnements de la paire.
+ * pas. Bloquer se confirme, et la confirmation dit l'effet réel du moteur
+ * (`graph.connections.blockPerson`, PF-01) : la paire se ferme dans tous les
+ * réseaux, la relation et les abonnements tombent dans les deux sens, sans
+ * annonce ; débloquer ne rétablit ni l'une ni les autres (RP-03).
  * Bloquer, signaler, mettre en sourdine et copier le lien vivent dans le menu
  * « … » de la fiche (RP-02).
+ *
+ * La boîte commune du moteur (`BlockPersonDialog`) n'est pas montée ici : elle
+ * appelle le moteur sans passer par le port de données (la démonstration n'y
+ * aurait pas accès) et renvoie à la liste des blocages d'ANTSIA ; celle de
+ * DIASPORALE vit dans Relations › Personnes bloquées.
  */
 function RelationBar(props: { personId: string; handle: string; displayName: string; canCommunicate: boolean }) {
   const { t } = useDiasporaleT()
@@ -223,6 +231,7 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
   const running = useRef(false)
   const [confirmingBlock, setConfirmingBlock] = useState(false)
   const hintId = useId()
+  const effectId = useId()
   const name = props.displayName
 
   if (relation.status !== "ready") return <Skeleton className="h-9 w-40 rounded-full" />
@@ -256,8 +265,11 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
 
   if (confirmingBlock) {
     return (
-      <div role="group" aria-label={t("relation.blockConfirm", { name })} className="flex flex-wrap items-center justify-end gap-2">
-        <p className="text-[13px] text-muted-foreground">{t("relation.blockConfirm", { name })}</p>
+      <div role="group" aria-label={t("relation.blockConfirm", { name })} aria-describedby={effectId} className="flex flex-wrap items-center justify-end gap-2">
+        <div className="basis-full text-right text-[13px] text-muted-foreground">
+          <p className="font-medium text-foreground">{t("relation.blockConfirm", { name })}</p>
+          <p id={effectId}>{t("relation.blockEffect")}</p>
+        </div>
         <Button
           variant="destructive"
           size="sm"

@@ -1,0 +1,13 @@
+{
+  "bell": {
+    "openGroup": "Open the group",
+    "openGroupInvite": "View the invitation",
+    "openCallJournal": "View the call log",
+    "kind": {
+      "group_message": "wrote in a group chat.",
+      "group_added": "invited you to a group chat.",
+      "call_missed": "tried to call you.",
+      "voicemail_left": "left you a voice message."
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "moderationDesk": {
+    "tab": {
+      "settings": "Réglages"
+    },
+    "settings": {
+      "title": "Réglages de modération",
+      "lead": "Ce que le réseau relit avant publication, rubrique par rubrique, et les mots qui envoient un contenu en relecture. Réservé à l'administration du réseau ; chaque réglage et chaque mot est motivé et inscrit au journal des décisions du moteur.",
+      "loading": "Chargement des réglages…",
+      "restricted": "Les réglages de modération sont réservés à l'administration du réseau.",
+      "defaults": {
+        "title": "Sans réglage du réseau",
+        "preReviewOff": "Pas de relecture avant publication : un contenu paraît dès son écriture.",
+        "preReviewOn": "Relecture avant publication : chaque contenu attend un modérateur.",
+        "links_one": "Au-delà de {{count}} lien, le contenu part en relecture : il n'est pas refusé.",
+        "links_other": "Au-delà de {{count}} liens, le contenu part en relecture : il n'est pas refusé.",
+        "writes_one": "Au-delà de {{count}} écriture en {{window}}, toutes rubriques confondues, la suivante part aussi en relecture.",
+        "writes_other": "Au-delà de {{count}} écritures en {{window}}, toutes rubriques confondues, la suivante part aussi en relecture.",
+        "terms": "Un contenu qui contient un mot bloqué part en relecture.",
+        "source": "Ce sont les défauts du moteur ANTSIA, lus tels qu'il les applique. Ils valent pour toute rubrique sans réglage, sauf les contenus relus d'office, listés à part, et les rubriques de l'entraide, du mentorat, du kit d'arrivée et de l'emploi, publiées sans règle tant qu'aucun réglage n'est posé pour elles."
+      },
+      "held": {
+        "title": "Relus d'office dans DIASPORALE",
+        "lead": "Tant qu'aucun réglage n'est posé pour leur rubrique, ces contenus attendent un modérateur avant de paraître :",
+        "associationEvents": "les évènements d'association (rubrique « Évènement ») ;",
+        "reviews": "les avis sur une prestation (rubrique « Avis sur une prestation ») ;",
+        "reviewReplies": "les réponses d'une page à un avis (rubrique « Réponse d'une page à un avis ») ;",
+        "eventGallery": "les ajouts à la galerie d'un évènement (rubrique « Publication »).",
+        "note": "Un réglage posé sur l'une de ces rubriques les soumet à ce réglage. Sur « Évènement » et « Publication », il vaut aussi pour les évènements personnels et pour toutes les publications."
+      },
+      "heldNote": {
+        "associationEvents": "Les évènements d'association y restent relus d'office tant qu'aucun réglage n'est posé.",
+        "eventGallery": "Les ajouts à la galerie d'un évènement y restent relus d'office tant qu'aucun réglage n'est posé."
+      },
+      "without": {
+        "defaults": "Sans réglage : les défauts du moteur s'appliquent.",
+        "held": "Sans réglage : tout contenu de cette rubrique attend un modérateur avant de paraître.",
+        "unchecked": "Sans réglage : publié dès l'écriture et modéré après signalement, sans plafond de liens, sans cadence ni mots bloqués."
+      },
+      "window": {
+        "hours_one": "{{count}} heure",
+        "hours_other": "{{count}} heures",
+        "minutes_one": "{{count}} minute",
+        "minutes_other": "{{count}} minutes",
+        "seconds_one": "{{count}} seconde",
+        "seconds_other": "{{count}} secondes"
+      },
+      "surfaces": {
+        "title": "Par rubrique",
+        "lead": "Les rubriques de DIASPORALE. Un réglage remplace, pour sa rubrique, la règle sans réglage ; il ne se retire pas, il se change."
+      },
+      "policy": {
+        "since": "Réglage en vigueur depuis le {{date}}.",
+        "preReviewOn": "Relecture avant publication : oui.",
+        "preReviewOff": "Relecture avant publication : non.",
+        "links_one": "Au-delà de {{count}} lien : relecture.",
+        "links_other": "Au-delà de {{count}} liens : relecture.",
+        "writes_one": "Au plus {{count}} écriture en {{window}} ; au-delà, relecture.",
+        "writes_other": "Au plus {{count}} écritures en {{window}} ; au-delà, relecture.",
+        "set": "Poser un réglage",
+        "change": "Changer le réglage"
+      },
+      "sheet": {
+        "title": "Réglage : {{surface}}",
+        "description": "Relecture avant publication, plafond de liens et cadence pour cette rubrique. Le réglage est motivé et inscrit au journal des décisions du moteur.",
+        "preReview": "Relire avant publication",
+        "preReviewHint": "Chaque contenu de cette rubrique attend un modérateur avant de paraître.",
+        "maxLinks": "Plafond de liens",
+        "maxLinksHint": "Au-delà, le contenu part en relecture ; de {{linksMin}} à {{linksMax}}.",
+        "maxWrites": "Écritures au plus dans la fenêtre",
+        "maxWritesHint": "Au-delà, la suivante part en relecture ; de {{writesMin}} à {{writesMax}}.",
+        "window": "Fenêtre de cadence, en minutes",
+        "windowHint": "De {{windowMin}} à {{windowMax}} minutes.",
+        "liftsHeld": {
+          "associationEvents": "Les évènements d'association sont relus d'office aujourd'hui. Ce réglage vaut pour tous les évènements, ceux des associations compris : sans relecture avant publication, le prochain paraîtra directement s'il respecte le plafond de liens, la cadence et les mots bloqués.",
+          "reviews": "Les avis sont relus d'office aujourd'hui. Ce réglage les y soumet : sans relecture avant publication, le prochain avis paraîtra directement s'il respecte le plafond de liens, la cadence et les mots bloqués.",
+          "reviewReplies": "Les réponses d'une page à un avis sont relues d'office aujourd'hui. Ce réglage les y soumet : sans relecture avant publication, la prochaine paraîtra directement si elle respecte le plafond de liens, la cadence et les mots bloqués.",
+          "eventGallery": "Les ajouts à la galerie d'un évènement sont relus d'office aujourd'hui. Ce réglage vaut pour toutes les publications, galerie comprise : sans relecture avant publication, le prochain ajout paraîtra directement s'il respecte le plafond de liens, la cadence et les mots bloqués."
+        },
+        "permanent": "Un réglage posé ne se retire pas : il se change.",
+        "reasonHint": "Pourquoi ce réglage ; le motif reste au journal des décisions ({{min}} à {{max}} caractères).",
+        "submit": "Enregistrer le réglage",
+        "saved": "Réglage enregistré : {{surface}}."
+      },
+      "terms": {
+        "title": "Mots bloqués",
+        "lead": "Un contenu qui contient l'un de ces mots part en relecture : il n'est pas refusé. Casse et accents ne comptent pas, et le mot est cherché aussi à l'intérieur des mots. Le réseau en garde {{termsMax}} au plus.",
+        "waveNote": "Les rubriques de l'entraide, du mentorat, du kit d'arrivée et de l'emploi ne lisent les mots bloqués qu'une fois un réglage posé pour elles.",
+        "emptyTitle": "Aucun mot bloqué",
+        "emptyBody": "Le réseau n'a bloqué aucun mot pour l'instant.",
+        "since": "Bloqué le {{date}}",
+        "remove": "Débloquer",
+        "removeTitle": "Débloquer « {{term}} »",
+        "removeBody": "Un contenu qui contient ce mot ne partira plus en relecture pour cette raison. Le retrait est motivé et inscrit au journal des décisions du moteur.",
+        "removeConfirm": "Débloquer ce mot",
+        "removed": "« {{term}} » n'est plus bloqué.",
+        "addTitle": "Bloquer un mot",
+        "term": "Mot ou expression",
+        "termHint": "De {{termMin}} à {{termMax}} caractères, casse et accents retirés.",
+        "reasonHint": "Pourquoi ce mot ; le motif reste au journal des décisions ({{min}} à {{max}} caractères).",
+        "add": "Bloquer ce mot",
+        "added": "« {{term}} » est bloqué."
+      }
+    }
+  },
+  "errors": {
+    "moderation_desk_links_bounds": "Le plafond de liens va de {{linksMin}} à {{linksMax}}, en nombre entier.",
+    "moderation_desk_writes_bounds": "La cadence admet de {{writesMin}} à {{writesMax}} écritures, en nombre entier.",
+    "moderation_desk_window_bounds": "La fenêtre de cadence va de {{windowMin}} à {{windowMax}} minutes, en nombre entier.",
+    "moderation_desk_term_length": "Un mot bloqué compte de {{termMin}} à {{termMax}} caractères, casse et accents retirés.",
+    "moderation_desk_terms_full": "Le réseau garde déjà {{termsMax}} mots bloqués : débloquez-en un avant d'en ajouter un autre."
+  }
+}

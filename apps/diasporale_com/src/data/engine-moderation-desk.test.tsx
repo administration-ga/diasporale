@@ -1,14 +1,28 @@
 // @vitest-environment jsdom
 import type { EngineAuthClient } from "@antsia/api/auth-client"
 import { CONTENT_REPORT_REASONS } from "@antsia/social-domain/moderation"
-import { DESK_GROUNDS, DESK_PAGE_SIZE, SERVICE_REVIEW_REPORT_REASONS, type DeskQueueRequest } from "@diasporale/features/data"
+import { DESK_BLOCKED_TERMS_PAGE, DESK_GROUNDS, DESK_PAGE_SIZE, SERVICE_REVIEW_REPORT_REASONS, type DeskQueueRequest } from "@diasporale/features/data"
 import { cleanup, renderHook } from "@testing-library/react"
 import type { ConvexReactClient } from "convex/react"
 import { getFunctionName } from "convex/server"
 import { ConvexError } from "convex/values"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { createEngineModerationDesk, engineZone, moderationDeskErrorCode, responsibleRoleErrorCode, toCaseView, toDeadlineView, toPendingView, toPreviewView } from "./engine-moderation-desk"
+import {
+  blockedTermErrorCode,
+  claimCanDecide,
+  createEngineModerationDesk,
+  engineZone,
+  moderationDeskErrorCode,
+  moderationPolicyErrorCode,
+  responsibleRoleErrorCode,
+  toBlockedTermsWindow,
+  toCaseView,
+  toClaimDetailView,
+  toDeadlineView,
+  toPendingView,
+  toPreviewView,
+} from "./engine-moderation-desk"
 
 /**
  * L'adaptateur du guichet de modération sans moteur : lectures réactives jouées
@@ -42,6 +56,7 @@ const DESK_ROW = {
   networkWide: true,
   canReviewAppeals: false,
   canManageTeams: false,
+  canManagePolicy: false,
   teams: [{ teamId: "team-fr", name: "France (fixture)", scope: null, isMember: true }],
 }
 const CASE_ROW = {
@@ -124,7 +139,8 @@ describe("Guichet — capacité", () => {
     respondWith({ "modules/diaspora/moderationDesk:myDesk": DESK_ROW })
     const { desk } = setup()
     const { result, rerender } = renderHook(() => desk.useDesk(PERSON._id))
-    expect(result.current).toEqual({ status: "ready", data: DESK_ROW })
+    // AS-01 : les pages à vérifier suivent le rôle de réseau (`networkWide`), la garde de `pages/claims`.
+    expect(result.current).toEqual({ status: "ready", data: { ...DESK_ROW, canReviewClaims: true } })
     const first = result.current
     rerender()
     expect(result.current).toBe(first)
@@ -213,6 +229,15 @@ describe("Guichet — file par pays", () => {
     } as never)).toEqual({
       available: true, title: null, body: "Texte signalé",
       media: [{ kind: "image", url: null, withheld: "quarantined", altText: null, width: null, height: null }],
+    })
+  })
+
+  it("MC-01 du moteur : un groupe et un message personnel se projettent tels quels, l'aperçu du message sans rien de plus", () => {
+    expect(toCaseView({ ...CASE_ROW, surface: "thematicGroup", party: "group" } as never)).toMatchObject({ surface: "thematicGroup", party: "group" })
+    expect(toCaseView({ ...CASE_ROW, surface: "personalMessage", country: null } as never)).toMatchObject({ surface: "personalMessage", country: null })
+    // Seuls titre, texte et médias passent : ni nature de contexte, ni révision, ni empreinte.
+    expect(toPreviewView({ kind: "personalMessage", available: true, title: null, body: "Message signalé", media: [], context: null, sourceRevision: 3, sourceDigest: "empreinte" } as never)).toEqual({
+      available: true, title: null, body: "Message signalé", media: [],
     })
   })
 })
@@ -450,5 +475,161 @@ describe("Guichet — responsables du réseau (MD-01)", () => {
     expect(responsibleRoleErrorCode(engineError({ code: "policyRefused" }))).toBe("moderation_desk_limit")
     expect(responsibleRoleErrorCode(engineError({ code: "rateLimited", retryAfterMs: 1000 }))).toBe("rate_limited")
     expect(moderationDeskErrorCode(engineError({ code: "invalidArgument", rule: "NETWORK_LAST_ADMIN", params: {} }))).toBe("moderation_desk_last_admin")
+  })
+})
+
+describe("Guichet — réglages de modération (MD-04)", () => {
+  const POLICIES = "modules/moderation/cases:policies"
+  const TERMS = "modules/moderation/cases:blockedTermsPage"
+  const SET_POLICY = "modules/moderation/cases:setPolicy"
+  const SET_TERM = "modules/moderation/cases:setBlockedTerm"
+  const DEFAULTS = { preReview: false, maxLinks: 2, maxWrites: 30, windowMs: 60_000 }
+  const SETTINGS_ROW = {
+    defaults: DEFAULTS,
+    surfaces: [
+      { surface: "event", withoutPolicy: "defaults", policy: null },
+      { surface: "diasporaJobOffer", withoutPolicy: "unchecked", policy: { preReview: true, maxLinks: 1, maxWrites: 10, windowMs: 120_000, updatedAt: NOW - DAY } },
+    ],
+  }
+  const POLICY = { personId: PERSON._id, surface: "diasporaJobOffer" as const, preReview: true, maxLinks: 2, maxWrites: 30, windowMs: 60_000, reason: "  Relecture des offres d'emploi au lancement.  " }
+
+  it("lit les réglages et les défauts tels que le moteur les sert, pour le seul réseau diasporale", () => {
+    respondWith({ [POLICIES]: SETTINGS_ROW })
+    const { desk } = setup()
+    const { result, rerender } = renderHook(() => desk.useSettings(PERSON._id))
+    expect(result.current).toEqual({ status: "ready", data: SETTINGS_ROW })
+    const first = result.current
+    rerender()
+    expect(result.current).toBe(first)
+    expect(lastArgs(POLICIES)).toEqual({ networkId: DIASPORALE._id })
+    // Un modérateur ou un simple membre : le refus indistinct du moteur, sans son détail.
+    respondWith({ [POLICIES]: engineError({ code: "notFound", detail: "PRIVATE_DETAIL" }) })
+    rerender()
+    expect(result.current).toEqual({ status: "error", code: "not_found" })
+  })
+
+  it("lit les mots bloqués par fenêtres de cinquante et ferme le curseur d'une fin de liste", () => {
+    respondWith({ [TERMS]: { page: [{ termId: "term-1", term: "consulat", updatedAt: NOW }], isDone: true, continueCursor: "fin" } })
+    const { desk } = setup()
+    const { result } = renderHook(() => desk.useBlockedTerms({ personId: PERSON._id, cursor: "c1" }))
+    expect(lastArgs(TERMS)).toEqual({ networkId: DIASPORALE._id, paginationOpts: { cursor: "c1", numItems: DESK_BLOCKED_TERMS_PAGE } })
+    expect(result.current).toEqual({ status: "ready", data: { items: [{ termId: "term-1", term: "consulat", updatedAt: NOW }], continueCursor: null, isDone: true } })
+    expect(toBlockedTermsWindow({ page: [], isDone: false, continueCursor: "suite" })).toEqual({ items: [], continueCursor: "suite", isDone: false })
+  })
+
+  it("pose un réglage par le moteur, motif compris (le moteur le journalise) ; motif et bornes jugés avant tout appel", async () => {
+    const { desk, calls, writes } = setup({ [SET_POLICY]: () => ({ policyId: "policy-1" }) })
+    expect(await desk.setPolicy({ ...POLICY, reason: "Court" })).toEqual({ ok: false, code: "moderation_desk_reason_length" })
+    expect(await desk.setPolicy({ ...POLICY, maxLinks: 21 })).toEqual({ ok: false, code: "moderation_desk_links_bounds" })
+    expect(await desk.setPolicy({ ...POLICY, windowMs: 500 })).toEqual({ ok: false, code: "moderation_desk_window_bounds" })
+    expect(calls).toEqual([])
+    expect(await desk.setPolicy(POLICY)).toEqual({ ok: true, value: null })
+    expect(writes().map(({ name, args }) => [name, args])).toEqual([
+      [SET_POLICY, { networkId: DIASPORALE._id, surface: "diasporaJobOffer", preReview: true, maxLinks: 2, maxWrites: 30, windowMs: 60_000, reason: "Relecture des offres d'emploi au lancement." }],
+    ])
+    const other = setup({ "modules/people/persons:getMyPerson": () => ({ _id: "autre-personne" }), [SET_POLICY]: () => ({ policyId: "policy-2" }) })
+    expect(await other.desk.setPolicy(POLICY)).toEqual({ ok: false, code: "not_found" })
+    expect(other.writes()).toEqual([])
+  })
+
+  it("bloque et débloque un mot par le moteur ; traduit ses refus en codes fermés", async () => {
+    const { desk, writes } = setup({ [SET_TERM]: () => ({ termId: "term-1" }) })
+    expect(await desk.setBlockedTerm({ personId: PERSON._id, term: " é ", active: true, reason: "Mot réservé aux institutions." })).toEqual({ ok: false, code: "moderation_desk_term_length" })
+    expect(await desk.setBlockedTerm({ personId: PERSON._id, term: "  Consulat ", active: true, reason: "Mot réservé aux institutions." })).toEqual({ ok: true, value: null })
+    expect(await desk.setBlockedTerm({ personId: PERSON._id, term: "consulat", active: false, reason: "Le mot ne pose plus de difficulté." })).toEqual({ ok: true, value: null })
+    expect(writes().map(({ args }) => [args.term, args.active, args.reason])).toEqual([
+      ["Consulat", true, "Mot réservé aux institutions."],
+      ["consulat", false, "Le mot ne pose plus de difficulté."],
+    ])
+    const full = setup({ [SET_TERM]: () => { throw engineError({ code: "policyRefused" }) } })
+    expect(await full.desk.setBlockedTerm({ personId: PERSON._id, term: "ambassade", active: true, reason: "Mot réservé aux institutions." })).toEqual({ ok: false, code: "moderation_desk_terms_full" })
+    const refused = setup({ [SET_TERM]: () => { throw engineError({ code: "notFound" }) } })
+    expect(await refused.desk.setBlockedTerm({ personId: PERSON._id, term: "ambassade", active: true, reason: "Mot réservé aux institutions." })).toEqual({ ok: false, code: "not_found" })
+    expect(blockedTermErrorCode(engineError({ code: "invalidArgument", field: "term" }))).toBe("moderation_desk_term_length")
+    expect(moderationPolicyErrorCode(engineError({ code: "invalidArgument", field: "maxWrites" }))).toBe("moderation_desk_writes_bounds")
+    expect(moderationPolicyErrorCode(engineError({ code: "notFound" }))).toBe("not_found")
+  })
+})
+
+describe("Guichet — pages à vérifier (AS-01)", () => {
+  const QUEUE = "modules/diaspora/moderationDesk:pageClaimQueue"
+  const CLAIM = "modules/pages/claims:getPageClaim"
+  const DECIDE = "modules/pages/claims:decidePageClaim"
+  const PAGE_CARD = { pageId: "page-1", networkId: DIASPORALE._id, handle: "amicale-lyon", name: "Amicale de Lyon", shortName: null, logoUrl: null, badge: "community", ownerKind: "association", country: "FR" }
+  const CLAIM_ROW = { claimId: "claim-1", page: PAGE_CARD, country: "FR", evidenceCount: 2, createdAt: NOW - DAY, party: null }
+  const DETAIL_ROW = {
+    claimId: "claim-1",
+    page: PAGE_CARD,
+    claimant: { personId: "person-awa", handle: "awa.fixture", displayName: "Awa", avatarUrl: "https://image.exemple.test/avatar" },
+    status: "pending",
+    note: "Mandat déclaré : présidence.",
+    evidenceCount: 2,
+    decisionReason: null,
+    createdAt: NOW - DAY,
+    decidedAt: null,
+    evidence: [{ url: "https://depot.exemple.test/1", withheld: null }, { url: "https://depot.exemple.test/2", withheld: "fileScanPending" }],
+  }
+
+  it("lit la file de la tranche par pays de la page, pour la personne attendue, et projette sans rien inventer", () => {
+    respondWith({ [QUEUE]: { items: [CLAIM_ROW, { ...CLAIM_ROW, claimId: "claim-2", country: "XX", party: "page" }], continueCursor: "suite", isDone: false } })
+    const { desk } = setup()
+    const { result } = renderHook(() => desk.useClaims({ personId: PERSON._id, zone: { kind: "country", country: "FR" }, cursor: null }))
+    expect(lastArgs(QUEUE)).toEqual({ networkId: DIASPORALE._id, expectedPersonId: PERSON._id, zone: { kind: "country", country: "FR" }, paginationOpts: { cursor: null, numItems: DESK_PAGE_SIZE } })
+    expect(result.current).toEqual({
+      status: "ready",
+      data: {
+        items: [
+          { claimId: "claim-1", page: { id: "page-1", handle: "amicale-lyon", name: "Amicale de Lyon", ownerKind: "association", badge: "community", country: "FR" }, country: "FR", evidenceCount: 2, createdAt: NOW - DAY, party: null },
+          { claimId: "claim-2", page: { id: "page-1", handle: "amicale-lyon", name: "Amicale de Lyon", ownerKind: "association", badge: "community", country: "FR" }, country: null, evidenceCount: 2, createdAt: NOW - DAY, party: "page" },
+        ],
+        continueCursor: "suite",
+        isDone: false,
+      },
+    })
+    // Hors rôle de réseau : le refus indistinct de la tranche, sans ligne.
+    respondWith({ [QUEUE]: engineError({ code: "notFound" }) })
+    expect(renderHook(() => desk.useClaims({ personId: PERSON._id, zone: { kind: "all" }, cursor: null })).result.current).toEqual({ status: "error", code: "not_found" })
+  })
+
+  it("lit la fiche de `pages/claims` : pièce retenue sans adresse, ni avatar ; `canDecide` lu s'il est servi, jamais exigé", () => {
+    respondWith({ [CLAIM]: DETAIL_ROW })
+    const { desk } = setup()
+    const { result } = renderHook(() => desk.useClaim({ personId: PERSON._id, claimId: "claim-1" }))
+    expect(lastArgs(CLAIM)).toEqual({ networkId: DIASPORALE._id, claimId: "claim-1" })
+    expect(result.current).toEqual({
+      status: "ready",
+      data: {
+        claimId: "claim-1",
+        claimant: { personId: "person-awa", handle: "awa.fixture", displayName: "Awa" },
+        note: "Mandat déclaré : présidence.",
+        evidence: [{ url: "https://depot.exemple.test/1", withheld: null }, { url: null, withheld: "fileScanPending" }],
+        canDecide: null,
+      },
+    })
+    expect(JSON.stringify(result.current)).not.toContain("avatar")
+    expect(toClaimDetailView({ ...DETAIL_ROW, canDecide: false } as never).canDecide).toBe(false)
+    expect(claimCanDecide({ canDecide: true })).toBe(true)
+    expect(claimCanDecide({ canDecide: "oui" })).toBeNull()
+    expect(claimCanDecide({})).toBeNull()
+  })
+
+  it("tranche par `decidePageClaim` : motif jugé avant tout appel, personne relue, refus indistinct du décideur en conflit", async () => {
+    const { desk, calls, writes } = setup({ [DECIDE]: (args) => ({ status: args.decision }) })
+    expect(await desk.decideClaim({ personId: PERSON._id, claimId: "claim-1", decision: "approved", reason: "ok" })).toEqual({ ok: false, code: "moderation_desk_reason_length" })
+    expect(calls).toEqual([])
+    expect(await desk.decideClaim({ personId: PERSON._id, claimId: "claim-1", decision: "approved", reason: "  Statuts et procès-verbal conformes.  " })).toEqual({ ok: true, value: { status: "approved" } })
+    expect(writes().map(({ name, args }) => [name, args])).toEqual([
+      [DECIDE, { networkId: DIASPORALE._id, claimId: "claim-1", decision: "approved", reason: "Statuts et procès-verbal conformes." }],
+    ])
+    // Le demandeur ou un signataire de la page (PG-01 du moteur) : le refus indistinct.
+    const party = setup({ [DECIDE]: () => { throw engineError({ code: "notFound" }) } })
+    expect(await party.desk.decideClaim({ personId: PERSON._id, claimId: "claim-1", decision: "approved", reason: "Statuts et procès-verbal conformes." })).toEqual({ ok: false, code: "not_found" })
+    const closed = setup({ [DECIDE]: () => { throw engineError({ code: "conflict" }) } })
+    expect(await closed.desk.decideClaim({ personId: PERSON._id, claimId: "claim-1", decision: "rejected", reason: "Pièces illisibles, mandat absent." })).toEqual({ ok: false, code: "moderation_desk_conflict" })
+    const official = setup({ [DECIDE]: () => { throw engineError({ code: "invalidArgument", rule: "PAGE_NOT_CLAIMABLE", params: {} }) } })
+    expect(await official.desk.decideClaim({ personId: PERSON._id, claimId: "claim-1", decision: "approved", reason: "Statuts et procès-verbal conformes." })).toEqual({ ok: false, code: "page_not_claimable" })
+    const other = setup({ "modules/people/persons:getMyPerson": () => ({ _id: "autre-personne" }), [DECIDE]: () => ({ status: "approved" }) })
+    expect(await other.desk.decideClaim({ personId: PERSON._id, claimId: "claim-1", decision: "approved", reason: "Décision par une autre session." })).toEqual({ ok: false, code: "not_found" })
+    expect(other.writes()).toEqual([])
   })
 })

@@ -30,7 +30,6 @@ import {
   normalizePageClaimNote,
   normalizePageDescription,
   normalizePageShortName,
-  PAGE_CLAIM_DECISIONS,
   PAGE_CLAIM_EVIDENCE_MAX,
   PAGE_CLAIM_NOTE_MAX_LENGTH,
   PAGE_CLAIM_STATUSES,
@@ -102,9 +101,6 @@ export const PAGE_ADMIN_ERROR_CODES = [
   "page_claim_mandate_required",
   "page_claim_consent_required",
   "page_claim_closed",
-  // Instruire une revendication (modération du réseau).
-  "page_decision_required",
-  "page_decision_reason_length",
   // Logo et bannière (garde des fichiers du moteur).
   "page_image_type_invalid",
   "page_image_too_large",
@@ -147,9 +143,6 @@ export function isMemberPageKind(value: string | null | undefined): value is Mem
 export const PAGE_CLAIM_STATES = PAGE_CLAIM_STATUSES
 export type PageClaimStatus = (typeof PAGE_CLAIM_STATES)[number]
 
-export const PAGE_CLAIM_OUTCOMES = PAGE_CLAIM_DECISIONS
-export type PageClaimDecision = (typeof PAGE_CLAIM_OUTCOMES)[number]
-
 /**
  * Le mandat DÉCLARÉ du demandeur — une déclaration, jamais une preuve : les
  * pièces jointes le prouvent, la modération en juge. Il ouvre la note de la
@@ -160,9 +153,6 @@ export type PageClaimMandate = (typeof PAGE_CLAIM_MANDATES)[number]
 
 /** Longueur des précisions libres : la note entière (mandat compris) tient dans la borne du moteur. */
 export const PAGE_CLAIM_DETAILS_MAX_LENGTH = PAGE_CLAIM_NOTE_MAX_LENGTH - 120
-
-/** Longueur minimale du motif d'une décision de revendication (règle du moteur). */
-export const PAGE_DECISION_REASON_MIN = 3
 
 // ═══════════════════════════════════════════════════════════════
 // Projections
@@ -214,7 +204,10 @@ export interface PageInvitationView {
   readonly invitedAt: number
 }
 
-/** Une revendication, telle que son demandeur (ou la modération) la lit. */
+/**
+ * Une revendication, telle que son demandeur la lit (« Mes revendications »).
+ * L'instruction vit au bureau de modération (AS-01, capacité « modération par pays »).
+ */
 export interface PageClaimView {
   readonly id: string
   readonly page: PageRefView
@@ -225,26 +218,6 @@ export interface PageClaimView {
   readonly decisionReason: string | null
   readonly createdAt: number
   readonly decidedAt: number | null
-}
-
-/**
- * Une pièce d'une revendication, servie par la garde des fichiers : l'adresse
- * manque tant que l'analyse n'a pas parlé, si elle a bloqué, ou si le
- * fournisseur ne garde pas le fichier (démonstration).
- */
-export interface PageClaimEvidenceView {
-  readonly url: string | null
-  readonly withheld: MediaWithheld | null
-}
-
-export interface PageClaimDetailView extends PageClaimView {
-  readonly evidence: readonly PageClaimEvidenceView[]
-}
-
-/** Une page de la file d'instruction ; `continueCursor` à `null` : la file est lue jusqu'au bout. */
-export interface PageClaimQueueView {
-  readonly items: readonly PageClaimView[]
-  readonly continueCursor: string | null
 }
 
 export type PageImageSlot = "logo" | "banner"
@@ -302,13 +275,6 @@ export interface PageManagement {
   useMyInvitations(): Loadable<readonly PageInvitationView[]>
   /** Mes revendications dans DIASPORALE, les plus récentes d'abord (cinquante au plus). */
   useMyClaims(): Loadable<readonly PageClaimView[]>
-  /**
-   * La file d'instruction du réseau — sa modération seule. `null` : le lecteur
-   * ne modère pas DIASPORALE (aucune lecture n'est même tentée).
-   */
-  useClaimQueue(args: { readonly status: PageClaimStatus; readonly cursor: string | null }): Loadable<PageClaimQueueView | null>
-  /** Une revendication et ses pièces — son demandeur ou la modération ; `null` : rien à lire. */
-  useClaim(claimId: string | null): Loadable<PageClaimDetailView | null>
 
   createPage(input: CreatePageInput): Promise<ActionResult<{ pageId: string; handle: string }>>
   updateIdentity(pageId: string, input: PageIdentityInput): Promise<ActionResult<{ changed: boolean }>>
@@ -322,13 +288,12 @@ export interface PageManagement {
   requestClaim(input: PageClaimInput): Promise<ActionResult<{ claimId: string }>>
   /** Retirer MA revendication en attente ; ses pièces sont purgées. `withdrawn: false` : déjà tranchée. */
   withdrawClaim(claimId: string): Promise<ActionResult<{ withdrawn: boolean }>>
-  decideClaim(claimId: string, decision: PageClaimDecision, reason: string): Promise<ActionResult<{ status: PageClaimStatus }>>
 }
 
 export interface PageAdminCapability {
   /** Mes pages (rôle vivant seulement), dans le réseau DIASPORALE. */
   useMyPages(): Loadable<readonly ManagedPageView[]>
-  /** Création, revendication, équipe et instruction (DG-008) ; absent : indisponible. */
+  /** Création, revendication et équipe (DG-008) ; l'instruction est au bureau de modération (AS-01). Absent : indisponible. */
   readonly management?: PageManagement
 }
 
@@ -417,10 +382,4 @@ export function pageImageRefusal(slot: PageImageSlot, file: Pick<File, "type" | 
   if (!isMimeAllowedForUsage(IMAGE_USAGE[slot], normalizeMimeType(file.type))) return "page_image_type_invalid"
   if (file.size <= 0 || file.size > PAGE_IMAGE_MAX_BYTES[slot]) return "page_image_too_large"
   return null
-}
-
-/** Le motif d'une décision : entre 3 et 500 caractères une fois les bords nettoyés (règle du moteur). */
-export function pageDecisionReasonRefusal(reason: string): ActionErrorCode | null {
-  const length = reason.trim().length
-  return length < PAGE_DECISION_REASON_MIN || length > DECISION_REASON_MAX ? "page_decision_reason_length" : null
 }

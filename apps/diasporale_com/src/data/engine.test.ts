@@ -601,6 +601,15 @@ describe("relations par le graphe du moteur (PD4)", () => {
     expect(toRelationView({ state: "blocked_by_me", connectionId: "c4" } as never, true)).toEqual({ connection: "blocked_by_me", connectionId: "c4", following: false })
   })
 
+  it("RP-03 : bloquer puis débloquer — la vue suit le moteur, qui ne rétablit ni la relation ni l'abonnement", () => {
+    // Avant : en relation et abonnée.
+    expect(toRelationView({ state: "connected", connectionId: "c5", since: 1 } as never, true)).toEqual({ connection: "connected", connectionId: "c5", following: true })
+    // Sous mon blocage, même une lecture d'abonnement encore en retard ne montre rien (le moteur l'a retiré, PF-01).
+    expect(toRelationView({ state: "blocked_by_me", connectionId: "c5" } as never, true)).toEqual({ connection: "blocked_by_me", connectionId: "c5", following: false })
+    // Après le déblocage, le moteur rend « aucune relation » et « non abonnée » : la vue n'invente rien.
+    expect(toRelationView({ state: "none" } as never, false)).toEqual({ connection: "none", connectionId: null, following: false })
+  })
+
   it("chaque geste part vers sa fonction du graphe, borné par le réseau diasporale", async () => {
     const ok = () => ({ status: "requested" })
     const { convex, calls } = fakeConvex({
@@ -676,7 +685,8 @@ describe("la cloche du moteur (PD4)", () => {
   })
 
   it("un genre inconnu se dit « nouvelle activité » ; un profil non publié ne nomme personne ; lu, c'est lu", () => {
-    const view = toNotificationView(notice({ kind: "file_withheld", subject: null, inviteState: null, readAt: 9, actor: { personId: "p3", displayName: null, handle: null, avatarUrl: null, badges: [] } }))
+    // NP-04 : le fichier retenu est désormais nommé ; le direct, qui n'est pas servi ici, reste inconnu.
+    const view = toNotificationView(notice({ kind: "live_started", subject: null, inviteState: null, readAt: 9, actor: { personId: "p3", displayName: null, handle: null, avatarUrl: null, badges: [] } }))
     expect(view).toEqual({ id: "nt1", kind: "other", actor: null, createdAt: 5, read: true, pendingConnectionId: null, inviteOutcome: null, postId: null })
     expect(toNotificationView(notice({ kind: "sponsorship_withdrawn", inviteState: null, actor: null }))).toMatchObject({ kind: "sponsorship_withdrawn", actor: null })
   })
@@ -1089,6 +1099,21 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
     } finally {
       vi.unstubAllGlobals()
     }
+  })
+
+  it("FD-02 : un .mov est refusé avec la marche à suivre avant toute URL de dépôt ; la durée refusée par le serveur se dit par le même code", async () => {
+    const { convex, calls } = fakeConvex({ ...NETWORK, "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement" })
+    const deposit = vi.fn()
+    vi.stubGlobal("fetch", deposit)
+    try {
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage() })
+      expect(await actions.uploadMedia(new File(["mov"], "IMG_0412.MOV", { type: "video/quicktime" }))).toEqual({ ok: false, code: "media_video_format" })
+      expect(calls.some((call) => call.name === "modules/media/media:generateUploadUrl")).toBe(false)
+      expect(deposit).not.toHaveBeenCalled()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+    expect(engineActionErrorCode(engineError({ code: "invalidArgument", rule: "POST_VIDEO_TOO_LONG", params: { maxMinutes: 5 } }))).toBe("media_video_too_long")
   })
 })
 

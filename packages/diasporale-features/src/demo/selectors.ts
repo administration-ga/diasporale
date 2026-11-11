@@ -57,16 +57,17 @@ import type {
   SessionView,
   SharedPostView,
   NotificationView,
+  NotificationsPageView,
   RelationView,
   SponsorDashboardView,
   SuggestionView,
   UnreadCountView,
 } from "../data/types"
-import { COMMENT_REPLIES_PAGE, COMMENT_REPLIES_PREVIEW, COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH } from "../data/types"
+import { COMMENT_REPLIES_PAGE, COMMENT_REPLIES_PREVIEW, COMMENTS_PAGE, MEMBER_SEARCH_MIN_LENGTH, NOTIFICATIONS_PAGE_SIZE } from "../data/types"
 import { maskDestination } from "../data/mask"
 import { PAGE_DIRECTORY_QUERY_MIN_LENGTH, type HubPagesView, type PageDirectoryEntry, type PageDirectoryRequest } from "../data/pages-port"
 import type { DemoAccountView } from "../data/port"
-import type { DemoComment, DemoPage, DemoPost, DemoState } from "./state"
+import type { DemoComment, DemoNotification, DemoPage, DemoPost, DemoState } from "./state"
 
 /** Les champs gardés pour soi ne sont jamais une projection d'acteur public. */
 function publishedProfile(state: DemoState, personId: string) {
@@ -190,32 +191,81 @@ export function relationView(state: DemoState, viewerId: string, otherId: string
   return { connection: "none", connectionId: null, following }
 }
 
-/** La cloche : mes avis, du plus récent, et l'état vivant d'une demande de relation reçue. */
-export function notificationsView(state: DemoState, viewerId: string): NotificationView[] {
+/** Un avis de la cloche, tel que le lecteur le voit : l'état vivant d'une demande de relation reçue. */
+function notificationRowView(state: DemoState, viewerId: string, item: DemoNotification): NotificationView {
+  const actor = item.actorId ? publishedProfile(state, item.actorId) : null
+  const request = item.connectionRequestId ? state.connectionRequests.find((candidate) => candidate.id === item.connectionRequestId) : undefined
+  const isRequest = item.kind === "connection_request"
+  return {
+    id: item.id,
+    kind: item.kind,
+    actor: actor ? { handle: actor.handle, displayName: actor.displayName } : null,
+    createdAt: item.createdAt,
+    read: item.readAt !== null,
+    pendingConnectionId: isRequest && request && request.toId === viewerId ? request.id : null,
+    // Une demande tranchée : refusée par moi, acceptée (le lien existe), sinon disparue (retirée, défaite).
+    inviteOutcome: !isRequest || request ? null : item.inviteDeclined ? "declined" : item.actorId && isConnected(state, viewerId, item.actorId) ? "accepted" : "gone",
+    postId: item.postId,
+    // ET-01 : l'objet qu'ouvre un avis du système écrit par une démonstration voisine (une mission).
+    ...(item.communityNotice ? { communityNotice: item.communityNotice } : {}),
+    // EV-03 : la fiche de l'évènement annoncé (annulation, place obtenue).
+    ...(item.associationEvent ? { associationEvent: item.associationEvent } : {}),
+  }
+}
+
+/** Mes avis, du plus récent au plus ancien (tri stable : à égalité de date, l'ordre du magasin). */
+function myNotifications(state: DemoState, viewerId: string): DemoNotification[] {
   return state.notifications
     .filter((item) => item.recipientId === viewerId)
     .sort((a, b) => b.createdAt - a.createdAt)
-    .slice(0, NOTIFICATIONS_PAGE)
-    .map((item) => {
-      const actor = item.actorId ? publishedProfile(state, item.actorId) : null
-      const request = item.connectionRequestId ? state.connectionRequests.find((candidate) => candidate.id === item.connectionRequestId) : undefined
-      const isRequest = item.kind === "connection_request"
-      return {
-        id: item.id,
-        kind: item.kind,
-        actor: actor ? { handle: actor.handle, displayName: actor.displayName } : null,
-        createdAt: item.createdAt,
-        read: item.readAt !== null,
-        pendingConnectionId: isRequest && request && request.toId === viewerId ? request.id : null,
-        // Une demande tranchée : refusée par moi, acceptée (le lien existe), sinon disparue (retirée, défaite).
-        inviteOutcome: !isRequest || request ? null : item.inviteDeclined ? "declined" : item.actorId && isConnected(state, viewerId, item.actorId) ? "accepted" : "gone",
-        postId: item.postId,
-        // ET-01 : l'objet qu'ouvre un avis du système écrit par une démonstration voisine (une mission).
-        ...(item.communityNotice ? { communityNotice: item.communityNotice } : {}),
-        // EV-03 : la fiche de l'évènement annoncé (annulation, place obtenue).
-        ...(item.associationEvent ? { associationEvent: item.associationEvent } : {}),
-      }
-    })
+}
+
+/** La cloche : mes avis, du plus récent, et l'état vivant d'une demande de relation reçue. */
+export function notificationsView(state: DemoState, viewerId: string): NotificationView[] {
+  return myNotifications(state, viewerId).slice(0, NOTIFICATIONS_PAGE).map((item) => notificationRowView(state, viewerId, item))
+}
+
+/** La position d'une page des avis : le dernier avis montré (date, identifiant). */
+export interface DemoNotificationBoundary {
+  readonly at: number
+  readonly id: string
+}
+
+/** Le curseur opaque de la démonstration après un avis : jamais un curseur du moteur. */
+export function demoNotificationCursor(row: DemoNotificationBoundary): string {
+  return JSON.stringify(["demo-notifications", row.at, row.id])
+}
+
+/** La position que porte un curseur : `null` pour la première page, `undefined` s'il est illisible. */
+export function readDemoNotificationCursor(cursor: string | null): DemoNotificationBoundary | null | undefined {
+  if (cursor === null) return null
+  try {
+    const decoded: unknown = JSON.parse(cursor)
+    if (!Array.isArray(decoded) || decoded.length !== 3 || decoded[0] !== "demo-notifications"
+      || typeof decoded[1] !== "number" || !Number.isFinite(decoded[1]) || typeof decoded[2] !== "string") return undefined
+    return { at: decoded[1], id: decoded[2] }
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * NP-04 : une page de mes avis, après la position donnée, comme le moteur les pagine (du plus récent
+ * au plus ancien) ; la suite reprend au dernier avis montré, même si d'autres arrivent en tête.
+ */
+export function notificationsPageView(state: DemoState, viewerId: string, after: DemoNotificationBoundary | null = null, size = NOTIFICATIONS_PAGE_SIZE): NotificationsPageView {
+  const all = myNotifications(state, viewerId)
+  // Après le dernier avis montré ; s'il a disparu (remise à zéro), après sa date.
+  const shown = after === null ? -1 : all.findIndex((item) => item.id === after.id)
+  const start = after === null ? 0 : shown >= 0 ? shown + 1 : all.findIndex((item) => item.createdAt < after.at)
+  const rest = start < 0 ? [] : all.slice(start)
+  const window = rest.slice(0, size)
+  const last = window.at(-1)
+  return {
+    items: window.map((item) => notificationRowView(state, viewerId, item)),
+    continueCursor: last ? demoNotificationCursor({ at: last.createdAt, id: last.id }) : after ? demoNotificationCursor(after) : "",
+    isDone: rest.length <= size,
+  }
 }
 
 /** Les avis de la première page de la cloche. */
@@ -428,6 +478,17 @@ export function bookmarksView(state: DemoState, viewerId: string, now: number): 
 /** Un blocage, dans un sens ou dans l'autre, entre deux personnes. */
 function blockedBetween(state: DemoState, a: string, b: string): boolean {
   return state.blocks.some((block) => (block.byId === a && block.targetId === b) || (block.byId === b && block.targetId === a))
+}
+
+/**
+ * RP-03 (décision 5 du plan 05), la règle de la tranche (`isPageClosedByBlocks`) :
+ * une page est FERMÉE à une personne quand elle a au moins un signataire vivant
+ * et que TOUS sont en blocage avec elle, dans un sens ou dans l'autre. Un seul
+ * signataire ne ferme pas une page collective ; la personne elle-même
+ * signataire n'est jamais fermée. La page fermée répond comme une page retirée.
+ */
+export function isPageClosedByBlocks(state: DemoState, liveSignatoryIds: readonly string[], personId: string): boolean {
+  return liveSignatoryIds.length > 0 && liveSignatoryIds.every((signatoryId) => signatoryId !== personId && blockedBetween(state, signatoryId, personId))
 }
 
 /**

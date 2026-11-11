@@ -189,33 +189,7 @@ describe("gestion des pages — lectures du moteur", () => {
     })
   })
 
-  it("n'interroge pas la file d'instruction pour un simple membre", () => {
-    const { management } = source()
-    const { result } = renderHook(() => management.useClaimQueue({ status: "pending", cursor: null }))
-    expect(result.current).toEqual({ status: "ready", data: null })
-    expect(mocks.loaded).not.toHaveBeenCalledWith("modules/pages/claims:paginatePageClaims", expect.anything())
-  })
-
-  it("sert la file à la modération du réseau, curseur compris", () => {
-    results({
-      "modules/diaspora/membership:myMembership": { ...MEMBER, role: "network_moderator" },
-      "modules/pages/claims:paginatePageClaims": { page: [CLAIM], isDone: false, continueCursor: "suite" },
-    })
-    const { management } = source()
-    const { result } = renderHook(() => management.useClaimQueue({ status: "pending", cursor: "debut" }))
-    expect(mocks.loaded).toHaveBeenCalledWith("modules/pages/claims:paginatePageClaims", { networkId: "network-diasporale", status: "pending", paginationOpts: { numItems: 20, cursor: "debut" } })
-    expect(result.current).toMatchObject({ status: "ready", data: { continueCursor: "suite", items: [{ id: "claim-1" }] } })
-  })
-
-  it.each(["fileScanPending", "fileScanUnavailable", "fileQuarantined"] as const)("une pièce retenue par la garde (%s) n'a jamais d'adresse", (withheld) => {
-    results({
-      "modules/pages/claims:getPageClaim": { ...CLAIM, evidence: [{ url: "https://depot.exemple.test/1", withheld: null }, { url: "https://depot.exemple.test/2", withheld }] },
-    })
-    const { management } = source()
-    const { result } = renderHook(() => management.useClaim("claim-1"))
-    expect(result.current).toMatchObject({ status: "ready", data: { evidence: [{ url: "https://depot.exemple.test/1", withheld: null }, { url: null, withheld }] } })
-    expect(renderHook(() => management.useClaim(null)).result.current).toEqual({ status: "ready", data: null })
-  })
+  // AS-01 : la file d'instruction, la fiche et les pièces sont au bureau de modération (`engine-moderation-desk.test.tsx`).
 })
 
 describe("gestion des pages — écritures du moteur", () => {
@@ -366,15 +340,6 @@ describe("gestion des pages — écritures du moteur", () => {
     expect(await accepted.management.respondToInvitation("page-1", true)).toEqual({ ok: true, value: { role: "signatory" } })
     const gone = source({ mutation: () => { throw new ConvexError({ code: "notFound" }) } })
     expect(await gone.management.respondToInvitation("page-1", false)).toEqual({ ok: false, code: "page_invitation_gone" })
-  })
-
-  it("tranche par une décision motivée ; une décision close se dit", async () => {
-    const { management, calls } = source({ mutation: () => ({ status: "approved" }) })
-    expect(await management.decideClaim("claim-1", "approved", "  Statuts et procès-verbal conformes.  ")).toEqual({ ok: true, value: { status: "approved" } })
-    expect(calls).toEqual([{ name: "modules/pages/claims:decidePageClaim", args: { networkId: "network-diasporale", claimId: "claim-1", decision: "approved", reason: "Statuts et procès-verbal conformes." } }])
-    expect(await management.decideClaim("claim-1", "rejected", " a ")).toEqual({ ok: false, code: "page_decision_reason_length" })
-    const closed = source({ mutation: () => { throw new ConvexError({ code: "conflict" }) } })
-    expect(await closed.management.decideClaim("claim-1", "rejected", "Pièces illisibles.")).toEqual({ ok: false, code: "page_claim_closed" })
   })
 
   it("retire ma demande ; une demande tranchée rend `withdrawn: false`", async () => {

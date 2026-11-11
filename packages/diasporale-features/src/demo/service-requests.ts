@@ -63,7 +63,7 @@ import {
   type ServiceRequestSummaryView,
 } from "../data/service-requests-port"
 import type { Loadable } from "../data/types"
-import { statusOf } from "./selectors"
+import { isPageClosedByBlocks, statusOf } from "./selectors"
 import type { DemoOfferRef } from "./services"
 import type { DemoStore } from "./store"
 
@@ -510,6 +510,8 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
       if (!input.shareIdentityWithPage) return fail("request_consent_required")
       const offer = deps.findOffer(input.offerId)
       if (!offer || offer.status !== "active") return fail("not_found")
+      // RP-03 : toute l'équipe vivante en blocage avec la personne, la page se tait comme retirée.
+      if (isPageClosedByBlocks(store.getState(), teamOf(offer.pageId), access.personId)) return fail("not_found")
       if (offer.version !== input.offerVersion) return fail("request_offer_changed")
       if (teamOf(offer.pageId).includes(access.personId)) return fail("request_own_page")
       const now = store.now()
@@ -637,6 +639,8 @@ export function createDemoServiceRequestsContext(store: DemoStore, deps: DemoSer
       if (!expected.ok) return fail(expected.code)
       const proposal = data.proposals.find((candidate) => candidate.id === row.currentProposalId)
       if (!proposal || proposal.state !== "current") return fail("request_not_open")
+      // RP-03 : ni un accord vers une page fermée par les blocages de toute son équipe vivante.
+      if (isPageClosedByBlocks(store.getState(), teamOf(row.pageId), access.personId)) return fail("not_found")
       const capacity = offerCapacityOf(row)
       if (slotTaken(data, row.pageId, proposal, capacity)) return fail("booking_slot_unavailable")
       const bookingId = `rendez-vous-demo-${data.sequence}`

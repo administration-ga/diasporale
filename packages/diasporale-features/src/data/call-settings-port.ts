@@ -1,19 +1,21 @@
 /**
- * Capacité « réglages iCom » du port (IM-02) — les réglages d'appel et de présence
- * de la PERSONNE : qui peut faire sonner son téléphone, « Ne pas déranger », la
- * messagerie vocale, la présence montrée aux relations, le double appel.
+ * Capacité « réglages iCom » du port (IM-02) — les réglages d'appel, de présence et
+ * de lecture de la PERSONNE : qui peut faire sonner son téléphone, « Ne pas
+ * déranger », les accusés de lecture, la messagerie vocale, la présence montrée aux
+ * relations, le double appel.
  *
  * Ces réglages sont ceux du compte commun : ils valent dans tous les réseaux de la
  * personne, ANTSIA compris. Le moteur les porte (`calls/preferences` : `getMine`,
  * `update`, `setDnd`, fonctions sur soi) et les applique à chaque appel qu'il
- * admet, d'où qu'il vienne (`calls/evaluate`, `calls/presence`, `calls/voicemail`).
+ * admet, d'où qu'il vienne (`calls/evaluate`, `calls/presence`, `calls/voicemail`),
+ * et à chaque « Lu » qu'il sert dans une conversation à deux (`messaging/participation`).
  *
  * Seuls les réglages qui ont un EFFET réel côté serveur sont servis ici. La
  * sonnerie et la vibration de l'appareil, les réponses rapides, le silence
  * pendant un évènement et l'avis d'appel hors du site ne le sont pas : aucun écran
  * de DIASPORALE ne les montre aujourd'hui.
  */
-import { MAX_DND_DURATION_MS } from "@antsia/social-contracts/calls"
+import { DEFAULT_OUTSIDE_RELATIONS_CALLS, DEFAULT_READ_RECEIPTS, MAX_DND_DURATION_MS } from "@antsia/social-contracts/calls"
 
 import type { ActionResult } from "./port"
 import type { Loadable } from "./types"
@@ -22,8 +24,10 @@ const HOUR_MS = 60 * 60 * 1000
 
 /**
  * Les appels d'une personne HORS de mes relations (moteur : `outsideRelationsCalls`).
- * `ring` : le téléphone sonne ; `silent` : l'appel est refusé, inscrit au journal, et
- * l'appelant l'apprend. Un appel de groupe et une mise en relation acceptée y échappent.
+ * `ring` : le téléphone sonne ; `silent` : il ne sonne pas, l'appel est inscrit au
+ * journal de l'appelé, et l'appelant voit un appel sans réponse (IC-04 : la raison ne lui
+ * est jamais dite). Un appel lancé dans un groupe dont on est membre, et un appel accepté
+ * dans une mise en relation, ne dépendent pas de ce choix.
  */
 export const OUTSIDE_RELATIONS_CALLS = ["ring", "silent"] as const
 export type OutsideRelationsCalls = (typeof OUTSIDE_RELATIONS_CALLS)[number]
@@ -32,6 +36,11 @@ export interface CallSettingsView {
   readonly outsideRelationsCalls: OutsideRelationsCalls
   /** Fin du « Ne pas déranger » en cours ; `null` : aucun silence en cours. */
   readonly dndUntil: number | null
+  /**
+   * Accusés de lecture des conversations à deux, RÉCIPROQUES (IC-04) : coupés, les autres ne
+   * voient plus quand je lis, et je ne vois plus quand ils lisent. Le serveur applique la règle.
+   */
+  readonly readReceipts: boolean
   /** L'appelant d'un appel manqué peut laisser un message vocal. */
   readonly voicemailEnabled: boolean
   /** Mes relations voient ma présence (en ligne, en appel, « Ne pas déranger »). */
@@ -41,12 +50,17 @@ export interface CallSettingsView {
 }
 
 /** Les réglages qu'un formulaire écrit : chaque champ omis reste inchangé (moteur : `update`). */
-export type CallPreferencesPatch = Partial<Pick<CallSettingsView, "outsideRelationsCalls" | "voicemailEnabled" | "sharePresence" | "callWaiting">>
+export type CallPreferencesPatch = Partial<Pick<CallSettingsView, "outsideRelationsCalls" | "readReceipts" | "voicemailEnabled" | "sharePresence" | "callWaiting">>
 
-/** Les défauts du moteur pour une personne qui n'a jamais rien réglé (`getMine`). */
+/**
+ * Les défauts du moteur pour une personne qui n'a jamais rien réglé (`getMine`). Les deux
+ * défauts d'IC-04 viennent du contrat du moteur, leur seule source : « mes relations
+ * seulement » (décision du propriétaire du 9/11/2026) et les accusés de lecture actifs.
+ */
 export const DEFAULT_CALL_SETTINGS: CallSettingsView = Object.freeze({
-  outsideRelationsCalls: "ring",
+  outsideRelationsCalls: DEFAULT_OUTSIDE_RELATIONS_CALLS,
   dndUntil: null,
+  readReceipts: DEFAULT_READ_RECEIPTS,
   voicemailEnabled: true,
   sharePresence: true,
   callWaiting: true,

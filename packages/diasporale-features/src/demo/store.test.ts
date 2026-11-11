@@ -425,6 +425,9 @@ describe("relations (EXF-DG-11, EXF-DG-12)", () => {
     await store.switchTo("p-mireille")
     await store.unblock("p-steeve")
     expect(relationView(store.getState(), "p-mireille", "p-steeve").connection).toBe("none")
+    // RP-03, comme le moteur (PF-01) : débloquer ne rétablit ni la relation ni l'abonnement d'avant.
+    expect(relationView(store.getState(), "p-mireille", "p-steeve")).toEqual({ connection: "none", connectionId: null, following: false })
+    expect(relationView(store.getState(), "p-steeve", "p-mireille")).toEqual({ connection: "none", connectionId: null, following: false })
   })
 
   it("un compte en attente n'échange pas encore ; une cible inconnue ou soi-même : introuvable", async () => {

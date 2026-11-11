@@ -2,12 +2,14 @@
  * Démonstration de la capacité « réglages iCom » (IM-02). PROPRIÉTAIRE : ce lot.
  *
  * Les mêmes règles que le moteur (`calls/preferences`) : des défauts lus sans rien
- * écrire, une mise à jour qui ne touche que les champs fournis, un « Ne pas
+ * écrire (ceux d'IC-04 compris : « mes relations seulement », accusés de lecture
+ * actifs), une mise à jour qui ne touche que les champs fournis, un « Ne pas
  * déranger » dans le futur et à sept jours au plus, une échéance passée lue comme
  * absente. Les gestes portent sur la personne de la session, jamais sur une autre.
  *
  * Réglages FICTIFS, gardés le temps de la page pour chaque compte de démonstration :
- * aucun appel n'existe en démonstration, rien n'est transmis.
+ * aucun appel n'existe en démonstration, aucun accusé de lecture n'y est servi, rien
+ * n'est transmis.
  */
 import { useSyncExternalStore } from "react"
 
@@ -27,6 +29,7 @@ import type { DemoStore } from "./store"
 interface DemoCallPreferences {
   readonly outsideRelationsCalls: OutsideRelationsCalls
   readonly dnd: { readonly until: number; readonly startedAt: number } | null
+  readonly readReceipts: boolean
   readonly voicemailEnabled: boolean
   readonly sharePresence: boolean
   readonly callWaiting: boolean
@@ -37,6 +40,7 @@ const LOADING = { status: "loading" } as const
 const DEFAULTS: DemoCallPreferences = {
   outsideRelationsCalls: DEFAULT_CALL_SETTINGS.outsideRelationsCalls,
   dnd: null,
+  readReceipts: DEFAULT_CALL_SETTINGS.readReceipts,
   voicemailEnabled: DEFAULT_CALL_SETTINGS.voicemailEnabled,
   sharePresence: DEFAULT_CALL_SETTINGS.sharePresence,
   callWaiting: DEFAULT_CALL_SETTINGS.callWaiting,
@@ -51,6 +55,7 @@ function patched(current: DemoCallPreferences, patch: CallPreferencesPatch): Dem
   return {
     ...current,
     ...(patch.outsideRelationsCalls !== undefined ? { outsideRelationsCalls: patch.outsideRelationsCalls } : {}),
+    ...(patch.readReceipts !== undefined ? { readReceipts: patch.readReceipts } : {}),
     ...(patch.voicemailEnabled !== undefined ? { voicemailEnabled: patch.voicemailEnabled } : {}),
     ...(patch.sharePresence !== undefined ? { sharePresence: patch.sharePresence } : {}),
     ...(patch.callWaiting !== undefined ? { callWaiting: patch.callWaiting } : {}),
@@ -62,6 +67,7 @@ function viewOf(row: DemoCallPreferences, now: number): CallSettingsView {
   return {
     outsideRelationsCalls: row.outsideRelationsCalls,
     dndUntil: row.dnd !== null && row.dnd.until > now ? row.dnd.until : null,
+    readReceipts: row.readReceipts,
     voicemailEnabled: row.voicemailEnabled,
     sharePresence: row.sharePresence,
     callWaiting: row.callWaiting,

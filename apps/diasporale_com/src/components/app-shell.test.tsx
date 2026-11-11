@@ -137,7 +137,7 @@ function ComposerProbe() {
 /** Un responsable reconnu par le serveur : modérateur du réseau et lecteur de la mesure du pilote (lectures stables). */
 const RESPONSIBLE_DESK: Loadable<ModerationDeskView | null> = {
   status: "ready",
-  data: { role: "network_admin", networkWide: true, canReviewAppeals: true, canManageTeams: true, teams: [] },
+  data: { role: "network_admin", networkWide: true, canReviewAppeals: true, canManageTeams: true, canManagePolicy: true, canReviewClaims: true, teams: [] },
 }
 const PILOT_ALLOWED: Loadable<PilotMetricsAccessView> = { status: "ready", data: { allowed: true } }
 

@@ -225,39 +225,6 @@
     "claims": {
       "title": "Mes revendications",
       "sentOn": "Envoyée le {{date}}"
-    },
-    "review": {
-      "title": "Revendications à instruire",
-      "lead": "Réservé à la modération de DIASPORALE. Chaque décision est motivée et tracée.",
-      "demoNote": "Démonstration : Mireille instruit les revendications au nom de la modération.",
-      "empty": "Aucune revendication n'attend de décision.",
-      "claimant": "Demande de {{name}}",
-      "receivedOn": "reçue le {{date}}",
-      "evidenceCount_one": "{{count}} pièce",
-      "evidenceCount_other": "{{count}} pièces",
-      "open": "Instruire",
-      "more": "Revendications suivantes",
-      "first": "Revenir au début",
-      "sheetTitle": "Revendication de {{page}}",
-      "sheetDescription": "Lisez la note et les pièces, puis tranchez par une décision motivée.",
-      "claimantLabel": "Demandeur",
-      "page": "Page",
-      "note": "Note du demandeur",
-      "noNote": "Aucune note.",
-      "evidence": "Pièces",
-      "evidenceOpen": "Ouvrir la pièce {{index}}",
-      "evidencePending": "Pièce {{index}} : analyse en cours.",
-      "evidenceBlocked": "Pièce {{index}} : bloquée par l'analyse.",
-      "evidenceKept": "Pièce {{index}} : reçue, non consultable ici.",
-      "decisionLegend": "Décision",
-      "decision": {
-        "approved": "Valider : le demandeur devient administrateur et la page devient « Vérifié »",
-        "rejected": "Refuser : rien ne change pour la page"
-      },
-      "reason": "Motif de la décision",
-      "reasonHint": "Il est communiqué au demandeur ({{min}} à {{max}} caractères).",
-      "submit": "Enregistrer la décision",
-      "decided": "Décision enregistrée."
     }
   },
   "errors": {
@@ -291,8 +258,6 @@
     "page_claim_mandate_required": "Indiquez votre mandat.",
     "page_claim_consent_required": "Cochez la déclaration pour envoyer votre demande.",
     "page_claim_closed": "Cette revendication n'attend plus de décision : déjà tranchée, ou son auteur n'est plus membre actif.",
-    "page_decision_required": "Choisissez une décision.",
-    "page_decision_reason_length": "Le motif compte de 3 à 500 caractères.",
     "page_image_type_invalid": "Images acceptées : JPEG, PNG ou WebP.",
     "page_image_too_large": "Image trop lourde : 5 Mo au plus pour le logo, 10 Mo pour la bannière."
   }

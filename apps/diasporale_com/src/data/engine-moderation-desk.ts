@@ -27,14 +27,32 @@
  * (`responsibles`) et se nomment par `diaspora/membership` (`setResponsibleRole`), qui appelle l'aide
  * du moteur (EX-08) et journalise ; la règle `NETWORK_LAST_ADMIN` se dit
  * `moderation_desk_last_admin`, le refus indistinct `moderation_desk_role_refused`.
+ *
+ * MD-04 : les réglages se lisent et se posent par les fonctions du moteur livrées
+ * par MC-02 (`moderation/cases` : `policies`, `blockedTermsPage`, `setPolicy`,
+ * `setBlockedTerm`), réservées à l'administration du réseau (refus indistinct
+ * sinon) et journalisées par le moteur. Comme la voie des délais légaux, elles ne
+ * connaissent pas la personne attendue : l'écran ne les lit que sous un guichet
+ * ouvert pour elle, avec `canManagePolicy`.
+ *
+ * AS-01 : la file des revendications en attente vient de la tranche
+ * (`diaspora/moderationDesk` : `pageClaimQueue`, filtrée par pays de la page, conflit
+ * d'intérêts dit par `party`) ; la fiche, les pièces et la décision viennent de
+ * `pages/claims` (`getPageClaim`, `decidePageClaim`). `canDecide` (PG-01 du
+ * moteur) est lu s'il est servi, sans être exigé.
  */
 import { engineErrorCode, engineErrorRule } from "@antsia/social-contracts/errors"
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
+import type { PageTrustLevel } from "@diasporale/domain"
 import {
+  DESK_BLOCKED_TERMS_PAGE,
   DESK_PAGE_SIZE,
+  deskBlockedTermRefusal,
   deskCountry,
   deskGround,
+  deskPolicyFieldRefusal,
+  deskPolicyRefusal,
   deskReasonRefusal,
   deskSanctions,
   deskTeamNameRefusal,
@@ -42,6 +60,9 @@ import {
   type ActionErrorCode,
   type ActionResult,
   type DeskAppealView,
+  type DeskBlockedTermView,
+  type DeskClaimDetailView,
+  type DeskClaimView,
   type DeskCaseDetailView,
   type DeskCaseView,
   type DeskDeadlineLane,
@@ -51,6 +72,7 @@ import {
   type DeskPreviewView,
   type DeskResponsiblesView,
   type DeskRosterView,
+  type DeskSettingsView,
   type DeskSurface,
   type DeskZone,
   type Loadable,
@@ -79,8 +101,11 @@ const DESK = api.modules.diaspora.moderationDesk
 const CASES = api.modules.moderation.cases
 const PREVIEW = api.modules.moderation.reviewProjection.preview
 const SET_RESPONSIBLE_ROLE = api.modules.diaspora.membership.setResponsibleRole
+const CLAIMS = api.modules.pages.claims
 
 type DeskRow = FunctionReturnType<typeof DESK.myDesk>
+type ClaimRow = FunctionReturnType<typeof DESK.pageClaimQueue>["items"][number]
+type ClaimDetailRow = FunctionReturnType<typeof CLAIMS.getPageClaim>
 type CaseRow = FunctionReturnType<typeof DESK.queue>["items"][number]
 type DeadlineRows = FunctionReturnType<typeof CASES.deadlineQueue>
 type DeadlineRow = DeadlineRows["items"][number]
@@ -90,6 +115,8 @@ type AppealRow = FunctionReturnType<typeof DESK.appealQueue>["items"][number]
 type RosterRow = FunctionReturnType<typeof DESK.teamRoster>
 type ResponsiblesRow = FunctionReturnType<typeof DESK.responsibles>
 type PreviewRow = FunctionReturnType<typeof PREVIEW>
+type SettingsRow = FunctionReturnType<typeof CASES.policies>
+type BlockedTermsRow = FunctionReturnType<typeof CASES.blockedTermsPage>
 type EngineZone = FunctionArgs<typeof DESK.queue>["zone"]
 type EngineTarget = FunctionArgs<typeof CASES.reviewContent>["target"]
 type Window<Row> = { readonly items: readonly Row[]; readonly continueCursor: string | null; readonly isDone: boolean }
@@ -129,6 +156,22 @@ export function responsibleRoleErrorCode(error: unknown): ActionErrorCode {
   return moderationDeskErrorCode(error)
 }
 
+/** MD-04 : les refus d'un réglage ; le champ hors bornes nommé par le moteur se dit par son code. */
+export function moderationPolicyErrorCode(error: unknown): ActionErrorCode {
+  if (error instanceof Refusal) return error.code
+  const field = invalidField(error)
+  const refusal = field === null ? null : deskPolicyFieldRefusal(field)
+  return refusal ?? moderationDeskErrorCode(error)
+}
+
+/** MD-04 : les refus d'un mot bloqué (mot trop court ou trop long, plafond des mots actifs atteint). */
+export function blockedTermErrorCode(error: unknown): ActionErrorCode {
+  if (error instanceof Refusal) return error.code
+  if (invalidField(error) === "term") return "moderation_desk_term_length"
+  if (engineErrorCode(error) === "policyRefused") return "moderation_desk_terms_full"
+  return moderationDeskErrorCode(error)
+}
+
 async function run<T>(work: () => Promise<T>, errorCode: (error: unknown) => ActionErrorCode = moderationDeskErrorCode): Promise<ActionResult<T>> {
   try {
     return { ok: true, value: await work() }
@@ -145,6 +188,9 @@ export function toDeskView(row: NonNullable<DeskRow>): ModerationDeskView {
     networkWide: row.networkWide,
     canReviewAppeals: row.canReviewAppeals,
     canManageTeams: row.canManageTeams,
+    canManagePolicy: row.canManagePolicy,
+    // AS-01 : `pages/claims` n'admet que le rôle de réseau (`networkRoleCapacity`), la règle de `networkWide`.
+    canReviewClaims: row.networkWide,
     teams: row.teams.map((team) => ({ teamId: team.teamId, name: team.name, scope: team.scope, isMember: team.isMember })),
   }
 }
@@ -266,6 +312,67 @@ export function toResponsiblesView(row: ResponsiblesRow): DeskResponsiblesView {
   }
 }
 
+/** Le badge CALCULÉ par le moteur ; une valeur inconnue se dit « Communauté », jamais plus. */
+function pageBadgeOf(badge: string): PageTrustLevel {
+  return badge === "official" || badge === "verified" ? badge : "community"
+}
+
+/** AS-01 : une revendication en attente de la file, le pays seulement s'il est un code connu. */
+export function toClaimView(row: ClaimRow): DeskClaimView {
+  return {
+    claimId: row.claimId,
+    page: { id: row.page.pageId, handle: row.page.handle, name: row.page.name, ownerKind: row.page.ownerKind, badge: pageBadgeOf(row.page.badge), country: deskCountry(row.page.country) },
+    country: deskCountry(row.country),
+    evidenceCount: row.evidenceCount,
+    createdAt: row.createdAt,
+    party: row.party,
+  }
+}
+
+/**
+ * `canDecide` de `getPageClaim` (PG-01 du moteur), s'il est servi ; `null`
+ * sinon. Lu par l'opérateur `in` : le typage tient avec ou sans ce champ.
+ */
+export function claimCanDecide(row: object): boolean | null {
+  if (!("canDecide" in row)) return null
+  const value: unknown = row.canDecide
+  return typeof value === "boolean" ? value : null
+}
+
+/** AS-01 : la fiche d'une revendication ; une pièce retenue par la garde des fichiers n'a pas d'adresse. */
+export function toClaimDetailView(row: ClaimDetailRow): DeskClaimDetailView {
+  return {
+    claimId: row.claimId,
+    claimant: { personId: row.claimant.personId, handle: row.claimant.handle, displayName: row.claimant.displayName },
+    note: row.note,
+    evidence: row.evidence.map((item) => ({ url: item.withheld === null ? item.url : null, withheld: item.withheld })),
+    canDecide: claimCanDecide(row),
+  }
+}
+
+/** MD-04 : les réglages tels que le moteur les sert, défauts compris ; aucune valeur n'est complétée ici. */
+export function toSettingsView(row: SettingsRow): DeskSettingsView {
+  return {
+    defaults: { preReview: row.defaults.preReview, maxLinks: row.defaults.maxLinks, maxWrites: row.defaults.maxWrites, windowMs: row.defaults.windowMs },
+    surfaces: row.surfaces.map((item) => ({
+      surface: item.surface,
+      withoutPolicy: item.withoutPolicy,
+      policy: item.policy === null
+        ? null
+        : { preReview: item.policy.preReview, maxLinks: item.policy.maxLinks, maxWrites: item.policy.maxWrites, windowMs: item.policy.windowMs, updatedAt: item.policy.updatedAt },
+    })),
+  }
+}
+
+/** MD-04 : une fenêtre des mots bloqués actifs. */
+export function toBlockedTermsWindow(row: BlockedTermsRow): DeskPage<DeskBlockedTermView> {
+  return {
+    items: row.page.map((item) => ({ termId: item.termId, term: item.term, updatedAt: item.updatedAt })),
+    continueCursor: row.isDone ? null : row.continueCursor,
+    isDone: row.isDone,
+  }
+}
+
 /** Un média retenu par la garde des fichiers garde sa place, sans adresse. */
 function toMediaView(media: PreviewRow["media"][number]): PostMediaView {
   const withheld = media.withheld === "fileScanPending" ? "scan_pending" : media.withheld === "fileQuarantined" ? "quarantined" : null
@@ -292,6 +399,7 @@ const projectDesk = (row: DeskRow): ModerationDeskView | null => (row === null ?
 const projectCases = (rows: FunctionReturnType<typeof DESK.queue>): DeskPage<DeskCaseView> => windowOf(rows, toCaseView)
 const projectPending = (rows: FunctionReturnType<typeof DESK.pendingQueue>): DeskPage<DeskPendingView> => windowOf(rows, toPendingView)
 const projectAppeals = (rows: FunctionReturnType<typeof DESK.appealQueue>): DeskPage<DeskAppealView> => windowOf(rows, toAppealView)
+const projectClaims = (rows: FunctionReturnType<typeof DESK.pageClaimQueue>): DeskPage<DeskClaimView> => windowOf(rows, toClaimView)
 
 /** La voie des délais légaux d'une file : celle d'une équipe, ou toute la file accessible (rôle réseau). */
 function deadlineArgs(networkId: Id<"networks">, teamId: string | null): FunctionArgs<typeof CASES.deadlineQueue> {
@@ -568,6 +676,76 @@ export function createEngineModerationDesk(deps: EngineSourceDeps): ModerationDe
         })
         return { role: result.role, changed: result.changed }
       }, responsibleRoleErrorCode)
+    },
+
+    useSettings(personId) {
+      const reader = useDeskReader(personId)
+      const loaded = useLoaded(CASES.policies, reader.networkId ? { networkId: reader.networkId } : "skip")
+      return useProjected(reader, loaded, toSettingsView)
+    },
+
+    useBlockedTerms({ personId, cursor }) {
+      const reader = useDeskReader(personId)
+      const loaded = useLoaded(CASES.blockedTermsPage, reader.networkId
+        ? { networkId: reader.networkId, paginationOpts: { cursor, numItems: DESK_BLOCKED_TERMS_PAGE } }
+        : "skip")
+      return useProjected(reader, loaded, toBlockedTermsWindow)
+    },
+
+    async setPolicy(input) {
+      return await run(async () => {
+        const reason = requireReason(input.reason)
+        const refusal = deskPolicyRefusal(input)
+        if (refusal) throw new Refusal(refusal)
+        await expectPerson(input.personId)
+        const networkId = await resolveDiasporaleNetworkId(deps.convex)
+        await deps.convex.mutation(CASES.setPolicy, {
+          networkId,
+          surface: input.surface,
+          preReview: input.preReview,
+          maxLinks: input.maxLinks,
+          maxWrites: input.maxWrites,
+          windowMs: input.windowMs,
+          reason,
+        })
+        return null
+      }, moderationPolicyErrorCode)
+    },
+
+    async setBlockedTerm(input) {
+      return await run(async () => {
+        const reason = requireReason(input.reason)
+        const refusal = deskBlockedTermRefusal(input.term)
+        if (refusal) throw new Refusal(refusal)
+        await expectPerson(input.personId)
+        const networkId = await resolveDiasporaleNetworkId(deps.convex)
+        await deps.convex.mutation(CASES.setBlockedTerm, { networkId, term: input.term.trim(), active: input.active, reason })
+        return null
+      }, blockedTermErrorCode)
+    },
+
+    useClaims({ personId, zone, cursor }) {
+      const reader = useDeskReader(personId)
+      const loaded = useLoaded(DESK.pageClaimQueue, reader.networkId
+        ? { networkId: reader.networkId, expectedPersonId: personId as Id<"persons">, zone: engineZone(zone), paginationOpts: { cursor, numItems: DESK_PAGE_SIZE } }
+        : "skip")
+      return useProjected(reader, loaded, projectClaims)
+    },
+
+    useClaim({ personId, claimId }) {
+      const reader = useDeskReader(personId)
+      const loaded = useLoaded(CLAIMS.getPageClaim, reader.networkId ? { networkId: reader.networkId, claimId: claimId as Id<"pageClaims"> } : "skip")
+      return useProjected(reader, loaded, toClaimDetailView)
+    },
+
+    async decideClaim(input) {
+      return await run(async () => {
+        const reason = requireReason(input.reason)
+        await expectPerson(input.personId)
+        const networkId = await resolveDiasporaleNetworkId(deps.convex)
+        await deps.convex.mutation(CLAIMS.decidePageClaim, { networkId, claimId: input.claimId as Id<"pageClaims">, decision: input.decision, reason })
+        return { status: input.decision }
+      })
     },
   }
 }

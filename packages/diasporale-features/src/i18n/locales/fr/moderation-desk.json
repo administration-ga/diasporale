@@ -25,7 +25,7 @@
       },
       "teams": "Vos équipes : {{names}}.",
       "noTeam": "Vous ne faites partie d'aucune équipe.",
-      "decisions": "Une personne partie à un dossier (auteur, déclarant, signataire de la page visée, ancien décideur) ne le tranche pas."
+      "decisions": "Une personne partie à un dossier (auteur, déclarant, signataire de la page visée, responsable du groupe visé, ancien décideur) ne le tranche pas."
     },
     "filters": {
       "label": "Filtres de la file",
@@ -83,7 +83,9 @@
       "professionalProfile": "Profil professionnel",
       "professionalCollaboration": "Demande de collaboration",
       "editorialVersion": "Version d'article",
-      "editorialMedia": "Présentation du média"
+      "editorialMedia": "Présentation du média",
+      "thematicGroup": "Groupe (fiche et règles)",
+      "personalMessage": "Message personnel"
     },
     "ground": {
       "harassment": "Harcèlement",
@@ -115,6 +117,7 @@
       "reporter": "Vous avez signalé ce contenu.",
       "page": "Vous signez pour la page dont relève ce contenu.",
       "decider": "Vous avez pris la décision contestée.",
+      "group": "Vous êtes propriétaire ou modérateur du groupe visé.",
       "handOver": "Un autre membre de l'équipe doit le trancher."
     },
     "sanction": {

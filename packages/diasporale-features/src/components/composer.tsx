@@ -17,6 +17,7 @@ import {
   type PostMediaKind,
   postMediaKindOf,
   postMediaRefusal,
+  unsupportedMediaRefusal,
 } from "../data/media"
 import type { PublishMediaInput, UploadedMedia } from "../data/port"
 import type { PagePublicationInput, PagePublicationsCapability } from "../data/page-publications-port"
@@ -253,7 +254,8 @@ export function PostComposerSheet(props: {
     for (const file of files) {
       const kind = postMediaKindOf(file.type)
       if (!kind) {
-        setMediaError("media_type_invalid")
+        // FD-02 : un .mov (ou tout autre conteneur vidéo) est refusé avant l'envoi, avec la marche à suivre.
+        setMediaError(unsupportedMediaRefusal(file.type))
         return
       }
       chosen.push({ file, kind })

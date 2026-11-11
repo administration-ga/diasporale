@@ -551,6 +551,31 @@ describe("ProfileScreen — RP-02 : le menu « … » de la fiche d'autrui", () 
     expect(mocks.block).toHaveBeenCalledExactlyOnceWith(other.personId)
   })
 
+  it("RP-03 : la confirmation dit l'effet réel — abonnements retirés dans les deux sens, rien de rétabli au déblocage", async () => {
+    const user = userEvent.setup()
+    render(withReports(fakeReports().capability, other.handle))
+    await user.click(within(await openMenu(user)).getByRole("menuitem", { name: t("relation.block") }))
+    const group = await screen.findByRole("group", { name: t("relation.blockConfirm", { name: other.displayName }) })
+    expect(group).toHaveAccessibleDescription(t("relation.blockEffect"))
+    expect(t("relation.blockEffect")).toContain("abonnements sont retirés dans les deux sens")
+    expect(t("relation.blockEffect")).toContain("ne rétablit ni la relation ni les abonnements")
+    // L'ancienne phrase promettait vaguement « vos liens tombent » : elle ne revient pas.
+    expect(group).not.toHaveTextContent("vos liens tombent")
+    await user.click(within(group).getByRole("button", { name: t("relation.blockAction") }))
+    await waitFor(() => expect(mocks.success).toHaveBeenCalledWith(t("relation.blocked", { name: other.displayName })))
+  })
+
+  it("RP-03 : débloquer depuis la fiche dit que ni la relation ni les abonnements ne reviennent", async () => {
+    const user = userEvent.setup()
+    mocks.relation = { status: "ready", data: { connection: "blocked_by_me", connectionId: null, following: false } }
+    render(tree(other.handle))
+    await user.click(screen.getByRole("button", { name: t("relation.unblock") }))
+    await waitFor(() => expect(mocks.unblock).toHaveBeenCalledExactlyOnceWith(other.personId))
+    await waitFor(() => expect(mocks.success).toHaveBeenCalledWith(t("relation.unblocked", { name: other.displayName })))
+    expect(t("relation.unblocked", { name: other.displayName })).toContain("Ni la relation ni les abonnements ne sont rétablis")
+    expect(getFixedT("en")("relation.unblocked", { name: other.displayName })).toContain("Neither the connection nor the follows are restored")
+  })
+
   it("Mettre en sourdine et Copier le lien : le choix privé, puis l'adresse du profil", async () => {
     const user = userEvent.setup()
     render(withReports(fakeReports().capability, other.handle))

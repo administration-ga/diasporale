@@ -7,9 +7,12 @@
  * sans réseau : les réglages valent dans tous les réseaux de la personne, ANTSIA
  * compris) — `calls/preferences` :
  *   · `getMine({ now })` : mes réglages ou les défauts, un silence échu à `now` rendu absent ;
- *   · `update(…)` : un sous-ensemble de réglages, chaque champ omis inchangé ;
+ *   · `update(…)` : un sous-ensemble de réglages, chaque champ omis inchangé (IC-04 :
+ *     `readReceipts` compris, facultatif) ;
  *   · `setDnd({ until })` : pose ou lève « Ne pas déranger », refus à code de règle
  *     (`CALL_DND_PAST`, `CALL_DND_TOO_LONG`).
+ * IC-04 (antsia#138) : `getMine` rend aussi `readReceipts` (accusés de lecture réciproques,
+ * actifs par défaut) et `outsideRelationsCalls` vaut `silent` pour qui ne l'a jamais réglé.
  * Aucun changement du moteur. Chaque écriture relit d'abord la personne de la session :
  * un changement de personne ferme le geste (`not_found`) avant toute écriture.
  */
@@ -53,6 +56,7 @@ export function toCallSettingsView(row: PreferencesRow): CallSettingsView {
   return {
     outsideRelationsCalls: row.outsideRelationsCalls,
     dndUntil: row.dnd?.until ?? null,
+    readReceipts: row.readReceipts,
     voicemailEnabled: row.voicemailEnabled,
     sharePresence: row.sharePresence,
     callWaiting: row.callWaiting,
@@ -63,6 +67,7 @@ export function toCallSettingsView(row: PreferencesRow): CallSettingsView {
 export function toUpdateArgs(patch: CallPreferencesPatch): CallPreferencesPatch {
   return {
     ...(patch.outsideRelationsCalls !== undefined ? { outsideRelationsCalls: patch.outsideRelationsCalls } : {}),
+    ...(patch.readReceipts !== undefined ? { readReceipts: patch.readReceipts } : {}),
     ...(patch.voicemailEnabled !== undefined ? { voicemailEnabled: patch.voicemailEnabled } : {}),
     ...(patch.sharePresence !== undefined ? { sharePresence: patch.sharePresence } : {}),
     ...(patch.callWaiting !== undefined ? { callWaiting: patch.callWaiting } : {}),

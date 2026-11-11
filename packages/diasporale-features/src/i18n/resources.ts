@@ -77,15 +77,20 @@ import enCommunityRules from "./locales/en/community-rules.json"
 import enReportEmergency from "./locales/en/report-emergency.json"
 import enMessagesUnread from "./locales/en/messages-unread.json"
 import enIdnEntry from "./locales/en/idn-entry.json"
+import enPostVideos from "./locales/en/post-videos.json"
 import enEntryReliability from "./locales/en/entry-reliability.json"
 import enSponsorshipRequest from "./locales/en/sponsorship-request.json"
 import enMissionVolunteerNotices from "./locales/en/mission-volunteer-notices.json"
 import enEventOutcomeNotices from "./locales/en/event-outcome-notices.json"
 import enNetworkResponsibles from "./locales/en/network-responsibles.json"
+import enModerationSettings from "./locales/en/moderation-settings.json"
+import enPageClaimsDesk from "./locales/en/page-claims-desk.json"
 import enAidFinding from "./locales/en/aid-finding.json"
 import enAidOnTheWay from "./locales/en/aid-on-the-way.json"
 import enAidUsefulness from "./locales/en/aid-usefulness.json"
 import enInstallableApp from "./locales/en/installable-app.json"
+import enNotificationsCenter from "./locales/en/notifications-center.json"
+import enIcomNotices from "./locales/en/icom-notices.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -152,15 +157,20 @@ import frCommunityRules from "./locales/fr/community-rules.json"
 import frReportEmergency from "./locales/fr/report-emergency.json"
 import frMessagesUnread from "./locales/fr/messages-unread.json"
 import frIdnEntry from "./locales/fr/idn-entry.json"
+import frPostVideos from "./locales/fr/post-videos.json"
 import frEntryReliability from "./locales/fr/entry-reliability.json"
 import frSponsorshipRequest from "./locales/fr/sponsorship-request.json"
 import frMissionVolunteerNotices from "./locales/fr/mission-volunteer-notices.json"
 import frEventOutcomeNotices from "./locales/fr/event-outcome-notices.json"
 import frNetworkResponsibles from "./locales/fr/network-responsibles.json"
+import frModerationSettings from "./locales/fr/moderation-settings.json"
+import frPageClaimsDesk from "./locales/fr/page-claims-desk.json"
 import frAidFinding from "./locales/fr/aid-finding.json"
 import frAidOnTheWay from "./locales/fr/aid-on-the-way.json"
 import frAidUsefulness from "./locales/fr/aid-usefulness.json"
 import frInstallableApp from "./locales/fr/installable-app.json"
+import frNotificationsCenter from "./locales/fr/notifications-center.json"
+import frIcomNotices from "./locales/fr/icom-notices.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -235,15 +245,20 @@ export const LOCALE_PARTS = {
     "report-emergency": frReportEmergency,
     "messages-unread": frMessagesUnread,
     "idn-entry": frIdnEntry,
+    "post-videos": frPostVideos,
     "entry-reliability": frEntryReliability,
     "sponsorship-request": frSponsorshipRequest,
     "mission-volunteer-notices": frMissionVolunteerNotices,
     "event-outcome-notices": frEventOutcomeNotices,
     "network-responsibles": frNetworkResponsibles,
+    "moderation-settings": frModerationSettings,
+    "page-claims-desk": frPageClaimsDesk,
     "aid-finding": frAidFinding,
     "aid-on-the-way": frAidOnTheWay,
     "aid-usefulness": frAidUsefulness,
     "installable-app": frInstallableApp,
+    "notifications-center": frNotificationsCenter,
+    "icom-notices": frIcomNotices,
   },
   en: {
     diasporale: enDiasporale,
@@ -312,15 +327,20 @@ export const LOCALE_PARTS = {
     "report-emergency": enReportEmergency,
     "messages-unread": enMessagesUnread,
     "idn-entry": enIdnEntry,
+    "post-videos": enPostVideos,
     "entry-reliability": enEntryReliability,
     "sponsorship-request": enSponsorshipRequest,
     "mission-volunteer-notices": enMissionVolunteerNotices,
     "event-outcome-notices": enEventOutcomeNotices,
     "network-responsibles": enNetworkResponsibles,
+    "moderation-settings": enModerationSettings,
+    "page-claims-desk": enPageClaimsDesk,
     "aid-finding": enAidFinding,
     "aid-on-the-way": enAidOnTheWay,
     "aid-usefulness": enAidUsefulness,
     "installable-app": enInstallableApp,
+    "notifications-center": enNotificationsCenter,
+    "icom-notices": enIcomNotices,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 
