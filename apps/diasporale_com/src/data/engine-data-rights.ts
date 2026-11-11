@@ -14,10 +14,10 @@
  *   · `moderation/cases` : `myDecisions` (sans déclarant ni contenu), `fileAppeal`, et
  *     `myReports` (SU01d : mes signalements, sans auteur, sanction ni motif de modération).
  *
- * MD-07 (protéger le déclarant) : `myDecisions` rend aussi les dossiers ouverts et les
- * classements sans suite ; l'adaptateur n'en montre que les mesures prises, et une mesure
- * annulée sur recours (`authorDecisionsOnly`), en lisant la fenêtre la plus large admise par
- * le moteur. Le correctif de fond est demandé au moteur (antsia#99).
+ * MD-07 (protéger le déclarant) : `myDecisions` ne rend que les mesures prises et une mesure
+ * annulée sur recours (antsia#99, règle `authorDecisionOutcome` du moteur). L'adaptateur
+ * applique encore cette même règle en défense (`authorDecisionsOnly`), en lisant la fenêtre
+ * la plus large admise par le moteur.
  *
  * Aucune lecture d'adhésion : un membre suspendu exerce ses droits sans
  * qu'aucune surface sociale lui soit rouverte. Chaque écriture relit d'abord la

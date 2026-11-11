@@ -26,11 +26,14 @@
  */
 import { DECISION_REASON_MAX } from "@antsia/social-domain/audit"
 import {
+  authorDecisionOutcome as engineAuthorDecisionOutcome,
   CONTENT_REPORT_REASONS,
   CONTENT_REPORT_STATUSES,
   REPORT_LEGAL_BASES,
   REPORT_OUTCOMES,
   reportDecisionDelayHours,
+  type AppealStatus,
+  type AuthorDecisionOutcome as EngineAuthorDecisionOutcome,
   type ContentReportStatus,
   type ReportLegalBasis,
   type ReportOutcome,
@@ -54,8 +57,8 @@ export const APPEAL_REASON_MAX = DECISION_REASON_MAX
 export const DECISIONS_PAGE_SIZE = 10
 
 /**
- * La fenêtre lue au moteur pour MES décisions : la plus large qu'il admet (cinquante). Le filtre
- * de MD-07 (`authorDecisionOutcome`) retire d'une fenêtre les dossiers ouverts et les classements :
+ * La fenêtre lue au moteur pour MES décisions : la plus large qu'il admet (cinquante). Le moteur
+ * retire d'une fenêtre les dossiers ouverts et les classements (MD-07, `authorDecisionOutcome`) :
  * plus elle est large, plus il est rare qu'une fenêtre se vide tout en annonçant une suite.
  */
 export const AUTHOR_DECISIONS_WINDOW = 50
@@ -150,7 +153,7 @@ export const DECISION_SANCTION_STATUSES = ["active", "expired", "revoked"] as co
 export type DecisionSanctionStatus = (typeof DECISION_SANCTION_STATUSES)[number]
 export const DECISION_APPEAL_LEVELS = ["network", "platform"] as const
 export type DecisionAppealLevel = (typeof DECISION_APPEAL_LEVELS)[number]
-export const DECISION_APPEAL_STATUSES = ["open", "upheld", "overturned"] as const
+export const DECISION_APPEAL_STATUSES = ["open", "upheld", "overturned"] as const satisfies readonly AppealStatus[]
 export type DecisionAppealStatus = (typeof DECISION_APPEAL_STATUSES)[number]
 
 /** Un code de motif reçu du moteur, dit par une valeur fermée (jamais le code brut à l'écran). */
@@ -213,17 +216,17 @@ export function nextAppealLevel(decision: Pick<ModerationDecisionView, "status" 
  * repasse alors le dossier à `dismissed` et garde le recours `overturned`). Jamais un dossier
  * ouvert ou en examen, jamais un classement sans suite ni une relecture approuvée : dans une
  * conversation à deux ou un petit hub, apprendre qu'un dossier s'ouvre peut désigner la personne
- * qui a signalé. Le correctif de fond est demandé au moteur (antsia#99) ; d'ici là, l'adaptateur
- * et l'écran de DIASPORALE appliquent cette règle, quel que soit le fournisseur.
+ * qui a signalé. La règle est CELLE du moteur (`authorDecisionOutcome` de
+ * `@antsia/social-domain/moderation`, antsia#99) : `myDecisions` ne rend plus que ces dossiers, et
+ * aucun avis ne part d'un dossier ouvert ou classé. L'adaptateur et l'écran de DIASPORALE
+ * l'appliquent encore en défense, quel que soit le fournisseur (la démonstration comprise).
  */
-export const AUTHOR_DECISION_OUTCOMES = ["actioned", "overturned"] as const
+export const AUTHOR_DECISION_OUTCOMES = ["actioned", "overturned"] as const satisfies readonly EngineAuthorDecisionOutcome[]
 export type AuthorDecisionOutcome = (typeof AUTHOR_DECISION_OUTCOMES)[number]
 
 /** L'issue que l'auteur lit, ou `null` : le dossier ne se montre pas à lui. */
 export function authorDecisionOutcome(decision: Pick<ModerationDecisionView, "status" | "appeals">): AuthorDecisionOutcome | null {
-  if (decision.status === "actioned") return "actioned"
-  if (decision.status === "dismissed" && decision.appeals.some((appeal) => appeal.status === "overturned")) return "overturned"
-  return null
+  return engineAuthorDecisionOutcome(decision.status, decision.appeals.map((appeal) => appeal.status))
 }
 
 /** Une fenêtre réduite à ce que l'auteur lit (MD-07) ; la continuation du moteur est gardée telle quelle. */
