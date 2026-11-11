@@ -42,10 +42,10 @@ Plan : [`01_ENTREE_ADHESION_CONFIANCE.md`](01_ENTREE_ADHESION_CONFIANCE.md)
 | EA-05 | Droits personnels et sortie sans adhésion | P0 | S | S2 | aucune | nouveau | fusionné (#40) |
 | EA-06 | Recette réelle de l'entrée de DIASPORALE | P0 | S | S2 + propriétaire | clés d'envoi et domaine (propriétaire) ; accord écrit sur le déploiement visé | nouveau | à faire |
 | EA-07 | Âge et identification dans l'accueil de DIASPORALE | P0 | M | S2 | juriste (seuil d'âge pour des résidents de France et d'ailleurs, identification) ; D-G11 | nouveau | à faire |
-| EA-08 | Porte fiable : durée vraie, renvoi du code, reprise après rechargement | P1 | S | S2 | aucune | nouveau | à faire |
+| EA-08 | Porte fiable : durée vraie, renvoi du code, reprise après rechargement | P1 | S | S2 | aucune | nouveau | fusionné (#69) ; aucune durée de code chiffrée tant que le moteur ne la publie pas (antsia#151) |
 | DG-009a | Attestation consulaire réelle | P1 | M | S2 + gabon-diplomatie | juriste (A4), clés, équipe de consulat.ga | plan 15 | à faire |
 | EA-09 | Élévation : rattacher IDN à un compte léger, bannières qui agissent | P1 | M | S2 | variables IDN (propriétaire) | nouveau | à faire |
-| EA-10 | Compte en attente : salle d'attente, lien et QR de demande de parrainage | P1 | S | S2 | aucune | nouveau | à faire |
+| EA-10 | Compte en attente : salle d'attente, lien et QR de demande de parrainage | P1 | S | S2 | aucune | nouveau | fusionné (#69) |
 | EA-11 | Invitation par un membre vérifié | P1 | M | S2 | aucune | nouveau | à faire |
 | EA-12 | Code par SMS | P1 | S | S2 | passerelle et budget par pays (propriétaire, décision 5) | nouveau | à faire |
 | EA-13 | Déclaration d'entrée et règles de la communauté | P1 | S | S2 | juriste pour les deux textes | nouveau | à faire |
@@ -93,7 +93,7 @@ Plan : [`03_FIL_PUBLICATIONS_DECOUVERTE_RECHERCHE.md`](03_FIL_PUBLICATIONS_DECOU
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
 | FD-01 | Photos nettoyées et allégées avant l'envoi | P0 | S | S2 | aucune | nouveau | fusionné (#53) ; images d'iCom : antsia#123 |
-| FD-02 | Vidéos lisibles partout et bornées | P0 | S | S2 | aucune | nouveau | fusionné (#53) pour la limite de poids ; formats et durée en cours |
+| FD-02 | Vidéos lisibles partout et bornées | P0 | S | S2 | aucune | nouveau | fusionné (#53 pour la limite de poids, #64 pour MP4 ou WebM seulement et la durée bornée) ; durée de 5 min proposée par le moteur, à valider par le propriétaire ; conversion `prepareVideoForUpload` non branchée |
 | FD-03 | Lire tous les commentaires | P0 | S | S2 | aucune | nouveau | fusionné (#43) |
 | FD-04 | L'auteur sait où en est sa publication | P0 | M | S2 | publication du moteur par S1 avant toute mise à jour de la démonstration | nouveau | fusionné (#43) ; l'état « en relecture » en mode moteur attend antsia#108 |
 | FD-05 | Signaler un commentaire et un statut | P0 | S | S2 | aucune | nouveau | fusionné (#48) ; signalement d'un statut en attente du moteur (SD-01) |
@@ -122,10 +122,10 @@ Plan : [`04_ICOM_MESSAGES_APPELS_MISE_EN_RELATION.md`](04_ICOM_MESSAGES_APPELS_M
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
 | DS-04 (volet CC-V) | Recette CC-V et traitement au guichet | P0 | M | S2 | accord du propriétaire pour ouvrir la politique sur la démonstration (décision 1) ; publication éventuelle | plan 15 | à faire |
-| IM-01 | Appels : rien n'est proposé tant que le serveur d'appels n'est pas prouvé | P0 | S | S2 | aucune pour le code ; l'ouverture réelle attend les clés du propriétaire et IC-01 | nouveau | fusionné (#36) ; gestes d'iCom en attente d'antsia#100 |
-| IM-02 | Réglages iCom dans les paramètres de DIASPORALE | P0 | S | S2 | aucune | nouveau | fusionné (#50) ; défaut et accusés de lecture : antsia#118 |
+| IM-01 | Appels : rien n'est proposé tant que le serveur d'appels n'est pas prouvé | P0 | S | S2 | aucune pour le code ; l'ouverture réelle attend les clés du propriétaire et IC-01 | nouveau | fusionné (#36 ; appels déclarés au moteur par #66 et antsia#138) ; aucun appel encore proposé (`CALLS_SWITCH` fermé) |
+| IM-02 | Réglages iCom dans les paramètres de DIASPORALE | P0 | S | S2 | aucune | nouveau | fusionné (#50 ; défaut « mes relations seulement » et accusés de lecture par #66 et antsia#138) |
 | IM-03 | Messagerie vocale, signaler et bloquer depuis le fil : raccord dans DIASPORALE | P0 | S | S2 | aucune | nouveau | à faire |
-| IM-04 | La cloche nomme les avis d'iCom et y mène | P1 | S | S2 | aucune | nouveau | à faire |
+| IM-04 | La cloche nomme les avis d'iCom et y mène | P1 | S | S2 | aucune | nouveau | fusionné (#68) |
 | IM-05 | iCom vivant sur la démonstration | P1 | M | S2 | accord pour republier la démonstration et y ouvrir la politique (décision 1) | nouveau | à faire |
 | IM-06 | Écrire à une page : prise de contact acceptée par l'équipe | P1 | L | S2 | décision 3 ; issue [S1] pour la nature | nouveau | à faire |
 | IM-07 | Demandes de message entre membres | P1 | M | S2 | décision 4 | nouveau | à faire |
@@ -152,7 +152,7 @@ Plan : [`05_PROFIL_RELATIONS_ANNUAIRE.md`](05_PROFIL_RELATIONS_ANNUAIRE.md)
 |---|---|---|---|---|---|---|---|
 | RP-01 | Photo et couverture nettoyées et recadrées | P0 | M | S2 | aucune | nouveau | fusionné (#53) |
 | RP-02 | Signaler un profil, et menu « … » de la fiche | P0 | S | S2 | aucune | nouveau | fusionné (#48) |
-| RP-03 | Blocage : abonnements, textes et pages | P0 | M | S2 | décision 5 | nouveau | à faire |
+| RP-03 | Blocage : abonnements, textes et pages | P0 | M | S2 | décision 5 | nouveau | fusionné (#64, antsia#140) ; matrice des surfaces : `docs/40_BLOCAGE_ET_PAGES_RP03.md` |
 | RP-04 | Annuaire navigable par pays et par ville | P1 | L | S2 | décision 3 | nouveau | à faire |
 | RP-05 | Entraide, associations et pages sur la fiche | P1 | M | S2 | décisions 1 et 2 | nouveau | à faire |
 | RP-06 | Gestes de relation déjà prêts au moteur | P1 | M | S2 | aucune | nouveau | à faire |
@@ -204,7 +204,7 @@ Plan : [`07_PAGES_ASSOCIATIONS_GROUPES.md`](07_PAGES_ASSOCIATIONS_GROUPES.md)
 
 | Lot | Titre | Priorité | Taille | Session | Porte | Origine | État |
 |---|---|---|---|---|---|---|---|
-| AS-01 | Trancher une revendication en production, par pays | P0 | M | S2 | durée de conservation des pièces (juriste) | nouveau | à faire |
+| AS-01 | Trancher une revendication en production, par pays | P0 | M | S2 | durée de conservation des pièces (juriste) | nouveau | fusionné (#67, antsia#147) pour « Pages à vérifier » par pays ; équipe de modération admise et échéance de purge : antsia#148 ; durée de conservation des pièces : juriste |
 | AS-02 | Signaler une page, un groupe et ses publications | P0 | S | S2 | aucune | nouveau | fusionné (#48) |
 | AS-03 | Rouvrir le groupe d'une association | P1 | S | S2 | aucune | nouveau | à faire |
 | AS-04 | Renommage d'une page vérifiée au grand jour | P1 | S | S2 | aucune | nouveau | à faire |
@@ -369,7 +369,7 @@ Plan : [`13_NOTIFICATIONS_REGLAGES_DONNEES.md`](13_NOTIFICATIONS_REGLAGES_DONNEE
 | NP-01 | Consentements : portée et retrait effectifs | P0 | S | S2 | aucune | nouveau | fusionné (#40, antsia#106) |
 | NP-02 | « Mes données » ouverte hors adhésion, et en démonstration | P0 | S | S2 | aucune | nouveau | fusionné (#40) |
 | NP-03 | Export complet des mises en relation | P1 | S | S2 + S1 | avis du juriste conseillé | nouveau | à faire |
-| NP-04 | Cloche complète : page, suite, filtre, genres nommés | P1 | M | S2 | aucune | nouveau | à faire |
+| NP-04 | Cloche complète : page, suite, filtre, genres nommés | P1 | M | S2 | aucune | nouveau | fusionné (#68) ; filtre « Non lues » sur les avis chargés seulement : filtre serveur et destination d'une invitation de groupe demandés (antsia#149) |
 | NP-05 | Matrice des avis et genres manquants | P1 | S | S2 + S1 | aucune | nouveau | à faire |
 | DS-14 (volet préférences) | Préférences de notification par famille et plafond | P1 | M | S2 + S1 | décisions 2 et 3 | plan 15 | à faire |
 | DS-14 (volet push) | Notifications du navigateur | P1 | M | S2 + S1 | clés et variables (propriétaire) ; publication | plan 15 | à faire |
@@ -396,7 +396,7 @@ Plan : [`14_MODERATION_SECURITE_CONFORMITE.md`](14_MODERATION_SECURITE_CONFORMIT
 | MD-01 | Responsables du réseau : nommer l'administration et les modérateurs | P0 | M | S2 + S1 | décision 2 du § 7 ; publication du moteur par S1 | nouveau | fusionné (#62, antsia#136) ; nomination réelle : propriétaire |
 | MD-02 | Signaler depuis chaque objet de DIASPORALE | P0 | L | S2 | aucune | nouveau | fusionné (#48) ; groupe et auto-signalement d'un signataire : antsia#114 |
 | MD-03 | Signaler et modérer une offre de service | P0 | M | S2 + S1 | publication du moteur par S1 | nouveau | à faire |
-| MD-04 | Réglages de modération au guichet | P0 | M | S2 | décision 4 du § 7 (valeurs de départ) | nouveau | à faire |
+| MD-04 | Réglages de modération au guichet | P0 | M | S2 | décision 4 du § 7 (valeurs de départ) | nouveau | fusionné (#67, antsia#147) ; valeurs de départ des réglages à valider par le propriétaire, aucun réglage écrit en base |
 | MD-05 | Règles de la communauté et charte des modérateurs | P0 | S | S2 + propriétaire | relecture du juriste (décision 1) ; décisions 7 et 9 | nouveau | fusionné (#55) ; texte provisoire, relecture du juriste et du propriétaire |
 | MD-06 | Permanence, escalade et procédure d'incident | P0 | S | S2 + propriétaire | décision 2 du § 7 ; questions 6 et 7 au juriste | nouveau | fusionné (#55) ; exercice à blanc non joué |
 | MD-07 | Protéger le déclarant : l'auteur ne lit qu'une décision | P0 | S | S2 + S1 | décision 6 du § 7 | nouveau | fusionné (#45) pour l'application ; moteur : antsia#99 et antsia#110 |
@@ -453,7 +453,7 @@ Plan : [`16_APPLICATION_MOBILE_PWA.md`](16_APPLICATION_MOBILE_PWA.md)
 | MO-01 | Passe sur téléphones réels | P0 | S | S2 + propriétaire | présence du propriétaire avec ses téléphones ; accord pour toute publication de la démonstration | nouveau | à faire |
 | MO-02 | Icônes, manifeste et installation | P1 | S | S2 | icône validée par le propriétaire (décision 3) | nouveau | fusionné (#58) ; icône provisoire à valider par le propriétaire |
 | MO-03 | Destination conservée à travers l'entrée | P1 | S | S2 | aucune | nouveau | fusionné (#49) |
-| MO-04 | Reprise de la saisie du code après un aller-retour | P1 | S | S2 | aucune | nouveau | à faire |
+| MO-04 | Reprise de la saisie du code après un aller-retour | P1 | S | S2 | aucune | nouveau | fusionné (#69) |
 | MO-05 | Script de fond unique et page hors-ligne | P1 | M | S2 | aucune | nouveau | fusionné (#58) ; recette hors-ligne non jouée |
 | MO-06 | Notifications sur l'écran d'accueil : pastille, aide iPhone, ouverture | P1 | S | S2 | clés du navigateur et déclaration de l'application `diasporale_com` (propriétaire) | nouveau | à faire |
 | MO-07 | Billet QR gardé pendant sa durée de vie | P1 | S | S2 | aucune | nouveau | à faire |
