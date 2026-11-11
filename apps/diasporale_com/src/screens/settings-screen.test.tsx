@@ -8,6 +8,7 @@ import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { formatLegalTextDate } from "@/lib/legal-texts"
+import { routes } from "@/lib/routes"
 
 import { SettingsScreen } from "./settings-screen"
 
@@ -94,6 +95,20 @@ describe("Réglages — profil commun et départ distinct", () => {
     render(tree())
     expect(mocks.publication).toHaveBeenLastCalledWith(membership)
     expect(screen.getByRole("region", { name: "Profil commun" })).toBeInTheDocument()
+  })
+
+  it("un compte en attente trouve sa salle d'attente à l'ancre du parrainage, où mènent toutes les sorties « Obtenir un parrainage » (EA-10)", () => {
+    render(tree())
+    const room = screen.getByRole("region", { name: t("pendingRoom.title") })
+    expect(room).toHaveAttribute("id", "parrainage")
+    expect(within(room).getByRole("textbox", { name: t("pendingRoom.linkLabel") })).toHaveValue(new URL(routes.sponsorFor("lecture.demo"), window.location.origin).href)
+  })
+
+  it("un membre déclaré garde l'aide au parrainage, sans salle d'attente", () => {
+    mocks.membership = { ...membership, status: "declaree" }
+    render(tree())
+    expect(screen.queryByRole("region", { name: t("pendingRoom.title") })).not.toBeInTheDocument()
+    expect(screen.getByRole("region", { name: t("settings.sponsorHelp") })).toHaveAttribute("id", "parrainage")
   })
 
   it("ne quitte qu'après confirmation et ne révoque pas le consentement global", async () => {

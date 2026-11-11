@@ -486,7 +486,7 @@ export function createDemoDataSource(store: DemoStore): DiasporaleDataSource {
       // Sans l'identité simulée de `/entrer/idn`, rien ne s'ouvre : la démonstration ne part pas chez IDN.
       signInWithIdn: (input) => (input === undefined ? Promise.resolve<ActionResult>({ ok: false, code: "idn_invalid" }) : store.signInWithIdn(input)),
       requestCode: (destination) => store.requestCode(destination),
-      verifyCode: (code) => store.verifyCode(code),
+      verifyCode: (code, destination) => store.verifyCode(code, destination),
       signOutEverywhere: () => store.signOutEverywhere(),
       checkHandle: (handle) => store.checkHandle(handle),
       join: (input) => store.join(input),

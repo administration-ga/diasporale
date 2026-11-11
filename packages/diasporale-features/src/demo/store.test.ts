@@ -181,6 +181,19 @@ describe("R2 — vérifier une inscription consulaire", () => {
   })
 })
 
+describe("Porte fiable — la vérification reprend l'adresse gardée par l'écran (EA-08, MO-04)", () => {
+  it("la même adresse ouvre la session ; une autre adresse ne reprend pas le code du dernier envoi", async () => {
+    const { store } = demo()
+    const sent = await store.requestCode({ kind: "email", value: " Reprise@Example.com " })
+    if (!sent.ok || !sent.value.demoCode) throw new Error("code non émis")
+    expect(await store.verifyCode(sent.value.demoCode, { kind: "email", value: "autre@example.com" })).toEqual({ ok: false, code: "code_expired" })
+    expect(await store.verifyCode(sent.value.demoCode, { kind: "phone", value: "+33 6 12 34 56 78" })).toEqual({ ok: false, code: "code_expired" })
+    expect(store.getState().session.personId).toBeNull()
+    expect(await store.verifyCode(sent.value.demoCode, { kind: "email", value: "reprise@example.com" })).toEqual({ ok: true, value: null })
+    expect(store.getState().session.personId).not.toBeNull()
+  })
+})
+
 describe("R3 — un compte léger se fait parrainer", () => {
   it("en attente puis lecture seule ; parrainé par un membre vérifié depuis plus de 30 jours, il publie pour toute la diaspora (pays fermé)", async () => {
     const { store, me } = demo()

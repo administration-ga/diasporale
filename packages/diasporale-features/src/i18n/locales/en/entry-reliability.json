@@ -1,0 +1,17 @@
+{
+  "entryCode": {
+    "resend": "Resend the code",
+    "resendIn": "You can ask for a new code in {{seconds}} s.",
+    "resendReady": "Code not received? You can ask for a new one.",
+    "resent": "New code sent. Use the most recent one."
+  },
+  "welcomeArrival": {
+    "label": "Year you arrived in this country",
+    "hint": "Optional, for example 2016. Only you can see it; you can change it in your settings."
+  },
+  "welcomeHandle": {
+    "checking": "Checking the handle…",
+    "available": "@{{handle}} is available.",
+    "taken": "@{{handle}} is already taken. Try a variant."
+  }
+}

@@ -760,9 +760,12 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
       return { ok: true, value: { demoCode: dev?.code ?? null } }
     },
 
-    async verifyCode(code) {
-      if (!pendingEmail) return { ok: false, code: "code_expired" }
-      const signedIn = await deps.authClient.signIn.emailOtp({ email: pendingEmail, otp: code.trim() })
+    async verifyCode(code, destination) {
+      // EA-08, MO-04 : l'adresse que l'écran a gardée dans l'onglet survit au rechargement, la
+      // mémoire de cette source non ; sans elle, l'adresse du dernier envoi de cette session.
+      const email = destination?.kind === "email" ? destination.value.trim().toLowerCase() : pendingEmail
+      if (!email) return { ok: false, code: "code_expired" }
+      const signedIn = await deps.authClient.signIn.emailOtp({ email, otp: code.trim() })
       if (signedIn.error) return { ok: false, code: authActionErrorCode(signedIn.error) }
       pendingEmail = null
       // Rechargement complet : la session amorce proprement le jeton Convex de la personne qui arrive.

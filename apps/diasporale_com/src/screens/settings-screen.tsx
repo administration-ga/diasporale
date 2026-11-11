@@ -43,6 +43,7 @@ import { AppShell } from "@/components/app-shell"
 import { CallSettings } from "@/components/call-settings"
 import { DataRightsSettings } from "@/components/data-rights-settings"
 import { Gate } from "@/components/gate"
+import { PendingRoom } from "@/components/pending-room"
 import { ProfileImagesSettings } from "@/components/profile-images-settings"
 import { ProfilePublicationSettings } from "@/components/profile-publication-settings"
 import { ContentPreferencesSettings } from "@/components/content-preferences-settings"
@@ -435,11 +436,22 @@ function ConsentsSection() {
   )
 }
 
+/**
+ * « Parrainage » : pour un compte en attente, sa salle d'attente (EA-10) — ce qu'il lit, ses
+ * chemins, son lien de demande ; toutes les sorties « Obtenir un parrainage » y mènent. Pour un
+ * membre, son identifiant à donner et, vérifié, le geste de parrainer.
+ */
 function SponsorHelpSection(props: { membership: MembershipView }) {
   const { t } = useDiasporaleT()
-  const pending = props.membership.status === "en_attente"
+  if (props.membership.status === "en_attente") {
+    return (
+      <Section id="parrainage" title={t("pendingRoom.title")} lead={t("pendingRoom.lead")}>
+        <PendingRoom membership={props.membership} />
+      </Section>
+    )
+  }
   return (
-    <Section id="parrainage" title={t("settings.sponsorHelp")} lead={pending ? t("settings.sponsorHelpPending") : t("settings.sponsorHelpLead")}>
+    <Section id="parrainage" title={t("settings.sponsorHelp")} lead={t("settings.sponsorHelpLead")}>
       <div className="flex flex-wrap items-center gap-3">
         <span className="rounded-md bg-muted px-3 py-2 font-mono text-[15px]">@{props.membership.handle}</span>
         <Button

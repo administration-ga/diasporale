@@ -6,6 +6,7 @@ import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { LogOutIcon } from "lucide-react"
 import { useRef, useState } from "react"
 
+import { forgetPendingCode } from "@/lib/pending-code"
 import { forgetReturnPath } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 import { clearOfflineReserves, offlineReservesSupported } from "@/lib/service-worker"
@@ -28,8 +29,10 @@ export function useSignOutEverywhere() {
     running.current = true
     setBusy(true)
     setFailed(false)
-    // La page demandée avant la connexion ne survit pas à la sortie (UX-02), quelle que soit la source.
+    // La page demandée avant la connexion ne survit pas à la sortie (UX-02), ni l'adresse en attente
+    // d'un code (EA-08), quelle que soit la source.
     forgetReturnPath()
+    forgetPendingCode()
     // Les réserves du script de fond sont vidées AVANT la navigation de la source (MO-05) : bornée,
     // la purge ne retient jamais la sortie, et son échec ne l'empêche pas. Sans réserves possibles
     // (navigateur sans stockage de script de fond), rien à attendre.

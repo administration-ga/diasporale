@@ -90,6 +90,8 @@ describe("parseReturnPath — un chemin interne connu de la table, rien d'autre"
     expect(parseReturnPath(routes.newPage("association"))?.needs).toBe("create_page")
     expect(parseReturnPath(routes.newStory())?.needs).toBe("publish")
     expect(parseReturnPath(routes.sponsor())?.needs).toBe("sponsor")
+    // La demande de parrainage par lien (EA-10) : même page, son identifiant public survit à l'entrée.
+    expect(parseReturnPath(routes.sponsorFor("eloise.ndong"))).toEqual({ path: "/parrainer?pour=eloise.ndong", needs: "sponsor" })
     expect(parseReturnPath(routes.myData())?.needs).toBe("person")
   })
 
@@ -120,6 +122,7 @@ describe("parseReturnPath — un chemin interne connu de la table, rien d'autre"
       routes.talents("FR"),
       // IM-04 : le journal d'appels d'iCom, sur sa brique.
       routes.callJournal(),
+      routes.sponsorFor("eloise.ndong"),
     ]
     const keys = new Set(hrefs.flatMap((href) => [...new URLSearchParams(href.split("?")[1] ?? "").keys()]))
     expect([...keys].filter((key) => !(ROUTE_FILTER_KEYS as readonly string[]).includes(key))).toEqual([])

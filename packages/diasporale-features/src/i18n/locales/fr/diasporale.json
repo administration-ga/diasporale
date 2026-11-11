@@ -102,7 +102,7 @@
   },
   "code": {
     "title": "Recevoir un code",
-    "lead": "Un code à usage unique, valable 10 minutes. Il ne sert qu'une fois.",
+    "lead": "Un code à usage unique, valable peu de temps. Il ne sert qu'une fois.",
     "kindLabel": "Recevoir le code par",
     "kind": {
       "email": "E-mail",

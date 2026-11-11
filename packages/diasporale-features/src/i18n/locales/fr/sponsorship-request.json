@@ -1,0 +1,29 @@
+{
+  "pendingRoom": {
+    "title": "Votre compte est en attente",
+    "lead": "En attendant, vous lisez votre hub, le fil et les pages du réseau. Publier, commenter, réagir, écrire un message et consulter l'annuaire s'ouvrent dès que votre compte est parrainé ou vérifié.",
+    "pathsTitle": "Vos chemins",
+    "sponsorTitle": "Être parrainé par un membre que vous connaissez",
+    "sponsorLink": "Envoyez-lui votre lien : il arrive sur le parrainage, votre identifiant déjà saisi.",
+    "linkLabel": "Votre lien de demande de parrainage",
+    "linkPrivacy": "Ce lien ne porte que votre identifiant public, @{{handle}} : ni adresse, ni code, ni jeton.",
+    "copy": "Copier le lien",
+    "copied": "Lien copié.",
+    "copyFailed": "Copie impossible : sélectionnez le lien à la main.",
+    "share": "Partager le lien",
+    "shareTitle": "Parrainez-moi sur DIASPORALE",
+    "shareFailed": "Le partage n'a pas abouti. Copiez le lien à la place.",
+    "showQr": "Afficher le code QR",
+    "qrTitle": "Code QR de votre lien de demande de parrainage",
+    "qrHint": "Un proche à côté de vous le lit avec l'appareil photo de son téléphone.",
+    "attestationTitle": "Faire vérifier votre inscription consulaire",
+    "attestationBody": "Vous avez une inscription dans un poste consulaire ? Demandez-en la vérification, avec votre accord."
+  },
+  "sponsorRequest": {
+    "prefilled": "Cet identifiant vient d'un lien de demande de parrainage. Ne parrainez qu'une personne que vous connaissez.",
+    "knows": "Je connais cette personne."
+  },
+  "errors": {
+    "sponsor_acquaintance_required": "Cochez cette case : on ne parraine qu'une personne que l'on connaît."
+  }
+}

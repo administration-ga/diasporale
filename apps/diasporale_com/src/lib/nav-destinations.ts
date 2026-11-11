@@ -158,6 +158,7 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   relations: member("relations", routes.relations()),
   bookmarks: member("bookmarks", routes.bookmarks()),
   sponsor: member("sponsor", routes.sponsor()),
+  sponsorFor: member("sponsor", routes.sponsorFor(SEGMENT)),
   moderationDesk: member("moderation", routes.moderationDesk()),
   pilotDashboard: member("pilot", routes.pilotDashboard()),
   // Le compte : les réglages, leurs ancres et la vérification consulaire.

@@ -9,6 +9,7 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { peekPendingCode, rememberPendingCode } from "@/lib/pending-code"
 import { peekReturnPath, rememberReturnPath } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 
@@ -283,6 +284,9 @@ describe("/bienvenue — la sortie d'un compte connecté sans adhésion", () => 
     rememberReturnPath({ pathname: routes.associationEvent("amicale-lyon", "evt-42"), search: "", hash: "" })
     const assign = stubPageNavigation()
     const { store, user } = await signedInAwa()
+    // Une adresse en attente d'un code, posée après l'ouverture de la session : la sortie l'oublie aussi (EA-08).
+    await vi.waitFor(() => expect(peekPendingCode()).toBeNull())
+    rememberPendingCode({ kind: "email", value: "awa@example.com" })
 
     // Ni les réglages ni la porte ne s'ouvrent à ce compte : l'accueil porte sa sortie.
     expect(await screen.findByText(t("welcome.notYourAccount").replace(/\s+/g, " "))).toBeInTheDocument()
@@ -292,6 +296,7 @@ describe("/bienvenue — la sortie d'un compte connecté sans adhésion", () => 
     await vi.waitFor(() => expect(assign).toHaveBeenCalledExactlyOnceWith(routes.home()))
     expect(store.getState().session.personId ?? null).toBeNull()
     expect(peekReturnPath()).toBeNull()
+    expect(peekPendingCode()).toBeNull()
   })
 
   it("dit un échec générique et laisse réessayer", async () => {
@@ -313,5 +318,68 @@ describe("/bienvenue — la sortie d'un compte connecté sans adhésion", () => 
     expect(link).toHaveAttribute("href", routes.myData())
     const footer = within(screen.getByRole("navigation", { name: t("footer.label") }))
     expect(footer.getByRole("link", { name: t("footer.myData") })).toHaveAttribute("href", routes.myData())
+  })
+})
+
+describe("/bienvenue — porte fiable (EA-08)", () => {
+  it("une session ouverte oublie l'adresse en attente d'un code", async () => {
+    rememberPendingCode({ kind: "email", value: "awa@example.com" })
+    await signedInAwa()
+
+    expect(await screen.findByRole("heading", { name: t("welcome.step1Title") })).toBeInTheDocument()
+    await vi.waitFor(() => expect(peekPendingCode()).toBeNull())
+  })
+
+  it("l'année d'arrivée est proposée, facultative, et part avec la facette quand elle est donnée", async () => {
+    const { store, user } = await signedInAwa()
+    await chooseFrance(user)
+    const year = screen.getByRole("textbox", { name: t("welcomeArrival.label") })
+    expect(year).toHaveAccessibleDescription(t("welcomeArrival.hint"))
+
+    // Une année hors bornes est refusée sur place, avant d'aller plus loin.
+    await user.type(year, "1900")
+    await user.click(screen.getByRole("button", { name: /Continuer/ }))
+    expect(await screen.findByText(t("errors.arrived_at_out_of_range"))).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: t("welcome.step1Title") })).toBeInTheDocument()
+
+    await user.clear(year)
+    await user.type(year, "2016")
+    await user.click(screen.getByRole("button", { name: /Continuer/ }))
+    await user.type(await screen.findByRole("textbox", { name: "Nom affiché" }), "Awa Ogooué")
+    await user.click(screen.getByRole("radio", { name: "@awa.ogooue" }))
+    await user.click(screen.getByRole("button", { name: /Continuer/ }))
+    await user.click(await screen.findByRole("checkbox", { name: /Créer mon profil social/ }))
+    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORALE/ }))
+
+    await vi.waitFor(() => expect(navigation.push).toHaveBeenCalled())
+    const me = store.getState().session.personId ?? ""
+    expect(store.getState().memberships[me]?.facet.arrivedAt).toBe(2016)
+  })
+
+  it("sans année, rien n'est envoyé : la facette n'en porte pas", async () => {
+    const join = vi.fn<DiasporaleActions["join"]>().mockResolvedValue({ ok: true, value: { country: "FR", status: "declaree" } })
+    const { user } = await signedInAwa({ join })
+    await completeNewAccount(user, "Awa Ogooué", "awa.ogooue")
+
+    await vi.waitFor(() => expect(join).toHaveBeenCalledTimes(1))
+    expect(join.mock.calls[0]?.[0].facet).toEqual({ countryOfResidence: "FR", city: "" })
+  })
+
+  it("l'identifiant choisi est vérifié pendant la saisie : libre, puis pris, dit poliment", async () => {
+    const checkHandle = vi.fn<DiasporaleActions["checkHandle"]>(async (handle) => ({ ok: true, value: { available: handle !== "pris.deja" } }))
+    const { user } = await signedInAwa({ checkHandle })
+    await chooseFrance(user)
+    await user.click(screen.getByRole("button", { name: /Continuer/ }))
+    await user.type(await screen.findByRole("textbox", { name: "Nom affiché" }), "Awa Ogooué")
+    await user.click(screen.getByRole("radio", { name: t("welcome.handleOther") }))
+    const field = screen.getByRole("textbox", { name: t("welcome.handleOtherLabel") })
+
+    await user.type(field, "awa.libre")
+    expect(await screen.findByText(t("welcomeHandle.available", { handle: "awa.libre" }), {}, { timeout: 3000 })).toHaveAttribute("role", "status")
+    await user.clear(field)
+    await user.type(field, "pris.deja")
+    expect(await screen.findByText(t("welcomeHandle.taken", { handle: "pris.deja" }), {}, { timeout: 3000 })).toBeInTheDocument()
+    // Une question par pause, pas par touche : jamais l'identifiant incomplet de chaque frappe.
+    expect(checkHandle.mock.calls.map(([handle]) => handle)).toEqual(["awa.libre", "pris.deja"])
   })
 })
