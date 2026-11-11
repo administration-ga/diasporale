@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
-import { DataSourceProvider, REPORT_REASONS } from "@diasporale/features/data"
+import { contentReportReasons, DataSourceProvider } from "@diasporale/features/data"
 import type {
   ActionResult,
   ContentReportsCapability,
@@ -568,17 +568,18 @@ describe("EM-01 — fiche et candidature protégées contre les fausses offres",
     render(tree(<JobOfferScreen jobId="job-1" />))
     const notice = screen.getByRole("complementary", { name: NOTICE })
     expect(within(notice).getByText(/ni frais de dossier, ni formation payante, ni avance pour un visa/)).toBeTruthy()
-    // Aucune promesse d'un motif absent : le seul motif cité est l'un de ceux du moteur (MC-06 n'a pas encore ajouté « arnaque »).
-    expect(REPORT_REASONS).toContain(JOB_FRAUD_REPORT_REASON)
+    // Aucune promesse d'un motif absent : le seul motif cité est celui que le moteur propose en tête pour une offre (UM-03).
+    expect(JOB_FRAUD_REPORT_REASON).toBe("job_fee_requested")
+    expect(contentReportReasons("diasporaJobOffer")[0]).toBe(JOB_FRAUD_REPORT_REASON)
     const cited = quotedReasons(within(notice).getByText(/Une offre vous semble fausse/).textContent ?? "")
     expect(cited).toEqual([fr(`report.reason.${JOB_FRAUD_REPORT_REASON}`)])
-    expect(REPORT_REASONS.map((reason) => fr(`report.reason.${reason}`))).toEqual(expect.arrayContaining(cited))
+    expect(contentReportReasons("diasporaJobOffer").map((reason) => fr(`report.reason.${reason}`))).toEqual(expect.arrayContaining(cited))
     // Un seul geste « Signaler » sur la fiche : celui de l'encart, à côté de la mention ; aucun bouton plein ajouté.
     expect(screen.getAllByRole("button", { name: "Signaler l'offre" })).toHaveLength(1)
     expect(within(notice).getAllByRole("button").filter((button) => /(^|\s)bg-[a-z-]+-fill(\s|$)/.test(button.className))).toEqual([])
     fireEvent.click(within(notice).getByRole("button", { name: "Signaler l'offre" }))
     const sheet = screen.getByRole("dialog", { name: "Signaler cette offre d'emploi" })
-    expect(quotedReasons(within(sheet).getByText(/Frais demandés, promesse de visa/).textContent ?? "")).toEqual(cited)
+    expect(quotedReasons(within(sheet).getByText(/Argent réclamé, promesse de visa/).textContent ?? "")).toEqual(cited)
     expect(within(sheet).getByRole("radio", { name: cited[0] })).toBeTruthy()
   })
 
@@ -624,7 +625,7 @@ describe("EM-01 — fiche et candidature protégées contre les fausses offres",
     mocks.offer = { status: "ready", data: detail("job-1") }
     render(tree(<JobOfferScreen jobId="job-1" />, "en"))
     const notice = screen.getByRole("complementary", { name: "You never pay to apply" })
-    expect(within(notice).getByText(/Report it with the reason “Other reason”/)).toBeTruthy()
+    expect(within(notice).getByText(/Report it with the reason “Candidate asked to pay fees”/)).toBeTruthy()
     expect(within(notice).getByRole("button", { name: "Report the offer" })).toBeTruthy()
     const keys = ["jobs.fraud.title", "jobs.fraud.body", "jobs.fraud.report", "jobs.fraud.reportHint", "jobs.form.noFees"]
     for (const key of keys) {

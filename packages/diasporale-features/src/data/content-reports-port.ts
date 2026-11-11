@@ -19,7 +19,10 @@
  * La publication du fil garde son propre geste (`reportPost`, avec précision écrite).
  *
  * Ce que le geste fait, et ne fait pas :
- *   · un motif FERMÉ, ceux du moteur (`REPORT_REASONS`), aucune saisie libre ;
+ *   · un motif FERMÉ, ceux que le moteur propose pour la nature visée (`reportReasonsFor`),
+ *     aucune saisie libre : une offre d'emploi (`diasporaJobOffer`) propose d'abord « frais
+ *     demandés au candidat » et « usurpation d'une entreprise » (UM-03, antsia#168), puis
+ *     les motifs de tout objet ;
  *   · jamais sur son propre contenu, ni sur la page que l'on administre ou ce qu'elle
  *     publie : l'écran n'offre pas le geste, et le moteur refuse son propre contenu
  *     d'un refus indistinct (`not_found`) ;
@@ -28,10 +31,10 @@
  *     n'apprend jamais qui l'a signalée ;
  *   · la démonstration ne transmet rien : elle masque la cible dans ce seul navigateur.
  */
+import { reportReasonsFor, type KnownReportReason } from "@antsia/social-domain/moderation"
 import type { ModerationSurface } from "@antsia/social-domain/moderationPolicy"
 
 import type { ActionResult } from "./port"
-import { REPORT_REASONS, type ReportReason } from "./types"
 
 /** Les natures signalables : chacune est une surface modérée par le moteur. */
 export const CONTENT_REPORT_KINDS = [
@@ -83,7 +86,17 @@ export interface ContentReportTarget {
 }
 
 export interface ContentReportInput extends ContentReportTarget {
-  readonly reason: ReportReason
+  /** Un motif que le moteur sait nommer : ceux de tout objet, et ceux d'une nature (UM-03). */
+  readonly reason: KnownReportReason
+}
+
+/**
+ * Les motifs proposés pour une nature, dans l'ordre du moteur : les siens d'abord, puis ceux
+ * de tout objet (« autre » en dernier). La règle est celle du moteur (`reportReasonsFor`), qui
+ * refuse de son côté un motif propre à une autre nature.
+ */
+export function contentReportReasons(kind: ContentReportKind): readonly KnownReportReason[] {
+  return reportReasonsFor(kind)
 }
 
 export function isContentReportKind(value: string): value is ContentReportKind {
@@ -93,12 +106,12 @@ export function isContentReportKind(value: string): value is ContentReportKind {
 /**
  * La garde commune aux deux fournisseurs, jugée avant tout appel : une nature du
  * contrat, un identifiant lisible (ni vide, ni bordé d'espaces, ni trop long), un
- * motif du moteur. `null` : rien ne s'y oppose.
+ * motif proposé pour cette nature (`contentReportReasons`). `null` : rien ne s'y oppose.
  */
 export function contentReportRefusal(input: { readonly kind: string; readonly id: string; readonly reason: string }): "content_report_target_invalid" | "report_reason_required" | null {
   if (!isContentReportKind(input.kind)) return "content_report_target_invalid"
   if (input.id.length === 0 || input.id.trim() !== input.id || input.id.length > CONTENT_REPORT_TARGET_ID_MAX) return "content_report_target_invalid"
-  if (!(REPORT_REASONS as readonly string[]).includes(input.reason)) return "report_reason_required"
+  if (!(contentReportReasons(input.kind) as readonly string[]).includes(input.reason)) return "report_reason_required"
   return null
 }
 

@@ -115,7 +115,7 @@
       "title": "You never pay to apply",
       "body": "A real offer never asks for money: no application fee, no paid training, no advance for a visa, a ticket or housing. Be wary of a visa promise and of anyone who urges you to continue outside DIASPORALE.",
       "report": "Does an offer look fake? Report it with the reason “{{reason}}”: it disappears for you right away.",
-      "reportHint": "Fees requested, a visa promise: choose the reason “{{reason}}”."
+      "reportHint": "Money asked for, a visa promise: choose the reason “{{reason}}”."
     },
     "apply": {
       "cta": "Apply",

@@ -11,18 +11,19 @@
  * fournisseur : son propre profil (MD-02), refusé comme le moteur le refuse (`not_found`).
  */
 import { hasCapability } from "@diasporale/domain"
+import type { KnownReportReason } from "@antsia/social-domain/moderation"
 import { useSyncExternalStore } from "react"
 
 import {
-  CONTENT_REPORT_KINDS,
+  contentReportReasons,
   contentReportRefusal,
+  isContentReportKind,
   type ContentReportKind,
   type ContentReportsCapability,
   type ContentReportTarget,
 } from "../data/content-reports-port"
 import type { ActionErrorCode } from "../data/errors"
 import type { ActionResult } from "../data/port"
-import { REPORT_REASONS, type ReportReason } from "../data/types"
 import { statusOf } from "./selectors"
 import type { DemoStore } from "./store"
 
@@ -36,7 +37,7 @@ interface DemoContentReport {
   readonly reporterId: string
   readonly kind: ContentReportKind
   readonly targetId: string
-  readonly reason: ReportReason
+  readonly reason: KnownReportReason
   readonly createdAt: number
 }
 
@@ -71,9 +72,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isReport(value: unknown): value is DemoContentReport {
   return isRecord(value)
     && typeof value.reporterId === "string"
-    && typeof value.kind === "string" && (CONTENT_REPORT_KINDS as readonly string[]).includes(value.kind)
+    && typeof value.kind === "string" && isContentReportKind(value.kind)
     && typeof value.targetId === "string"
-    && typeof value.reason === "string" && (REPORT_REASONS as readonly string[]).includes(value.reason)
+    // Un motif proposé pour SA nature (UM-03 : ceux d'une offre d'emploi ne valent que pour elle).
+    && typeof value.reason === "string" && (contentReportReasons(value.kind) as readonly string[]).includes(value.reason)
     && typeof value.createdAt === "number" && Number.isFinite(value.createdAt)
 }
 

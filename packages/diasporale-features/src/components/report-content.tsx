@@ -9,7 +9,8 @@
  *   · `ReportContentAction` / `ReportContentButton` : le bouton (cible de 44 px) qui
  *     ouvre la feuille — le premier lit la capacité du fournisseur, le second la reçoit ;
  *   · `ReportContentSheet` : la feuille, React Hook Form + Zod — un motif FERMÉ parmi
- *     ceux du moteur, aucune saisie libre, une confirmation explicite, l'issue dite par
+ *     ceux que le moteur propose pour la nature visée (une offre d'emploi d'abord les
+ *     siens, UM-03), aucune saisie libre, une confirmation explicite, l'issue dite par
  *     sonner (envoyé, déjà signalé, démonstration), un refus traduit qui laisse la
  *     feuille ouverte. Pour un profil, elle dit que le réseau racine traite le dossier ;
  *   · `ReportedContent` / `ReportedContentMask` : l'avis qui remplace, pour la personne
@@ -22,6 +23,7 @@
  * « déjà signalé » sans rien recréer. Le focus revient au déclencheur à la fermeture ;
  * quand le contenu se masque, il passe à l'avis qui le remplace.
  */
+import { isKnownReportReason, type KnownReportReason } from "@antsia/social-domain/moderation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { FlagIcon } from "lucide-react"
 import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react"
@@ -29,10 +31,9 @@ import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
-import { contentReportKey, reportReachesRootNetwork, type ContentReportTarget, type ContentReportsCapability } from "../data/content-reports-port"
+import { contentReportKey, contentReportReasons, reportReachesRootNetwork, type ContentReportTarget, type ContentReportsCapability } from "../data/content-reports-port"
 import { useOptionalDataSource } from "../data/context"
 import { ERROR_CODES, type ActionErrorCode, type ErrorCode } from "../data/errors"
-import { REPORT_REASONS } from "../data/types"
 import { useDiasporaleT } from "../i18n/client"
 import { cn } from "../lib/cn"
 import { Button } from "../primitives/button"
@@ -50,8 +51,9 @@ function errorKey(code: string): string {
   return `errors.${ERROR_CODES.has(code as ErrorCode) ? code : "unknown"}`
 }
 
+// Un motif que le moteur sait nommer ; la feuille n'offre que ceux de la nature visée, et la garde du port le rejuge.
 const reportSchema = z.object({
-  reason: z.enum(REPORT_REASONS, { message: "report_reason_required" }),
+  reason: z.custom<KnownReportReason>((value) => typeof value === "string" && isKnownReportReason(value), { message: "report_reason_required" }),
 })
 type ReportValues = z.infer<typeof reportSchema>
 
@@ -195,7 +197,7 @@ function ReportForm(props: {
               aria-invalid={reasonError ? true : undefined}
               aria-describedby={reasonError ? `${ids}-motif` : undefined}
             >
-              {REPORT_REASONS.map((reason) => (
+              {contentReportReasons(props.target.kind).map((reason) => (
                 <RadioCard key={reason} value={reason}>
                   <span className="text-sm">{t(`report.reason.${reason}`)}</span>
                 </RadioCard>

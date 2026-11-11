@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import {
   CONTENT_REPORT_KINDS,
   CONTENT_REPORT_TARGET_ID_MAX,
+  contentReportReasons,
   contentReportRefusal,
   reportReachesRootNetwork,
   type ContentReportInput,
@@ -142,6 +143,18 @@ describe("signalements — démonstration", () => {
     expect(CONTENT_REPORT_KINDS).toHaveLength(14)
     // Seul le profil part au réseau racine : la feuille le dit.
     expect(CONTENT_REPORT_KINDS.filter(reportReachesRootNetwork)).toEqual(["person"])
+  })
+
+  it("UM-03 : une offre d'emploi propose d'abord ses deux motifs ; aucune autre nature ne les admet", async () => {
+    const JOB_REASONS = ["job_fee_requested", "job_impersonation"] as const
+    expect(contentReportReasons("diasporaJobOffer")).toEqual([...JOB_REASONS, ...CONTENT_REPORT_REASONS])
+    for (const kind of CONTENT_REPORT_KINDS) {
+      const own = kind === "diasporaJobOffer"
+      if (!own) expect(contentReportReasons(kind), kind).toEqual(CONTENT_REPORT_REASONS)
+      for (const reason of JOB_REASONS) expect(contentReportRefusal({ kind, id: "cible-1", reason }), `${kind} ${reason}`).toBe(own ? null : "report_reason_required")
+    }
+    const { reports } = setup()
+    expect(await reports.report({ kind: "diasporaJobOffer", id: "job-1", reason: "job_fee_requested" })).toEqual({ ok: true, value: { created: true } })
   })
 
   it("MD-02 : publication, commentaire, page, évènement et profil d'autrui se masquent ici seulement, rien n'est transmis", async () => {

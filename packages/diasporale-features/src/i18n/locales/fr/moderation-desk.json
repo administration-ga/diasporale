@@ -102,6 +102,8 @@
       "misinformation": "Fausse information",
       "spam": "Contenu indésirable",
       "fraud": "Fraude ou tromperie",
+      "job_fee_requested": "Frais demandés au candidat",
+      "job_impersonation": "Usurpation d'une entreprise",
       "other": "Autre motif",
       "pre_review": "Relecture préalable",
       "unspecified": "Motif non précisé"

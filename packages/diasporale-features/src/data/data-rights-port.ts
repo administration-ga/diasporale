@@ -35,6 +35,7 @@ import {
   type AppealStatus,
   type AuthorDecisionOutcome as EngineAuthorDecisionOutcome,
   type ContentReportStatus,
+  type TargetReportReason,
   type ReportLegalBasis,
   type ReportOutcome,
 } from "@antsia/social-domain/moderation"
@@ -145,7 +146,9 @@ export type DecisionLevel = (typeof DECISION_LEVELS)[number]
 export const DECISION_NETWORKS = ["diasporale", "antsia", "other"] as const
 export type DecisionNetwork = (typeof DECISION_NETWORKS)[number]
 /** Le motif du dossier : un motif de signalement connu, la relecture préalable, ou un motif non précisé. */
-export const DECISION_GROUNDS = [...CONTENT_REPORT_REASONS, "pre_review", "unspecified"] as const
+/** UM-03 (antsia#168) : les motifs propres à une nature (offre d'emploi), qu'une décision peut citer. */
+export const TARGET_DECISION_GROUNDS = ["job_fee_requested", "job_impersonation"] as const satisfies readonly TargetReportReason[]
+export const DECISION_GROUNDS = [...CONTENT_REPORT_REASONS, ...TARGET_DECISION_GROUNDS, "pre_review", "unspecified"] as const
 export type DecisionGround = (typeof DECISION_GROUNDS)[number]
 export const DECISION_SANCTION_KINDS = SANCTION_KINDS
 export type DecisionSanctionKind = SanctionKind

@@ -102,6 +102,8 @@
       "misinformation": "False information",
       "spam": "Spam",
       "fraud": "Fraud or deception",
+      "job_fee_requested": "Candidate asked to pay fees",
+      "job_impersonation": "Impersonating a company",
       "other": "Other reason",
       "pre_review": "Pre-publication review",
       "unspecified": "Unspecified reason"

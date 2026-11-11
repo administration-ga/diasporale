@@ -15,7 +15,7 @@
  */
 import { utcToZonedWallTime, zonedWallTimeToUtc, type CountryCode, type JobPayRangeLike } from "@diasporale/domain"
 import { Card, EmptyState, TrustBadge, countryName, formatDate } from "@diasporale/features"
-import type { ActionErrorCode, ContentReportTarget, JobOfferCardView, ManagedModerationState, ReportReason, TalentHitView } from "@diasporale/features/data"
+import type { ActionErrorCode, ContentReportInput, ContentReportTarget, JobOfferCardView, ManagedModerationState, TalentHitView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { BriefcaseBusinessIcon, CircleAlertIcon, ClockIcon, MapPinIcon, ShieldAlertIcon, type LucideIcon } from "lucide-react"
 import NextLink from "next/link"
@@ -146,12 +146,12 @@ export function JobModerationNote(props: { readonly subject: keyof typeof MODERA
 }
 
 /**
- * EM-01 — le motif sous lequel signaler une fausse offre. Le motif dédié (« arnaque, frais
- * demandés ») appartient au moteur (lot MC-06) et n'existe pas encore : d'ici là, « Autre
- * motif ». Typé par les motifs du moteur : un motif qui n'y figure pas ne compile pas, et
- * l'écran ne promet jamais un motif absent de la feuille.
+ * EM-01 — le motif sous lequel signaler une fausse offre : « Frais demandés au candidat », le
+ * motif propre à une offre d'emploi que le moteur propose en tête de sa feuille (UM-03,
+ * antsia#168 ; avant lui, « Autre motif »). Typé par les motifs du moteur : un motif qui n'y
+ * figure pas ne compile pas, et l'écran ne promet jamais un motif absent de la feuille.
  */
-export const JOB_FRAUD_REPORT_REASON: ReportReason = "other"
+export const JOB_FRAUD_REPORT_REASON: ContentReportInput["reason"] = "job_fee_requested"
 
 /**
  * EM-01 — l'encart « On ne paie jamais pour candidater », sur la fiche d'une offre et en tête

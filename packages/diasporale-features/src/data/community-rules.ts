@@ -7,6 +7,7 @@
  * moteur : un motif ajouté sans sa règle ne compile pas. Les règles elles-mêmes (leur ordre,
  * leur version, leur état) vivent dans le domaine (`COMMUNITY_RULES`, `LEGAL_TEXTS.community`).
  */
+import type { TargetReportReason } from "@antsia/social-domain/moderation"
 import type { CommunityRule } from "@diasporale/domain"
 
 import { SERVICE_REVIEW_REPORT_REASONS, type ServiceReviewReportReason } from "./service-reviews-port"
@@ -36,6 +37,16 @@ export const SERVICE_REVIEW_REASON_RULES: Readonly<Record<ServiceReviewReportRea
   other: "reporting",
 })
 
+/** UM-03 (antsia#168) : la règle de chaque motif propre à une offre d'emploi. */
+export const TARGET_REASON_RULES: Readonly<Record<TargetReportReason, CommunityRule>> = Object.freeze({
+  job_fee_requested: "scams",
+  job_impersonation: "impersonation",
+})
+
+function isTargetReason(ground: string): ground is TargetReportReason {
+  return Object.prototype.hasOwnProperty.call(TARGET_REASON_RULES, ground)
+}
+
 function isReportReason(ground: string): ground is ReportReason {
   return (REPORT_REASONS as readonly string[]).includes(ground)
 }
@@ -52,6 +63,7 @@ function isServiceReviewReason(ground: string): ground is ServiceReviewReportRea
 export function communityRuleOf(ground: string): CommunityRule | null {
   if (ground === "pre_review") return "measures"
   if (isReportReason(ground)) return REPORT_REASON_RULES[ground]
+  if (isTargetReason(ground)) return TARGET_REASON_RULES[ground]
   if (isServiceReviewReason(ground)) return SERVICE_REVIEW_REASON_RULES[ground]
   return null
 }
