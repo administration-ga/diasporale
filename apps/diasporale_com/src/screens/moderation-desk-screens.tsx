@@ -56,7 +56,7 @@ const TAB_LABELS: Readonly<Record<DeskTab, string>> = {
   reglages: "moderationDesk.tab.settings",
 }
 
-/** Un onglet offert à ce rôle : les recours et les réglages à l'administration du réseau, les pages à vérifier aux rôles de réseau. */
+/** Un onglet offert à ce rôle : les recours et les réglages à l'administration du réseau, les pages à vérifier à qui les instruit selon le moteur (rôle de réseau ou équipe compétente pour les pages). */
 function offersTab(tab: DeskTab, view: ModerationDeskView): boolean {
   if (tab === "pages") return view.canReviewClaims
   if (tab === "recours") return view.canReviewAppeals

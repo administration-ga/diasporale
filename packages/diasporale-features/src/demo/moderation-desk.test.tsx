@@ -337,8 +337,9 @@ describe("Guichet de démonstration — responsables du réseau (MD-01)", () => 
     const { desk } = setup()
     await act(async () => { await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-steeve", role: "network_admin", reason: REASON }) })
     await act(async () => { await desk.setResponsibleRole({ personId: PERSON, memberPersonId: PERSON, role: "member", reason: REASON }) })
+    // AS-01 : membre de l'équipe sans nature, sans équipe « page » : la règle du moteur lui laisse l'instruction des pages.
     expect(capacity(desk)).toEqual({
-      role: "team_member", networkWide: false, canReviewAppeals: false, canManageTeams: false, canManagePolicy: false, canReviewClaims: false,
+      role: "team_member", networkWide: false, canReviewAppeals: false, canManageTeams: false, canManagePolicy: false, canReviewClaims: true,
       teams: [{ teamId: DEMO_DESK_TEAM_ID, name: "Équipe France (fictive)", scope: null, isMember: true }],
     })
     const queue = (teamId: string | null) => renderHook(() => desk.useQueue({ personId: PERSON, zone: { kind: "all" }, surface: null, teamId, cursor: null })).result.current
@@ -441,7 +442,7 @@ describe("Guichet de démonstration — pages à vérifier (AS-01)", () => {
     expect(await desk.decideClaim({ personId: "p-steeve", claimId, decision: "rejected", reason: REASON })).toEqual({ ok: false, code: "moderation_desk_conflict" })
   })
 
-  it("un signataire de la page, même invité, ne tranche pas ; sans rôle de réseau, plus de file", async () => {
+  it("un signataire de la page, même invité, ne tranche pas ; sans rôle de réseau ni équipe compétente pour les pages, plus de file", async () => {
     const { store, desk } = setup()
     // Mireille (vérifiée) crée une page, y invite Steeve, puis en demande la vérification.
     await act(async () => { await store.switchTo("p-mireille") })
@@ -462,6 +463,8 @@ describe("Guichet de démonstration — pages à vérifier (AS-01)", () => {
 
     await act(async () => { await store.switchTo(PERSON) })
     expect(claims(desk, PERSON)).toMatchObject([{ claimId, party: null }])
+    // Une équipe « page » prend la compétence de l'équipe sans nature (règle du moteur) ; la personne n'en est pas membre.
+    await act(async () => { await desk.createTeam({ personId: PERSON, name: "Pages (fictive)", scope: "page", reason: REASON }) })
     await act(async () => { await desk.setResponsibleRole({ personId: PERSON, memberPersonId: "p-steeve", role: "network_admin", reason: REASON }) })
     await act(async () => { await desk.setResponsibleRole({ personId: PERSON, memberPersonId: PERSON, role: "member", reason: REASON }) })
     expect(ready(renderHook(() => desk.useDesk(PERSON)).result.current)?.canReviewClaims).toBe(false)

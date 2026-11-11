@@ -335,7 +335,7 @@ export interface ModerationDeskView {
   readonly canManageTeams: boolean
   /** MD-04 : règle la modération du réseau (administration du réseau seule). */
   readonly canManagePolicy: boolean
-  /** AS-01 : instruit les revendications de page (`pages/claims` n'admet que le rôle de réseau). */
+  /** AS-01 : instruit les revendications de page, selon le moteur (`pages/claims.pageClaimReviewCapacity` : rôle de réseau, ou membre de l'équipe compétente pour les pages). */
   readonly canReviewClaims: boolean
   /** Toutes les équipes vivantes pour l'administration du réseau ; les siennes sinon. */
   readonly teams: readonly DeskTeamView[]

@@ -136,24 +136,42 @@ afterEach(() => {
 
 describe("Guichet — capacité", () => {
   it("lit la capacité pour la personne attendue et la rend stable d'un rendu à l'autre", () => {
-    respondWith({ "modules/diaspora/moderationDesk:myDesk": DESK_ROW })
+    respondWith({ "modules/diaspora/moderationDesk:myDesk": DESK_ROW, "modules/pages/claims:myPageClaimReview": { canReview: true } })
     const { desk } = setup()
     const { result, rerender } = renderHook(() => desk.useDesk(PERSON._id))
-    // AS-01 : les pages à vérifier suivent le rôle de réseau (`networkWide`), la garde de `pages/claims`.
+    // AS-01 : les pages à vérifier suivent la règle d'instruction du moteur (`pages.claims.myPageClaimReview`).
     expect(result.current).toEqual({ status: "ready", data: { ...DESK_ROW, canReviewClaims: true } })
     const first = result.current
     rerender()
     expect(result.current).toBe(first)
     expect(lastArgs("modules/diaspora/moderationDesk:myDesk")).toEqual({ networkId: DIASPORALE._id, expectedPersonId: PERSON._id })
+    expect(lastArgs("modules/pages/claims:myPageClaimReview")).toEqual({ networkId: DIASPORALE._id })
     expect(desk.demonstration).toBe(false)
   })
 
+  it("AS-01 : « Pages à vérifier » suit la règle du moteur ; sans elle (moteur plus ancien), la règle du rôle de réseau", () => {
+    const TEAM_ROW = { ...DESK_ROW, role: "team_member", networkWide: false }
+    // Membre de l'équipe compétente pour les pages, sans rôle de réseau : le moteur l'admet.
+    respondWith({ "modules/diaspora/moderationDesk:myDesk": TEAM_ROW, "modules/pages/claims:myPageClaimReview": { canReview: true } })
+    const { desk } = setup()
+    const { result, rerender } = renderHook(() => desk.useDesk(PERSON._id))
+    expect(result.current).toEqual({ status: "ready", data: { ...TEAM_ROW, canReviewClaims: true } })
+    // Un rôle de réseau que le moteur ne compte plus parmi les instructeurs : l'onglet se ferme.
+    respondWith({ "modules/diaspora/moderationDesk:myDesk": DESK_ROW, "modules/pages/claims:myPageClaimReview": { canReview: false } })
+    rerender()
+    expect(result.current).toEqual({ status: "ready", data: { ...DESK_ROW, canReviewClaims: false } })
+    // La lecture refusée (fonction absente d'un moteur plus ancien) ne casse pas le guichet : règle du rôle de réseau.
+    respondWith({ "modules/diaspora/moderationDesk:myDesk": TEAM_ROW, "modules/pages/claims:myPageClaimReview": engineError({ code: "notFound" }) })
+    rerender()
+    expect(result.current).toEqual({ status: "ready", data: { ...TEAM_ROW, canReviewClaims: false } })
+  })
+
   it("rend null sans compétence, et le refus du moteur sans son détail", () => {
-    respondWith({ "modules/diaspora/moderationDesk:myDesk": null })
+    respondWith({ "modules/diaspora/moderationDesk:myDesk": null, "modules/pages/claims:myPageClaimReview": { canReview: false } })
     const { desk } = setup()
     const { result, rerender } = renderHook(() => desk.useDesk(PERSON._id))
     expect(result.current).toEqual({ status: "ready", data: null })
-    respondWith({ "modules/diaspora/moderationDesk:myDesk": engineError({ code: "notFound", detail: "PRIVATE_DETAIL" }) })
+    respondWith({ "modules/diaspora/moderationDesk:myDesk": engineError({ code: "notFound", detail: "PRIVATE_DETAIL" }), "modules/pages/claims:myPageClaimReview": { canReview: false } })
     rerender()
     expect(result.current).toEqual({ status: "error", code: "not_found" })
     expect(JSON.stringify(result.current)).not.toContain("PRIVATE_DETAIL")
