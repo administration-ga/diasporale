@@ -11,8 +11,8 @@
  *   · `pages.signatories` : `listPageSignatories`, `grantPageRole`, `revokePageRole`,
  *     `myPageInvitations`, `respondToPageInvitation` ;
  *   · `pages.claims` : `generateClaimEvidenceUploadUrl`, `requestPageClaim`,
- *     `withdrawPageClaim`, `paginateMyPageClaims`, et, pour la modération du réseau
- *     seule, `paginatePageClaims`, `getPageClaim`, `decidePageClaim`.
+ *     `withdrawPageClaim`, `paginateMyPageClaims`. L'instruction (fiche, pièces,
+ *     décision) est au bureau de modération (AS-01, `engine-moderation-desk.ts`).
  *
  * Garde des fichiers (pièces, logo, bannière) : URL de dépôt d'un usage nommé,
  * dépôt NEUF au moment de l'envoi, rattachement par la mutation qui admet le
@@ -33,7 +33,6 @@ import {
   pageAssociationTypeRefusal,
   pageCityRefusal,
   pageClaimNoteRefusal,
-  pageDecisionReasonRefusal,
   pageDescriptionRefusal,
   pageEvidenceSetRefusal,
   pageHandleRefusal,
@@ -48,8 +47,6 @@ import {
   type ManagedPageDetailView,
   type ManagedPageView,
   type PageAdminCapability,
-  type PageClaimDetailView,
-  type PageClaimQueueView,
   type PageClaimView,
   type PageIdentityInput,
   type PageImageSlot,
@@ -81,8 +78,6 @@ import {
 
 /** Mes revendications : la première page du moteur (son plafond). */
 const MY_CLAIMS_PAGE = 50
-/** La file d'instruction, par pages de vingt. */
-const CLAIM_QUEUE_PAGE = 20
 
 // ═══════════════════════════════════════════════════════════════
 // Refus du moteur, lus dans le CONTEXTE d'un geste de gestion
@@ -161,11 +156,6 @@ const CLAIM_CONTEXT: RefusalContext = {
   codes: { conflict: "media_upload_failed" },
   rules: { UPLOAD_TYPE_NOT_ALLOWED: "page_claim_evidence_type", UPLOAD_SIZE_OUT_OF_RANGE: "page_claim_evidence_too_large" },
 }
-const DECISION_CONTEXT: RefusalContext = {
-  // Déjà tranchée, ou son auteur n'est plus membre actif : la décision n'est plus ouverte.
-  codes: { conflict: "page_claim_closed" },
-  rules: { DECISION_REASON_LENGTH: "page_decision_reason_length" },
-}
 
 async function attempt<T>(work: () => Promise<T>, context: RefusalContext = {}): Promise<ActionResult<T>> {
   try {
@@ -232,7 +222,6 @@ function useProjected<T, R>(reader: Reader, loaded: Loaded<T>, project: (value: 
 type PageCard = FunctionReturnType<typeof api.modules.pages.pages.myPages>[number]
 type PageDto = NonNullable<FunctionReturnType<typeof api.modules.pages.pages.getPage>>
 type ClaimDto = FunctionReturnType<typeof api.modules.pages.claims.paginateMyPageClaims>["page"][number]
-type ClaimDetailDto = FunctionReturnType<typeof api.modules.pages.claims.getPageClaim>
 
 /** Le badge d'une PAGE est sa confiance ; tout autre badge n'a pas de sens ici (lu « Communauté »). */
 function toPageBadge(badge: string): PageTrustLevel {
@@ -284,23 +273,11 @@ function toClaimViews(result: { readonly page: readonly ClaimDto[] }): readonly 
   return result.page.map(toClaimView)
 }
 
-function toClaimQueue(result: { readonly page: readonly ClaimDto[]; readonly isDone: boolean; readonly continueCursor: string }): PageClaimQueueView {
-  return { items: result.page.map(toClaimView), continueCursor: result.isDone ? null : result.continueCursor }
-}
-
-function toClaimDetail(claim: ClaimDetailDto): PageClaimDetailView {
-  // Une retenue gagne même si un fournisseur incohérent rend aussi une adresse.
-  return { ...toClaimView(claim), evidence: claim.evidence.map((item) => ({ url: item.withheld === null ? item.url : null, withheld: item.withheld })) }
-}
-
 function toInvitations(rows: FunctionReturnType<typeof api.modules.pages.signatories.myPageInvitations>): readonly PageInvitationView[] {
   return rows.map((row) => ({ page: toPageRef(row.page), role: row.role, invitedAt: row.invitedAt }))
 }
 
-const isReviewerRole = (role: string | undefined) => role === "network_admin" || role === "network_moderator"
-
 /** Réponses constantes : un écran qui compare les références ne voit pas de changement fantôme. */
-const NOTHING: Loadable<null> = { status: "ready", data: null }
 const NO_SIGNATORIES: Loadable<readonly PageSignatoryView[]> = { status: "ready", data: [] }
 
 // ═══════════════════════════════════════════════════════════════
@@ -383,30 +360,6 @@ export function createEnginePageAdmin(deps: EngineSourceDeps, options: { fetch?:
         reader.networkId ? { networkId: reader.networkId, paginationOpts: { numItems: MY_CLAIMS_PAGE, cursor: null } } : "skip",
       )
       return useProjected(reader, result, toClaimViews)
-    },
-
-    useClaimQueue(args): Loadable<PageClaimQueueView | null> {
-      const reader = useReader()
-      // La file est celle de la modération du réseau : un simple membre n'interroge même pas le moteur.
-      const reviewer = isReviewerRole(reader.row?.role)
-      const result = usePageQuery(
-        api.modules.pages.claims.paginatePageClaims,
-        reader.networkId && reviewer ? { networkId: reader.networkId, status: args.status, paginationOpts: { numItems: CLAIM_QUEUE_PAGE, cursor: args.cursor } } : "skip",
-      )
-      const projected = useProjected(reader, result, toClaimQueue)
-      if (reader.settled && !reviewer) return NOTHING
-      return projected
-    },
-
-    useClaim(claimId: string | null): Loadable<PageClaimDetailView | null> {
-      const reader = useReader()
-      const claim = usePageQuery(
-        api.modules.pages.claims.getPageClaim,
-        reader.networkId && claimId ? { networkId: reader.networkId, claimId: claimId as Id<"pageClaims"> } : "skip",
-      )
-      const projected = useProjected(reader, claim, toClaimDetail)
-      if (claimId === null) return reader.refusal ? failed(reader.refusal) : NOTHING
-      return projected
     },
 
     createPage: (input: CreatePageInput) => attempt(async () => {
@@ -548,17 +501,6 @@ export function createEnginePageAdmin(deps: EngineSourceDeps, options: { fetch?:
 
     withdrawClaim: (claimId) => attempt(async () =>
       await deps.convex.mutation(api.modules.pages.claims.withdrawPageClaim, { networkId: await diasporale(), claimId: claimId as Id<"pageClaims"> })),
-
-    decideClaim: (claimId, decision, reason) => attempt(async () => {
-      const refusal = pageDecisionReasonRefusal(reason)
-      if (refusal) throw new Refusal(refusal)
-      return await deps.convex.mutation(api.modules.pages.claims.decidePageClaim, {
-        networkId: await diasporale(),
-        claimId: claimId as Id<"pageClaims">,
-        decision,
-        reason: reason.trim(),
-      })
-    }, DECISION_CONTEXT),
   }
 
   return {

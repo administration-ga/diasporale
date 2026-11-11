@@ -33,16 +33,42 @@
  *   · SU01d du moteur (ordonnance n° 0011/PR/2026, art. 24, 32, 33) : les
  *     dossiers à délai légal forment une voie À PART, l'échéance la plus proche
  *     d'abord, que ni le pays ni la nature ne filtrent ; la file ordinaire ne les
- *     reprend pas.
+ *     reprend pas ;
+ *   · MD-04 (sur MC-02 du moteur) : les réglages de modération du réseau — par
+ *     rubrique, relecture avant publication, plafond de liens, cadence ; mots
+ *     bloqués — se lisent et se posent par les fonctions du moteur, réservées à
+ *     l'administration du réseau, motif obligatoire, journalisés par le moteur.
+ *     Ce qui vaut sans réglage se lit dans les constantes du moteur, jamais dans
+ *     un nombre écrit à la main ;
+ *   · AS-01 : les revendications de page en attente (« Pages à vérifier ») se
+ *     lisent par pays de la page, avec la garde du moteur (rôle de réseau) ; la
+ *     fiche, les pièces (servies par la garde des fichiers) et la décision
+ *     motivée passent par `pages/claims`. Le demandeur et toute personne qui a
+ *     une ligne de signataire sur la page ne tranchent jamais : l'écran n'offre
+ *     pas le geste, le moteur refuse de façon indistincte.
  *
  * Aucune donnée consulaire, aucune statistique : une fenêtre de file ne compte
  * rien, elle liste.
  */
+import type { MediaWithheld } from "@antsia/social-contracts/media"
 import { DECISION_REASON_MAX } from "@antsia/social-domain/audit"
 import { REPORT_DEADLINES_ORDINANCE, REPORT_LEGAL_BASES, type ContentReportReason, type ReportLegalBasis } from "@antsia/social-domain/moderation"
-import { MODERATION_SURFACES, SANCTION_KINDS, type ModerationSurface, type SanctionKind } from "@antsia/social-domain/moderationPolicy"
+import {
+  admissibleBlockedTerm,
+  BLOCKED_TERM_LENGTH,
+  BLOCKED_TERMS_ACTIVE_MAX,
+  MODERATION_POLICY_BOUNDS,
+  MODERATION_POLICY_DEFAULTS,
+  MODERATION_SURFACES,
+  moderationPolicyProblem,
+  SANCTION_KINDS,
+  type ModerationSurface,
+  type SanctionKind,
+} from "@antsia/social-domain/moderationPolicy"
+import { PAGE_CLAIM_DECISIONS } from "@antsia/social-domain/pages"
 import { isCountryCode, normalizeCountryCode, type CountryCode } from "@diasporale/domain"
 
+import type { PageRefView } from "./page-admin-port"
 import type { ActionResult } from "./port"
 import type { ServiceReviewReportReason } from "./service-reviews-port"
 import type { Loadable, PostMediaView } from "./types"
@@ -78,6 +104,16 @@ export const MODERATION_DESK_ERROR_CODES = [
   "moderation_desk_last_admin",
   // MD-01 : rôle refusé, sans dire pourquoi (personne qui n'est pas membre active « déclarée » au moins, ou geste hors de l'administration).
   "moderation_desk_role_refused",
+  // MD-04 : plafond de liens hors des bornes du moteur ({{linksMin}} à {{linksMax}}).
+  "moderation_desk_links_bounds",
+  // MD-04 : cadence hors des bornes du moteur ({{writesMin}} à {{writesMax}} écritures).
+  "moderation_desk_writes_bounds",
+  // MD-04 : fenêtre de cadence hors des bornes ({{windowMin}} à {{windowMax}} minutes).
+  "moderation_desk_window_bounds",
+  // MD-04 : mot bloqué trop court ou trop long une fois normalisé ({{termMin}} à {{termMax}} caractères).
+  "moderation_desk_term_length",
+  // MD-04 : le réseau garde déjà le nombre maximal de mots bloqués actifs ({{termsMax}}).
+  "moderation_desk_terms_full",
 ] as const
 export type ModerationDeskErrorCode = (typeof MODERATION_DESK_ERROR_CODES)[number]
 
@@ -297,6 +333,10 @@ export interface ModerationDeskView {
   readonly networkWide: boolean
   readonly canReviewAppeals: boolean
   readonly canManageTeams: boolean
+  /** MD-04 : règle la modération du réseau (administration du réseau seule). */
+  readonly canManagePolicy: boolean
+  /** AS-01 : instruit les revendications de page (`pages/claims` n'admet que le rôle de réseau). */
+  readonly canReviewClaims: boolean
   /** Toutes les équipes vivantes pour l'administration du réseau ; les siennes sinon. */
   readonly teams: readonly DeskTeamView[]
 }
@@ -480,6 +520,240 @@ export interface DeskResponsibleRoleResult {
   readonly changed: boolean
 }
 
+// ── Réglages de modération (MD-04, sur MC-02 du moteur) ────────────────────
+
+const HOUR_MS = 60 * MINUTE_MS
+
+/**
+ * Ce que le moteur applique à une rubrique SANS réglage explicite du réseau
+ * (`MODERATION_POLICY_DEFAULTS`) : l'écran lit ces valeurs, il n'écrit jamais un
+ * nombre dans un texte. Le moteur les sert aussi avec les réglages (`defaults`).
+ */
+export const DESK_POLICY_DEFAULTS = MODERATION_POLICY_DEFAULTS
+/** Les bornes d'un réglage, celles qu'admet `cases.setPolicy`. */
+export const DESK_POLICY_BOUNDS = MODERATION_POLICY_BOUNDS
+/** La fenêtre de cadence se règle à la minute, dans les bornes du moteur. */
+export const DESK_WINDOW_MINUTES = {
+  min: Math.ceil(MODERATION_POLICY_BOUNDS.windowMs.min / MINUTE_MS),
+  max: Math.floor(MODERATION_POLICY_BOUNDS.windowMs.max / MINUTE_MS),
+} as const
+/** Un mot bloqué, une fois normalisé (casse et accents retirés), compte de `min` à `max` caractères. */
+export const DESK_BLOCKED_TERM_LENGTH = BLOCKED_TERM_LENGTH
+/** Le réseau garde au plus ce nombre de mots bloqués actifs. */
+export const DESK_BLOCKED_TERMS_MAX = BLOCKED_TERMS_ACTIVE_MAX
+/** Mots bloqués lus par fenêtre (le moteur borne ses pages à cinquante). */
+export const DESK_BLOCKED_TERMS_PAGE = 50
+
+/**
+ * Les rubriques que DIASPORALE sert et dont le réglage vaut dans le réseau
+ * `diasporale`, dans l'ordre de l'écran. Écartées : le compte (`person`, profil
+ * commun modéré dans le réseau racine), le direct et les natures propres à
+ * ANTSIA (boutique, emploi reflété, profils professionnels, médias).
+ */
+export const DESK_POLICY_SURFACES = [
+  "post",
+  "comment",
+  "groupMessage",
+  "story",
+  "album",
+  "event",
+  "page",
+  "serviceReview",
+  "serviceReviewReply",
+  "contextualMessage",
+  "diasporaAidQuestion",
+  "diasporaAidAnswer",
+  "diasporaAidMission",
+  "diasporaMentorProfile",
+  "diasporaMentoringRequest",
+  "diasporaKitResource",
+  "diasporaJobOffer",
+  "diasporaTalentProfile",
+  "diasporaJobApplication",
+] as const satisfies readonly DeskSurface[]
+
+/**
+ * Ce que fait le moteur pour une rubrique sans réglage (`withoutPolicy` de
+ * `cases.policies`) : ses défauts prudents (`defaults`), une relecture de tout
+ * (`held`), ou aucune règle (`unchecked` : la vague H de DIASPORALE, publiée dès
+ * l'écriture et modérée après signalement, décision du 18/10).
+ */
+export const DESK_WITHOUT_POLICY = ["defaults", "held", "unchecked"] as const
+export type DeskWithoutPolicy = (typeof DESK_WITHOUT_POLICY)[number]
+
+/**
+ * Les contenus de DIASPORALE relus d'office tant qu'aucun réglage n'est posé pour
+ * leur nature — vérifié dans le moteur le 10/11/2026 : les évènements
+ * d'association (`events/pageEvents`, nature `event`), les réponses d'une page à
+ * un avis et les ajouts à la galerie d'un évènement (`posts/postWrite`, nature
+ * `post`) passent par `moderatePageContentWrite`, les avis par la règle de
+ * `diaspora/serviceReviews` : sans réglage, chacun attend un modérateur. Un
+ * réglage posé sur la nature les soumet à CE réglage ; pour `event` et `post`, il
+ * vaut aussi pour les évènements personnels et pour toutes les publications.
+ */
+export const DESK_HELD_CONTENTS = [
+  { content: "associationEvents", surface: "event" },
+  { content: "reviews", surface: "serviceReview" },
+  { content: "reviewReplies", surface: "serviceReviewReply" },
+  { content: "eventGallery", surface: "post" },
+] as const satisfies readonly { readonly content: string; readonly surface: DeskSurface }[]
+export type DeskHeldContent = (typeof DESK_HELD_CONTENTS)[number]["content"]
+
+/** Le contenu relu d'office que soumet au réglage une rubrique, s'il en est un. */
+export function deskHeldContentOf(surface: DeskSurface): DeskHeldContent | null {
+  return DESK_HELD_CONTENTS.find((row) => row.surface === surface)?.content ?? null
+}
+
+/** Relecture avant publication, plafond de liens, cadence : ce qu'un réseau règle pour une rubrique. */
+export interface DeskPolicyValues {
+  readonly preReview: boolean
+  readonly maxLinks: number
+  readonly maxWrites: number
+  readonly windowMs: number
+}
+
+export interface DeskSurfacePolicyView {
+  readonly surface: DeskSurface
+  readonly withoutPolicy: DeskWithoutPolicy
+  /** Le réglage posé ; `null` : la règle « sans réglage » s'applique. */
+  readonly policy: (DeskPolicyValues & { readonly updatedAt: number }) | null
+}
+
+export interface DeskSettingsView {
+  /** Les défauts du moteur, tels qu'il les sert. */
+  readonly defaults: DeskPolicyValues
+  readonly surfaces: readonly DeskSurfacePolicyView[]
+}
+
+export interface DeskBlockedTermView {
+  readonly termId: string
+  /** Le mot tel que le moteur le garde : normalisé, casse et accents retirés. */
+  readonly term: string
+  readonly updatedAt: number
+}
+
+export interface DeskBlockedTermsRequest {
+  readonly personId: string
+  readonly cursor: string | null
+}
+
+export interface DeskPolicyInput extends DeskPolicyValues {
+  readonly personId: string
+  readonly surface: DeskSurface
+  readonly reason: string
+}
+
+export interface DeskBlockedTermInput {
+  readonly personId: string
+  readonly term: string
+  /** Vrai : bloquer le mot ; faux : le débloquer. */
+  readonly active: boolean
+  readonly reason: string
+}
+
+const POLICY_FIELD_REFUSALS = {
+  maxLinks: "moderation_desk_links_bounds",
+  maxWrites: "moderation_desk_writes_bounds",
+  windowMs: "moderation_desk_window_bounds",
+} as const satisfies Readonly<Record<"maxLinks" | "maxWrites" | "windowMs", ModerationDeskErrorCode>>
+
+/** Le premier champ d'un réglage hors des bornes du moteur (`moderationPolicyProblem`), dit en code fermé. */
+export function deskPolicyRefusal(values: DeskPolicyValues): ModerationDeskErrorCode | null {
+  const problem = moderationPolicyProblem(values)
+  return problem === null ? null : POLICY_FIELD_REFUSALS[problem]
+}
+
+/** Le refus d'un champ fautif nommé par le moteur (`invalidArgument`), s'il est un champ de réglage. */
+export function deskPolicyFieldRefusal(field: string): ModerationDeskErrorCode | null {
+  return field === "maxLinks" || field === "maxWrites" || field === "windowMs" ? POLICY_FIELD_REFUSALS[field] : null
+}
+
+/** Le mot tel que le moteur le garde (normalisé), ou `null` s'il n'est pas admissible (règle `admissibleBlockedTerm`). */
+export function deskAdmissibleTerm(term: string): string | null {
+  return admissibleBlockedTerm(term)
+}
+
+/** Un mot bloqué admissible une fois normalisé, sinon le refus. */
+export function deskBlockedTermRefusal(term: string): "moderation_desk_term_length" | null {
+  return deskAdmissibleTerm(term) === null ? "moderation_desk_term_length" : null
+}
+
+/** Une fenêtre de cadence dite dans l'unité la plus ronde : heures, minutes, sinon secondes. */
+export function deskWindowUnit(windowMs: number): { readonly unit: "hours" | "minutes" | "seconds"; readonly count: number } {
+  if (windowMs >= HOUR_MS && windowMs % HOUR_MS === 0) return { unit: "hours", count: windowMs / HOUR_MS }
+  if (windowMs >= MINUTE_MS && windowMs % MINUTE_MS === 0) return { unit: "minutes", count: windowMs / MINUTE_MS }
+  return { unit: "seconds", count: Math.round(windowMs / 1000) }
+}
+
+/** La fenêtre en minutes pour le formulaire, ramenée dans les bornes de l'écran. */
+export function deskWindowMinutes(windowMs: number): number {
+  return Math.min(DESK_WINDOW_MINUTES.max, Math.max(DESK_WINDOW_MINUTES.min, Math.round(windowMs / MINUTE_MS)))
+}
+
+/** La fenêtre saisie en minutes, telle que le moteur la reçoit (millisecondes). */
+export function deskWindowMsOf(minutes: number): number {
+  return minutes * MINUTE_MS
+}
+
+// ── Pages à vérifier (AS-01) ───────────────────────────────────────────────
+
+/** Les deux issues d'une revendication (celles du moteur) : valider, refuser. */
+export const DESK_CLAIM_DECISIONS = PAGE_CLAIM_DECISIONS
+export type DeskClaimDecision = (typeof DESK_CLAIM_DECISIONS)[number]
+
+/** Pourquoi la personne ne tranche pas une revendication : elle l'a déposée, ou elle a une ligne de signataire sur la page. */
+export const DESK_CLAIM_PARTIES = ["author", "page"] as const
+export type DeskClaimParty = (typeof DESK_CLAIM_PARTIES)[number]
+
+/** Une revendication en attente, telle que la file la montre : ni note, ni pièce, ni demandeur. */
+export interface DeskClaimView {
+  readonly claimId: string
+  readonly page: PageRefView
+  /** Le pays de la PAGE ; `null` : sans pays. */
+  readonly country: CountryCode | null
+  readonly evidenceCount: number
+  readonly createdAt: number
+  readonly party: DeskClaimParty | null
+}
+
+export interface DeskClaimsRequest {
+  readonly personId: string
+  readonly zone: DeskZone
+  readonly cursor: string | null
+}
+
+export interface DeskClaimRequest {
+  readonly personId: string
+  readonly claimId: string
+}
+
+/** Une pièce servie par la garde des fichiers : sans adresse tant que l'analyse n'a pas parlé, ou si elle a bloqué. */
+export interface DeskClaimEvidenceView {
+  readonly url: string | null
+  readonly withheld: MediaWithheld | null
+}
+
+/** La fiche d'une revendication : demandeur (profil publié), note, pièces. */
+export interface DeskClaimDetailView {
+  readonly claimId: string
+  readonly claimant: { readonly personId: string; readonly handle: string | null; readonly displayName: string | null }
+  readonly note: string | null
+  readonly evidence: readonly DeskClaimEvidenceView[]
+  /**
+   * Le serveur dit si la personne peut trancher MAINTENANT (`canDecide` de
+   * `getPageClaim`, PG-01 du moteur) ; `null` : il ne le dit pas, l'écran s'en
+   * tient alors au conflit d'intérêts de la file.
+   */
+  readonly canDecide: boolean | null
+}
+
+export interface DeskClaimDecisionInput {
+  readonly personId: string
+  readonly claimId: string
+  readonly decision: DeskClaimDecision
+  readonly reason: string
+}
+
 // ── Délais légaux (SU01d du moteur) ────────────────────────────────────────
 
 /** Le fondement d'un délai légal (`REPORT_LEGAL_BASES` du moteur). */
@@ -635,4 +909,18 @@ export interface ModerationDeskCapability {
    * (`moderation_desk_last_admin`). Le rôle vaut au geste suivant de la personne.
    */
   setResponsibleRole(input: DeskResponsibleRoleInput): Promise<ActionResult<DeskResponsibleRoleResult>>
+  /** MD-04 : les réglages du réseau, rubrique par rubrique, et les défauts du moteur (administration du réseau seule ; sinon `not_found`). */
+  useSettings(personId: string): Loadable<DeskSettingsView>
+  /** MD-04 : une fenêtre des mots bloqués actifs (administration du réseau seule ; sinon `not_found`). */
+  useBlockedTerms(request: DeskBlockedTermsRequest): Loadable<DeskPage<DeskBlockedTermView>>
+  /** MD-04 : poser ou remplacer le réglage d'une rubrique, motif obligatoire ; le moteur le journalise. Un réglage posé ne se retire pas, il se change. */
+  setPolicy(input: DeskPolicyInput): Promise<ActionResult>
+  /** MD-04 : bloquer ou débloquer un mot, motif obligatoire ; le moteur le journalise. */
+  setBlockedTerm(input: DeskBlockedTermInput): Promise<ActionResult>
+  /** AS-01 : une fenêtre des revendications en attente, filtrée par le pays de la page, la plus ancienne d'abord (rôle de réseau ; sinon `not_found`). */
+  useClaims(request: DeskClaimsRequest): Loadable<DeskPage<DeskClaimView>>
+  /** AS-01 : la fiche d'une revendication et ses pièces. */
+  useClaim(request: DeskClaimRequest): Loadable<DeskClaimDetailView>
+  /** AS-01 : trancher, motif obligatoire ; le demandeur et les signataires de la page reçoivent le refus indistinct (`not_found`). */
+  decideClaim(input: DeskClaimDecisionInput): Promise<ActionResult<{ readonly status: DeskClaimDecision }>>
 }

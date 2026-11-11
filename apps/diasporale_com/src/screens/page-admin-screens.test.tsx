@@ -13,7 +13,7 @@ import type {
 } from "@diasporale/features/data"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
-import { act, cleanup, fireEvent, getDefaultNormalizer, render, screen, waitFor, within } from "@testing-library/react"
+import { cleanup, fireEvent, getDefaultNormalizer, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -58,8 +58,6 @@ const t = getFixedT("fr")
 const normalize = getDefaultNormalizer()
 /** Le texte tel que l'écran le lit (espaces insécables ramenées à l'espace simple). */
 const text = (key: string, values: Record<string, unknown> = {}) => normalize(String(t(key, values)))
-/** Le nom accessible garde les espaces insécables : il se compare au texte brut. */
-const raw = (key: string, values: Record<string, unknown> = {}) => String(t(key, values))
 
 function membership(status: MembershipView["status"] = "verifiee"): MembershipView {
   return {
@@ -118,8 +116,6 @@ function management(overrides: Partial<PageManagement> = {}): PageManagement {
     useSignatories: () => ready([ME, OTHER]),
     useMyInvitations: () => ready([]),
     useMyClaims: () => ready([]),
-    useClaimQueue: () => ready(null),
-    useClaim: () => ready(null),
     createPage: vi.fn(() => ok({ pageId: "page-neuve", handle: "saveurs-de-lille" })),
     updateIdentity: vi.fn(() => ok({ changed: true })),
     grantRole: vi.fn(() => ok({ personId: "person-3", role: "signatory" as const, invited: true })),
@@ -127,7 +123,6 @@ function management(overrides: Partial<PageManagement> = {}): PageManagement {
     respondToInvitation: vi.fn(() => ok({ role: "signatory" as const })),
     requestClaim: vi.fn(() => ok({ claimId: "claim-neuve" })),
     withdrawClaim: vi.fn(() => ok({ withdrawn: true })),
-    decideClaim: vi.fn(() => ok({ status: "approved" as const })),
     ...overrides,
   }
 }
@@ -478,39 +473,12 @@ describe("gestes depuis la fiche et « Mon activité »", () => {
     await waitFor(() => expect(manage.respondToInvitation).toHaveBeenCalledExactlyOnceWith("page-9", true))
   })
 
-  it("montre la file d'instruction à la seule modération et y tranche par une décision motivée", async () => {
-    const decideClaim = vi.fn(() => ok({ status: "approved" as const }))
-    provide(management({
-      useClaimQueue: () => ready({ items: [PENDING_CLAIM], continueCursor: null }),
-      useClaim: () => ready({ ...PENDING_CLAIM, evidence: [{ url: null, withheld: "fileScanPending" as const }, { url: "https://depot.exemple.test/piece", withheld: null }, { url: "https://depot.exemple.test/retenue", withheld: "fileScanUnavailable" as const }] }),
-      decideClaim,
-    }))
-    const user = userEvent.setup()
+  it("AS-01 : « Mon activité » garde mes revendications, sans file d'instruction (elle est au bureau de modération)", () => {
+    provide(management({ useMyClaims: () => ready([PENDING_CLAIM]) }))
     wrap(<MyPagesPanel />)
-    await user.click(screen.getByRole("button", { name: text("pageAdmin.review.open") }))
-    const dialog = await screen.findByRole("dialog")
-    expect(within(dialog).getByText(text("pageAdmin.review.evidencePending", { index: 1 }))).toBeInTheDocument()
-    expect(within(dialog).getByRole("link", { name: text("pageAdmin.review.evidenceOpen", { index: 2 }) })).toHaveAttribute("href", "https://depot.exemple.test/piece")
-    expect(within(dialog).getByText(t("errors:fileScanUnavailable"))).toBeInTheDocument()
-    expect(within(dialog).queryByRole("link", { name: text("pageAdmin.review.evidenceOpen", { index: 3 }) })).not.toBeInTheDocument()
-    expect(dialog.innerHTML).not.toContain("https://depot.exemple.test/retenue")
-    await user.click(within(dialog).getByRole("button", { name: text("pageAdmin.review.submit") }))
-    expect(await within(dialog).findByText(text("errors.page_decision_required"))).toBeInTheDocument()
-    await user.click(within(dialog).getByRole("radio", { name: raw("pageAdmin.review.decision.approved") }))
-    await user.type(within(dialog).getByLabelText(text("pageAdmin.review.reason")), "ok")
-    await user.click(within(dialog).getByRole("button", { name: text("pageAdmin.review.submit") }))
-    expect(await within(dialog).findByText(text("errors.page_decision_reason_length"))).toBeInTheDocument()
-    await user.type(within(dialog).getByLabelText(text("pageAdmin.review.reason")), " : statuts conformes")
-    await act(async () => {
-      await user.click(within(dialog).getByRole("button", { name: text("pageAdmin.review.submit") }))
-    })
-    await waitFor(() => expect(decideClaim).toHaveBeenCalledExactlyOnceWith("claim-1", "approved", "ok : statuts conformes"))
-  })
-
-  it("aucune file pour qui ne modère pas", () => {
-    provide(management())
-    wrap(<MyPagesPanel />)
-    expect(screen.queryByText(text("pageAdmin.review.title"))).not.toBeInTheDocument()
     expect(screen.getByText(text("pageAdmin.myPages.emptyTitle"))).toBeInTheDocument()
+    expect(screen.getByText(PENDING_CLAIM.page.name)).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: text("moderationDesk.claims.open") })).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: text("moderationDesk.claims.title") })).not.toBeInTheDocument()
   })
 })

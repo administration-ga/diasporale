@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
 import type { PageManagement } from "../data/page-admin-port"
-import { createDemoPageAdmin, DEMO_PAGE_ADMIN_STORAGE_KEY, demoManagedPage } from "./page-admin"
+import { createDemoPageAdmin, DEMO_PAGE_ADMIN_STORAGE_KEY, demoManagedPage, demoPageClaimsDesk } from "./page-admin"
 import { createDemoSeed } from "./state"
 import { DEMO_STORAGE_KEY, DemoStore } from "./store"
 
@@ -112,21 +112,19 @@ describe("démonstration — revendiquer et instruire", () => {
     expect(await demo.management.requestClaim({ pageId: "page-asso-montreal", evidence: [] })).toEqual({ ok: false, code: "page_claim_evidence_count" })
     expect(await demo.management.requestClaim({ pageId: "page-asso-montreal", evidence: [pdf("photo.gif", "image/gif")] })).toEqual({ ok: false, code: "page_claim_evidence_type" })
 
-    // Un simple membre ne voit pas la file et ne tranche rien.
-    await demo.as("p-steeve")
-    const queue = renderHook(() => demo.management.useClaimQueue({ status: "pending", cursor: null }))
-    expect(queue.result.current).toEqual({ status: "ready", data: null })
-    expect(await demo.management.decideClaim(claimId, "approved", "Statuts conformes.")).toEqual({ ok: false, code: "not_found" })
-
-    // La modération (Mireille en démonstration) instruit : pièces dites reçues, jamais servies.
-    await demo.as("p-mireille")
-    expect(queue.result.current).toMatchObject({ status: "ready", data: { items: [{ id: claimId, claimant: { handle: "prisca.abanga" } }], continueCursor: null } })
-    const detail = renderHook(() => demo.management.useClaim(claimId))
-    expect(detail.result.current).toMatchObject({ status: "ready", data: { evidence: [{ url: null, withheld: null }, { url: null, withheld: null }] } })
-    expect(await demo.management.decideClaim(claimId, "approved", "ok")).toEqual({ ok: false, code: "page_decision_reason_length" })
-    await act(async () => { expect(await demo.management.decideClaim(claimId, "approved", "Statuts et procès-verbal conformes.")).toEqual({ ok: true, value: { status: "approved" } }) })
-    expect(queue.result.current).toMatchObject({ status: "ready", data: { items: [] } })
-    expect(await demo.management.decideClaim(claimId, "rejected", "Trop tard pour changer.")).toEqual({ ok: false, code: "page_claim_closed" })
+    // AS-01 : l'instruction est au bureau de modération ; ce module lui prête l'état et les règles des pages.
+    const claims = demoPageClaimsDesk(demo.store)
+    expect(claims.pending("p-prisca")).toMatchObject([{ claimId, country: "FR", evidenceCount: 2, party: "author", page: { id: "page-asso-bordeaux" } }])
+    expect(claims.pending("p-steeve")).toMatchObject([{ claimId, party: null }])
+    // Pièces dites reçues, jamais servies ; la demandeuse ne tranche pas sa propre demande.
+    expect(claims.detail("p-steeve", claimId)).toMatchObject({ claimant: { handle: "prisca.abanga" }, evidence: [{ url: null, withheld: null }, { url: null, withheld: null }], canDecide: true })
+    expect(claims.detail("p-prisca", claimId)?.canDecide).toBe(false)
+    expect(claims.decide({ deciderId: "p-prisca", claimId, decision: "approved", reason: "Statuts et procès-verbal conformes." })).toEqual({ ok: false, code: "not_found" })
+    await act(async () => {
+      expect(claims.decide({ deciderId: "p-steeve", claimId, decision: "approved", reason: "Statuts et procès-verbal conformes." })).toEqual({ ok: true, value: { status: "approved" } })
+    })
+    expect(claims.pending("p-steeve")).toEqual([])
+    expect(claims.decide({ deciderId: "p-steeve", claimId, decision: "rejected", reason: "Trop tard pour changer." })).toEqual({ ok: false, code: "moderation_desk_conflict" })
 
     await demo.as("p-prisca")
     expect(mine.result.current).toMatchObject({ data: [{ id: claimId, status: "approved", decisionReason: "Statuts et procès-verbal conformes." }] })

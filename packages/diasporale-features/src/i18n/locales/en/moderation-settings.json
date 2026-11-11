@@ -1,0 +1,113 @@
+{
+  "moderationDesk": {
+    "tab": {
+      "settings": "Settings"
+    },
+    "settings": {
+      "title": "Moderation settings",
+      "lead": "What the network reviews before publication, section by section, and the words that send content to review. Reserved to the network administration; every setting and every word carries a reason and is written to the engine's decision log.",
+      "loading": "Loading settings…",
+      "restricted": "Moderation settings are reserved to the network administration.",
+      "defaults": {
+        "title": "Without a network setting",
+        "preReviewOff": "No review before publication: content appears as soon as it is written.",
+        "preReviewOn": "Review before publication: every piece of content waits for a moderator.",
+        "links_one": "Beyond {{count}} link, content goes to review: it is not refused.",
+        "links_other": "Beyond {{count}} links, content goes to review: it is not refused.",
+        "writes_one": "Beyond {{count}} write in {{window}}, across all sections, the next one also goes to review.",
+        "writes_other": "Beyond {{count}} writes in {{window}}, across all sections, the next one also goes to review.",
+        "terms": "Content containing a blocked word goes to review.",
+        "source": "These are the defaults of the ANTSIA engine, read as it applies them. They apply to every section without a setting, except the content reviewed by default, listed separately, and the mutual aid, mentoring, arrival kit and jobs sections, published without any rule until a setting is set for them."
+      },
+      "held": {
+        "title": "Reviewed by default in DIASPORALE",
+        "lead": "Until a setting is set for their section, this content waits for a moderator before it appears:",
+        "associationEvents": "association events (section “Event”);",
+        "reviews": "reviews of a service (section “Review of a service”);",
+        "reviewReplies": "a page's replies to a review (section “Page reply to a review”);",
+        "eventGallery": "additions to an event gallery (section “Post”).",
+        "note": "A setting on one of these sections makes this content follow that setting. On “Event” and “Post”, it also applies to personal events and to every post."
+      },
+      "heldNote": {
+        "associationEvents": "Association events stay reviewed by default until a setting is set.",
+        "eventGallery": "Additions to an event gallery stay reviewed by default until a setting is set."
+      },
+      "without": {
+        "defaults": "Without a setting: the engine defaults apply.",
+        "held": "Without a setting: every piece of content in this section waits for a moderator before it appears.",
+        "unchecked": "Without a setting: published as soon as it is written and moderated after a report, with no link cap, no pace limit and no blocked words."
+      },
+      "window": {
+        "hours_one": "{{count}} hour",
+        "hours_other": "{{count}} hours",
+        "minutes_one": "{{count}} minute",
+        "minutes_other": "{{count}} minutes",
+        "seconds_one": "{{count}} second",
+        "seconds_other": "{{count}} seconds"
+      },
+      "surfaces": {
+        "title": "By section",
+        "lead": "The sections of DIASPORALE. A setting replaces, for its section, the rule without a setting; it cannot be removed, only changed."
+      },
+      "policy": {
+        "since": "Setting in force since {{date}}.",
+        "preReviewOn": "Review before publication: yes.",
+        "preReviewOff": "Review before publication: no.",
+        "links_one": "Beyond {{count}} link: review.",
+        "links_other": "Beyond {{count}} links: review.",
+        "writes_one": "At most {{count}} write in {{window}}; beyond that, review.",
+        "writes_other": "At most {{count}} writes in {{window}}; beyond that, review.",
+        "set": "Set a setting",
+        "change": "Change the setting"
+      },
+      "sheet": {
+        "title": "Setting: {{surface}}",
+        "description": "Review before publication, link cap and pace for this section. The setting carries a reason and is written to the engine's decision log.",
+        "preReview": "Review before publication",
+        "preReviewHint": "Every piece of content in this section waits for a moderator before it appears.",
+        "maxLinks": "Link cap",
+        "maxLinksHint": "Beyond it, content goes to review; from {{linksMin}} to {{linksMax}}.",
+        "maxWrites": "Writes at most within the window",
+        "maxWritesHint": "Beyond it, the next one goes to review; from {{writesMin}} to {{writesMax}}.",
+        "window": "Pace window, in minutes",
+        "windowHint": "From {{windowMin}} to {{windowMax}} minutes.",
+        "liftsHeld": {
+          "associationEvents": "Association events are reviewed by default today. This setting applies to every event, association events included: without review before publication, the next one will appear directly if it respects the link cap, the pace and the blocked words.",
+          "reviews": "Reviews are reviewed by default today. This setting makes them follow it: without review before publication, the next review will appear directly if it respects the link cap, the pace and the blocked words.",
+          "reviewReplies": "A page's replies to a review are reviewed by default today. This setting makes them follow it: without review before publication, the next one will appear directly if it respects the link cap, the pace and the blocked words.",
+          "eventGallery": "Additions to an event gallery are reviewed by default today. This setting applies to every post, gallery included: without review before publication, the next addition will appear directly if it respects the link cap, the pace and the blocked words."
+        },
+        "permanent": "A setting cannot be removed once set: it can only be changed.",
+        "reasonHint": "Why this setting; the reason stays in the decision log ({{min}} to {{max}} characters).",
+        "submit": "Save the setting",
+        "saved": "Setting saved: {{surface}}."
+      },
+      "terms": {
+        "title": "Blocked words",
+        "lead": "Content containing one of these words goes to review: it is not refused. Case and accents do not matter, and the word is also matched inside other words. The network keeps {{termsMax}} at most.",
+        "waveNote": "The mutual aid, mentoring, arrival kit and jobs sections only read blocked words once a setting is set for them.",
+        "emptyTitle": "No blocked word",
+        "emptyBody": "The network has not blocked any word yet.",
+        "since": "Blocked on {{date}}",
+        "remove": "Unblock",
+        "removeTitle": "Unblock “{{term}}”",
+        "removeBody": "Content containing this word will no longer go to review for that reason. The removal carries a reason and is written to the engine's decision log.",
+        "removeConfirm": "Unblock this word",
+        "removed": "“{{term}}” is no longer blocked.",
+        "addTitle": "Block a word",
+        "term": "Word or phrase",
+        "termHint": "From {{termMin}} to {{termMax}} characters, case and accents removed.",
+        "reasonHint": "Why this word; the reason stays in the decision log ({{min}} to {{max}} characters).",
+        "add": "Block this word",
+        "added": "“{{term}}” is blocked."
+      }
+    }
+  },
+  "errors": {
+    "moderation_desk_links_bounds": "The link cap goes from {{linksMin}} to {{linksMax}}, as a whole number.",
+    "moderation_desk_writes_bounds": "The pace allows {{writesMin}} to {{writesMax}} writes, as a whole number.",
+    "moderation_desk_window_bounds": "The pace window goes from {{windowMin}} to {{windowMax}} minutes, as a whole number.",
+    "moderation_desk_term_length": "A blocked word has {{termMin}} to {{termMax}} characters, case and accents removed.",
+    "moderation_desk_terms_full": "The network already keeps {{termsMax}} blocked words: unblock one before adding another."
+  }
+}

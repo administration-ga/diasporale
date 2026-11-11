@@ -2,8 +2,9 @@
 
 /**
  * Mes pages dans « Mon activité » (onglet « Pages ») : les pages que je gère,
- * mes invitations de signataire, mes revendications, « Créer une page » — et,
- * pour la modération du réseau seule, les revendications à instruire.
+ * mes invitations de signataire, mes revendications, « Créer une page ».
+ * L'instruction des revendications est au bureau de modération, onglet
+ * « Pages à vérifier » (AS-01).
  * PROPRIÉTAIRE : chantier « gestion des pages ». « Mon activité » (chantier
  * « catalogue ») le monte ; la signature est figée.
  */
@@ -19,7 +20,6 @@ import { toast } from "sonner"
 import { routes } from "@/lib/routes"
 
 import { ClaimStatusChip, ConfirmSheet, ErrorNotice, PageAdminUnavailable, RoleChip } from "./page-admin-parts"
-import { ClaimReviewSection } from "./page-claim-review"
 
 export function MyPagesPanel() {
   const capability = usePageAdmin()
@@ -60,7 +60,6 @@ function Panel(props: { readonly capability: PageAdminCapability; readonly manag
       </section>
       {props.management ? <Invitations management={props.management} /> : null}
       {props.management ? <MyClaims management={props.management} /> : null}
-      {props.management ? <ClaimReviewSection management={props.management} /> : null}
     </div>
   )
 }

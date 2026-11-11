@@ -81,6 +81,8 @@ import enPostVideos from "./locales/en/post-videos.json"
 import enMissionVolunteerNotices from "./locales/en/mission-volunteer-notices.json"
 import enEventOutcomeNotices from "./locales/en/event-outcome-notices.json"
 import enNetworkResponsibles from "./locales/en/network-responsibles.json"
+import enModerationSettings from "./locales/en/moderation-settings.json"
+import enPageClaimsDesk from "./locales/en/page-claims-desk.json"
 import enAidFinding from "./locales/en/aid-finding.json"
 import enAidOnTheWay from "./locales/en/aid-on-the-way.json"
 import enAidUsefulness from "./locales/en/aid-usefulness.json"
@@ -155,6 +157,8 @@ import frPostVideos from "./locales/fr/post-videos.json"
 import frMissionVolunteerNotices from "./locales/fr/mission-volunteer-notices.json"
 import frEventOutcomeNotices from "./locales/fr/event-outcome-notices.json"
 import frNetworkResponsibles from "./locales/fr/network-responsibles.json"
+import frModerationSettings from "./locales/fr/moderation-settings.json"
+import frPageClaimsDesk from "./locales/fr/page-claims-desk.json"
 import frAidFinding from "./locales/fr/aid-finding.json"
 import frAidOnTheWay from "./locales/fr/aid-on-the-way.json"
 import frAidUsefulness from "./locales/fr/aid-usefulness.json"
@@ -237,6 +241,8 @@ export const LOCALE_PARTS = {
     "mission-volunteer-notices": frMissionVolunteerNotices,
     "event-outcome-notices": frEventOutcomeNotices,
     "network-responsibles": frNetworkResponsibles,
+    "moderation-settings": frModerationSettings,
+    "page-claims-desk": frPageClaimsDesk,
     "aid-finding": frAidFinding,
     "aid-on-the-way": frAidOnTheWay,
     "aid-usefulness": frAidUsefulness,
@@ -313,6 +319,8 @@ export const LOCALE_PARTS = {
     "mission-volunteer-notices": enMissionVolunteerNotices,
     "event-outcome-notices": enEventOutcomeNotices,
     "network-responsibles": enNetworkResponsibles,
+    "moderation-settings": enModerationSettings,
+    "page-claims-desk": enPageClaimsDesk,
     "aid-finding": enAidFinding,
     "aid-on-the-way": enAidOnTheWay,
     "aid-usefulness": enAidUsefulness,
