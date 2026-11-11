@@ -115,7 +115,7 @@
       "title": "On ne paie jamais pour candidater",
       "body": "Une vraie offre ne demande jamais d'argent : ni frais de dossier, ni formation payante, ni avance pour un visa, un billet ou un logement. Méfiez-vous d'une promesse de visa et de qui vous presse de poursuivre hors de DIASPORALE.",
       "report": "Une offre vous semble fausse ? Signalez-la avec le motif « {{reason}} » : elle disparaît aussitôt pour vous.",
-      "reportHint": "Frais demandés, promesse de visa : choisissez le motif « {{reason}} »."
+      "reportHint": "Argent réclamé, promesse de visa : choisissez le motif « {{reason}} »."
     },
     "apply": {
       "cta": "Candidater",

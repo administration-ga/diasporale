@@ -1260,6 +1260,8 @@
       "impersonation": "Identity theft",
       "privacy_or_honor": "Invasion of privacy or reputation",
       "misinformation": "False information",
+      "job_fee_requested": "Candidate asked to pay fees",
+      "job_impersonation": "Impersonating a company",
       "other": "Other reason"
     },
     "noteLabel": "Details (optional)",

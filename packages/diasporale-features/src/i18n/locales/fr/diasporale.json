@@ -1260,6 +1260,8 @@
       "impersonation": "Usurpation d'identité",
       "privacy_or_honor": "Atteinte à la vie privée ou à l'honneur",
       "misinformation": "Fausse information",
+      "job_fee_requested": "Frais demandés au candidat",
+      "job_impersonation": "Usurpation d'une entreprise",
       "other": "Autre motif"
     },
     "noteLabel": "Précision (facultative)",

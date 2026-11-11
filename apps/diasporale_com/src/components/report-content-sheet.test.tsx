@@ -308,3 +308,46 @@ describe("MD-02 — la même feuille pour un profil : le réseau racine traite l
     expect(within(dialog).queryByText(plain(t("contentReports.rootNotice")))).not.toBeInTheDocument()
   })
 })
+
+describe("UM-03 — une offre d'emploi propose d'abord ses deux motifs", () => {
+  const JOB: ContentReportTarget = { kind: "diasporaJobOffer", id: "job-offer-1" }
+
+  function mountJob(capability: ContentReportsCapability) {
+    const source = { contentReports: capability } as unknown as DiasporaleDataSource
+    return render(
+      <I18nProvider locale="fr">
+        <DataSourceProvider source={source}>
+          <ReportedContent target={JOB}>
+            <p>{CONTENT}</p>
+            <ReportContentAction target={JOB} />
+          </ReportedContent>
+        </DataSourceProvider>
+      </I18nProvider>,
+    )
+  }
+
+  it("frais demandés au candidat et usurpation d'une entreprise en tête, puis les motifs de tout objet ; l'envoi porte le motif choisi", async () => {
+    const user = userEvent.setup()
+    const { capability, report } = fakeReports()
+    mountJob(capability)
+    await user.click(screen.getByRole("button", { name: t("contentReports.action.diasporaJobOffer") }))
+    const dialog = await screen.findByRole("dialog", { name: t("contentReports.title.diasporaJobOffer") })
+    const radios = within(dialog).getAllByRole("radio")
+    expect(radios).toHaveLength(REPORT_REASONS.length + 2)
+    expect(radios[0]).toHaveAccessibleName(t("report.reason.job_fee_requested"))
+    expect(radios[1]).toHaveAccessibleName(t("report.reason.job_impersonation"))
+    expect(t("report.reason.job_fee_requested")).toBe("Frais demandés au candidat")
+    await user.click(within(dialog).getByRole("radio", { name: t("report.reason.job_fee_requested") }))
+    await user.click(within(dialog).getByRole("button", { name: t("contentReports.confirm") }))
+    await waitFor(() => expect(report).toHaveBeenCalledExactlyOnceWith({ kind: "diasporaJobOffer", id: "job-offer-1", reason: "job_fee_requested" }))
+  })
+
+  it("une autre nature ne les propose pas", async () => {
+    const user = userEvent.setup()
+    const { capability } = fakeReports()
+    mount(capability)
+    const dialog = await openSheet(user)
+    expect(within(dialog).getAllByRole("radio")).toHaveLength(REPORT_REASONS.length)
+    expect(within(dialog).queryByRole("radio", { name: t("report.reason.job_fee_requested") })).not.toBeInTheDocument()
+  })
+})

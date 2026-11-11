@@ -52,7 +52,7 @@
  */
 import type { MediaWithheld } from "@antsia/social-contracts/media"
 import { DECISION_REASON_MAX } from "@antsia/social-domain/audit"
-import { REPORT_DEADLINES_ORDINANCE, REPORT_LEGAL_BASES, type ContentReportReason, type ReportLegalBasis } from "@antsia/social-domain/moderation"
+import { REPORT_DEADLINES_ORDINANCE, REPORT_LEGAL_BASES, type ContentReportReason, type ReportLegalBasis, type TargetReportReason } from "@antsia/social-domain/moderation"
 import {
   admissibleBlockedTerm,
   BLOCKED_TERM_LENGTH,
@@ -129,8 +129,10 @@ export type DeskSanctionKind = SanctionKind
 
 /**
  * Le motif d'un dossier, dit par une valeur fermée : ceux des signalements du
- * moteur (`CONTENT_REPORT_REASONS`), ceux des avis (`SERVICE_REVIEW_REPORT_REASONS`),
- * la relecture préalable, et « non précisé » pour tout autre code.
+ * moteur (`CONTENT_REPORT_REASONS`), ceux d'une nature (`TARGET_REPORT_REASONS` : frais
+ * demandés au candidat, usurpation d'une entreprise, pour une offre d'emploi, UM-03), ceux
+ * des avis (`SERVICE_REVIEW_REPORT_REASONS`), la relecture préalable, et « non précisé »
+ * pour tout autre code.
  */
 export const DESK_GROUNDS = [
   "harassment",
@@ -147,10 +149,13 @@ export const DESK_GROUNDS = [
   "misinformation",
   "spam",
   "fraud",
+  // UM-03 du moteur (antsia#168) : les motifs propres à une offre d'emploi.
+  "job_fee_requested",
+  "job_impersonation",
   "other",
   "pre_review",
   "unspecified",
-] as const satisfies readonly (ContentReportReason | ServiceReviewReportReason | "pre_review" | "unspecified")[]
+] as const satisfies readonly (ContentReportReason | TargetReportReason | ServiceReviewReportReason | "pre_review" | "unspecified")[]
 export type DeskGround = (typeof DESK_GROUNDS)[number]
 
 /** Un code de motif reçu du moteur, jamais affiché brut. */
