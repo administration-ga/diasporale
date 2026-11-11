@@ -61,6 +61,8 @@ export const BELL_DESTINATIONS: Readonly<Record<NotificationKind, BellDestinatio
   service_booking_completed: "serviceNotice",
   service_booking_no_show: "serviceNotice",
   service_no_show_contested: "serviceNotice",
+  service_booking_reschedule_proposed: "serviceNotice",
+  service_booking_rescheduled: "serviceNotice",
   association_membership_requested: "serviceNotice",
   association_membership_accepted: "serviceNotice",
   association_membership_declined: "serviceNotice",
