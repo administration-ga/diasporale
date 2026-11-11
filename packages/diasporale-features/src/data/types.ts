@@ -486,6 +486,9 @@ export const SERVICE_NOTIFICATION_KINDS = [
   "service_booking_completed",
   "service_booking_no_show",
   "service_no_show_contested",
+  // SV-03 : un nouvel horaire proposé à l'autre partie, puis accepté pour le proposant.
+  "service_booking_reschedule_proposed",
+  "service_booking_rescheduled",
   "association_membership_requested",
   "association_membership_accepted",
   "association_membership_declined",
